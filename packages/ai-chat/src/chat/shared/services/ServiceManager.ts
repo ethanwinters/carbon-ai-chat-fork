@@ -27,6 +27,7 @@ import {
   WriteableElements,
 } from "../../../types/instance/ChatInstance";
 import { BusEvent } from "../../../types/events/eventBusTypes";
+import { ExternalComponents } from "../../../types/external/input";
 
 export interface UserDefinedElementRegistryItem {
   slotName: string;
@@ -142,6 +143,11 @@ class ServiceManager {
    * both here and through the React RawIntlProvider that makes it available to react-intl components.
    */
   intl: IntlShape;
+
+  /**
+   * External components system for replacing internal components with external ones.
+   */
+  externalComponents?: ExternalComponents;
 
   /**
    * As part of the view change work a bug was exposed where someone calling openWindow, closeWindow, or toggleOpen,

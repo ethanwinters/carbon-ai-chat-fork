@@ -1,0 +1,87 @@
+/*
+ *  Copyright IBM Corp. 2025
+ *
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ *
+ *  @license
+ */
+
+:host {
+  display: block;
+}
+
+.WAC__TextArea {
+  position: relative;
+  width: 100%;
+}
+
+.WAC__TextArea-textarea {
+  width: 100%;
+  min-height: 1.5em;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  background-color: #fff;
+  color: #333;
+
+  &:focus {
+    border-color: #0066cc;
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+  }
+
+  &--empty {
+    // Styles for empty state if needed
+  }
+}
+
+.WAC__TextArea--disabled .WAC__TextArea-textarea {
+  background-color: #f5f5f5;
+  color: #888;
+  cursor: not-allowed;
+  border-color: #ddd;
+
+  &:focus {
+    border-color: #ddd;
+    box-shadow: none;
+  }
+}
+
+.WAC__TextArea-placeholder {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  color: #888;
+  pointer-events: none;
+  font-size: inherit;
+  line-height: 1.5;
+}
+
+.WAC__TextArea--autoSize {
+  .WAC__TextArea-textarea {
+    resize: none;
+    overflow: hidden;
+  }
+}
+
+.WAC__TextArea-sizer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  visibility: hidden;
+  height: auto;
+  min-height: 1.5em;
+  padding: 0.75rem;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

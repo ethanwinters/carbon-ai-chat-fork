@@ -256,6 +256,8 @@ export enum CSSVariable {
   BASE_Z_INDEX = "BASE-z-index",
 }
 
+
+
 /**
  * This is a subset of the public interface that provides methods that can be used by the user to control the widget
  * and have it perform certain actions.
@@ -558,35 +560,47 @@ export enum WriteableElementName {
 /**
  * The interface represents the elements that Carbon AI Chat provides access to.
  *
- * @experimental
- *
  * @category Instance
  */
 export interface InstanceElements {
   /**
    * Returns the element that represents the main window.
-   *
-   * @experimental
    */
   getMainWindow: () => HasAddRemoveClassName;
 
   /**
-   * Returns the element that represents the input field (text area) on the main message area.
-   *
-   * This will likely change to a contenteditable div before we move away from experimental.
-   *
-   * @experimental
+   * Returns the element that represents the input field (content editable div) on the main message area.
    */
   getMessageInput: () => InstanceInputElement;
 
   /**
-   * Returns the element that represents the input field (text area) on the home screen.
-   *
-   * This will likely change to a contenteditable div before we move away from experimental.
-   *
-   * @experimental
+   * Returns the element that represents the input field (content editable div) on the home screen.
    */
   getHomeScreenInput: () => InstanceInputElement;
+}
+
+/**
+ * Extended input element interface for rich text editor integration.
+ *
+ * @category Instance
+ */
+export interface ExtendedInputElement {
+  /**
+   * Get the plain text content that should be sent when the user submits.
+   * This is the actual value that will be transmitted, stripped of any formatting.
+   */
+  getTextContent?: () => string;
+  
+  /**
+   * Get the current display content (may include formatting/HTML/markdown).
+   * This represents what the user sees in the editor.
+   */
+  getDisplayContent?: () => string;
+  
+  /**
+   * Set the display content (may include formatting/HTML/markdown).
+   */
+  setDisplayContent?: (content: string) => void;
 }
 
 /**
@@ -594,15 +608,11 @@ export interface InstanceElements {
  *
  * @category Instance
  */
-export interface InstanceInputElement {
+export interface InstanceInputElement extends ExtendedInputElement {
   /**
-   * The raw HTML element for the element.
-   *
-   * This will likely change to a contenteditable div before we move away from experimental.
-   *
-   * @experimental
+   * The raw HTML element for the element. This is a content editable div.
    */
-  getHTMLElement: () => HTMLTextAreaElement;
+  getHTMLElement: () => HTMLDivElement;
 
   /**
    * Sets the current text value inside the input.
@@ -624,6 +634,16 @@ export interface InstanceInputElement {
    * Removes a change listener that was previously added.
    */
   removeChangeListener: (listener: ChangeFunction) => void;
+  
+  /**
+   * Puts focus on the input element.
+   */
+  takeFocus?: () => void;
+  
+  /**
+   * Removes focus from the input element.
+   */
+  doBlur?: () => void;
 }
 
 /**

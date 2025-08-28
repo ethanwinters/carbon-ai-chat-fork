@@ -15,12 +15,11 @@ import cx from "classnames";
 import React, {
   ChangeEvent,
   forwardRef,
-  KeyboardEvent,
   Ref,
-  UIEvent,
   useImperativeHandle,
   useRef,
   useState,
+  useEffect,
 } from "react";
 
 import { StopStreamingButton } from "../../../react/components/stopStreamingButton/StopStreamingButton";
@@ -32,12 +31,12 @@ import { FileUpload } from "../../../../types/state/AppState";
 import HasLanguagePack from "../../../../types/utilities/HasLanguagePack";
 import { IS_MOBILE } from "../../utils/browserUtils";
 import { FileStatusValue } from "../../utils/constants";
-import { isEnterKey } from "../../utils/domUtils";
 import { uuid, UUIDType } from "../../utils/lang/uuid";
 import { ListenerList } from "../../utils/ListenerList";
 import { isValidForUpload } from "../../utils/miscUtils";
-import TextArea from "../responseTypes/text/TextArea";
+import { ContentEditableInput } from "../../../react/components/contentEditableInput/ContentEditableInput";
 import { InstanceInputElement } from "../../../../types/instance/ChatInstance";
+import { InputProps as ExternalInputProps } from "../../../../types/external/input";
 import {
   ButtonKindEnum,
   ButtonSizeEnum,
@@ -57,98 +56,13 @@ const STOP_TYPING_PERIOD = 5000;
  */
 const INPUT_MAX_CHARS = 2048;
 
-interface InputProps extends HasServiceManager, HasLanguagePack {
-  /**
-   * Indicates if the input field should be disabled (the user cannot type anything). This will also hide any value
-   * that may already be set in the field.
-   */
-  disableInput: boolean;
-
-  /**
-   * Indicates if the input field should be hidden or visible.
-   */
-  isInputVisible: boolean;
-
-  /**
-   * Indicates if the sending a message should be disabled. This will disable the send button as well as the send on
-   * enter listener of the input field.
-   */
-  disableSend: boolean;
-
-  /**
-   * The callback to call when the user enters some text into the field, and it needs to be sent. This occurs if the
-   * user presses the enter key or clicks the send button.
-   *
-   * @param text The text that was entered into the input field that should be sent.
-   * {@link InstanceInputElement.setOnBeforeSend} callback.
-   */
-  onSendInput: (text: string) => void;
-
-  /**
-   * Indicates if the text area should blur when the text is sent.
-   */
-  blurOnSend?: boolean;
-
-  /**
-   * An optional placeholder to display in the field. If this is not set, then a default value will be used.
-   */
-  placeholder?: string;
-
-  /**
-   * A callback to use to indicate when the user is typing. The user is considered as stopping typing when no input
-   * changes have been made for 5 seconds.
-   *
-   * @param isTyping If true, indicates that the user has started typing. If false, indicates that the user has
-   * stopped typing.
-   */
-  onUserTyping?: (isTyping: boolean) => void;
-
-  /**
-   * Indicates if a button should be displayed that would allow a user to select a file to upload.
-   */
-  showUploadButton?: boolean;
-
-  /**
-   * Indicates if the file upload button should be disabled.
-   */
-  disableUploadButton?: boolean;
-
-  /**
-   * The filter to apply to choosing files for upload.
-   */
-  allowedFileUploadTypes?: string;
-
-  /**
-   * Indicates if the user should be allowed to choose multiple files to upload.
-   */
-  allowMultipleFileUploads?: boolean;
-
-  /**
-   * A list of pending file uploads to display in the input area.
-   */
-  pendingUploads?: FileUpload[];
-
-  /**
-   * The callback that is called when the user selects one or more files to be uploaded.
-   */
-  onFilesSelectedForUpload?: (files: FileUpload[]) => void;
-
-  /**
-   * Determines if the "stop streaming" button should be visible. This also indicates that a streamed response can be
-   * cancelled.
-   */
-  isStopStreamingButtonVisible?: boolean;
-
-  /**
-   * Determines if the "stop streaming" button should be disabled. The button can be visible and disabled to show that
-   * the process of cancelling a streamed response is in progress.
-   */
-  isStopStreamingButtonDisabled?: boolean;
-
-  /**
-   * Testing id used for e2e tests.
-   */
-  testIdPrefix: OverlayPanelName;
+/**
+ * Props for the pure Input component. This extends ExternalInputProps and adds
+ * serviceManager and languagePack for internal use.
+ */
+interface InputProps extends ExternalInputProps, HasServiceManager, HasLanguagePack {
+  // ExternalInputProps already contains all the input-specific props
+  // We just need serviceManager and languagePack for internal functionality
 }
 
 interface InputFunctions {
@@ -200,8 +114,8 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
   // Indicates the user is currently typing.
   const isTypingTimeout = useRef<ReturnType<typeof setTimeout>>(null);
 
-  // A React ref to the TextArea component.
-  const textAreaRef = useRef<TextArea>();
+  // A React ref to the ContentEditableInput component.
+  const textAreaRef = useRef<any>();
 
   // A React ref to the file Input element.
   const fileInputRef = useRef<HTMLInputElement>();
@@ -232,39 +146,23 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
    * This is a callback which is called on each keydown event that occurs on the text area. This is used to capture
    * the enter key, so we can send the entered text to the server.
    */
-  function onKeyDown(event: KeyboardEvent) {
-    if (isEnterKey(event)) {
+  function onKeyDown(event: CustomEvent) {
+    // The Lit component passes keyboard event details in the custom event detail
+    const keyboardDetails = event.detail;
+    
+    if (keyboardDetails.key === 'Enter') {
       if (disableSend || !enterKeyEnabled.current) {
         // If sending is disabled, stop the field from inserting a newline into the field.
-        event.preventDefault();
+        keyboardDetails.preventDefault();
       } else {
-        send(event);
+        // Call send function directly - we'll handle preventDefault there
+        sendMessage();
       }
     }
   }
 
-  /**
-   * This is a callback which is called when a change event occurs on the textarea inside this input.
-   */
-  function onChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    const inputText = event.target.value;
-
-    if (onUserTyping) {
-      if (!isTypingTimeout.current) {
-        onUserTyping(true);
-      } else {
-        clearTimeout(isTypingTimeout.current);
-      }
-      isTypingTimeout.current = setTimeout(doTypingStopped, STOP_TYPING_PERIOD);
-    }
-
-    setInputValue(inputText);
-  }
-
-  function send(event: UIEvent) {
+  function sendMessage() {
     if (doHasValidInput()) {
-      event.preventDefault();
-
       doTypingStopped();
 
       const text = inputValue.trim();
@@ -280,16 +178,35 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
   }
 
   /**
+   * This is a callback which is called when a change event occurs on the textarea inside this input.
+   */
+  function onChange(event: CustomEvent) {
+    const inputText = event.detail.value;
+
+    if (onUserTyping) {
+      if (!isTypingTimeout.current) {
+        onUserTyping(true);
+      } else {
+        clearTimeout(isTypingTimeout.current);
+      }
+      isTypingTimeout.current = setTimeout(doTypingStopped, STOP_TYPING_PERIOD);
+    }
+
+    setInputValue(inputText);
+  }
+
+
+  /**
    * Called when the input field gets focus.
    */
-  function onInputFocus() {
+  function onInputFocus(_event: CustomEvent) {
     setTextAreaHasFocus(true);
   }
 
   /**
    * Called when the input field loses focus.
    */
-  function onInputBlur() {
+  function onInputBlur(_event: CustomEvent) {
     setTextAreaHasFocus(false);
   }
 
@@ -316,6 +233,16 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
         changeListeners.current.addListener(listener),
       removeChangeListener: (listener: (value: string) => void) =>
         changeListeners.current.removeListener(listener),
+      // Extended methods for rich text editor support
+      getTextContent: () => inputValue,
+      getDisplayContent: () => inputValue,
+      setDisplayContent: (content: string) => setInputValue(content),
+      takeFocus: () => {
+        if (!IS_MOBILE && isInputVisible) {
+          textAreaRef.current?.takeFocus();
+        }
+      },
+      doBlur: () => textAreaRef.current?.doBlur(),
     };
   }
 
@@ -384,12 +311,13 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
   }));
 
   const {
-    input_buttonLabel,
-    input_placeholder,
-    input_ariaLabel,
-    input_uploadButtonLabel,
-    input_stopResponse,
-  } = languagePack;
+    sendButtonLabel,
+    inputPlaceholder,
+    inputAriaLabel,
+    uploadButtonLabel,
+    stopStreamingLabel,
+    removeFileButtonLabel,
+  } = props;
   const useInputValue = disableInput ? "" : inputValue;
   const hasValidInput = doHasValidInput();
   const showDisabledSend = !hasValidInput || disableInput || disableSend;
@@ -399,7 +327,7 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
 
   // If the input field is disabled, don't show a placeholder (unless one is provided).
   const usePlaceHolder =
-    placeholder || (disableInput ? undefined : input_placeholder);
+    placeholder || (disableInput ? undefined : inputPlaceholder);
 
   if (lastValue.current !== inputValue) {
     lastValue.current = inputValue;
@@ -426,7 +354,7 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
                     id={uploadButtonID}
                     className="WACVisuallyHidden WACInputContainer__UploadInput"
                     type="file"
-                    aria-label={input_uploadButtonLabel}
+                    aria-label={uploadButtonLabel}
                     onChange={onFileChange}
                     multiple={allowMultipleFileUploads}
                     disabled={showUploadButtonDisabled}
@@ -443,9 +371,9 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
                   </label>
                 </div>
               )}
-              <TextArea
+              <ContentEditableInput
                 autoSize
-                ariaLabel={input_ariaLabel}
+                aria-label={inputAriaLabel}
                 disabled={disableInput}
                 maxLength={INPUT_MAX_CHARS}
                 onChange={onChange}
@@ -466,7 +394,7 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
                       // eslint-disable-next-line react/no-array-index-key
                       key={index}
                       iconDescription={
-                        languagePack.fileSharing_removeButtonTitle
+                        removeFileButtonLabel
                       }
                       name={fileUpload.file.name}
                       status={FileStatusValue.EDIT}
@@ -484,7 +412,7 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
           <div className="WACInputContainer__SendButtonContainer">
             {isStopStreamingButtonVisible && (
               <StopStreamingButton
-                label={input_stopResponse}
+                label={stopStreamingLabel}
                 disabled={isStopStreamingButtonDisabled}
                 tooltipAlignment="top"
                 onClick={() => {
@@ -499,11 +427,11 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
               kind={ButtonKindEnum.GHOST}
               size={ButtonSizeEnum.SMALL}
               type="button"
-              onClick={send}
-              aria-label={input_buttonLabel}
+              onClick={sendMessage}
+              aria-label={sendButtonLabel}
               disabled={showDisabledSend}
               renderIcon={hasValidInput ? SendFilled : Send}
-              iconDescription={input_buttonLabel}
+              iconDescription={sendButtonLabel}
               tooltipAlignment={isRTL ? "start" : "end"}
               tooltipPosition="top"
               hasIconOnly

@@ -19,7 +19,7 @@ import { useServiceManager } from "../../hooks/useServiceManager";
 import { AppState } from "../../../../types/state/AppState";
 
 import { BrandColorKind, WriteableElementName } from "../../utils/constants";
-import { Input, InputFunctions } from "../input/Input";
+import { InputContainer, InputFunctions } from "../../containers/input";
 import WriteableElement from "../WriteableElement";
 import { HomeScreenHeader } from "./HomeScreenHeader";
 import {
@@ -221,7 +221,7 @@ function HomeScreenComponent({
             id={`homeScreenBeforeInputElement${serviceManager.namespace.suffix}`}
           />
           <div className="WACHomeScreen__inputContainer">
-            <Input
+            <InputContainer
               ref={homeScreenMessageInputRef}
               onSendInput={onSendInput}
               disableInput={false}

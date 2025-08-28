@@ -38,7 +38,7 @@ import { createUnmappingMemoizer } from "../utils/memoizerUtils";
 import { consoleError, createDidCatchErrorData } from "../utils/miscUtils";
 import { CatastrophicError } from "./CatastrophicError";
 import { BotHeader } from "./header/BotHeader";
-import { Input, InputFunctions } from "./input/Input";
+import { InputContainer, InputFunctions } from "../containers/input";
 import { EndHumanAgentChatModal } from "./modals/EndHumanAgentChatModal";
 import { RequestScreenShareModal } from "./modals/RequestScreenShareModal";
 import WriteableElement from "./WriteableElement";
@@ -448,7 +448,7 @@ class Chat extends Component<ChatProps, ChatState> {
           slotName={WriteableElementName.BEFORE_INPUT_ELEMENT}
           id={`beforeInputElement${serviceManager.namespace.suffix}`}
         />
-        <Input
+        <InputContainer
           ref={this.inputRef}
           languagePack={languagePack}
           serviceManager={serviceManager}

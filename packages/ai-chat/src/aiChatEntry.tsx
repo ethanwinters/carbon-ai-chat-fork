@@ -120,6 +120,11 @@ export {
 export { DeepPartial } from "../src/types/utilities/DeepPartial";
 
 export {
+  InputProps,
+  InputFunctions,
+} from "./types/external/input";
+
+export {
   AdditionalDataToAgent,
   AgentAvailability,
   HumanAgentsOnlineStatus,

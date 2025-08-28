@@ -16,7 +16,7 @@ import { connect } from "react-redux";
 
 import Chat, { ChatClass } from "../../components/Chat";
 import { HydrationPanel } from "../../components/HydrationPanel";
-import { InputFunctions } from "../../components/input/Input";
+import { InputFunctions } from "../input";
 import { MessageTypeComponent } from "../MessageTypeComponent";
 
 import { OverlayPanel, OverlayPanelName } from "../../components/OverlayPanel";
