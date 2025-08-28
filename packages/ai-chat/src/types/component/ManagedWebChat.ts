@@ -28,11 +28,4 @@ interface ManagedWebChat {
   instance: ChatInstance;
 }
 
-/**
- * Just adding the element we use internally that doesn't get exposed.
- */
-interface RenderUserDefinedStateInternal extends RenderUserDefinedState {
-  element: HTMLElement;
-}
-
-export { ManagedWebChat, RenderUserDefinedStateInternal };
+export { ManagedWebChat };

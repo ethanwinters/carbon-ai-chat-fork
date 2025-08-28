@@ -31,7 +31,6 @@ import { ExternalComponents } from "../../../types/external/input";
 
 export interface UserDefinedElementRegistryItem {
   slotName: string;
-  element: HTMLElement;
 }
 
 /**

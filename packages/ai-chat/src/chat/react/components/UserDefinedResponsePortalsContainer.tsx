@@ -7,12 +7,11 @@
  *  @license
  */
 
-import React, { ReactNode } from "react";
+import React, { ReactNode, useRef } from "react";
 import ReactDOM from "react-dom";
 
 import { ChatInstance } from "../../../types/instance/ChatInstance";
-import { RenderUserDefinedResponse } from "../../../types/component/ChatContainer";
-import { RenderUserDefinedStateInternal } from "../../../types/component/ManagedWebChat";
+import { RenderUserDefinedResponse, RenderUserDefinedState } from "../../../types/component/ChatContainer";
 
 interface UserDefinedResponsePortalsContainer {
   /**
@@ -30,7 +29,7 @@ interface UserDefinedResponsePortalsContainer {
    * The list of events gathered by slot name that were fired that contain all the responses to render.
    */
   userDefinedResponseEventsBySlot: {
-    [key: string]: RenderUserDefinedStateInternal;
+    [key: string]: RenderUserDefinedState;
   };
 }
 
@@ -49,19 +48,30 @@ function UserDefinedResponsePortalsContainer({
   renderUserDefinedResponse,
   userDefinedResponseEventsBySlot,
 }: UserDefinedResponsePortalsContainer) {
+  // Map to store portal elements by slot name
+  const portalElementsRef = useRef<Map<string, HTMLElement>>(new Map());
+
+  // Helper function to get or create a portal element for a slot
+  const getOrCreatePortalElement = (slotName: string): HTMLElement => {
+    let element = portalElementsRef.current.get(slotName);
+    if (!element) {
+      element = document.createElement("div");
+      element.setAttribute("slot", slotName);
+      portalElementsRef.current.set(slotName, element);
+    }
+    return element;
+  };
+
   // All we need to do to enable the React portals is to render each portal somewhere in your application (it
   // doesn't really matter where).
   return renderUserDefinedResponse
     ? Object.entries(userDefinedResponseEventsBySlot).map(
         ([slot, slotState]) => {
-          const { element } = slotState;
-          if (!element) {
-            return null;
-          }
+          const hostElement = getOrCreatePortalElement(slot);
           return (
             <UserDefinedResponseComponentPortal
               key={slot}
-              hostElement={element}
+              hostElement={hostElement}
             >
               {renderUserDefinedResponse(slotState, chatInstance)}
             </UserDefinedResponseComponentPortal>

@@ -501,10 +501,6 @@ export interface BusEventUserDefinedResponse extends BusEvent {
      */
     fullMessage: Message;
 
-    /**
-     * The element to which customers can add the custom code to render for the custom response.
-     */
-    element?: HTMLElement;
 
     /**
      * The slot name for users of the web components cds-aichat-container or cds-aichat-custom-element.
@@ -529,10 +525,6 @@ export interface BusEventChunkUserDefinedResponse extends BusEvent {
      */
     chunk: PartialOrCompleteItemChunk;
 
-    /**
-     * The element to which customers can add the custom code to render for the custom response.
-     */
-    element?: HTMLElement;
 
     /**
      * The slot name for users of the web components cds-aichat-container or cds-aichat-custom-element.

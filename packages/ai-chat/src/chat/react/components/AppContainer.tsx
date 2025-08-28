@@ -35,10 +35,8 @@ import { UserDefinedResponsePortalsContainer } from "./UserDefinedResponsePortal
 import { WriteableElementsPortalsContainer } from "./WriteableElementsPortalsContainer";
 import { ChatContainerProps } from "../../../types/component/ChatContainer";
 import { ChatInstance } from "../../../types/instance/ChatInstance";
-import {
-  ManagedWebChat,
-  RenderUserDefinedStateInternal,
-} from "../../../types/component/ManagedWebChat";
+import { ManagedWebChat } from "../../../types/component/ManagedWebChat";
+import { RenderUserDefinedState } from "../../../types/component/ChatContainer";
 import { PublicConfig } from "../../../types/config/PublicConfig";
 import {
   BusEventChunkUserDefinedResponse,
@@ -99,7 +97,7 @@ function AppContainer({
   // events contain the HTML elements that we will attach our portals to as well as the messages that we wish to
   // render in the message.
   const [userDefinedResponseEventsBySlot, setUserDefinedResponseEventsBySlot] =
-    useState<Record<string, RenderUserDefinedStateInternal>>({});
+    useState<Record<string, RenderUserDefinedState>>({});
 
   // The most recent Carbon AI Chat that was load by this component.
   const managedWebChatRef = useRef<ManagedWebChat>(null);
@@ -223,7 +221,7 @@ interface LoadChatArgs {
 
   setUserDefinedResponseEventsBySlot: Dispatch<
     SetStateAction<{
-      [key: string]: RenderUserDefinedStateInternal;
+      [key: string]: RenderUserDefinedState;
     }>
   >;
 
@@ -264,7 +262,7 @@ function addUserDefinedResponseHandler(
   webChatInstance: ChatInstance,
   setUserDefinedResponseEventsBySlot: Dispatch<
     SetStateAction<{
-      [key: string]: RenderUserDefinedStateInternal;
+      [key: string]: RenderUserDefinedState;
     }>
   >,
 ) {
@@ -279,7 +277,6 @@ function addUserDefinedResponseHandler(
         [event.data.slot]: {
           fullMessage: event.data.fullMessage,
           messageItem: event.data.message,
-          element: event.data.element,
         },
       };
     });
@@ -298,7 +295,6 @@ function addUserDefinedResponseHandler(
           ...userDefinedEventsBySlot,
           [event.data.slot]: {
             messageItem,
-            element: event.data.element,
             // We blow away partial items here so we don't have to track them forever for no reason.
           },
         };
@@ -313,7 +309,6 @@ function addUserDefinedResponseHandler(
               ...(userDefinedEventsBySlot[event.data.slot]?.partialItems || []),
               itemChunk,
             ],
-            element: event.data.element,
           },
         };
       });

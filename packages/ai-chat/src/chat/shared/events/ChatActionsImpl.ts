@@ -748,10 +748,8 @@ class ChatActionsImpl {
       this.serviceManager.userDefinedElementRegistry.get(messageItemID);
     if (!userDefinedItem) {
       userDefinedItem = {
-        element: document.createElement("div"),
         slotName: `slot-user-defined-${uuid()}`,
       };
-      userDefinedItem.element.setAttribute("slot", userDefinedItem.slotName);
       this.serviceManager.userDefinedElementRegistry.set(
         messageItemID,
         userDefinedItem,
@@ -770,11 +768,10 @@ class ChatActionsImpl {
     originalMessage: Message,
   ) {
     if (renderAsUserDefinedMessage(localMessage.item)) {
-      let element: HTMLElement;
       let slotName: string;
       if (!localMessage.item.user_defined?.silent) {
         // If the message is silent, don't create a host element for it since it's not going to be rendered.
-        ({ element, slotName } = this.getOrCreateUserDefinedElement(
+        ({ slotName } = this.getOrCreateUserDefinedElement(
           localMessage.ui_state.id,
         ));
       }
@@ -784,7 +781,6 @@ class ChatActionsImpl {
         data: {
           message: localMessage.item,
           fullMessage: originalMessage,
-          element,
           slot: slotName,
         },
       };
@@ -860,11 +856,10 @@ class ChatActionsImpl {
     if (renderAsUserDefinedMessage(messageItem)) {
       const itemID = streamItemID(messageID, messageItem);
 
-      let element: HTMLElement;
       let slotName: string;
       if (!messageItem.user_defined?.silent) {
         // If the message is silent, don't create a host element for it since it's not going to be rendered.
-        ({ element, slotName } = this.getOrCreateUserDefinedElement(itemID));
+        ({ slotName } = this.getOrCreateUserDefinedElement(itemID));
       }
 
       const userDefinedResponseEvent: BusEventChunkUserDefinedResponse = {
@@ -872,7 +867,6 @@ class ChatActionsImpl {
         data: {
           messageItem,
           chunk,
-          element,
           slot: slotName,
         },
       };

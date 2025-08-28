@@ -15,11 +15,6 @@ import { createPortal } from "react-dom";
 import { AppContainer } from "../chat/react/components/AppContainer";
 import { carbonElement } from "../chat/web-components/decorators/customElement";
 import { ChatContainerProps } from "../types/component/ChatContainer";
-import {
-  BusEventChunkUserDefinedResponse,
-  BusEventType,
-  BusEventUserDefinedResponse,
-} from "../types/events/eventBusTypes";
 import { ChatInstance } from "../types/instance/ChatInstance";
 import { isBrowser } from "../chat/shared/utils/browserUtils";
 
@@ -78,9 +73,6 @@ function ChatContainer({
   const [wrapper, setWrapper] = useState(null);
   const [container, setContainer] = useState<HTMLElement | null>(null); // Actual element we render the React Portal to in the Shadowroot.
 
-  const [userDefinedElements, setUserDefinedElements] = useState<HTMLElement[]>(
-    [],
-  );
   const [writeableElementSlots, setWriteableElementSlots] = useState<
     HTMLElement[]
   >([]);
@@ -149,10 +141,7 @@ function ChatContainer({
    */
   useEffect(() => {
     if (wrapper) {
-      const combinedNodes: HTMLElement[] = [
-        ...userDefinedElements,
-        ...writeableElementSlots,
-      ];
+      const combinedNodes: HTMLElement[] = [...writeableElementSlots];
       const currentNodes: HTMLElement[] = Array.from(
         wrapper.childNodes,
       ) as HTMLElement[];
@@ -172,18 +161,7 @@ function ChatContainer({
         }
       });
     }
-  }, [userDefinedElements, writeableElementSlots, wrapper]);
-
-  const userDefinedHandler = useCallback(
-    (event: BusEventUserDefinedResponse | BusEventChunkUserDefinedResponse) => {
-      const { element } = event.data;
-      setUserDefinedElements((previousUserDefinedElements) => [
-        ...previousUserDefinedElements,
-        element,
-      ]);
-    },
-    [],
-  );
+  }, [writeableElementSlots, wrapper]);
 
   const onBeforeRenderOverride = useCallback(
     (instance: ChatInstance) => {
@@ -198,19 +176,11 @@ function ChatContainer({
           });
           setWriteableElementSlots(slots);
         };
-        instance.on({
-          type: BusEventType.USER_DEFINED_RESPONSE,
-          handler: userDefinedHandler,
-        });
-        instance.on({
-          type: BusEventType.CHUNK_USER_DEFINED_RESPONSE,
-          handler: userDefinedHandler,
-        });
         addWriteableElementSlots();
         onBeforeRender?.(instance);
       }
     },
-    [onBeforeRender, userDefinedHandler],
+    [onBeforeRender],
   );
 
   // If we are in SSR mode, just short circuit here. This prevents all of our window.* and document.* stuff from trying
