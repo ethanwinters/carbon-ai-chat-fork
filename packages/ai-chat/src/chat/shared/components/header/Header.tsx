@@ -16,7 +16,12 @@ import Menu from "@carbon/icons-react/es/Menu.js";
 import Restart from "@carbon/icons-react/es/Restart.js";
 import SidePanelClose from "@carbon/icons-react/es/SidePanelClose.js";
 import SubtractLarge from "@carbon/icons-react/es/SubtractLarge.js";
-import { Button, ButtonTooltipPosition, MenuItem } from "@carbon/react";
+import {
+  Button,
+  ButtonTooltipAlignment,
+  ButtonTooltipPosition,
+  MenuItem,
+} from "@carbon/react";
 import { AI_LABEL_SIZE } from "@carbon/web-components/es-custom/components/ai-label/defs.js";
 import { POPOVER_ALIGNMENT } from "@carbon/web-components/es-custom/components/popover/defs.js";
 import cx from "classnames";
@@ -416,7 +421,8 @@ function Header(props: HeaderProps, ref: Ref<HasRequestFocus>) {
               label={languagePack.buttons_restart}
               onClick={onClickRestart}
               buttonRef={restartButtonRef}
-              tooltipPosition={isRTL ? "right" : "left"}
+              tooltipAlignment={isRTL ? "start" : "end"}
+              tooltipPosition={"bottom"}
             >
               <Restart />
             </HeaderButton>
@@ -432,7 +438,8 @@ function Header(props: HeaderProps, ref: Ref<HasRequestFocus>) {
                 onClickClose();
               }}
               buttonRef={closeButtonRef}
-              tooltipPosition={isRTL ? "right" : "left"}
+              tooltipAlignment={isRTL ? "start" : "end"}
+              tooltipPosition={"bottom"}
               testId={makeTestId(PageObjectId.CLOSE_CHAT, testIdPrefix)}
             >
               {closeIcon}
@@ -444,7 +451,8 @@ function Header(props: HeaderProps, ref: Ref<HasRequestFocus>) {
               label={languagePack.header_ariaCloseRestart}
               onClick={() => setConfirmModelOpen(true)}
               buttonRef={closeAndRestartButtonRef}
-              tooltipPosition={isRTL ? "right" : "left"}
+              tooltipAlignment={isRTL ? "start" : "end"}
+              tooltipPosition={"bottom"}
             >
               <CloseLarge className="WACIcon__Close" />
             </HeaderButton>
@@ -492,6 +500,11 @@ interface HeaderButtonProps extends HasClassName, HasChildren {
    * Indicates if the icon should be reversible based on the document direction.
    */
   isReversible?: boolean;
+  /**
+   * Specify the alignment of the tooltip to the icon-only button.
+   * Can be one of: start, center, or end.
+   */
+  tooltipAlignment?: ButtonTooltipAlignment;
 
   /**
    * Specify the alignment of the tooltip to the icon-only button. Can be one of: start, center, or end.
@@ -515,6 +528,7 @@ function HeaderButton({
   children,
   buttonKind,
   isReversible = true,
+  tooltipAlignment,
   tooltipPosition,
   testId,
 }: HeaderButtonProps) {
@@ -527,6 +541,7 @@ function HeaderButton({
       iconDescription={label}
       size={ButtonSizeEnum.MEDIUM}
       kind={buttonKind || ButtonKindEnum.GHOST}
+      tooltipAlignment={tooltipAlignment}
       tooltipPosition={tooltipPosition}
       data-testid={testId}
     >
