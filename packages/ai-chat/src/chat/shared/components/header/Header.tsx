@@ -7,14 +7,14 @@
  *  @license
  */
 
-import "@carbon/web-components/es-custom/components/slug/index.js";
-import CDSButton from "@carbon/web-components/es-custom/components/button/button";
+import "@carbon/web-components/es/components/slug/index.js";
+import CDSButton from "@carbon/web-components/es/components/button/button.js";
 import Button, {
   BUTTON_KIND,
   BUTTON_SIZE,
   BUTTON_TOOLTIP_POSITION,
 } from "../../../react/carbon/Button";
-import CDSMenu from "@carbon/web-components/es/components/menu/menu";
+import CDSMenu from "@carbon/web-components/es/components/menu/menu.js";
 import MenuItem from "../../../react/carbon/MenuItem";
 import CloseLarge16 from "@carbon/icons/es/close--large/16.js";
 import DownToBottom16 from "@carbon/icons/es/down-to-bottom/16.js";
@@ -23,8 +23,8 @@ import SidePanelClose16 from "@carbon/icons/es/side-panel--close/16.js";
 import SubtractLarge16 from "@carbon/icons/es/subtract--large/16.js";
 import Menu16 from "@carbon/icons/es/menu/16.js";
 import Close16 from "@carbon/icons/es/close/16.js";
-import { AI_LABEL_SIZE } from "@carbon/web-components/es-custom/components/ai-label/defs.js";
-import { POPOVER_ALIGNMENT } from "@carbon/web-components/es-custom/components/popover/defs.js";
+import { AI_LABEL_SIZE } from "@carbon/web-components/es/components/ai-label/defs.js";
+import { POPOVER_ALIGNMENT } from "@carbon/web-components/es/components/popover/defs.js";
 import cx from "classnames";
 import React, {
   forwardRef,

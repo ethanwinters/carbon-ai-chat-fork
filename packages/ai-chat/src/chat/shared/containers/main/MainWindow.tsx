@@ -26,7 +26,7 @@ import VisuallyHidden from "../../components/util/VisuallyHidden";
 import { ModalPortalRootContext } from "../../contexts/ModalPortalRootContext";
 import { HasServiceManager } from "../../hocs/withServiceManager";
 import actions from "../../store/actions";
-import CDSButton from "@carbon/web-components/es-custom/components/button/button";
+import CDSButton from "@carbon/web-components/es/components/button/button.js";
 import {
   selectHumanAgentDisplayState,
   selectInputState,

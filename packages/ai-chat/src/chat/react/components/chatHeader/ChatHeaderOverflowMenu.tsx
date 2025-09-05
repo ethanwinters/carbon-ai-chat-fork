@@ -8,7 +8,7 @@
  */
 
 import { CarbonIconType } from "@carbon/icons-react";
-import CDSMenu from "@carbon/web-components/es/components/menu/menu";
+import CDSMenu from "@carbon/web-components/es/components/menu/menu.js";
 import { CarbonIconProps } from "../../../shared/utils/carbonIcon";
 import {
   useClick,

@@ -8,7 +8,7 @@
  */
 
 import Menu, { MENU_SIZE } from "../../carbon/Menu";
-import CDSMenu from "@carbon/web-components/es/components/menu/menu";
+import CDSMenu from "@carbon/web-components/es/components/menu/menu.js";
 import React, { MutableRefObject } from "react";
 
 import { HasChildren } from "../../../../types/utilities/HasChildren";

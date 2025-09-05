@@ -10,7 +10,7 @@
 import ScreenOff16 from "@carbon/icons/es/screen--off/16.js";
 import { carbonIconToReact } from "../../utils/carbonIcon";
 import Button, { BUTTON_KIND } from "../../../react/carbon/Button";
-import CDSButton from "@carbon/web-components/es-custom/components/button/button.js";
+import CDSButton from "@carbon/web-components/es/components/button/button.js";
 import cx from "classnames";
 import React, {
   forwardRef,

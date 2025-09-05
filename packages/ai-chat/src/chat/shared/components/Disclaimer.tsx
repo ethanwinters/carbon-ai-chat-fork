@@ -14,7 +14,7 @@
  * is enabled. We drop an item in SESSION storage to not ask them again as they go from page to page.
  */
 import Button from "../../react/carbon/Button";
-import CDSButton from "@carbon/web-components/es-custom/components/button/button";
+import CDSButton from "@carbon/web-components/es/components/button/button.js";
 import React, { RefObject, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 

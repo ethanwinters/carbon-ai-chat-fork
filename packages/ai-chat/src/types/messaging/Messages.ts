@@ -16,7 +16,7 @@ import { DeepPartial } from "../utilities/DeepPartial";
 import { MessageErrorState } from "./LocalMessageItem";
 import { HumanAgentsOnlineStatus } from "../config/ServiceDeskConfig";
 import { FileStatusValue } from "../instance/apiTypes";
-import { BUTTON_KIND } from "@carbon/web-components/es-custom/components/button/defs";
+import { BUTTON_KIND } from "@carbon/web-components/es/components/button/defs.js";
 
 /**
  * This is the main interface that represents a request from a user sent to a back-end.

@@ -9,7 +9,7 @@
 
 /* eslint-disable react/no-danger */
 
-import CDSButton from "@carbon/web-components/es-custom/components/button/button.js";
+import CDSButton from "@carbon/web-components/es/components/button/button.js";
 import AiLaunch from "@carbon/icons-react/es/AiLaunch.js";
 import ChatLaunch from "@carbon/icons-react/es/ChatLaunch.js";
 import Button, { BUTTON_KIND, BUTTON_TYPE } from "../../../react/carbon/Button";
