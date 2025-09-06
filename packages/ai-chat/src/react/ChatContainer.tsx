@@ -18,7 +18,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 
-import Chat from "../chat/shared/containers/Chat";
+import App from "../chat/shared/containers/App";
 import { carbonElement } from "../chat/web-components/decorators/customElement";
 import { ChatContainerProps } from "../types/component/ChatContainer";
 import { ChatInstance } from "../types/instance/ChatInstance";
@@ -269,7 +269,7 @@ function ChatContainer({
       <ReactChatContainer ref={wrapperRef} />
       {container &&
         createPortal(
-          <Chat
+          <App
             key="stable-chat-instance" // Prevent remounting on config changes
             config={config}
             strings={strings}

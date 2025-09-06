@@ -15,6 +15,7 @@ import { CarbonTheme } from "../../../src/types/config/PublicConfig";
 import { CornersType } from "../../../src/types/config/CornersType";
 import { createBaseTestProps } from "../../utils/testHelpers";
 import { AppState } from "../../../src/types/state/AppState";
+import { applyConfigChangesDynamically } from "../../../src/chat/shared/utils/dynamicConfigUpdates";
 
 describe("Config Theme", () => {
   const createBaseProps = (): Partial<ChatContainerProps> => ({
@@ -199,6 +200,73 @@ describe("Config Theme", () => {
       expect(state.config.derived.themeWithDefaults.corners).toEqual(
         CornersType.SQUARE,
       );
+    });
+
+    it("should preserve derivedCarbonTheme during dynamic config updates in inherit mode", async () => {
+      const props: Partial<ChatContainerProps> = {
+        ...createBaseProps(),
+        // No injectCarbonTheme - inherit mode
+        aiEnabled: true,
+      };
+
+      let capturedInstance: any = null;
+      const onBeforeRender = jest.fn((instance) => {
+        capturedInstance = instance;
+      });
+
+      render(React.createElement(ChatContainer, { ...props, onBeforeRender }));
+
+      await waitFor(
+        () => {
+          expect(capturedInstance).not.toBeNull();
+        },
+        { timeout: 5000 },
+      );
+
+      const serviceManager = (capturedInstance as any).serviceManager;
+      const store = serviceManager.store;
+
+      // Simulate ThemeWatcherService setting a detected theme
+      store.dispatch({
+        type: "UPDATE_THEME_STATE",
+        themeState: {
+          originalCarbonTheme: null,
+          derivedCarbonTheme: "g10",
+          aiEnabled: true,
+          corners: "round",
+        },
+      });
+
+      let state: AppState = store.getState();
+      expect(state.config.derived.themeWithDefaults.derivedCarbonTheme).toEqual(
+        "g10",
+      );
+
+      // Simulate dynamic config update (e.g., toggling aiEnabled)
+      await applyConfigChangesDynamically(
+        {
+          themingChanged: true,
+          namespaceChanged: false,
+          messagingChanged: false,
+          layoutChanged: false,
+          humanAgentConfigChanged: false,
+          headerChanged: false,
+          disclaimerChanged: false,
+          lightweightUIChanged: false,
+        },
+        { aiEnabled: false }, // New config
+        serviceManager,
+      );
+
+      // Check that derivedCarbonTheme was preserved
+      state = store.getState();
+      expect(
+        state.config.derived.themeWithDefaults.originalCarbonTheme,
+      ).toEqual(null);
+      expect(state.config.derived.themeWithDefaults.derivedCarbonTheme).toEqual(
+        "g10",
+      ); // Should be preserved
+      expect(state.config.derived.themeWithDefaults.aiEnabled).toEqual(false); // Should be updated
     });
   });
 });

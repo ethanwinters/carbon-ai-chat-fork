@@ -1313,7 +1313,13 @@ const reducers: { [key: string]: ReducerType } = {
   ) => {
     return {
       ...state,
-      theme: themeState,
+      config: {
+        ...state.config,
+        derived: {
+          ...state.config.derived,
+          themeWithDefaults: themeState,
+        },
+      },
     };
   },
 };

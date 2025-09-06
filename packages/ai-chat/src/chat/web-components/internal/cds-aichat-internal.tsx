@@ -17,7 +17,7 @@ import { property } from "lit/decorators.js";
 import React from "react";
 import { createRoot, Root } from "react-dom/client";
 
-import Chat from "../../shared/containers/Chat";
+import App from "../../shared/containers/App";
 import { carbonElement } from "../decorators/customElement";
 import { PublicConfig } from "../../../types/config/PublicConfig";
 import { ChatInstance } from "../../../types/instance/ChatInstance";
@@ -81,7 +81,7 @@ class ChatContainerInternal extends LitElement {
         width: 100%;
         height: 100%;
         box-sizing: border-box;
-        ${this.element ? "" : "z-index: var(--cds-chat-BASE-z-index);"}
+        ${this.element ? "" : "z-index: var(--cds-chat-z-index);"}
       }
     `;
     this.appendChild(style);
@@ -111,7 +111,7 @@ class ChatContainerInternal extends LitElement {
 
     this.root = createRoot(container);
     this.root.render(
-      <Chat
+      <App
         config={this.config}
         strings={this.strings}
         serviceDeskFactory={this.serviceDeskFactory}

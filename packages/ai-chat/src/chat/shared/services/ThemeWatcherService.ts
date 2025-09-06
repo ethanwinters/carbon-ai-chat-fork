@@ -142,15 +142,15 @@ class ThemeWatcherService {
 
       // Only act if we're currently in inherit mode or derived from it
       if (
-        this.originalTheme != null &&
-        currentState.config.derived.themeWithDefaults.originalCarbonTheme !==
-          null
+        this.originalTheme &&
+        currentState.config.derived.themeWithDefaults.originalCarbonTheme
       ) {
         return;
       }
 
       // First check for exact matches with Carbon theme background values
       let targetTheme: CarbonTheme;
+
       if (bgColor === white.background) {
         targetTheme = CarbonTheme.WHITE;
       } else if (bgColor === g10.background) {

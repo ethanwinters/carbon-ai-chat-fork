@@ -250,12 +250,12 @@ export interface LayoutConfig {
   /**
    * CSS variable overrides for the chat UI.
    *
-   * Keys correspond to values from `CSSVariable` (e.g. `CSSVariable.BASE_HEIGHT`),
+   * Keys correspond to values from `LayoutCSSVariables` (e.g. `LayoutCSSVariables.HEIGHT`),
    * which map to the underlying `--cds-chat-…` custom properties.
    * Values are raw CSS values such as `"420px"`, `"9999"`, etc.
    *
    * Example:
-   * { BASE_HEIGHT: "560px", BASE_WIDTH: "420px" }
+   * { HEIGHT: "560px", WIDTH: "420px" }
    */
   cssVariables?: Partial<Record<LayoutCSSVariables, string>>;
 }

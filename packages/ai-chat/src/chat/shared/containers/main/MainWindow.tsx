@@ -41,11 +41,6 @@ import {
   ChatWidthBreakpoint,
   ViewType,
 } from "../../../../types/state/AppState";
-import {
-  addClassNameToState,
-  HasExtraClassNames,
-  removeClassNameFromState,
-} from "../../../../types/utilities/HasAddRemoveClassName";
 import { AutoScrollOptions } from "../../../../types/utilities/HasDoAutoScroll";
 import { HasRequestFocus } from "../../../../types/utilities/HasRequestFocus";
 import { IS_IOS, IS_MOBILE, isBrowser } from "../../utils/browserUtils";
@@ -62,10 +57,7 @@ import {
   MainWindowCloseReason,
   MessageSendSource,
 } from "../../../../types/events/eventBusTypes";
-import {
-  InstanceInputElement,
-  SendOptions,
-} from "../../../../types/instance/ChatInstance";
+import { SendOptions } from "../../../../types/instance/ChatInstance";
 import { ButtonItem, SingleOption } from "../../../../types/messaging/Messages";
 import CatastrophicError from "../../components/CatastrophicError";
 import Disclaimer from "../../components/Disclaimer";
@@ -98,7 +90,7 @@ interface MainWindowOwnProps extends HasServiceManager {
   mainWindowRef: MutableRefObject<MainWindowFunctions>;
 }
 
-interface MainWindowState extends HasExtraClassNames {
+interface MainWindowState {
   open: boolean;
   closing: boolean;
 
@@ -157,7 +149,6 @@ class MainWindow
     isHydrationAnimationComplete: this.props.isHydrated,
     shouldAutoFocus:
       this.props.config.public.shouldTakeFocusIfOpensAutomatically,
-    extraClassNames: [],
   };
 
   /**
@@ -652,34 +643,6 @@ class MainWindow
   }
 
   /**
-   * Returns the element that represents the input field (text area) on the main message area.
-   */
-  public getMessageInput(): InstanceInputElement {
-    return this.botChatRef.current?.getMessageInput();
-  }
-
-  /**
-   * Returns the element that represents the input field (text area) on the home screen.
-   */
-  public getHomeScreenInput(): InstanceInputElement {
-    return this.homeScreenInputRef.current?.getMessageInput();
-  }
-
-  /**
-   * Adds the given class name to the main window element.
-   */
-  public addClassName(name: string) {
-    this.setState(addClassNameToState(name));
-  }
-
-  /**
-   * Removes the given class name from the main window element.
-   */
-  public removeClassName(name: string) {
-    this.setState(removeClassNameFromState(name));
-  }
-
-  /**
    * Called when the user starts or stops typing.
    */
   onUserTyping = (isTyping: boolean) => {
@@ -1152,7 +1115,7 @@ class MainWindow
       layout,
       languagePack,
     } = this.props;
-    const { closing, open, extraClassNames } = this.state;
+    const { closing, open } = this.state;
     const locale = config.public.locale || "en";
     const localeClassName = `WACLocale-${locale}`;
 
@@ -1173,10 +1136,7 @@ class MainWindow
     return (
       <FocusTrap active={trapActive}>
         <Layer className="WACWidget__Layer" level={shouldUseLayer ? 1 : 0}>
-          <div
-            className={cx("WACMainWindow", ...extraClassNames)}
-            ref={this.mainWindowRef}
-          >
+          <div className="WACMainWindow" ref={this.mainWindowRef}>
             {showGlass && <div className="WACWidget__FocusTrapGlass" />}
             <div
               id={`WACWidget${serviceManager.namespace.suffix}`}

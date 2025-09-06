@@ -42,6 +42,20 @@ Key replacements:
 - `updateLanguagePack()` -> pass `strings` prop (DeepPartial<LanguagePack>)
 - `updateHomeScreenConfig()` -> set `homescreen` config
 - `updateLocale()` -> set `locale` config
+- `updateCSSVariables()` -> set `layout.cssVariables` config
+- `updateMainHeaderTitle()` -> set `header.title` config
+- `updateLauncherConfig()` -> set `launcher` config
+- `updateCustomMenuOptions()` -> set `header.menuOptions` config
+- `updateHeaderConfig()` -> set `header` config
+
+**Removed functionality:**
+
+- `updateMainHeaderAvatar()` -> no replacement (functionality removed)
+- `instance.elements` -> no replacement (functionality removed)
+
+**Note:** The `elements` API provided direct DOM access to input fields and the main window. This functionality is being replaced with the ability to pass custom header and footer components instead of controlling everything via DOM access. Custom component support will be added in a future version.
+
+**Note:** The `addClassName`/`removeClassName` methods were used to manually control MainWindow visibility in custom elements. MainWindow now handles its own visibility consistently in both floating and custom element modes, so external className manipulation is no longer needed.
 
 ## Migration Examples
 
@@ -94,6 +108,28 @@ const config = {
   aiEnabled: true,
   injectCarbonTheme: CarbonTheme.G90,
   layout: { corners: CornersType.SQUARE },
+};
+```
+
+### CSS Variables
+
+```ts
+// Before
+instance.updateCSSVariables({
+  BASE_HEIGHT: "600px",
+  BASE_WIDTH: "400px",
+  BASE_Z_INDEX: "9999",
+});
+
+// After
+const config = {
+  layout: {
+    cssVariables: {
+      HEIGHT: "600px",
+      WIDTH: "400px",
+      Z_INDEX: "9999",
+    },
+  },
 };
 ```
 

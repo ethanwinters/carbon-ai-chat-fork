@@ -40,7 +40,6 @@ import { Input, InputFunctions } from "./input/Input";
 import { EndHumanAgentChatModal } from "./modals/EndHumanAgentChatModal";
 import { RequestScreenShareModal } from "./modals/RequestScreenShareModal";
 import WriteableElement from "./WriteableElement";
-import { InstanceInputElement } from "../../../types/instance/ChatInstance";
 import { LanguagePack } from "../../../types/instance/apiTypes";
 import { OverlayPanelName } from "./OverlayPanel";
 import { CarbonTheme } from "../../../types/config/PublicConfig";
@@ -199,10 +198,6 @@ class ChatInterface extends Component<ChatInterfaceProps, ChatInterfaceState> {
       }
     }
   };
-
-  public getMessageInput(): InstanceInputElement {
-    return this.inputRef.current?.getMessageInput();
-  }
 
   private shouldDisableInput() {
     return (

@@ -17,11 +17,11 @@
  */
 export enum LayoutCSSVariables {
   /** Minimum height of the chat container (float layout). */
-  BASE_HEIGHT = "BASE-height",
+  HEIGHT = "height",
   /** Maximum height of the chat container (float layout). */
-  BASE_MAX_HEIGHT = "BASE-max-height",
+  MAX_HEIGHT = "max-height",
   /** Width of the chat panel (float layout). */
-  BASE_WIDTH = "BASE-width",
+  WIDTH = "width",
   /** z-index of the chat overlay or container (float layout). */
-  BASE_Z_INDEX = "BASE-z-index",
+  Z_INDEX = "z-index",
 }

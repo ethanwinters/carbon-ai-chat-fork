@@ -46,17 +46,13 @@ export {
 export { ChatHeaderConfig } from "./types/config/ChatHeaderConfig";
 
 export {
-  ChangeFunction,
   ChatInstance,
   ChatInstanceNotifications,
   ChatInstanceServiceDeskActions,
   EventBusHandler,
   EventHandlers,
   FileUploadCapabilities,
-  HasAddRemoveClassName,
   IncreaseOrDecrease,
-  InstanceElements,
-  InstanceInputElement,
   PublicWebChatServiceDeskState,
   PublicWebChatState,
   SendOptions,

@@ -225,20 +225,19 @@ class ChatCustomElement extends LitElement {
 
   private defaultViewChangeHandler = (
     event: BusEventViewChange,
-    instance: ChatInstance,
+    _instance: ChatInstance,
   ) => {
     if (event.newViewState.mainWindow) {
-      // restore original
+      // restore original host element size
       this.updateHostSize(
         this._originalStyles.width,
         this._originalStyles.height,
       );
-      instance.elements.getMainWindow().removeClassName("HideWebChat");
     } else {
+      // minimize host element size
       const { width, height } = getComputedStyle(this);
       this._originalStyles = { width, height };
       this.updateHostSize("0px", "0px");
-      instance.elements.getMainWindow().addClassName("HideWebChat");
     }
   };
 

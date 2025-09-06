@@ -93,19 +93,19 @@ function ChatCustomElement({
        * A default handler for the "view:change" event. This will be used to show or hide the Carbon AI Chat main window
        * using a simple classname.
        */
-      function defaultViewChangeHandler(event: any, instance: ChatInstance) {
+      function defaultViewChangeHandler(event: any, _instance: ChatInstance) {
         if (event.newViewState.mainWindow) {
+          // restore original host element size
           customElement.style.width = originalStyles.current.width;
           customElement.style.height = originalStyles.current.height;
-          instance.elements.getMainWindow().removeClassName("HideWebChat");
         } else {
+          // minimize host element size
           originalStyles.current = {
             width: customElement.style.width,
             height: customElement.style.height,
           };
           customElement.style.width = "0px";
           customElement.style.height = "0px";
-          instance.elements.getMainWindow().addClassName("HideWebChat");
         }
       }
 

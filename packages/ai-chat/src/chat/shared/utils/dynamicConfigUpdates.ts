@@ -32,7 +32,14 @@ export async function applyConfigChangesDynamically(
   const { store } = serviceManager;
 
   // Create new AppConfig with recomputed derived values
+  const currentState = store.getState();
   const newAppConfig = createAppConfig(newConfig);
+
+  // Preserve derivedCarbonTheme when in inherit mode (originalCarbonTheme is null)
+  if (newAppConfig.derived.themeWithDefaults.originalCarbonTheme === null) {
+    newAppConfig.derived.themeWithDefaults.derivedCarbonTheme =
+      currentState.config.derived.themeWithDefaults.derivedCarbonTheme;
+  }
 
   // Update Redux store with complete config (public + derived)
   store.dispatch(actions.changeState({ config: newAppConfig }));

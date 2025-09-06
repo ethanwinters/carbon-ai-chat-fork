@@ -233,12 +233,6 @@ interface ChatActions {
   writeableElements: Partial<WriteableElements>;
 
   /**
-   * The elements of Carbon AI Chat that need to be exposed for customers to manipulate. Unlike writeable elements, these
-   * elements have existing content
-   */
-  elements: InstanceElements;
-
-  /**
    * Sets the input field to be invisible. Helpful for when
    * you want to force input into a button, etc.
    */
@@ -417,80 +411,6 @@ export enum WriteableElementName {
 }
 
 /**
- * The interface represents the elements that Carbon AI Chat provides access to.
- *
- * @experimental
- *
- * @category Instance
- */
-export interface InstanceElements {
-  /**
-   * Returns the element that represents the main window.
-   *
-   * @experimental
-   */
-  getMainWindow: () => HasAddRemoveClassName;
-
-  /**
-   * Returns the element that represents the input field (text area) on the main message area.
-   *
-   * This will likely change to a contenteditable div before we move away from experimental.
-   *
-   * @experimental
-   */
-  getMessageInput: () => InstanceInputElement;
-
-  /**
-   * Returns the element that represents the input field (text area) on the home screen.
-   *
-   * This will likely change to a contenteditable div before we move away from experimental.
-   *
-   * @experimental
-   */
-  getHomeScreenInput: () => InstanceInputElement;
-}
-
-/**
- * Represents one of the input elements that Carbon AI Chat provides access to custom code.
- *
- * This will be removed and you will be allowed to pass in your own component in the future.
- *
- * @experimental
- * @category Instance
- */
-export interface InstanceInputElement {
-  /**
-   * The raw HTML element for the element.
-   *
-   * This will likely change to a contenteditable div before we move away from experimental.
-   *
-   * @experimental
-   */
-  getHTMLElement: () => HTMLTextAreaElement;
-
-  /**
-   * Sets the current text value inside the input.
-   */
-  setValue: (value: string) => void;
-
-  /**
-   * Enables or disables the handling of the enter key by the input field.
-   */
-  setEnableEnterKey: (isEnabled: boolean) => void;
-
-  /**
-   * Adds a listener that will fire whenever the value in the input field is changed. This fires immediately like an
-   * "input" event and not only when focus is lost like a "change".
-   */
-  addChangeListener: (listener: ChangeFunction) => void;
-
-  /**
-   * Removes a change listener that was previously added.
-   */
-  removeChangeListener: (listener: ChangeFunction) => void;
-}
-
-/**
  * Add notification messages to the chat. This component has some a11y bugs before we can mark it complete.
  *
  * @category Instance
@@ -518,23 +438,6 @@ export interface ChatInstanceNotifications {
  * @category Instance
  */
 export type ChangeFunction = (text: string) => void;
-
-/**
- * Represents an item that can add or remove class names.
- *
- * @category Instance
- */
-export interface HasAddRemoveClassName {
-  /**
-   * Adds the given class name to the element.
-   */
-  addClassName(name: string): void;
-
-  /**
-   * Removes the given class name from the element.
-   */
-  removeClassName(name: string): void;
-}
 
 /**
  * Upload options. Currently only applies to conversations with a human agent.

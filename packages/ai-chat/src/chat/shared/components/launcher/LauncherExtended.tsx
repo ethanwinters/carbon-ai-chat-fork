@@ -400,7 +400,7 @@ function calculateAndSetMaxExtendedLauncherWidth(
   // setWrapperExtendedWidth(launcherExtendedWidth - 6);
   // Set the extended width property to animate to.
   extendedContainerEl.style.setProperty(
-    "--cds-chat--LAUNCHER-EXTENDED-width",
+    "--cds-chat--launcher-extended-width",
     `${launcherExtendedWidth}px`,
   );
 }

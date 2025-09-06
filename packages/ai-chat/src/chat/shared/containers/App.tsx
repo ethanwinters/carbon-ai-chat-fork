@@ -79,7 +79,7 @@ import { setIntl } from "../utils/intlUtils";
  * bootstrapping services and the chat instance, rendering the application shell,
  * and handling dynamic updates when the public config changes.
  */
-interface ChatProps {
+interface AppProps {
   config: PublicConfig;
   strings?: DeepPartial<LanguagePack>;
   onBeforeRender?: (instance: ChatInstance) => Promise<void> | void;
@@ -103,7 +103,7 @@ interface ChatProps {
  * chat is active/connecting, the current human agent chat is ended quietly and
  * the service is recreated.
  */
-export function Chat({
+export function App({
   config,
   strings,
   onBeforeRender,
@@ -116,7 +116,7 @@ export function Chat({
   chatWrapper,
   serviceDeskFactory,
   serviceDesk,
-}: ChatProps) {
+}: AppProps) {
   const [instance, setInstance] = useState<ChatInstance>(null);
   const [serviceManager, setServiceManager] = useState<ServiceManager>(null);
   const [beforeRenderComplete, setBeforeRenderComplete] =
@@ -519,4 +519,4 @@ function AppRegion({ hostElement, serviceManager }: AppRegionProps) {
   );
 }
 
-export default Chat;
+export default App;

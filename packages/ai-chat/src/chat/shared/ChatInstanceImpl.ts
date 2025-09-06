@@ -24,9 +24,7 @@ import { HistoryItem } from "../../types/messaging/History";
 import { WriteableElementName } from "./utils/constants";
 import { consoleDebug, consoleError, debugLog } from "./utils/miscUtils";
 import {
-  ChangeFunction,
   ChatInstance,
-  InstanceInputElement,
   SendOptions,
   TypeAndHandler,
   WriteableElements,
@@ -60,55 +58,6 @@ interface CreateChatInstance {
 function createChatInstance({
   serviceManager,
 }: CreateChatInstance): ChatInstance {
-  function getMainWindow() {
-    return {
-      addClassName: (name: string) =>
-        serviceManager.mainWindow?.addClassName(name),
-      removeClassName: (name: string) =>
-        serviceManager.mainWindow?.removeClassName(name),
-    };
-  }
-
-  function getMessageInput(): InstanceInputElement {
-    return {
-      getHTMLElement: () =>
-        serviceManager.mainWindow?.getMessageInput()?.getHTMLElement(),
-      setValue: (value: string) =>
-        serviceManager.mainWindow?.getMessageInput()?.setValue(value),
-      setEnableEnterKey: (value: boolean) =>
-        serviceManager.mainWindow?.getMessageInput()?.setEnableEnterKey(value),
-      addChangeListener: (listener: ChangeFunction) =>
-        serviceManager.mainWindow
-          ?.getMessageInput()
-          ?.addChangeListener(listener),
-      removeChangeListener: (listener: ChangeFunction) =>
-        serviceManager.mainWindow
-          ?.getMessageInput()
-          ?.removeChangeListener(listener),
-    };
-  }
-
-  function getHomeScreenInput(): InstanceInputElement {
-    return {
-      getHTMLElement: () =>
-        serviceManager.mainWindow?.getHomeScreenInput()?.getHTMLElement(),
-      setValue: (value: string) =>
-        serviceManager.mainWindow?.getHomeScreenInput()?.setValue(value),
-      setEnableEnterKey: (value: boolean) =>
-        serviceManager.mainWindow
-          ?.getHomeScreenInput()
-          ?.setEnableEnterKey(value),
-      addChangeListener: (listener: ChangeFunction) =>
-        serviceManager.mainWindow
-          ?.getHomeScreenInput()
-          ?.addChangeListener(listener),
-      removeChangeListener: (listener: ChangeFunction) =>
-        serviceManager.mainWindow
-          ?.getHomeScreenInput()
-          ?.removeChangeListener(listener),
-    };
-  }
-
   const instance: ChatInstance = {
     on: (handlers: TypeAndHandler | TypeAndHandler[]) => {
       serviceManager.eventBus.on(handlers);
@@ -285,12 +234,6 @@ function createChatInstance({
           `[updateIsChatLoadingCounter] Invalid direction: ${direction}. Valid values are "increase" and "decrease".`,
         );
       }
-    },
-
-    elements: {
-      getMainWindow,
-      getMessageInput,
-      getHomeScreenInput,
     },
 
     messaging: {
