@@ -35,11 +35,14 @@ export function stopStreamingButtonTemplate({
       ?disabled=${disabled}
       @click="${onClick}"
     >
-      <span
-        class="${disabled ? `${CSS_CLASS_PREFIX}-stop-icon` : ""}"
-        slot="icon"
-        >${iconLoader(StopFilled16)}</span
-      >
+      <span slot="icon">
+        <span
+          class="${CSS_CLASS_PREFIX}-stop-icon ${disabled
+            ? "${CSS_CLASS_PREFIX}-stop-icon--disabled"
+            : ""}"
+          >${iconLoader(StopFilled16)}</span
+        >
+      </span>
       <span slot="tooltip-content">${label}</span>
     </cds-icon-button>
   `;
