@@ -13,6 +13,7 @@ import Button, {
   BUTTON_KIND,
   BUTTON_SIZE,
   BUTTON_TOOLTIP_POSITION,
+  BUTTON_TOOLTIP_ALIGNMENT,
 } from "../../../react/carbon/Button";
 import CDSMenu from "@carbon/web-components/es/components/menu/menu.js";
 import MenuItem from "../../../react/carbon/MenuItem";
@@ -462,11 +463,12 @@ function Header(props: HeaderProps, ref: Ref<HasRequestFocus>) {
               label={languagePack.buttons_restart}
               onClick={onClickRestart}
               buttonRef={restartButtonRef}
-              tooltipPosition={
+              tooltipAlignment={
                 isRTL
-                  ? BUTTON_TOOLTIP_POSITION.RIGHT
-                  : BUTTON_TOOLTIP_POSITION.LEFT
+                  ? BUTTON_TOOLTIP_ALIGNMENT.START
+                  : BUTTON_TOOLTIP_ALIGNMENT.END
               }
+              tooltipPosition={BUTTON_TOOLTIP_POSITION.BOTTOM}
             >
               <Restart aria-label={languagePack.buttons_restart} slot="icon" />
             </HeaderButton>
@@ -482,11 +484,12 @@ function Header(props: HeaderProps, ref: Ref<HasRequestFocus>) {
                 onClickClose();
               }}
               buttonRef={closeButtonRef}
-              tooltipPosition={
+              tooltipAlignment={
                 isRTL
-                  ? BUTTON_TOOLTIP_POSITION.RIGHT
-                  : BUTTON_TOOLTIP_POSITION.LEFT
+                  ? BUTTON_TOOLTIP_ALIGNMENT.START
+                  : BUTTON_TOOLTIP_ALIGNMENT.END
               }
+              tooltipPosition={BUTTON_TOOLTIP_POSITION.BOTTOM}
               testId={makeTestId(PageObjectId.CLOSE_CHAT, testIdPrefix)}
             >
               {closeIcon}
@@ -498,11 +501,12 @@ function Header(props: HeaderProps, ref: Ref<HasRequestFocus>) {
               label={languagePack.header_ariaCloseRestart}
               onClick={() => setConfirmModelOpen(true)}
               buttonRef={closeAndRestartButtonRef}
-              tooltipPosition={
+              tooltipAlignment={
                 isRTL
-                  ? BUTTON_TOOLTIP_POSITION.RIGHT
-                  : BUTTON_TOOLTIP_POSITION.LEFT
+                  ? BUTTON_TOOLTIP_ALIGNMENT.START
+                  : BUTTON_TOOLTIP_ALIGNMENT.END
               }
+              tooltipPosition={BUTTON_TOOLTIP_POSITION.BOTTOM}
             >
               <CloseLarge
                 aria-label={languagePack.header_ariaCloseRestart}
@@ -554,6 +558,11 @@ interface HeaderButtonProps extends HasClassName, HasChildren {
    * Indicates if the icon should be reversible based on the document direction.
    */
   isReversible?: boolean;
+  /**
+   * Specify the alignment of the tooltip to the icon-only button.
+   * Can be one of: start, center, or end.
+   */
+  tooltipAlignment?: BUTTON_TOOLTIP_ALIGNMENT;
 
   /**
    * Specify the alignment of the tooltip to the icon-only button. Can be one of: start, center, or end.
@@ -576,6 +585,7 @@ function HeaderButton({
   children,
   buttonKind,
   isReversible = true,
+  tooltipAlignment,
   tooltipPosition,
   testId,
 }: HeaderButtonProps) {
@@ -587,6 +597,7 @@ function HeaderButton({
       onClick={onClick}
       size={BUTTON_SIZE.MEDIUM}
       kind={buttonKindVal as BUTTON_KIND}
+      tooltipAlignment={tooltipAlignment}
       tooltipPosition={tooltipPosition}
       data-testid={testId}
     >
