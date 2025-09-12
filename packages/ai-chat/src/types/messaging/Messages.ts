@@ -15,7 +15,7 @@
 import { DeepPartial } from "../utilities/DeepPartial";
 import { MessageErrorState } from "./LocalMessageItem";
 import { HumanAgentsOnlineStatus } from "../config/ServiceDeskConfig";
-import { FileStatusValue } from "../instance/apiTypes";
+import { FileStatusValue } from "../config/ServiceDeskConfig";
 import { BUTTON_KIND } from "@carbon/web-components/es/components/button/defs.js";
 
 /**
@@ -541,7 +541,7 @@ export interface GenericItemMessageFeedbackOptions {
   /**
    * Indicates if a request for feedback should be displayed.
    */
-  is_on?: boolean;
+  isOn?: boolean;
 
   /**
    * A unique identifier for this feedback. This is required for the feedback to be recorded in message history.
