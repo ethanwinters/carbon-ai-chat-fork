@@ -24,11 +24,7 @@ import {
 import { AdditionalChatParameters } from "../../types/component/AdditionalChatParameters";
 import { AppConfig } from "../../types/state/AppConfig";
 import { WriteableElementName } from "./utils/constants";
-import {
-  assertType,
-  setEnableDebugLog,
-  setEnableDebugStackTracesLog,
-} from "./utils/miscUtils";
+import { assertType, setEnableDebugLog } from "./utils/miscUtils";
 import { setIntl } from "./utils/intlUtils";
 import { isBrowser } from "./utils/browserUtils";
 
@@ -120,10 +116,6 @@ async function createServiceManager(
 
   if (publicConfig.debug) {
     setEnableDebugLog(true);
-  }
-
-  if (publicConfig.debugStackTraces) {
-    setEnableDebugStackTracesLog(true);
   }
 
   return serviceManager;
