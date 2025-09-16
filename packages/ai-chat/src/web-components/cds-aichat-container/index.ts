@@ -81,7 +81,7 @@ class ChatContainer extends LitElement {
     converter: {
       fromAttribute: (value: string | null) => {
         if (value === null) {
-          return undefined; // attribute absent → leave undefined to use defaults
+          return undefined; // attribute absent -> leave undefined to use defaults
         }
         const v = String(value).trim().toLowerCase();
         const falsey = v === "false" || v === "0" || v === "off" || v === "no";

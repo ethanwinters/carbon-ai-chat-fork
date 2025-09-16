@@ -15,6 +15,7 @@ import {
   MessageResponse,
   WidthOptions,
 } from "../../../../types/messaging/Messages";
+import { MessageTypeComponentProps } from "../../../../types/messaging/MessageTypeComponentProps";
 import { GridItemCell } from "./GridItemCell";
 
 // This regex is for validating a number (1) or pixel value (10px) which are the only valid width values for a column.
@@ -32,7 +33,7 @@ function GridItemComponent({
 }: {
   localMessageItem: LocalMessageItem<GridItem>;
   originalMessage: MessageResponse;
-  renderMessageComponent: (props: any) => React.ReactNode;
+  renderMessageComponent: (props: MessageTypeComponentProps) => React.ReactNode;
 }) {
   const { columns, max_width } = localMessageItem.item;
 

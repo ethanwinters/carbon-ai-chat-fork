@@ -23,6 +23,7 @@ import { HasRequestFocus } from "../../../types/utilities/HasRequestFocus";
 import { LocalMessageItem } from "../../../types/messaging/LocalMessageItem";
 import { BasePanelComponent } from "../BasePanelComponent";
 import { BodyWithFooterComponent } from "../BodyWithFooterComponent";
+import { MessageTypeComponentProps } from "../../../types/messaging/MessageTypeComponentProps";
 import { OverlayPanel, OverlayPanelName } from "../OverlayPanel";
 import { MessageResponse } from "../../../types/messaging/Messages";
 
@@ -118,7 +119,7 @@ interface BodyAndFooterPanelComponentProps
   /**
    * Function to render message components
    */
-  renderMessageComponent: (props: any) => React.ReactNode;
+  renderMessageComponent: (props: MessageTypeComponentProps) => React.ReactNode;
 }
 
 /**

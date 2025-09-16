@@ -156,18 +156,6 @@ function doCreateStore(
     sessionStorageState.viewState = VIEW_STATE_ALL_CLOSED;
     // Replace the launcher state with the session storage state.
     initialState.persistedToBrowserStorage = sessionStorageState;
-    // Initialize volatile state from defaults but mirror persisted flags
-    initialState.humanAgentState = {
-      ...DEFAULT_HUMAN_AGENT_STATE,
-      isConnected: sessionStorageState.humanAgentState?.isConnected ?? false,
-      isSuspended: sessionStorageState.humanAgentState?.isSuspended ?? false,
-      responseUserProfile:
-        sessionStorageState.humanAgentState?.responseUserProfile ?? null,
-      responseUserProfiles:
-        sessionStorageState.humanAgentState?.responseUserProfiles ?? {},
-      serviceDeskState:
-        sessionStorageState.humanAgentState?.serviceDeskState ?? undefined,
-    };
   }
 
   return createAppStore(reducerFunction, initialState);

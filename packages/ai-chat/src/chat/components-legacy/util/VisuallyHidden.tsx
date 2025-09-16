@@ -15,7 +15,10 @@
 import React from "react";
 
 const VisuallyHidden = React.forwardRef(
-  (props: any, ref: React.Ref<HTMLDivElement>) => {
+  (
+    props: React.HTMLAttributes<HTMLDivElement>,
+    ref: React.Ref<HTMLDivElement>,
+  ) => {
     return (
       <div
         ref={ref}

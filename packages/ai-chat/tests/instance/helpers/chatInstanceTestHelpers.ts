@@ -63,7 +63,7 @@ export interface ChatInstanceWithStore {
 export const renderChatAndGetInstanceWithStore = async (
   config: PublicConfig,
 ): Promise<ChatInstanceWithStore> => {
-  let capturedInstance: any = null;
+  let capturedInstance: ChatInstance | null = null;
   const onBeforeRender = jest.fn((instance) => {
     capturedInstance = instance;
   });

@@ -141,7 +141,7 @@ function ChatCustomElement({
        * A default handler for the "view:change" event. This will be used to show or hide the Carbon AI Chat main window
        * by adding/removing a CSS class that sets the element size to 0x0 when hidden.
        */
-      function defaultViewChangeHandler(event: any) {
+      function defaultViewChangeHandler(event: BusEventViewChange) {
         if (customElement) {
           if (event.newViewState.mainWindow) {
             // Show: remove the hidden class, let the provided className handle sizing

@@ -74,7 +74,11 @@ The custom element should be sized using external CSS (see example below). The d
 
 **Note:** The custom element must remain visible if you want to use the built-in Carbon AI Chat launcher, which is also contained in your custom element.
 
-If you don't want these behaviors, then provide your own `onViewChange` prop to `cds-aichat-custom-element` and provide your own logic for controlling the visibility of the Carbon AI Chat. If you want custom animations when the Carbon AI Chat opens and closes, use this mechanism to do that. Refer to the following example.
+If you don't want these behaviors, then provide your own `onViewChange` prop to `cds-aichat-custom-element` and provide your own logic for controlling the visibility of the Carbon AI Chat. If you want custom animations when the Carbon AI Chat opens and closes, use this mechanism to do that.
+
+**For advanced view change handling:** You can also listen for {@link BusEventType.VIEW_PRE_CHANGE} and {@link BusEventType.VIEW_CHANGE} events directly. These events fire in sequence (PRE_CHANGE -> view state update -> CHANGE), and both are awaited, making async handlers ideal for animations. See the event type documentation for complete details on timing and usage.
+
+Just be aware that the `onViewChange` default behavior will still run if you don't replace that function with your own.
 
 See {@link CdsAiChatCustomElementAttributes} for an explanation of the various accepted properties and attributes.
 
@@ -150,6 +154,7 @@ import "@carbon/ai-chat/dist/es/web-components/cds-aichat-container/index.js";
 
 import {
   BusEventType,
+  type BusEventUserDefinedResponse,
   type ChatInstance,
   type GenericItem,
   type MessageResponse,
@@ -197,7 +202,7 @@ export class Demo extends LitElement {
    * Here we make sure we store all these slots along with their relevant data in order to be able to dynamically
    * render the content to be slotted when this.renderUserDefinedSlots() is called in the render function.
    */
-  userDefinedHandler = (event: any) => {
+  userDefinedHandler = (event: BusEventUserDefinedResponse) => {
     const { data } = event;
     this.userDefinedSlotsMap[data.slot] = {
       message: data.message,

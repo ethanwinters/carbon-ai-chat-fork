@@ -22,6 +22,7 @@ import {
   MessageResponse,
   VerticalCellAlignment,
 } from "../../../../types/messaging/Messages";
+import { MessageTypeComponentProps } from "../../../../types/messaging/MessageTypeComponentProps";
 
 function GridItemCell({
   cell,
@@ -45,7 +46,7 @@ function GridItemCell({
   isPixelValue: boolean | string;
   localMessageItem: LocalMessageItem<GridItem>;
   originalMessage: MessageResponse;
-  renderMessageComponent: (props: any) => React.ReactNode;
+  renderMessageComponent: (props: MessageTypeComponentProps) => React.ReactNode;
   rowIndex: number;
 }) {
   const serviceManager = useServiceManager();

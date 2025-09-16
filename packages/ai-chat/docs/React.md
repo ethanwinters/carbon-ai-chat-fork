@@ -63,7 +63,9 @@ This component requires a `className` prop that defines the size and positioning
 
 **Note:** In the use case where you are using a custom element but also using the Carbon AI Chat's native launcher, the custom element must remain visible as it also contains the launcher. With that in mind, you should really provide your own launcher.
 
-If you don't want these behaviors, provide your own `onViewChange` prop to {@link ChatCustomElementProps.onViewChange} and provide your logic for controlling the visibility of the Carbon AI Chat. If you want custom animations when the Carbon AI Chat opens and closes, this is the mechanism to do that. Refer to the following example.
+If you don't want these behaviors, provide your own `onViewChange` prop to {@link ChatCustomElementProps.onViewChange} and provide your logic for controlling the visibility of the Carbon AI Chat. If you want custom animations when the Carbon AI Chat opens and closes, this is the mechanism to do that.
+
+**For advanced view change handling:** You can also listen for {@link BusEventType.VIEW_PRE_CHANGE} and {@link BusEventType.VIEW_CHANGE} events directly. These events fire in sequence (PRE_CHANGE -> view state update -> CHANGE), and both are awaited, making async handlers ideal for animations. See the event type documentation for complete details on timing and usage. Just be aware that the `onViewChange` default behavior will still run if you don't replace that function with your own.
 
 See {@link ChatCustomElementProps} for an explanation of the various accepted props.
 
@@ -145,7 +147,7 @@ function App() {
 Best (needs props/state):
 
 ```javascript
-function App({ messageService }: any) {
+function App({ messageService }: { messageService: (message: MessageRequest) => void }) {
   const customSendMessage = useCallback(
     (message: MessageRequest) => messageService(message),
     [messageService]
@@ -157,7 +159,7 @@ function App({ messageService }: any) {
 No‑churn variant using a ref:
 
 ```javascript
-function App({ messageService }: any) {
+function App({ messageService }: { messageService: (message: MessageRequest) => void }) {
   const messageServiceRef = useRef(messageService);
   messageServiceRef.current = messageService;
 

@@ -81,7 +81,7 @@ async function runRollup() {
           const inNodeModules = ids.some(id => id.includes("node_modules"));
 
           if (!inNodeModules) {
-            // Circular dep in your own source → error
+            // Circular dep in your own source -> error
             throw new Error(`Circular dependency detected in app code: ${warning.message}`);
           }
         }

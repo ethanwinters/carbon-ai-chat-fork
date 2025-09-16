@@ -20,6 +20,7 @@ import { THROW_ERROR } from "../utils/constants";
 import { BodyMessageComponents } from "./responseTypes/util/BodyMessageComponents";
 import { FooterButtonComponents } from "./responseTypes/util/FooterButtonComponents";
 import { MessageResponse } from "../../types/messaging/Messages";
+import { MessageTypeComponentProps } from "../../types/messaging/MessageTypeComponentProps";
 
 interface BodyWithFooterComponentProps extends HasRequestFocus {
   localMessageItem: LocalMessageItem;
@@ -33,7 +34,7 @@ interface BodyWithFooterComponentProps extends HasRequestFocus {
   /**
    * Function to render message components
    */
-  renderMessageComponent: (props: any) => React.ReactNode;
+  renderMessageComponent: (props: MessageTypeComponentProps) => React.ReactNode;
 }
 
 /**
