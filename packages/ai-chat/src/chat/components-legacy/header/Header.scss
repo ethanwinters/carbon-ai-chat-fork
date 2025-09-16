@@ -16,10 +16,10 @@
   position: relative;
   display: flex;
   justify-content: center;
-  block-size: 41px;
+  block-size: 40px;
   @include type.type-style("body-01");
 
-  border-block-end: 1px solid theme.$border-subtle-00;
+  border-block-end: 1px solid theme.$border-subtle-01;
   inline-size: 100%;
 }
 
