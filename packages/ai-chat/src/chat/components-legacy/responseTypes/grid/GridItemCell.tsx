@@ -109,6 +109,7 @@ function GridItemCell({
               isNestedMessageItem: true,
               hideFeedback: true,
               allowNewFeedback: false,
+              showChainOfThought: false,
             })}
           </React.Fragment>
         );
