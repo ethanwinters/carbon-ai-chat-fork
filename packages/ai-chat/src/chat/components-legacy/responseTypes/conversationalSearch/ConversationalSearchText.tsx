@@ -73,7 +73,7 @@ function ConversationalSearchText(props: ConversationalSearchTextProps) {
   const languagePack = useLanguagePack();
   const serviceManager = useServiceManager();
   const { streamingState } = searchItem.ui_state;
-  const toggleID = `WACConversationalSearchText-${useCounter()}${
+  const toggleID = `cds-aichat--conversational-search-text-${useCounter()}${
     serviceManager.namespace.suffix
   }`;
   const [html, setHtml] = useState("");
@@ -91,15 +91,15 @@ function ConversationalSearchText(props: ConversationalSearchTextProps) {
   }, [text, highlightCitation, showCitationsToggle, streamingState]);
 
   return (
-    <div className="WACConversationalSearchText">
+    <div className="cds-aichat--conversational-search-text">
       <RichText
         text={html}
         overrideSanitize={false}
         streaming={streamingState && !streamingState.isDone}
       />
       {showCitationsToggle && (
-        <div className="WACConversationalSearchText__CitationsToggleContainer">
-          <div className="WACConversationalSearchText__CitationsToggle">
+        <div className="cds-aichat--conversational-search-text__CitationsToggleContainer">
+          <div className="cds-aichat--conversational-search-text__CitationsToggle">
             <OperationalTag
               id={toggleID}
               onClick={onToggleCitations}

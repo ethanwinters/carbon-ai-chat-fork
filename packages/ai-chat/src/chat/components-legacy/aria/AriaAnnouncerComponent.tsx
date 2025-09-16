@@ -41,7 +41,7 @@ const ANNOUNCE_INPUT_TYPES = new Set([
   "week",
 ]);
 
-const ANNOUNCE_NODE_EXCLUDE_ATTRIBUTE = "data-wac-exclude-node-read";
+const ANNOUNCE_NODE_EXCLUDE_ATTRIBUTE = "data-cds-aichat-exclude-node-read";
 
 /**
  * This component holds several aria live-regions that are used to make screen reader announcements by the application.

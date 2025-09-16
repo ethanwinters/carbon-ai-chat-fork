@@ -1015,7 +1015,7 @@ class MessagesComponent extends PureComponent<MessagesProps, MessagesState> {
               <button
                 type="button"
                 aria-label={languagePack.messages_scrollMoreButton}
-                className="WAC__messages--scrollDownIndicatorIcon"
+                className="cds-aichat-scrollDownIndicatorIcon"
                 onClick={() =>
                   this.doAutoScroll({ scrollToBottom: 0, preferAnimate: true })
                 }

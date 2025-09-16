@@ -448,7 +448,7 @@ class MessageComponent extends PureComponent<
       }
 
       label = (
-        <span data-wac-exclude-node-read>
+        <span data-cds-aichat-exclude-node-read>
           <FormattedMessage
             id="message_labelBot"
             values={{ timestamp, actorName }}
