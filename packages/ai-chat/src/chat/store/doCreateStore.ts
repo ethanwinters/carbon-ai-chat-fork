@@ -155,7 +155,27 @@ function doCreateStore(
     // view state to the default before replacing the launcher state with the session storage state.
     sessionStorageState.viewState = VIEW_STATE_ALL_CLOSED;
     // Replace the launcher state with the session storage state.
-    initialState.persistedToBrowserStorage = sessionStorageState;
+    initialState.persistedToBrowserStorage = {
+      ...initialState.persistedToBrowserStorage,
+      ...sessionStorageState,
+      disclaimersAccepted: {
+        ...initialState.persistedToBrowserStorage.disclaimersAccepted,
+        ...sessionStorageState?.disclaimersAccepted,
+      },
+      homeScreenState: {
+        ...initialState.persistedToBrowserStorage.homeScreenState,
+        ...sessionStorageState?.homeScreenState,
+      },
+      humanAgentState: {
+        ...initialState.persistedToBrowserStorage.humanAgentState,
+        ...sessionStorageState?.humanAgentState,
+        responseUserProfiles: {
+          ...initialState.persistedToBrowserStorage.humanAgentState
+            .responseUserProfiles,
+          ...sessionStorageState?.humanAgentState?.responseUserProfiles,
+        },
+      },
+    };
   }
 
   return createAppStore(reducerFunction, initialState);

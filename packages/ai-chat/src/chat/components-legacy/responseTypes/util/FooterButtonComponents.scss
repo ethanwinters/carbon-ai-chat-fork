@@ -16,12 +16,19 @@
   cds-button.cds-aichat--button-item {
     flex: auto;
   }
+
+  cds-button[href][kind="ghost"] svg {
+    fill: theme.$link-primary;
+  }
 }
 
 .cds-aichat--footer-button-components--column
-  .cds-aichat--button-item:last-child::part(button),
+  .cds-aichat--button-item:last-child::part(button) {
+  border-end-start-radius: chat-theme.$card-border-radius;
+}
+
 .cds-aichat--footer-button-components
-  .cds-aichat--button-item:first-child::part(button) {
+  .cds-aichat--button-item:only-child::part(button) {
   border-end-start-radius: chat-theme.$card-border-radius;
 }
 

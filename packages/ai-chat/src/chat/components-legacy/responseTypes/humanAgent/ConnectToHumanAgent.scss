@@ -14,6 +14,12 @@
   max-inline-size: chat-theme.$card-max-width;
 }
 
+.cds-aichat--connect-to-human-agent__title {
+  @include type.type-style("heading-02");
+
+  padding-block-end: 0.25rem;
+}
+
 .cds-aichat--connect-to-human-agent__text {
   padding-block-end: layout.$spacing-06;
 }
