@@ -170,11 +170,14 @@
         "^[a-z][a-z0-9\\-]+$",
         {
           "message": "Keyframe names should be kebab-case",
-          "severity": "warning"
+          "severity": "error"
         }
       ],
       "declaration-property-unit-allowed-list": [
         {
+          "/^animation/": [
+            "ms"
+          ],
           "font-size": [
             "em",
             "rem",
@@ -185,15 +188,6 @@
             "em",
             "rem"
           ]
-        },
-        {
-          "severity": "warning"
-        }
-      ],
-      "selector-type-no-unknown": [
-        true,
-        {
-          "severity": "warning"
         }
       ],
       "no-descending-specificity": [
@@ -202,11 +196,11 @@
           "severity": "warning"
         }
       ],
-      "selector-pseudo-class-no-unknown": [
+      "selector-type-no-unknown": [
         true,
         {
-          "ignorePseudoClasses": [
-            "global"
+          "ignoreTypes": [
+            "/^cds-/"
           ]
         }
       ]

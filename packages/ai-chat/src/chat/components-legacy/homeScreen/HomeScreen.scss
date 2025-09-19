@@ -53,7 +53,7 @@
 @media screen and (prefers-reduced-motion: no-preference) {
   .cds-aichat--home-screen--first-render .cds-aichat--home-screen__content {
     animation: motion.$duration-slow-01 motion.motion(entrance, expressive)
-      cds-aichat-fade-in 0.07s both;
+      cds-aichat-fade-in 70ms both;
   }
 }
 
@@ -118,7 +118,7 @@
   .cds-aichat--home-screen.cds-aichat--home-screen--hydration-complete
     .cds-aichat--home-screen__avatar-holder {
     animation: motion.$duration-slow-01 motion.motion(entrance, expressive)
-      cds-aichat-fade-in 0.07s both;
+      cds-aichat-fade-in 70ms both;
   }
 }
 
@@ -144,7 +144,7 @@
   .cds-aichat--home-screen.cds-aichat--home-screen--hydration-complete
     .cds-aichat--home-screen__greeting {
     animation: motion.$duration-slow-01 motion.motion(entrance, expressive)
-      cds-aichat-fade-in-up 0.07s both;
+      cds-aichat-fade-in-up 70ms both;
   }
 }
 
@@ -213,7 +213,7 @@ cds-chat-button.cds-aichat--home-screen__starter:nth-child(5) {
     display: block;
     animation: motion.$duration-slow-01 motion.motion(entrance, expressive)
       cds-aichat-fade-in-up
-      calc(var(--cds-aichat-homescreen-starter-index) * 0.12s) both;
+      calc(var(--cds-aichat-homescreen-starter-index) * 120ms) both;
     margin-block-end: layout.$spacing-04;
     max-inline-size: 100%;
     word-break: break-word;
@@ -237,7 +237,7 @@ cds-chat-button.cds-aichat--home-screen__starter:nth-child(5) {
     .cds-aichat--home-screen__starters--animate-group
     cds-chat-button.cds-aichat--home-screen__starter {
     animation: motion.$duration-slow-01 motion.motion(entrance, expressive)
-      cds-aichat-fade-in-up 0.12s both;
+      cds-aichat-fade-in-up 120ms both;
   }
 }
 
@@ -287,7 +287,7 @@ cds-chat-button.cds-aichat--home-screen__starter:nth-child(5) {
   .cds-aichat--home-screen.cds-aichat--home-screen--hydration-complete
     .cds-aichat--home-screen__custom-content--animation {
     animation: motion.$duration-slow-01 motion.motion(entrance, expressive)
-      cds-aichat-fade-in-up 0.33s both;
+      cds-aichat-fade-in-up 330ms both;
   }
 }
 
@@ -350,7 +350,7 @@ cds-chat-button.cds-aichat--home-screen__starter:nth-child(5) {
   .cds-aichat--home-screen.cds-aichat--home-screen--hydration-complete
     .cds-aichat--home-screen__back-button {
     animation: motion.$duration-slow-01 motion.motion(entrance, expressive)
-      cds-aichat-fade-in-up-back-button 0.35s both;
+      cds-aichat-fade-in-up-back-button 350ms both;
   }
 }
 
@@ -378,6 +378,6 @@ cds-chat-button.cds-aichat--home-screen__starter:nth-child(5) {
   .cds-aichat--home-screen.cds-aichat--home-screen--first-render
     .cds-aichat--input-container {
     animation: motion.$duration-slow-01 motion.motion(entrance, expressive)
-      cds-aichat-fade-in-up 0.37s both;
+      cds-aichat-fade-in-up 370ms both;
   }
 }

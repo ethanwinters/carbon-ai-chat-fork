@@ -7,6 +7,7 @@
 
 @use "@carbon/layout";
 @use "@carbon/styles/scss/theme";
+@use "@carbon/styles/scss/type";
 @use "../styles/chat-theme";
 
 .cds-aichat--overlay--catastrophic .cds-aichat--overlay-panel {
@@ -42,17 +43,13 @@
 }
 
 .cds-aichat--catastrophic-error__error-heading {
-  font-size: 28px;
-  font-weight: 400;
-  line-height: 36px;
+  @include type.type-style("heading-04");
 }
 
 .cds-aichat--catastrophic-error__error-body {
   color: theme.$text-secondary;
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0.16px;
-  line-height: 20px;
+  @include type.type-style("body-01");
+
   margin-block-start: layout.$spacing-05;
 }
 

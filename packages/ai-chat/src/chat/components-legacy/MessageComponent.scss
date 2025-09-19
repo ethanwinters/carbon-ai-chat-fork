@@ -269,7 +269,7 @@ $message-bar-width: 3px;
 }
 
 .cds-aichat--sent-container .cds-aichat--message-status-file-success svg {
-  animation: motion.$duration-moderate-01 motion.motion(exit, expressive) 2s
+  animation: motion.$duration-moderate-01 motion.motion(exit, expressive) 2000ms
     cds-chat-fade-out forwards;
   fill: theme.$interactive;
 }
