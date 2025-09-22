@@ -199,7 +199,7 @@ class MessagesComponent extends PureComponent<MessagesProps, MessagesState> {
       // If the last message has changed, then do an auto scroll.
       const lastItemChanged = newLastItem !== oldLastItem;
       if (lastItemChanged || typingChanged) {
-        this.doAutoScroll();
+        this.doAutoScroll({ preferAnimate: true });
       }
     }
   }
