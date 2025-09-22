@@ -12,8 +12,6 @@ import cloneDeep from "lodash-es/cloneDeep.js";
 import inputItemToLocalItem from "../schema/inputItemToLocalItem";
 import { createLocalMessageForInlineError } from "../schema/outputItemToLocalItem";
 import actions from "../store/actions";
-import { MessageErrorState } from "../../types/messaging/LocalMessageItem";
-
 import { deepFreeze } from "../utils/lang/objectUtils";
 import { MessageLoadingManager } from "../utils/messageServiceUtils";
 import {
@@ -37,11 +35,13 @@ import {
 } from "../../types/messaging/Messages";
 import { SendOptions } from "../../types/instance/ChatInstance";
 import {
+  BusEventSend,
   BusEventType,
   MessageSendSource,
 } from "../../types/events/eventBusTypes";
 import { OnErrorType, PublicConfig } from "../../types/config/PublicConfig";
 import { LanguagePack } from "../../types/config/PublicConfig";
+import { MessageErrorState } from "../../types/messaging/LocalMessageItem";
 
 // Time in ms between retry attempts.
 const MS_BETWEEN_RETRIES = [1000, 3000, 5000];
@@ -436,10 +436,18 @@ class MessageService {
       const controller = new AbortController();
       current.sendMessageController = controller;
       debugLog("Called customSendMessage", message);
-
+      const busEventSend: BusEventSend = {
+        type: BusEventType.SEND,
+        data: message,
+        source: current.source,
+      };
       await customSendMessage(
         message,
-        { signal: controller.signal, silent: current.requestOptions.silent },
+        {
+          signal: controller.signal,
+          silent: current.requestOptions.silent,
+          busEventSend: busEventSend,
+        },
         this.serviceManager.instance,
       );
       await this.processSuccess(current, null);
