@@ -292,12 +292,12 @@ export interface LayoutConfig {
   /**
    * CSS variable overrides for the chat UI.
    *
-   * Keys correspond to values from `LayoutCustomProperties` (e.g. `LayoutCustomProperties.HEIGHT`),
+   * Keys correspond to values from `LayoutCustomProperties` (e.g. `LayoutCustomProperties.height`),
    * which map to the underlying `--cds-aichat-…` custom properties.
    * Values are raw CSS values such as `"420px"`, `"9999"`, etc.
    *
    * Example:
-   * { HEIGHT: "560px", WIDTH: "420px" }
+   * { height: "560px", width: "420px" }
    */
   customProperties?: Partial<Record<LayoutCustomProperties, string>>;
 }

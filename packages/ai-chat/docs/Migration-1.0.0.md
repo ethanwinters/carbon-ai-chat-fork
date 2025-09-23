@@ -134,9 +134,9 @@ instance.updateCSSVariables({
 const config = {
   layout: {
     customProperties: {
-      HEIGHT: "600px",
-      WIDTH: "400px",
-      Z_INDEX: "9999",
+      height: "600px",
+      width: "400px",
+      z_index: "9999",
     },
   },
 };
