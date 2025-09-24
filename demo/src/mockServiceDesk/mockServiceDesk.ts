@@ -352,13 +352,6 @@ class MockServiceDesk implements ServiceDesk {
         steps = MESSAGE_TO_AGENT_TEXT(MARKDOWN);
       } else if (textLower.includes("multiple")) {
         steps = MESSAGE_TO_AGENT_MULTIPLE();
-      } else if (textLower.includes("intl")) {
-        const message = this.factoryParameters.instance
-          .getState()
-          .intl.formatMessage({ id: "input_placeholder" });
-        steps = MESSAGE_TO_AGENT_TEXT(
-          `Intl string (input_placeholder): *${message}*`,
-        );
       } else if (textLower.includes("leave")) {
         steps = MESSAGE_TO_AGENT_LEAVE_CHAT();
       } else if (textLower.includes("text")) {
@@ -619,7 +612,6 @@ const HELP_TEXT = `You can send me the messages below to get a specific response
 **text**: I will say something.
 **someone else**: I will transfer you to someone not as nice as I am.
 **multiple**: I will output a response with multiple items in it.
-**intl**: I will output the current value for a translatable string.
 **message throw**: This will throw an error while sending this message.
 **hang**: The service desk will never respond to this message.
 **leave**: I will leave the chat without ending it.
