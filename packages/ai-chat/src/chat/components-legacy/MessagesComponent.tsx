@@ -55,6 +55,7 @@ import { LanguagePack } from "../../types/config/PublicConfig";
 import { CarbonTheme } from "../../types/config/PublicConfig";
 import { carbonIconToReact } from "../utils/carbonIcon";
 import { InlineLoadingComponent } from "../ai-chat-components/react/components/inlineLoading/InlineLoadingComponent";
+import { MountChildrenOnDelay } from "./util/MountChildrenOnDelay";
 
 const DownToBottom = carbonIconToReact(DownToBottom16);
 
@@ -1014,17 +1015,22 @@ class MessagesComponent extends PureComponent<MessagesProps, MessagesState> {
             />
             {this.renderScrollHandle(false)}
             {scrollDown && (
-              <button
-                type="button"
-                aria-hidden
-                aria-label={languagePack.messages_scrollMoreButton}
-                className="cds-aichat-scrollDownIndicatorIcon"
-                onClick={() =>
-                  this.doAutoScroll({ scrollToBottom: 0, preferAnimate: true })
-                }
-              >
-                <DownToBottom />
-              </button>
+              <MountChildrenOnDelay delay={200}>
+                <button
+                  type="button"
+                  aria-hidden
+                  aria-label={languagePack.messages_scrollMoreButton}
+                  className="cds-aichat-scrollDownIndicatorIcon"
+                  onClick={() =>
+                    this.doAutoScroll({
+                      scrollToBottom: 0,
+                      preferAnimate: true,
+                    })
+                  }
+                >
+                  <DownToBottom />
+                </button>
+              </MountChildrenOnDelay>
             )}
           </div>
         </div>
