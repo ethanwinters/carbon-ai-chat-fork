@@ -384,12 +384,6 @@ class ChatCustomElement extends LitElement {
  */
 interface CdsAiChatCustomElementAttributes extends PublicConfig {
   /**
-   * Full configuration object that can be passed directly as a property.
-   * Individual attributes still override matching keys, if provided.
-   */
-  config?: PublicConfig;
-
-  /**
    * This function is called before the render function of Carbon AI Chat is called. This function can return a Promise
    * which will cause Carbon AI Chat to wait for it before rendering.
    */

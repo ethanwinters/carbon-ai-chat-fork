@@ -218,7 +218,7 @@ class TextArea extends PureComponent<TextAreaProps> {
       testId,
       onSelect,
     } = this.props;
-    console.log({ value });
+
     // The extra ' ' in the sizer div below makes sure there's at least a space in the area to ensure that we get a
     // min-height of one line of text.
     return (
