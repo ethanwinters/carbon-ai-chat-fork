@@ -40,11 +40,22 @@ test("programmatic configuration mode functionality", async ({ page }) => {
   // 3. Call window.setChatConfig with header title
   await page.evaluate(() => {
     if (window.setChatConfig) {
-      window.setChatConfig({
-        header: { title: "Test Title 1" },
-      });
+      window.setChatConfig(
+        {
+          header: { title: "Test Title 1" },
+        },
+        {
+          layout: "fullscreen",
+          framework: "react",
+          writeableElements: "false",
+          direction: "default",
+        },
+      );
     }
   });
+
+  // Wait for configuration to take effect
+  await page.waitForTimeout(1000);
 
   // 4. Assertions for programmatic mode activation - sidebar should still be visible but with different content
   await expect(
@@ -60,7 +71,15 @@ test("programmatic configuration mode functionality", async ({ page }) => {
   ).toBeVisible();
 
   // Check that header title is applied using panel-scoped approach
+  // Check if we need to click launcher to open chat
+  const launcherExists =
+    (await page.getByTestId(PageObjectId.LAUNCHER).count()) > 0;
+  if (launcherExists) {
+    await page.getByTestId(PageObjectId.LAUNCHER).click();
+  }
+
   const mainPanel = page.getByTestId(PageObjectId.MAIN_PANEL);
+  await expect(mainPanel).toBeVisible({ timeout: 15000 });
   await expect(mainPanel.getByTestId(PageObjectId.HEADER_TITLE)).toContainText(
     "Test Title 1",
   );

@@ -106,7 +106,7 @@ function getSettings() {
 
   const defaultSettings: Settings = {
     framework: "react",
-    layout: "fullscreen",
+    layout: "float",
     writeableElements: "false",
     direction: "default",
     ...settings,
