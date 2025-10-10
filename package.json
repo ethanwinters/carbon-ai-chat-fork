@@ -26,11 +26,12 @@
     "packages/ai-chat-components"
   ],
   "scripts": {
-    "aiChat:build": "npm run build --workspace=@carbon/ai-chat --workspace=@carbon/ai-chat-examples-demo",
+    "aiChat:build": "npm run build --workspace=@carbon/ai-chat-components --workspace=@carbon/ai-chat --workspace=@carbon/ai-chat-examples-demo",
     "aiChat:build:typedoc": "npm run build:typedoc --workspace=@carbon/ai-chat",
     "aiChat:build:profile": "npm run build:profile --workspace=@carbon/ai-chat",
-    "aiChat:start": "npm run build:chat --workspace=@carbon/ai-chat && concurrently \"npm run aiChat:start:ai-chat\" \"npm run aiChat:start:demo\"",
-    "aiChat:start:all": "npm run build:chat --workspace=@carbon/ai-chat && lerna run start --stream --parallel",
+    "aiChat:start": "npm run build --workspace=@carbon/ai-chat-components && npm run build:chat --workspace=@carbon/ai-chat && concurrently \"npm run aiChat:start:ai-chat-components\" \"npm run aiChat:start:ai-chat\" \"npm run aiChat:start:demo\"",
+    "aiChat:start:all": "npm run build --workspace=@carbon/ai-chat-components && npm run build:chat --workspace=@carbon/ai-chat && lerna run start --stream --parallel",
+    "aiChat:start:ai-chat-components": "npm run start --workspace=@carbon/ai-chat-components",
     "aiChat:start:ai-chat": "npm run start --workspace=@carbon/ai-chat",
     "aiChat:start:demo": "npm run start --workspace=@carbon/ai-chat-examples-demo",
     "aiChat:start:storybook": "npm run storybook --workspace=@carbon/ai-chat-components",

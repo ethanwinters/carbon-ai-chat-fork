@@ -118,4 +118,9 @@
   cds-ordered-list:not([nested]) cds-list-item {
     margin-inline-start: layout.$spacing-06;
   }
+
+  // Hide code snippet component until it's defined to prevent FOUC
+  cds-aichat-code-snippet:not(:defined) {
+    display: none;
+  }
 }

@@ -16,7 +16,7 @@ import "./cds-aichat-internal";
 import { html, LitElement } from "lit";
 import { property, state } from "lit/decorators.js";
 
-import { carbonElement } from "../../chat/ai-chat-components/web-components/decorators/customElement";
+import { carbonElement } from "../../chat/ai-chat-components/web-components/decorators/index";
 import {
   PublicConfig,
   OnErrorData,

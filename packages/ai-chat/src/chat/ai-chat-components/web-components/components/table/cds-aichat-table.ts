@@ -12,7 +12,7 @@ import { css, html, LitElement, PropertyValues, unsafeCSS } from "lit";
 import { property, state } from "lit/decorators.js";
 import debounce from "lodash-es/debounce.js";
 
-import { carbonElement } from "../../decorators/customElement";
+import { carbonElement } from "../../decorators/index";
 import styles from "./src/table.scss";
 import { tableTemplate } from "./src/table.template";
 import { tablePaginationTemplate } from "./src/tablePagination.template";

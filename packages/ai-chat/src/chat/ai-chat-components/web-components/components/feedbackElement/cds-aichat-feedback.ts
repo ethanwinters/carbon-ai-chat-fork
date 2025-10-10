@@ -10,7 +10,7 @@
 import "../tagListElement/cds-aichat-tag-list";
 import "../roundedButton/cds-aichat-rounded-button";
 
-import { carbonElement } from "../../decorators/customElement";
+import { carbonElement } from "../../decorators/index";
 import { FeedbackElement } from "./src/FeedbackElement";
 import { feedbackElementTemplate } from "./src/feedbackElement.template";
 

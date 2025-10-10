@@ -54,6 +54,9 @@ class MarkdownElement extends LitElement {
   @property({ type: Boolean })
   dark = false;
 
+  @property({ type: Boolean })
+  highlight = true;
+
   private fullText = "";
 
   protected updated(changedProperties: PropertyValues) {
@@ -68,7 +71,8 @@ class MarkdownElement extends LitElement {
     if (
       changedProperties.has("dark") ||
       changedProperties.has("localization") ||
-      changedProperties.has("streaming")
+      changedProperties.has("streaming") ||
+      changedProperties.has("highlight")
     ) {
       this.scheduleRender();
     }
@@ -125,6 +129,7 @@ class MarkdownElement extends LitElement {
         streaming: this.streaming,
         localization: this.localization,
         dark: this.dark,
+        highlight: this.highlight,
       });
 
       if (this.debug) {
@@ -146,6 +151,7 @@ class MarkdownElement extends LitElement {
       streaming: this.streaming,
       localization: this.localization,
       dark: this.dark,
+      highlight: this.highlight,
     });
   }, 50);
 }

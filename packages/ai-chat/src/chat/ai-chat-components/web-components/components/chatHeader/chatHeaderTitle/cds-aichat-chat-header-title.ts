@@ -10,7 +10,7 @@
 import { css, LitElement, unsafeCSS } from "lit";
 import { property } from "lit/decorators.js";
 
-import { carbonElement } from "../../../decorators/customElement";
+import { carbonElement } from "../../../decorators/index";
 import { prefix } from "../../../settings";
 import styles from "./src/chatHeaderTitle.scss";
 import { chatHeaderTitleTemplate } from "./src/chatHeaderTitle.template";

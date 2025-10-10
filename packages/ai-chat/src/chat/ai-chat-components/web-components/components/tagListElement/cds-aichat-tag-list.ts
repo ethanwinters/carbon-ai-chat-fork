@@ -7,7 +7,7 @@
  *  @license
  */
 
-import { carbonElement } from "../../decorators/customElement";
+import { carbonElement } from "../../decorators/index";
 import { prefix } from "../../settings";
 import TagListElement from "./src/TagListElement";
 import { tagListElementTemplate } from "./src/tagListElement.template";

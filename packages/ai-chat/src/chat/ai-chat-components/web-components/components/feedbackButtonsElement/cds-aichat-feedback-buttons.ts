@@ -7,7 +7,7 @@
  *  @license
  */
 
-import { carbonElement } from "../../decorators/customElement";
+import { carbonElement } from "../../decorators/index";
 import { FeedbackButtonsElement } from "./src/FeedbackButtonsElement";
 import { feedbackButtonsElementTemplate } from "./src/feedbackButtonsElement.template";
 

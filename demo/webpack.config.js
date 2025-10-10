@@ -41,8 +41,14 @@ export default async (_env, args) => {
     entry: "./src/main.ts",
     output: {
       path: path.resolve(__dirname, "dist"),
-      filename: "bundle.js",
+      filename: "[name].js",
       clean: true,
+    },
+    optimization: {
+      splitChunks: {
+        chunks: "all",
+      },
+      minimize: mode === "production",
     },
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx", ".css"],

@@ -7,7 +7,7 @@
  *  @license
  */
 
-import { carbonElement } from "../../decorators/customElement";
+import { carbonElement } from "../../decorators/index";
 import { ChainOfThoughtElement } from "./src/ChainOfThoughtElement";
 import { chainOfThoughtElementTemplate } from "./src/chainOfThoughtElement.template";
 

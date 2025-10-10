@@ -62,6 +62,9 @@ export default async () => {
       filename: "bundle.js",
       clean: true,
     },
+    optimization: {
+      minimize: environment === "production",
+    },
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx", ".css"],
     },

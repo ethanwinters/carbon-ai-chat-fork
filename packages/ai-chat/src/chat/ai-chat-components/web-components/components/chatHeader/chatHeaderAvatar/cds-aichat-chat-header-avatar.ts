@@ -7,7 +7,7 @@
  *  @license
  */
 
-import { carbonElement } from "../../../decorators/customElement";
+import { carbonElement } from "../../../decorators/index";
 import { chatHeaderAvatarTemplate } from "./src/chatHeaderAvatar.template";
 import { ChatHeaderAvatarElement } from "./src/chatHeaderAvatarElement";
 

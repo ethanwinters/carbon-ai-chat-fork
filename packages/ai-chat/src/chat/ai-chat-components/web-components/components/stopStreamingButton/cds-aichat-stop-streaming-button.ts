@@ -7,7 +7,7 @@
  *  @license
  */
 
-import { carbonElement } from "../../decorators/customElement";
+import { carbonElement } from "../../decorators/index";
 import { stopStreamingButtonTemplate } from "./src/stopStreamingButton.template";
 import { StopStreamingButtonElement } from "./src/StopStreamingButtonElement";
 

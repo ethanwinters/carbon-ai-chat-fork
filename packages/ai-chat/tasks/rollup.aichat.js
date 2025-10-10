@@ -72,6 +72,12 @@ async function runRollup() {
   const config = [
     // Main build
     {
+      watch: {
+        // Watch the ai-chat-components package specifically, exclude other node_modules
+        include: 'src/**',
+        exclude: ['node_modules/**', '!node_modules/@carbon/ai-chat-components/**'],
+        clearScreen: false,
+      },
       // Allow entry chunks to depend on side-effect imports from
       // other entry chunks (e.g., custom-element importing container)
       preserveEntrySignatures: 'exports-only',

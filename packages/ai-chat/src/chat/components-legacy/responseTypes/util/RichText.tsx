@@ -40,6 +40,11 @@ interface RichTextProps {
    * If we are actively streaming to this RichText component.
    */
   streaming?: boolean;
+
+  /**
+   * Whether to enable syntax highlighting in code blocks.
+   */
+  highlight?: boolean;
 }
 
 /**
@@ -55,6 +60,7 @@ function RichText(props: RichTextProps) {
     shouldRemoveHTMLBeforeMarkdownConversion,
     overrideSanitize,
     streaming,
+    highlight = true,
   } = props;
 
   let doSanitize = useShouldSanitizeHTML();
@@ -118,12 +124,22 @@ function RichText(props: RichTextProps) {
         getPaginationSupplementalText: getTablePaginationSupplementalText,
         getPaginationStatusText: getTablePaginationStatusText,
       },
+      codeSnippet: {
+        feedback: languagePack.codeSnippet_feedback,
+        showLessText: languagePack.codeSnippet_showLessText,
+        showMoreText: languagePack.codeSnippet_showMoreText,
+        tooltipContent: languagePack.codeSnippet_tooltipContent,
+      },
     };
   }, [
     languagePack.table_filterPlaceholder,
     languagePack.table_previousPage,
     languagePack.table_nextPage,
     languagePack.table_itemsPerPage,
+    languagePack.codeSnippet_feedback,
+    languagePack.codeSnippet_showLessText,
+    languagePack.codeSnippet_showMoreText,
+    languagePack.codeSnippet_tooltipContent,
     locale,
     intl,
   ]);
@@ -140,6 +156,7 @@ function RichText(props: RichTextProps) {
       streaming={streaming}
       localization={localization}
       dark={isDarkTheme}
+      highlight={highlight}
       shouldRemoveHTMLBeforeMarkdownConversion={
         shouldRemoveHTMLBeforeMarkdownConversion
       }
@@ -155,16 +172,23 @@ const RichTextExport = React.memo(RichText, (prevProps, nextProps) => {
     nextProps.shouldRemoveHTMLBeforeMarkdownConversion;
   const sanitizeEqual =
     prevProps.overrideSanitize === nextProps.overrideSanitize;
+  const highlightEqual = prevProps.highlight === nextProps.highlight;
 
   // If text content is identical, we don't need to re-render regardless of streaming state
-  if (textEqual && htmlConversionEqual && sanitizeEqual) {
+  if (textEqual && htmlConversionEqual && sanitizeEqual && highlightEqual) {
     return true; // Skip re-render
   }
 
   // If text content changed, check if streaming state is relevant
   const streamingEqual = prevProps.streaming === nextProps.streaming;
 
-  return textEqual && htmlConversionEqual && sanitizeEqual && streamingEqual;
+  return (
+    textEqual &&
+    htmlConversionEqual &&
+    sanitizeEqual &&
+    highlightEqual &&
+    streamingEqual
+  );
 });
 
 export { RichTextExport as RichText };

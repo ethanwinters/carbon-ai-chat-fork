@@ -23,8 +23,6 @@ import markdownItAttrs from "markdown-it-attrs";
 import { markdownItHighlight } from "./plugins/markdownItHighlight";
 
 import { LocalizationOptions } from "../../../../../../types/localization/LocalizationOptions";
-import "@carbon/web-components/es/components/list/index.js";
-import "../../codeElement/cds-aichat-code";
 import "../../table/cds-aichat-table";
 
 import { nothing } from "lit";
@@ -88,6 +86,9 @@ interface RenderTokenTreeOptions {
 
   /** Whether child components should use dark mode styling */
   dark?: boolean;
+
+  /** Whether to enable syntax highlighting in code blocks */
+  highlight?: boolean;
 }
 
 /**
@@ -448,12 +449,21 @@ function renderTokenTree(
 
   // Handle fenced code blocks
   if (token.type === "fence") {
+    import("@carbon/ai-chat-components/es/components/code-snippet/index.js");
     const language = token.info?.trim() ?? "";
-    return html`<cds-aichat-code
-      .language=${language}
-      .content=${token.content}
-      .dark=${dark}
-    ></cds-aichat-code>`;
+    const { highlight = true, localization } = options;
+    const codeSnippetLocalization = localization?.codeSnippet;
+
+    return html`<cds-aichat-code-snippet
+      language=${language}
+      ?dark=${dark}
+      ?highlight=${highlight}
+      feedback=${codeSnippetLocalization?.feedback}
+      show-less-text=${codeSnippetLocalization?.showLessText}
+      show-more-text=${codeSnippetLocalization?.showMoreText}
+      tooltip-content=${codeSnippetLocalization?.tooltipContent}
+      >${token.content}</cds-aichat-code-snippet
+    >`;
   }
 
   // Handle structural elements (paragraphs, headings, lists, etc.)
@@ -592,6 +602,7 @@ function renderWithStaticTag(
 
     // Lists with Carbon components
     case "ul": {
+      import("@carbon/web-components/es/components/list/index.js");
       const nested = token.level > 1;
       return html`<cds-unordered-list ?nested=${nested} ${spread(attrs)}>
         ${content}
@@ -599,6 +610,7 @@ function renderWithStaticTag(
     }
 
     case "ol": {
+      import("@carbon/web-components/es/components/list/index.js");
       const nested = token.level > 1;
       return html`<cds-ordered-list ?nested=${nested} ${spread(attrs)}>
         ${content}

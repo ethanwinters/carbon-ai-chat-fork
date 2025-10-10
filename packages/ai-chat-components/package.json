@@ -27,10 +27,11 @@
     "telemetry.yml"
   ],
   "scripts": {
-    "build": "npm run clean && npm run custom-elements && node tasks/build.js && node tasks/build-dist.js",
+    "build": "npm run clean && node tasks/build.js && node tasks/build-dist.js && npm run custom-elements",
     "clean": "rimraf es dist storybook-static",
     "custom-elements": "cem analyze --config ./custom-elements-manifest.config.js",
     "postinstall": "ibmtelemetry --config=telemetry.yml",
+    "start": "npm run custom-elements && node tasks/build.js --watch",
     "storybook": "npm run custom-elements && storybook dev -p 6006",
     "storybook:build": "npm run custom-elements && storybook build",
     "telemetry:config": "npx -y @ibm/telemetry-js-config-generator generate --id 62aa153d-8a70-4d12-9e8d-069511e80e65 --endpoint https://www-api.ibm.com/ibm-telemetry/v1/metrics --files ./src/components --wc",
@@ -40,9 +41,17 @@
   "dependencies": {
     "@carbon/styles": "^1.39.0",
     "@carbon/web-components": "^2.40.1",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/language-data": "^6.5.1",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "@codemirror/view": "^6.38.5",
     "@ibm/telemetry-js": "^1.10.2",
     "@lit/react": "^1.0.8",
+    "codemirror": "^6.0.2",
     "lit": "^3.0.0",
+    "lodash-es": "^4.17.0",
+    "program-language-detector": "^0.0.12",
     "tslib": "^2.6.3"
   },
   "devDependencies": {
