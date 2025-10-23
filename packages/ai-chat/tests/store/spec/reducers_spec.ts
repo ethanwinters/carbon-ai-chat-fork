@@ -337,17 +337,15 @@ describe("Store Reducers", () => {
     });
   });
 
-  describe("SET_IS_RESTARTING action", () => {
+  describe("Other reducer actions", () => {
     it("should toggle the isRestarting flag", () => {
       expect((store.getState() as AppState).isRestarting).toBe(false);
       store.dispatch(actions.setIsRestarting(true));
-      expect(store.getState() as AppState).toBe(true);
+      expect((store.getState() as AppState).isRestarting).toBe(true);
       store.dispatch(actions.setIsRestarting(false));
-      expect(store.getState() as AppState).toBe(false);
+      expect((store.getState() as AppState).isRestarting).toBe(false);
     });
-  });
 
-  describe("Other reducer actions", () => {
     it("should handle HYDRATE_CHAT action", () => {
       expect((store.getState() as AppState).isHydrated).toBe(false);
 

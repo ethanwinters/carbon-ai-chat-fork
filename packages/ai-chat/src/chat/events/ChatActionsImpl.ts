@@ -656,7 +656,7 @@ class ChatActionsImpl {
    * per-chunk promise returned to callers. This loop intentionally runs to completion before yielding so that
    * the queue never processes chunks in parallel.
    */
-  async processChunkQueue() {
+  private async processChunkQueue() {
     const { store } = this.serviceManager;
 
     while (this.chunkQueue.length > 0) {
@@ -1000,7 +1000,7 @@ class ChatActionsImpl {
    *
    * Note, this function does not currently support nested items inside the chunk.
    */
-  async handleUserDefinedResponseItemsChunk(
+  private async handleUserDefinedResponseItemsChunk(
     messageID: string,
     chunk: PartialOrCompleteItemChunk,
     messageItem: DeepPartial<GenericItem>,
@@ -1037,7 +1037,7 @@ class ChatActionsImpl {
    * @param requestMessage The optional {@link MessageRequest} that this response is a response to.
    * @param requestOptions The options that were included when the request was sent.
    */
-  async processMessageResponse(
+  private async processMessageResponse(
     fullMessage: MessageResponse,
     isLatestWelcomeNode: boolean,
     requestMessage: MessageRequest,
@@ -1560,7 +1560,9 @@ class ChatActionsImpl {
    * Creates the custom response elements for all the messages in the given set. This is used in particular when
    * loading a list of messages from history.
    */
-  async createElementsForUserDefinedResponses(messages: AppStateMessages) {
+  private async createElementsForUserDefinedResponses(
+    messages: AppStateMessages,
+  ) {
     await asyncForEach(
       Object.values(messages.allMessageItemsByID),
       (localMessage) => {
