@@ -52,6 +52,7 @@ function createInitialAppState(): AppState {
     isHydrated: false,
     suspendScrollDetection: false,
     showNonHeaderBackgroundCover: false,
+    isRestarting: false,
     isBrowserPageVisible: true,
     chatWidthBreakpoint: null,
     chatWidth: null,
@@ -333,6 +334,16 @@ describe("Store Reducers", () => {
       expect(updatedState.config.public).not.toBe(
         (initialState as AppState).config.public,
       );
+    });
+  });
+
+  describe("SET_IS_RESTARTING action", () => {
+    it("should toggle the isRestarting flag", () => {
+      expect((store.getState() as AppState).isRestarting).toBe(false);
+      store.dispatch(actions.setIsRestarting(true));
+      expect(store.getState() as AppState).toBe(true);
+      store.dispatch(actions.setIsRestarting(false));
+      expect(store.getState() as AppState).toBe(false);
     });
   });
 

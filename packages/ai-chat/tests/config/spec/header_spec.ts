@@ -35,7 +35,7 @@ describe("Config Header", () => {
   });
 
   describe("header", () => {
-    it("should store complete header in Redux state", async () => {
+    it("should store complete header in state", async () => {
       const header = {
         minimizeButtonIconType: MinimizeButtonIconType.SIDE_PANEL_LEFT,
         hideMinimizeButton: true,
@@ -155,7 +155,7 @@ describe("Config Header", () => {
       expect(state.config.public.header).toEqual(header);
     });
 
-    it("should handle undefined header in Redux state", async () => {
+    it("should handle undefined header in state", async () => {
       const props: Partial<ChatContainerProps> = {
         ...createBaseProps(),
         // header intentionally omitted
