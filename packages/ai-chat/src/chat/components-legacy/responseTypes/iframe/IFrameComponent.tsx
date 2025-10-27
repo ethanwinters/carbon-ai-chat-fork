@@ -107,6 +107,10 @@ function IFrameComponent({
           src={source}
           sandbox="allow-scripts allow-downloads allow-forms allow-popups"
           referrerPolicy="origin"
+          role="application"
+          // Allow keyboard users to access iframe content - required for accessibility
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          tabIndex={0}
           onLoad={handleIFrameLoaded}
         />
       )}
