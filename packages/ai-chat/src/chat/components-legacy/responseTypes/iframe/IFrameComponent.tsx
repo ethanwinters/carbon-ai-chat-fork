@@ -105,7 +105,7 @@ function IFrameComponent({
           className="cds-aichat--i-frame-component__i-frame"
           title={title}
           src={source}
-          sandbox="allow-scripts allow-downloads allow-forms allow-popups"
+          sandbox="allow-scripts allow-downloads allow-forms allow-popups allow-same-origin"
           referrerPolicy="origin"
           role="application"
           // Allow keyboard users to access iframe content - required for accessibility
