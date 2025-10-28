@@ -740,8 +740,8 @@ const reducers: { [key: string]: ReducerType } = {
       ...state,
       persistedToBrowserStorage: {
         ...state.persistedToBrowserStorage,
-        desktopLauncherIsExpanded: false,
-        desktopLauncherWasMinimized: true,
+        launcherIsExpanded: false,
+        launcherWasMinimized: true,
       },
     };
   },
