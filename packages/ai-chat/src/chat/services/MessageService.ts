@@ -449,6 +449,12 @@ class MessageService {
         },
         this.serviceManager.instance,
       );
+      console.log(
+        "[MessageService] customSendMessage completed for message:",
+        message.id,
+        "isStreaming:",
+        current.isStreaming,
+      );
       await this.processSuccess(current, null);
     } catch (error) {
       consoleError("An error occurred while sending a message", error);
@@ -471,6 +477,12 @@ class MessageService {
       this.queue.current = this.queue.waiting.shift();
       const { current } = this.queue;
       const { message, source } = current;
+      console.log(
+        "[MessageService] Starting to process message:",
+        message.id,
+        "has controller:",
+        !!current.sendMessageController,
+      );
       const state = store.getState();
       const { config } = store.getState();
       const { public: publicConfig } = config;
