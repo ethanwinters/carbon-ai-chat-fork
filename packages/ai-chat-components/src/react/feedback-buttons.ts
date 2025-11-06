@@ -16,6 +16,9 @@ const FeedbackButtons = createComponent({
   tagName: "cds-aichat-feedback-buttons",
   elementClass: CDSChatFeedbackButtonsElement,
   react: React,
+  events: {
+    onClick: "feedback-buttons-click",
+  },
 });
 
 export default FeedbackButtons;

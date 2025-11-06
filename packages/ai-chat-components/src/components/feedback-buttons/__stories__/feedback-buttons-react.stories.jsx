@@ -74,10 +74,9 @@ const renderButtons = (args, options) => {
         positiveLabel={args.positiveLabel}
         negativeLabel={args.negativeLabel}
         panelID={args.panelID}
-        onClick={(isPositive) => {
-          if (clickHandler) {
-            clickHandler(isPositive);
-          }
+        onClick={(event) => {
+          const { isPositive } = event.detail;
+          clickHandler?.(isPositive);
         }}
       />
     </div>

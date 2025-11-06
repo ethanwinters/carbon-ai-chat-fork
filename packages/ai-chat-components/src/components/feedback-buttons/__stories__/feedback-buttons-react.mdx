@@ -28,7 +28,8 @@ function FeedbackButtonsExample() {
     <FeedbackButtons
       positiveLabel="Thumbs up"
       negativeLabel="Thumbs down"
-      onClick={(isPositive) => {
+      onClick={(event) => {
+        const { isPositive } = event.detail;
         console.log(isPositive ? "Positive feedback" : "Negative feedback");
       }}
     />
@@ -82,7 +83,8 @@ function SimpleFeedback() {
       isNegativeDisabled={state.disabled}
       positiveLabel="Thumbs up"
       negativeLabel="Thumbs down"
-      onClick={(isPositive) => {
+      onClick={(event) => {
+        const { isPositive } = event.detail;
         const updates =
           isPositive
             ? { positiveSelected: true, negativeSelected: false }
@@ -115,7 +117,8 @@ function DetailedFeedback() {
         negativeLabel="Thumbs down"
         positiveLabel="Thumbs up"
         isNegativeOpen={isNegativeOpen}
-        onClick={(isPositive) => {
+        onClick={(event) => {
+          const { isPositive } = event.detail;
           if (isPositive) {
             recordFeedback({ messageId: "123", sentiment: "positive" });
           } else {
@@ -149,7 +152,8 @@ function ToggleableFeedback() {
       isNegativeSelected={selection.negative}
       positiveLabel="Helpful"
       negativeLabel="Not helpful"
-      onClick={(isPositive) => {
+      onClick={(event) => {
+        const { isPositive } = event.detail;
         const nextSelection = {
           positive: isPositive ? !selection.positive : false,
           negative: isPositive ? false : !selection.negative,

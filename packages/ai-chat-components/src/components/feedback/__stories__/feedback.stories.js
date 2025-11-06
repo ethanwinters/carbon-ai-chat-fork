@@ -92,13 +92,14 @@ export const Default = {
       submit-label=${args.submitLabel}
       .showTextArea=${args.showTextArea}
       ?show-prompt=${args.showPrompt}
-      .onSubmit=${(details) => {
+      @feedback-submit=${(event) => {
+        const details = event.detail;
         console.log("Feedback submitted:", details);
         alert(
           `Feedback submitted!\nText: ${details.text || "(empty)"}\nCategories: ${details.selectedCategories?.join(", ") || "(none)"}`,
         );
       }}
-      .onClose=${() => {
+      @feedback-close=${() => {
         console.log("Feedback closed");
       }}
     >
@@ -130,13 +131,14 @@ export const WithCategories = {
       .showTextArea=${args.showTextArea}
       ?show-prompt=${args.showPrompt}
       .categories=${negativeCategories}
-      .onSubmit=${(details) => {
+      @feedback-submit=${(event) => {
+        const details = event.detail;
         console.log("Feedback submitted:", details);
         alert(
           `Feedback submitted!\nText: ${details.text || "(empty)"}\nCategories: ${details.selectedCategories?.join(", ") || "(none)"}`,
         );
       }}
-      .onClose=${() => {
+      @feedback-close=${() => {
         console.log("Feedback closed");
       }}
     >
@@ -169,13 +171,14 @@ export const WithDisclaimer = {
       ?show-prompt=${args.showPrompt}
       .categories=${positiveCategories}
       disclaimer="By submitting feedback, you agree to our [Privacy Policy](https://example.com/privacy). Your feedback may be used to improve our services."
-      .onSubmit=${(details) => {
+      @feedback-submit=${(event) => {
+        const details = event.detail;
         console.log("Feedback submitted:", details);
         alert(
           `Feedback submitted!\nText: ${details.text || "(empty)"}\nCategories: ${details.selectedCategories?.join(", ") || "(none)"}`,
         );
       }}
-      .onClose=${() => {
+      @feedback-close=${() => {
         console.log("Feedback closed");
       }}
     >
@@ -230,13 +233,14 @@ export const WithoutTextArea = {
       .showTextArea=${args.showTextArea}
       ?show-prompt=${args.showPrompt}
       .categories=${positiveCategories}
-      .onSubmit=${(details) => {
+      @feedback-submit=${(event) => {
+        const details = event.detail;
         console.log("Feedback submitted:", details);
         alert(
           `Feedback submitted!\nCategories: ${details.selectedCategories?.join(", ") || "(none)"}`,
         );
       }}
-      .onClose=${() => {
+      @feedback-close=${() => {
         console.log("Feedback closed");
       }}
     >

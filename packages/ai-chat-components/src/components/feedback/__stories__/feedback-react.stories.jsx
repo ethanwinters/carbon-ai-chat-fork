@@ -83,15 +83,12 @@ const renderFeedback = (args, options) => {
         categories={options?.categories}
         disclaimer={options?.disclaimer}
         initialValues={options?.initialValues}
-        onSubmit={(details) => {
-          if (options?.onSubmit) {
-            options.onSubmit(details);
-          }
+        onSubmit={(event) => {
+          const details = event.detail;
+          options?.onSubmit?.(details);
         }}
         onClose={() => {
-          if (options?.onClose) {
-            options.onClose();
-          }
+          options?.onClose?.();
         }}
       />
     </div>

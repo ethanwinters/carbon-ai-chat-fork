@@ -32,7 +32,9 @@ function FeedbackExample() {
       prompt="Help us improve by sharing your thoughts"
       cancelLabel="Cancel"
       submitLabel="Submit"
-      onSubmit={(details) => console.log("Feedback submitted:", details)}
+      onSubmit={(event) =>
+        console.log("Feedback submitted:", event.detail)
+      }
       onClose={() => console.log("Feedback closed")}
     />
   );
@@ -80,7 +82,8 @@ function NegativeFeedbackPanel() {
         "Unhelpful",
         "Inappropriate",
       ]}
-      onSubmit={(details) => {
+      onSubmit={(event) => {
+        const details = event.detail;
         console.log("Feedback:", details);
         // { text: "...", selectedCategories: ["Inaccurate"] }
       }}
@@ -102,8 +105,8 @@ function PositiveFeedbackPanel() {
         "Helpful",
         "Well-formatted",
       ]}
-      onSubmit={(details) => {
-        console.log("Feedback:", details);
+      onSubmit={(event) => {
+        console.log("Feedback:", event.detail);
       }}
     />
   );
@@ -115,11 +118,11 @@ function PositiveFeedbackPanel() {
 ```jsx
 function ReadOnlyFeedbackPanel() {
   return (
-    <Feedback
-      isOpen
-      isReadonly
-      title="Submitted feedback"
-      initialValues={{
+<Feedback
+  isOpen
+  isReadonly
+  title="Submitted feedback"
+  initialValues={{
         text: "The response was very helpful!",
         selectedCategories: ["Accurate", "Helpful"],
       }}

@@ -37,7 +37,7 @@ function feedbackButtonsElementTemplate(
     positiveLabel,
     negativeLabel,
     panelID,
-    onClick,
+    handleButtonClick,
   } = customElementClass;
 
   return html`<div class="${prefix}--feedback-buttons">
@@ -53,7 +53,7 @@ function feedbackButtonsElementTemplate(
         : isPositiveOpen}"
       aria-pressed="${isPositiveSelected || nothing}"
       aria-controls="${panelID}-feedback-positive"
-      @click="${() => onClick?.(true)}"
+      @click="${() => handleButtonClick(true)}"
     >
       <span slot="icon"
         >${iconLoader(isPositiveSelected ? ThumbsUpFilled16 : ThumbsUp16)}</span
@@ -74,7 +74,7 @@ function feedbackButtonsElementTemplate(
         : isNegativeOpen}"
       aria-pressed="${isNegativeSelected || nothing}"
       aria-controls="${panelID}-feedback-positive"
-      @click="${() => onClick?.(false)}"
+      @click="${() => handleButtonClick(false)}"
     >
       <span slot="icon"
         >${iconLoader(

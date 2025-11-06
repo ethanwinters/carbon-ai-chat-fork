@@ -72,10 +72,11 @@ const feedback = document.querySelector('cds-aichat-feedback');
 feedback.isOpen = true;
 feedback.title = "What went wrong?";
 feedback.categories = ["Inaccurate", "Unhelpful", "Inappropriate"];
-feedback.onSubmit = (details) => {
+feedback.addEventListener('feedback-submit', (event) => {
+  const details = event.detail;
   console.log('Feedback:', details);
   // { text: "...", selectedCategories: ["Inaccurate"] }
-};
+});
 ```
 
 ### Collecting Positive Feedback
@@ -85,9 +86,10 @@ const feedback = document.querySelector('cds-aichat-feedback');
 feedback.isOpen = true;
 feedback.title = "What did you like?";
 feedback.categories = ["Accurate", "Helpful", "Well-formatted"];
-feedback.onSubmit = (details) => {
+feedback.addEventListener('feedback-submit', (event) => {
+  const details = event.detail;
   console.log('Feedback:', details);
-};
+});
 ```
 
 ### Displaying Submitted Feedback

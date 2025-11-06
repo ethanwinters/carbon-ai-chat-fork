@@ -90,7 +90,8 @@ export const Default = {
         positive-label=${args.positiveLabel}
         negative-label=${args.negativeLabel}
         panel-id=${args.panelID}
-        .onClick=${(isPositive) => {
+        @feedback-buttons-click=${(event) => {
+          const { isPositive } = event.detail;
           console.log(`${isPositive ? "Positive" : "Negative"} button clicked`);
           alert(`${isPositive ? "Positive" : "Negative"} feedback recorded!`);
         }}
@@ -128,7 +129,8 @@ export const PositiveSelected = {
         positive-label=${args.positiveLabel}
         negative-label=${args.negativeLabel}
         panel-id=${args.panelID}
-        .onClick=${(isPositive) => {
+        @feedback-buttons-click=${(event) => {
+          const { isPositive } = event.detail;
           console.log(`${isPositive ? "Positive" : "Negative"} button clicked`);
         }}
       >
@@ -165,7 +167,8 @@ export const NegativeSelected = {
         positive-label=${args.positiveLabel}
         negative-label=${args.negativeLabel}
         panel-id=${args.panelID}
-        .onClick=${(isPositive) => {
+        @feedback-buttons-click=${(event) => {
+          const { isPositive } = event.detail;
           console.log(`${isPositive ? "Positive" : "Negative"} button clicked`);
         }}
       >
@@ -205,7 +208,8 @@ export const WithDetailsPanel = {
         positive-label=${args.positiveLabel}
         negative-label=${args.negativeLabel}
         panel-id=${args.panelID}
-        .onClick=${(isPositive) => {
+        @feedback-buttons-click=${(event) => {
+          const { isPositive } = event.detail;
           if (isPositive) {
             console.log("Positive feedback recorded immediately");
             alert("Thank you for your positive feedback!");
@@ -252,7 +256,7 @@ export const Disabled = {
         positive-label=${args.positiveLabel}
         negative-label=${args.negativeLabel}
         panel-id=${args.panelID}
-        .onClick=${(_isPositive) => {
+        @feedback-buttons-click=${() => {
           console.log("Buttons are disabled, should not fire");
         }}
       >
@@ -292,7 +296,8 @@ export const BothDetails = {
         positive-label=${args.positiveLabel}
         negative-label=${args.negativeLabel}
         panel-id=${args.panelID}
-        .onClick=${(isPositive) => {
+        @feedback-buttons-click=${(event) => {
+          const { isPositive } = event.detail;
           console.log(
             `Opening ${isPositive ? "positive" : "negative"} feedback details panel`,
           );

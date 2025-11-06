@@ -70,7 +70,8 @@ Record feedback immediately when a button is clicked:
 
 ```javascript
 const buttons = document.querySelector('cds-aichat-feedback-buttons');
-buttons.onClick = (isPositive) => {
+buttons.addEventListener('feedback-buttons-click', (event) => {
+  const { isPositive } = event.detail;
   console.log(isPositive ? 'Positive feedback' : 'Negative feedback');
   // Record feedback to your backend
   recordFeedback({ messageId: '123', sentiment: isPositive ? 'positive' : 'negative' });
@@ -83,7 +84,7 @@ buttons.onClick = (isPositive) => {
   // Disable further feedback
   buttons.isPositiveDisabled = true;
   buttons.isNegativeDisabled = true;
-};
+});
 ```
 
 ### With Feedback Details Panel
@@ -95,7 +96,8 @@ const buttons = document.querySelector('cds-aichat-feedback-buttons');
 buttons.hasNegativeDetails = true;
 buttons.panelID = 'feedback-panel-123';
 
-buttons.onClick = (isPositive) => {
+buttons.addEventListener('feedback-buttons-click', (event) => {
+  const { isPositive } = event.detail;
   if (isPositive) {
     // Record positive feedback immediately
     recordFeedback({ messageId: '123', sentiment: 'positive' });
@@ -104,7 +106,7 @@ buttons.onClick = (isPositive) => {
     // Open details panel for negative feedback
     buttons.isNegativeOpen = true;
   }
-};
+});
 ```
 
 ### Toggle Behavior
@@ -114,7 +116,8 @@ Allow users to change their feedback:
 ```javascript
 const buttons = document.querySelector('cds-aichat-feedback-buttons');
 
-buttons.onClick = (isPositive) => {
+buttons.addEventListener('feedback-buttons-click', (event) => {
+  const { isPositive } = event.detail;
   if (isPositive) {
     // Toggle positive selection
     buttons.isPositiveSelected = !buttons.isPositiveSelected;
@@ -130,7 +133,7 @@ buttons.onClick = (isPositive) => {
     : buttons.isNegativeSelected ? 'negative'
     : null;
   recordFeedback({ messageId: '123', sentiment });
-};
+});
 ```
 
 ## Integration with Feedback Component
