@@ -10,7 +10,7 @@
 import { createComponent } from "@lit/react";
 import React from "react";
 
-import CDSChatFeedbackButtonsElement from "../components/feedback-buttons/src/cds-aichat-feedback-buttons.js";
+import CDSChatFeedbackButtonsElement from "../components/feedback/src/cds-aichat-feedback-buttons.js";
 
 const FeedbackButtons = createComponent({
   tagName: "cds-aichat-feedback-buttons",

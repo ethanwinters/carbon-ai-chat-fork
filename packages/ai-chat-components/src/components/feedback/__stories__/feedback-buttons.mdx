@@ -24,8 +24,10 @@ Here's a quick example to get you started.
 ### JS (via import)
 
 ```javascript
-import "@carbon/ai-chat-components/es/components/feedback-buttons/index.js";
+import "@carbon/ai-chat-components/es/components/feedback/index.js";
 ```
+
+Both the feedback panel and the quick buttons are registered from this single entrypoint, mirroring the way Carbon's data table groups its subcomponents.
 
 We provide a lit-react wrapper for this web component to consume in a react application and can be imported as below
 
@@ -33,7 +35,7 @@ We provide a lit-react wrapper for this web component to consume in a react appl
 import FeedbackButtons from "@carbon/ai-chat-components/es/react/feedback-buttons.js";
 ```
 
-<Markdown>{`${cdnJs(["feedback-buttons"])}`}</Markdown>
+<Markdown>{`${cdnJs(["feedback"])}`}</Markdown>
 <Markdown>{`${cdnCss()}`}</Markdown>
 
 ### HTML

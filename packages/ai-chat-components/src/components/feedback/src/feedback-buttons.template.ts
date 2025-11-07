@@ -37,8 +37,11 @@ function feedbackButtonsElementTemplate(
     positiveLabel,
     negativeLabel,
     panelID,
-    handleButtonClick,
   } = customElementClass;
+
+  const handleButtonClick = (isPositive: boolean) => {
+    customElementClass.handleButtonClick?.call(customElementClass, isPositive);
+  };
 
   return html`<div class="${prefix}--feedback-buttons">
     <cds-icon-button
@@ -73,7 +76,7 @@ function feedbackButtonsElementTemplate(
         ? nothing
         : isNegativeOpen}"
       aria-pressed="${isNegativeSelected || nothing}"
-      aria-controls="${panelID}-feedback-positive"
+      aria-controls="${panelID}-feedback-negative"
       @click="${() => handleButtonClick(false)}"
     >
       <span slot="icon"
