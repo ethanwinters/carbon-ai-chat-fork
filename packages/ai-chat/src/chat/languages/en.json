@@ -46,6 +46,7 @@
   "messages_searchResultsCollapse": "Collapse",
   "messages_assistantIsLoading": "{assistantName} is thinking",
   "messages_agentIsTyping": "The live agent is typing",
+  "messages_focusHandle": "Select message",
   "messages_scrollHandle": "Chat history begin",
   "messages_scrollHandleDetailed": "Chat history begin. Activate to focus the first message then use the arrow, home, and end keys to move between messages. Press escape to exit.",
   "messages_scrollHandleEnd": "Chat history end",
@@ -188,5 +189,6 @@
   "chainOfThought_statusSucceededLabel": "Succeeded",
   "chainOfThought_statusFailedLabel": "Failed",
   "chainOfThought_statusProcessingLabel": "Processing",
-  "chainOfThought_explainabilityLabel": "How did I get this answer?"
+  "chainOfThought_explainabilityLabel": "How did I get this answer?",
+  "table_downloadButton": "Download table data"
 }
