@@ -10,6 +10,9 @@
 import ChatBot32 from "@carbon/icons/es/chat-bot/32.js";
 import CheckmarkFilled16 from "@carbon/icons/es/checkmark--filled/16.js";
 import Headset32 from "@carbon/icons/es/headset/32.js";
+import ReasoningStepsComponent from "@carbon/ai-chat-components/es/react/reasoning-steps.js";
+import ReasoningStepComponent from "@carbon/ai-chat-components/es/react/reasoning-step.js";
+import Markdown from "@carbon/ai-chat-components/es/react/markdown.js";
 import { carbonIconToReact } from "../utils/carbonIcon";
 import Loading from "../components/carbon/Loading";
 import cx from "classnames";
@@ -54,6 +57,9 @@ import {
   Message,
   MessageRequest,
   MessageResponseTypes,
+  ReasoningStep as ReasoningStepData,
+  ReasoningStepOpenState,
+  ReasoningSteps as ReasoningStepsData,
   ResponseUserProfile,
   UserType,
 } from "../../types/messaging/Messages";
@@ -379,6 +385,7 @@ class MessageComponent extends PureComponent<
     let label;
     let actorName;
     let iconClassName = "";
+
     if (isResponse(message)) {
       // We'll use the first message item for deciding if we should show the agent's avatar.
       const agentMessageType = localMessageItem.item.agent_message_type;
@@ -523,6 +530,60 @@ class MessageComponent extends PureComponent<
         ),
         showBelowMessage,
       }
+    );
+  }
+
+  private renderReasoningSteps(reasoning?: ReasoningStepsData) {
+    const steps = reasoning?.steps;
+
+    if (!steps || steps.length === 0) {
+      return null;
+    }
+
+    const containerOpenState = reasoning?.open_state;
+    const containerControlled =
+      containerOpenState === ReasoningStepOpenState.OPEN ||
+      containerOpenState === ReasoningStepOpenState.CLOSE;
+    const containerOpen =
+      containerOpenState === ReasoningStepOpenState.OPEN
+        ? true
+        : containerOpenState === ReasoningStepOpenState.CLOSE
+          ? false
+          : undefined;
+
+    return (
+      <ReasoningStepsComponent
+        open={containerOpen}
+        controlled={containerControlled}
+      >
+        {steps.map((step: ReasoningStepData, index: number) => {
+          const stepOpenState = step.open_state;
+          const stepControlled =
+            stepOpenState === ReasoningStepOpenState.OPEN ||
+            stepOpenState === ReasoningStepOpenState.CLOSE;
+          const stepOpen =
+            stepOpenState === ReasoningStepOpenState.OPEN
+              ? true
+              : stepOpenState === ReasoningStepOpenState.CLOSE
+                ? false
+                : undefined;
+
+          const stepContent = step.content ? (
+            <Markdown markdown={step.content} />
+          ) : null;
+
+          return (
+            <ReasoningStepComponent
+              key={`${this.props.message.id}-reasoning-${index}`}
+              title={step.title}
+              open={stepOpen}
+              controlled={stepControlled}
+            >
+              {stepContent}
+            </ReasoningStepComponent>
+          );
+        })}
+      </ReasoningStepsComponent>
     );
   }
 
@@ -721,6 +782,7 @@ class MessageComponent extends PureComponent<
               {readWidgetSaid && (
                 <VisuallyHidden>{this.getWidgetSaidMessage()}</VisuallyHidden>
               )}
+              {this.renderReasoningSteps(message.message_options?.reasoning)}
               <div
                 className={cx(
                   "cds-aichat--received",

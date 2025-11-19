@@ -1394,6 +1394,53 @@ interface MessageUIStateInternal {
   agent_no_service_desk?: boolean;
 }
 
+enum ReasoningStepOpenState {
+  OPEN = "open",
+  CLOSE = "close",
+  DEFAULT = "default",
+}
+
+/**
+ * An individual reasoning step.
+ */
+interface ReasoningStep {
+  /**
+   * The title of the reasoning step.
+   */
+  title: string;
+
+  /**
+   * If this individual step is open.
+   *
+   * If the step has content, by default the reasoning step will automaitcally open and will close when the
+   * first {@link GenericItem} is returned with something to display.
+   */
+  open_state?: ReasoningStepOpenState;
+
+  /**
+   * Optional markdown content to explain what the step is doing.
+   */
+  content?: string;
+}
+
+/**
+ * The interface describing how to pass reasoning steps to the UI.
+ */
+interface ReasoningSteps {
+  /**
+   * If the reasoning step interface is open.
+   *
+   * By default the reasoning step interface will automatically open and will then close when the first
+   * {@link GenericItem} is returned with something to display.
+   */
+  open_state?: ReasoningStepOpenState;
+
+  /**
+   * The array of reasoning steps for this message.
+   */
+  steps?: ReasoningStep[];
+}
+
 /**
  * This interface contains options for a {@link MessageResponse}.
  *
@@ -1406,7 +1453,26 @@ interface MessageResponseOptions {
   response_user_profile?: ResponseUserProfile;
 
   /**
+   * Controls the display of the reasoning steps component.
+   *
+   * Most people should use reasoning steps instead of chain of thought.
+   *
+   * Chain of thought it meant more for technical "called X API and got Y result back".
+   *
+   * Reasoning steps can include that kind of detail depending on your use case, but is meant more for user friendly
+   * content than debugging technically content.
+   */
+  reasoning?: ReasoningSteps;
+
+  /**
    * Controls the display of the chain of thought component.
+   *
+   * Most people should use reasoning steps instead of chain of thought.
+   *
+   * Chain of thought it meant more for technical "called X API and got Y result back".
+   *
+   * Reasoning steps can include that kind of detail depending on your use case, but is meant more for user friendly
+   * content than debugging technically content.
    */
   chain_of_thought?: ChainOfThoughtStep[];
 }
@@ -1728,4 +1794,7 @@ export {
   MessageResponseOptions,
   MessageResponseHistory,
   MessageRequestHistory,
+  ReasoningSteps,
+  ReasoningStep,
+  ReasoningStepOpenState,
 };
