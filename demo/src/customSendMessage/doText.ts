@@ -15,6 +15,9 @@ import {
   GenericItemMessageFeedbackOptions,
   MessageResponse,
   MessageResponseTypes,
+  ReasoningStep,
+  ReasoningStepOpenState,
+  ReasoningSteps,
   ResponseUserProfile,
   StreamChunk,
   UserType,
@@ -112,6 +115,65 @@ const fullChainOfThought: ChainOfThoughtStep[] = [
   },
 ];
 
+const defaultReasoningSteps: ReasoningStep[] = [
+  {
+    title: "Interpret the request",
+    content:
+      "Identified the user's main objective and clarified any constraints so downstream steps share the same intent.",
+  },
+  {
+    title: "Check supporting documents",
+  },
+  {
+    title: "Evaluate possible solutions",
+    content:
+      "Compared internal guidance with the latest public documentation to find an approach that balances accuracy and safety.",
+  },
+  {
+    title: "Compose the response",
+    content:
+      "Structured the final answer with plain-language explanations and cited the most trustworthy sources.",
+  },
+];
+
+function buildReasoningPayload(
+  steps: ReasoningStep[],
+  visibleCount: number,
+  controlled = false,
+  finalState = false,
+): ReasoningSteps {
+  const totalCount = finalState ? steps.length : visibleCount;
+  const limited = steps.slice(0, totalCount).map((step, index) => {
+    const clone: ReasoningStep = { ...step };
+
+    if (controlled) {
+      if (finalState) {
+        clone.open_state = ReasoningStepOpenState.CLOSE;
+      } else if (index < visibleCount - 1) {
+        clone.open_state = ReasoningStepOpenState.CLOSE;
+      } else {
+        clone.open_state = clone.content
+          ? ReasoningStepOpenState.OPEN
+          : ReasoningStepOpenState.DEFAULT;
+      }
+    }
+
+    return clone;
+  });
+
+  const payload: ReasoningSteps = {
+    steps: limited,
+  };
+
+  if (controlled) {
+    payload.open_state = finalState
+      ? ReasoningStepOpenState.CLOSE
+      : ReasoningStepOpenState.OPEN;
+  }
+
+  return payload;
+}
+
 /**
  * A function that just mocks the chain of thought steps coming in live.
  */
@@ -154,6 +216,8 @@ async function doTextStreaming(
   wordDelay = WORD_DELAY,
   userProfile?: ResponseUserProfile,
   chainOfThought?: ChainOfThoughtStep[],
+  reasoningSteps?: ReasoningStep[],
+  controlledReasoning = false,
   feedback?: GenericItemMessageFeedbackOptions,
   requestOptions?: CustomSendMessageOptions,
 ) {
@@ -163,6 +227,14 @@ async function doTextStreaming(
   const totalWords = words.length;
 
   const chainOfThoughtStreamingSteps: any = {};
+  const reasoningFinalState = reasoningSteps?.length
+    ? buildReasoningPayload(
+        reasoningSteps,
+        reasoningSteps.length,
+        controlledReasoning,
+        true,
+      )
+    : undefined;
 
   // Setup mocking chain of thought steps coming in as the text renders.
   if (typeof chainOfThought !== "undefined") {
@@ -194,6 +266,87 @@ async function doTextStreaming(
   signal?.addEventListener("abort", abortHandler);
 
   try {
+    if (reasoningSteps?.length) {
+      const reasoningDisplaySteps = reasoningSteps.map((step) => ({
+        ...step,
+        content: step.content ? "" : step.content,
+      }));
+
+      const emitReasoningChunk = (payload: ReasoningSteps) => {
+        const chunk: StreamChunk = {
+          partial_item: {
+            response_type: MessageResponseTypes.TEXT,
+            text: "",
+            streaming_metadata: {
+              id: "1",
+              cancellable,
+            },
+          },
+          streaming_metadata: {
+            response_id: responseID,
+          },
+          partial_response: {
+            message_options: {
+              response_user_profile: userProfile,
+              reasoning: payload,
+            },
+          },
+        };
+
+        instance.messaging.addMessageChunk(chunk);
+      };
+
+      for (
+        let stepIndex = 0;
+        stepIndex < reasoningDisplaySteps.length && !isCanceled;
+        stepIndex++
+      ) {
+        await sleep(wordDelay);
+        if (isCanceled) {
+          break;
+        }
+
+        emitReasoningChunk(
+          buildReasoningPayload(
+            reasoningDisplaySteps,
+            stepIndex + 1,
+            controlledReasoning,
+          ),
+        );
+
+        const originalContent = reasoningSteps[stepIndex].content;
+        if (!originalContent) {
+          continue;
+        }
+
+        const contentTokens = originalContent.match(/\S+\s*/g) ?? [
+          originalContent,
+        ];
+        let partialContent = "";
+
+        for (const token of contentTokens) {
+          if (isCanceled) {
+            break;
+          }
+          partialContent += token;
+          reasoningDisplaySteps[stepIndex].content = partialContent;
+          await sleep(wordDelay);
+          if (isCanceled) {
+            break;
+          }
+          emitReasoningChunk(
+            buildReasoningPayload(
+              reasoningDisplaySteps,
+              stepIndex + 1,
+              controlledReasoning,
+            ),
+          );
+        }
+
+        reasoningDisplaySteps[stepIndex].content = originalContent;
+      }
+    }
+
     for (let index = 0; index < words.length && !isCanceled; index++) {
       const word = words[index];
       lastWordIndex = index;
@@ -262,6 +415,10 @@ async function doTextStreaming(
       },
     };
 
+    if (reasoningFinalState) {
+      chunk.partial_response.message_options.reasoning = reasoningFinalState;
+    }
+
     instance.messaging.addMessageChunk(chunk);
 
     // When all and any chunks are complete, you send a final response.
@@ -284,8 +441,13 @@ async function doTextStreaming(
       message_options: {
         response_user_profile: userProfile,
         chain_of_thought: chainOfThought,
+        reasoning: undefined,
       },
     };
+
+    if (reasoningFinalState) {
+      finalResponse.message_options.reasoning = reasoningFinalState;
+    }
 
     await instance.messaging.addMessageChunk({
       final_response: finalResponse,
@@ -323,6 +485,7 @@ function doText(
   userProfile?: ResponseUserProfile,
   chainOfThought?: ChainOfThoughtStep[],
   feedback?: GenericItemMessageFeedbackOptions,
+  reasoning?: ReasoningSteps,
 ) {
   const genericItem = {
     response_type: MessageResponseTypes.TEXT,
@@ -337,6 +500,7 @@ function doText(
 
   message.message_options = {
     chain_of_thought: chainOfThought,
+    reasoning,
   };
 
   if (userProfile) {
@@ -435,6 +599,8 @@ async function doTextStreamingWithNonWatsonAssistantProfile(
     userProfile,
     undefined,
     undefined,
+    undefined,
+    undefined,
     requestOptions,
   );
 }
@@ -455,6 +621,8 @@ async function doTextChainOfThoughtStreaming(
     userProfile,
     chainOfThought,
     undefined,
+    undefined,
+    undefined,
     requestOptions,
   );
 }
@@ -466,6 +634,42 @@ function doTextChainOfThought(
   chainOfThought: ChainOfThoughtStep[] = fullChainOfThought,
 ) {
   doText(instance, text, userProfile, chainOfThought);
+}
+
+async function doTextWithReasoningStepsStreaming(
+  instance: ChatInstance,
+  requestOptions?: CustomSendMessageOptions,
+) {
+  await doTextStreaming(
+    instance,
+    MARKDOWN,
+    true,
+    WORD_DELAY,
+    undefined,
+    undefined,
+    defaultReasoningSteps,
+    false,
+    undefined,
+    requestOptions,
+  );
+}
+
+async function doTextWithReasoningStepsControlledStreaming(
+  instance: ChatInstance,
+  requestOptions?: CustomSendMessageOptions,
+) {
+  await doTextStreaming(
+    instance,
+    MARKDOWN,
+    true,
+    WORD_DELAY,
+    undefined,
+    undefined,
+    defaultReasoningSteps,
+    true,
+    undefined,
+    requestOptions,
+  );
 }
 
 function doHTML(
@@ -495,6 +699,8 @@ async function doHTMLStreaming(
     wordDelay,
     userProfile,
     chainOfThought,
+    undefined,
+    undefined,
     undefined,
     requestOptions,
   );
@@ -545,6 +751,8 @@ async function doTextWithFeedbackStreaming(
     WORD_DELAY,
     undefined,
     undefined,
+    undefined,
+    undefined,
     feedback,
     requestOptions,
   );
@@ -554,6 +762,8 @@ export {
   doTextChainOfThoughtStreaming,
   doTextChainOfThought,
   doTextStreaming,
+  doTextWithReasoningStepsStreaming,
+  doTextWithReasoningStepsControlledStreaming,
   doWelcomeText,
   doText,
   doTextWithHumanProfile,

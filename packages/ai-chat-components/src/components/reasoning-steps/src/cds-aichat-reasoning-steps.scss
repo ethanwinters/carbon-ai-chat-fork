@@ -1,0 +1,59 @@
+/*
+ *  Copyright IBM Corp. 2025
+ *
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ *
+ *  @license
+ */
+
+@use "../../../globals/scss/vars" as *;
+@use "@carbon/styles/scss/theme";
+@use "@carbon/styles/scss/motion";
+@use "@carbon/layout";
+
+:host {
+  display: block;
+  inline-size: 100%;
+  --cds-aichat-reasoning-step-border-color: theme.$border-subtle-01;
+  --cds-aichat-reasoning-step-background-color: theme.$layer-01;
+  --cds-aichat-reasoning-step-text-color: theme.$text-primary;
+  --cds-aichat-reasoning-step-padding-inline: layout.$spacing-05;
+  --cds-aichat-reasoning-step-padding-block: layout.$spacing-04;
+  --cds-aichat-reasoning-step-border-radius: layout.$spacing-02;
+}
+
+.#{$prefix}--reasoning-steps__wrapper {
+  display: grid;
+  overflow: hidden;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  padding-block: 0;
+  padding-inline: layout.$spacing-05;
+  pointer-events: none;
+  transition:
+    grid-template-rows motion.$duration-fast-02
+      motion.motion(entrance, productive),
+    padding-block motion.$duration-fast-02 motion.motion(entrance, productive),
+    opacity motion.$duration-fast-02 motion.motion(entrance, productive);
+
+  @media screen and (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+:host([open]) .#{$prefix}--reasoning-steps__wrapper {
+  overflow: visible;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  padding-block: layout.$spacing-03 layout.$spacing-05;
+  pointer-events: auto;
+}
+
+.#{$prefix}--reasoning-steps__body {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  gap: layout.$spacing-03;
+  min-block-size: 0;
+}

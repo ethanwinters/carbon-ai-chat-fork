@@ -41,6 +41,8 @@ function doCodeStreaming(
     undefined,
     undefined,
     undefined,
+    undefined,
+    undefined,
     requestOptions,
   );
 }

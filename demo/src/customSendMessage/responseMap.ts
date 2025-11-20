@@ -40,6 +40,8 @@ import {
   doTextWithFeedbackStreaming,
   doTextWithHumanProfile,
   doTextWithNonWatsonAssistantProfile,
+  doTextWithReasoningStepsStreaming,
+  doTextWithReasoningStepsControlledStreaming,
   doTextWithWatsonAgentProfile,
 } from "./doText";
 import { doUserDefined, doUserDefinedStreaming } from "./doUserDefined";
@@ -84,6 +86,8 @@ const RESPONSE_MAP: Record<
       undefined,
       undefined,
       undefined,
+      undefined,
+      undefined,
       requestOptions,
     ),
   "text with feedback": (instance) => doTextWithFeedback(instance),
@@ -112,6 +116,12 @@ const RESPONSE_MAP: Record<
       undefined,
       requestOptions,
     ),
+  "text (stream) with reasoning steps": (instance, requestOptions) =>
+    doTextWithReasoningStepsStreaming(instance, requestOptions),
+  "text (stream) with reasoning steps controlled open_state": (
+    instance,
+    requestOptions,
+  ) => doTextWithReasoningStepsControlledStreaming(instance, requestOptions),
   html: (instance) => doHTML(instance),
   "html (stream)": (instance, requestOptions) =>
     doHTMLStreaming(
