@@ -61,6 +61,7 @@ import {
   ReasoningStepOpenState,
   ReasoningSteps as ReasoningStepsData,
   ResponseUserProfile,
+  TextItem,
   UserType,
 } from "../../types/messaging/Messages";
 import { LanguagePack } from "../../types/config/PublicConfig";
@@ -205,6 +206,21 @@ interface MessageState {
    * Indicates if the focus handle has focus. This will be used to display the focus indicator on the message.
    */
   focusHandleHasFocus: boolean;
+
+  /**
+   * Tracks whether auto-controlled reasoning steps should be open.
+   */
+  autoReasoningContainerOpen?: boolean;
+
+  /**
+   * Tracks whether each auto-controlled reasoning step should be open.
+   */
+  autoReasoningStepOpenStates: boolean[];
+
+  /**
+   * Tracks if auto-controlled reasoning has already collapsed due to response content.
+   */
+  autoReasoningHasAutoCollapsed: boolean;
 }
 
 class MessageComponent extends PureComponent<
@@ -217,6 +233,9 @@ class MessageComponent extends PureComponent<
   public readonly state: Readonly<MessageState> = {
     didRenderErrorOccur: false,
     focusHandleHasFocus: false,
+    autoReasoningContainerOpen: true,
+    autoReasoningStepOpenStates: [],
+    autoReasoningHasAutoCollapsed: false,
   };
 
   /**
@@ -280,6 +299,7 @@ class MessageComponent extends PureComponent<
         actions.setMessageWasAnnounced(uiState.id),
       );
     }
+    this.syncAutoReasoningState();
   }
 
   componentDidUpdate() {
@@ -290,6 +310,7 @@ class MessageComponent extends PureComponent<
         actions.setMessageWasAnnounced(uiState.id),
       );
     }
+    this.syncAutoReasoningState();
   }
 
   /**
@@ -541,32 +562,37 @@ class MessageComponent extends PureComponent<
     }
 
     const containerOpenState = reasoning?.open_state;
-    const containerControlled =
-      containerOpenState === ReasoningStepOpenState.OPEN ||
-      containerOpenState === ReasoningStepOpenState.CLOSE;
-    const containerOpen =
-      containerOpenState === ReasoningStepOpenState.OPEN
-        ? true
-        : containerOpenState === ReasoningStepOpenState.CLOSE
-          ? false
-          : undefined;
+    const hasExplicitContainerState =
+      typeof containerOpenState !== "undefined" &&
+      containerOpenState !== ReasoningStepOpenState.DEFAULT;
+    const isAutoControlled = this.isAutoReasoning(this.props.message);
+    const containerOpen = hasExplicitContainerState
+      ? containerOpenState === ReasoningStepOpenState.OPEN
+      : (this.state.autoReasoningContainerOpen ?? true);
 
     return (
       <ReasoningStepsComponent
+        controlled
         open={containerOpen}
-        controlled={containerControlled}
+        onToggle={isAutoControlled ? this.handleAutoReasoningToggle : undefined}
       >
         {steps.map((step: ReasoningStepData, index: number) => {
           const stepOpenState = step.open_state;
-          const stepControlled =
-            stepOpenState === ReasoningStepOpenState.OPEN ||
-            stepOpenState === ReasoningStepOpenState.CLOSE;
-          const stepOpen =
-            stepOpenState === ReasoningStepOpenState.OPEN
-              ? true
-              : stepOpenState === ReasoningStepOpenState.CLOSE
-                ? false
-                : undefined;
+          const hasExplicitStepState =
+            typeof stepOpenState !== "undefined" &&
+            stepOpenState !== ReasoningStepOpenState.DEFAULT;
+          const stepOpen = hasExplicitStepState
+            ? stepOpenState === ReasoningStepOpenState.OPEN
+            : isAutoControlled
+              ? (this.state.autoReasoningStepOpenStates[index] ??
+                this.state.autoReasoningContainerOpen ??
+                true)
+              : containerOpen;
+          const stepToggleHandler =
+            isAutoControlled && !hasExplicitStepState
+              ? (event: CustomEvent<{ open: boolean }>) =>
+                  this.handleAutoReasoningStepToggle(index, event)
+              : undefined;
 
           const stepContent = step.content ? (
             <Markdown markdown={step.content} />
@@ -577,7 +603,8 @@ class MessageComponent extends PureComponent<
               key={`${this.props.message.id}-reasoning-${index}`}
               title={step.title}
               open={stepOpen}
-              controlled={stepControlled}
+              controlled
+              onToggle={stepToggleHandler}
             >
               {stepContent}
             </ReasoningStepComponent>
@@ -586,6 +613,134 @@ class MessageComponent extends PureComponent<
       </ReasoningStepsComponent>
     );
   }
+
+  private isAutoReasoning(message: Message) {
+    if (!isResponse(message)) {
+      return false;
+    }
+    const reasoning = message.message_options?.reasoning;
+    if (!reasoning || !reasoning.steps || reasoning.steps.length === 0) {
+      return false;
+    }
+    const containerState = reasoning.open_state;
+    return (
+      typeof containerState === "undefined" ||
+      containerState === ReasoningStepOpenState.DEFAULT
+    );
+  }
+
+  private shouldCloseReasoning(item: LocalMessageItem["item"]) {
+    if (!item || !item.response_type) {
+      return false;
+    }
+    if (item.response_type === MessageResponseTypes.TEXT) {
+      const text = (item as TextItem).text;
+      return Boolean(text && text.trim());
+    }
+    return true;
+  }
+
+  private syncAutoReasoningState() {
+    if (!this.isAutoReasoning(this.props.message)) {
+      return;
+    }
+
+    const reasoningSteps =
+      this.props.message.message_options?.reasoning?.steps ?? [];
+    const shouldClose = this.shouldCloseReasoning(
+      this.props.localMessageItem.item,
+    );
+
+    this.setState((prevState) => {
+      let containerOpen =
+        typeof prevState.autoReasoningContainerOpen === "boolean"
+          ? prevState.autoReasoningContainerOpen
+          : true;
+
+      let stepStates = prevState.autoReasoningStepOpenStates.slice(
+        0,
+        reasoningSteps.length,
+      );
+
+      if (stepStates.length < reasoningSteps.length) {
+        stepStates = [
+          ...stepStates,
+          ...Array(reasoningSteps.length - stepStates.length).fill(
+            containerOpen,
+          ),
+        ];
+      }
+
+      let containerChanged = false;
+      let stepsChanged =
+        stepStates.length !== prevState.autoReasoningStepOpenStates.length ||
+        stepStates.some(
+          (value, index) =>
+            value !== prevState.autoReasoningStepOpenStates[index],
+        );
+
+      let hasAutoCollapsed = prevState.autoReasoningHasAutoCollapsed;
+
+      if (shouldClose && !hasAutoCollapsed && containerOpen) {
+        containerOpen = false;
+        stepStates = stepStates.map(() => false);
+        containerChanged = true;
+        stepsChanged = true;
+        hasAutoCollapsed = true;
+      }
+
+      if (
+        containerChanged ||
+        stepsChanged ||
+        hasAutoCollapsed !== prevState.autoReasoningHasAutoCollapsed
+      ) {
+        return {
+          autoReasoningContainerOpen: containerOpen,
+          autoReasoningStepOpenStates: stepStates,
+          autoReasoningHasAutoCollapsed: hasAutoCollapsed,
+        };
+      }
+
+      return null;
+    });
+  }
+
+  private handleAutoReasoningToggle = (
+    event: CustomEvent<{ open: boolean }>,
+  ) => {
+    if (!this.isAutoReasoning(this.props.message)) {
+      return;
+    }
+    const open = Boolean(event?.detail?.open);
+    this.setState((prevState) => {
+      if (prevState.autoReasoningContainerOpen === open) {
+        return null;
+      }
+      return {
+        autoReasoningContainerOpen: open,
+      };
+    });
+  };
+
+  private handleAutoReasoningStepToggle = (
+    index: number,
+    event: CustomEvent<{ open: boolean }>,
+  ) => {
+    if (!this.isAutoReasoning(this.props.message)) {
+      return;
+    }
+    const open = Boolean(event?.detail?.open);
+    this.setState((prevState) => {
+      if (prevState.autoReasoningStepOpenStates[index] === open) {
+        return null;
+      }
+      const nextStates = prevState.autoReasoningStepOpenStates.slice();
+      nextStates[index] = open;
+      return {
+        autoReasoningStepOpenStates: nextStates,
+      };
+    });
+  };
 
   /**
    * Renders a focus "handle" for this message. When this message gets focus, we actually move focus to an element
