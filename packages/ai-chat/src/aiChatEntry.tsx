@@ -22,6 +22,7 @@ export {
   ViewType,
   PanelType,
 } from "./types/instance/apiTypes";
+export { PageObjectId, TestId } from "./testing/PageObjectId";
 
 export { PersistedState } from "./types/state/AppState";
 
@@ -58,6 +59,7 @@ export {
 export { LayoutCustomProperties } from "./types/config/LayoutCustomProperties";
 
 export { CornersType } from "./types/config/CornersType";
+export type { loadAllLazyDeps } from "./testing/helpers";
 
 export {
   BusEvent,
@@ -244,5 +246,3 @@ export {
   ChatCustomElement,
   ChatCustomElementProps,
 } from "./react/ChatCustomElement";
-
-export { PageObjectId, TestId } from "./chat/utils/PageObjectId";

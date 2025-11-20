@@ -17,7 +17,8 @@
  */
 
 // Export types and utilities without importing web components
-export { PageObjectId, TestId } from "./chat/utils/PageObjectId";
+export { PageObjectId, TestId } from "./testing/PageObjectId";
+export { loadAllLazyDeps } from "./testing/helpers";
 
 // Export all types without the web component implementations
 export {
