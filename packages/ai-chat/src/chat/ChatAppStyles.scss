@@ -1,0 +1,43 @@
+/* 
+ *  Copyright IBM Corp. 2025
+ *  
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ */
+
+@use "sass:meta";
+@use "@carbon/styles/scss/themes";
+@use "@carbon/layout";
+@use "@carbon/styles/scss/theme";
+@use "@carbon/styles/scss/reset";
+
+@use "./styles";
+@use "./components-legacy/imports" as components;
+
+.cds--white {
+  @include theme.theme(themes.$white);
+}
+
+.cds--g10 {
+  @include theme.theme(themes.$g10);
+}
+
+.cds--g90 {
+  @include theme.theme(themes.$g90);
+}
+
+.cds--g100 {
+  @include theme.theme(themes.$g100);
+}
+
+cds-tile {
+  border: 1px solid theme.$chat-bubble-border;
+  border-radius: layout.$spacing-03;
+  background-color: theme.$chat-shell-background;
+}
+
+.cds-aichat--dark,
+.cds--g90,
+.cds--g100 {
+  scrollbar-color: theme.$layer-03 theme.$layer-01;
+}

@@ -1,0 +1,8 @@
+es
+lib
+dist
+umd
+node_modules
+*.snap.js
+
+packages/ai-chat/tasks/**
