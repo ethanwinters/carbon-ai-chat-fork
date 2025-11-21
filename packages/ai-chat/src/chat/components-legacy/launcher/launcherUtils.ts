@@ -143,7 +143,7 @@ function checkIfUserSwipedRight(
 function getMaxLauncherExtendedWidth() {
   const launcherPosition = IS_MOBILE ? 32 : 64;
 
-  if (!isBrowser) {
+  if (!isBrowser()) {
     return MAX_EXTENDED_LAUNCHER_WIDTH;
   }
 

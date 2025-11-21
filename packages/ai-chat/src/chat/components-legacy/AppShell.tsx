@@ -68,15 +68,15 @@ export default function AppShell({
   const dispatch = useDispatch();
 
   const [windowSize, setWindowSize] = useState<Dimension>({
-    width: isBrowser ? window.innerWidth : 0,
-    height: isBrowser ? window.innerHeight : 0,
+    width: isBrowser() ? window.innerWidth : 0,
+    height: isBrowser() ? window.innerHeight : 0,
   });
 
   const cssVariableOverrideString = useMemo(() => {
     return convertCSSVariablesToString(cssVariableOverrides);
   }, [cssVariableOverrides]);
 
-  const dir = isBrowser ? document.dir || "auto" : "auto";
+  const dir = isBrowser() ? document.dir || "auto" : "auto";
 
   useOnMount(() => {
     if (!isBrowser) {
@@ -160,9 +160,9 @@ export default function AppShell({
             "cds-aichat--container-disable-mobile-enhancements":
               hostElement &&
               config.public.disableCustomElementMobileEnhancements,
-            "cds-aichat---is-phone":
+            "cds-aichat--is-phone":
               IS_PHONE && !config.public.disableCustomElementMobileEnhancements,
-            "cds-aichat---is-phone-portrait-mode":
+            "cds-aichat--is-phone-portrait-mode":
               IS_PHONE_IN_PORTRAIT_MODE &&
               !config.public.disableCustomElementMobileEnhancements,
             "cds-aichat--frameless": !layout?.showFrame,
