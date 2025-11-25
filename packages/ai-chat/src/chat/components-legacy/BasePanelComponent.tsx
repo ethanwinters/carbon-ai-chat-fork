@@ -124,6 +124,8 @@ function BasePanelComponent(
 
   const headerRef = useRef<HasRequestFocus>(undefined);
   const panelContainerRef = useRef<HTMLDivElement | null>(null);
+  const [panelContainerElement, setPanelContainerElement] =
+    useState<HTMLDivElement | null>(null);
 
   // Reuse the imperative handles from the header.
   useImperativeHandle(ref, () => headerRef.current);
@@ -141,6 +143,11 @@ function BasePanelComponent(
       "button",
     ) as HTMLElement | null;
     return innerButton ?? backButtonHost;
+  }, []);
+
+  const setPanelContainerRef = useCallback((element: HTMLDivElement | null) => {
+    panelContainerRef.current = element;
+    setPanelContainerElement(element);
   }, []);
 
   useEffect(() => {
@@ -206,21 +213,25 @@ function BasePanelComponent(
       (isUsingConfigOverflowItems ? overflowClickedFromConfig : undefined));
 
   return (
-    <FocusTrap
-      active={focusTrapActive}
-      focusTrapOptions={{
-        clickOutsideDeactivates: true,
-        returnFocusOnDeactivate: !IS_MOBILE,
-        preventScroll: true,
-        tabbableOptions: {
-          getShadowRoot: true,
-        },
-        fallbackFocus: () =>
-          getPanelBackButton() ?? panelContainerRef.current ?? undefined,
-      }}
-    >
+    <>
+      <FocusTrap
+        active={focusTrapActive}
+        containerElements={
+          panelContainerElement ? [panelContainerElement] : undefined
+        }
+        focusTrapOptions={{
+          clickOutsideDeactivates: true,
+          returnFocusOnDeactivate: !IS_MOBILE,
+          preventScroll: true,
+          tabbableOptions: {
+            getShadowRoot: true,
+          },
+          fallbackFocus: () =>
+            getPanelBackButton() ?? panelContainerRef.current ?? undefined,
+        }}
+      />
       {/* tabIndex is set in case there is nothing to focus on, shouldn't really ever get hit */}
-      <div className={className} ref={panelContainerRef} tabIndex={-1}>
+      <div className={className} ref={setPanelContainerRef} tabIndex={-1}>
         {shouldRenderHeader && (
           <Header
             {...headerProps}
@@ -255,7 +266,7 @@ function BasePanelComponent(
         )}
         <div className="cds-aichat--panel-content">{children}</div>
       </div>
-    </FocusTrap>
+    </>
   );
 }
 
