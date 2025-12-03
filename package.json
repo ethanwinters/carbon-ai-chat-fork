@@ -144,6 +144,7 @@
         {
           "definedTags": [
             "category",
+            "element",
             "experimental",
             "element",
             "typeParam",
