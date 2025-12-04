@@ -88,6 +88,7 @@ import {
   VideoItem,
 } from "../../types/messaging/Messages";
 import RichText from "./responseTypes/util/RichText";
+import type { CDSAIChatChainOfThought } from "@carbon/ai-chat-components/es/components/chain-of-thought/src/chain-of-thought.js";
 
 /**
  * This component renders a specific message component based on a message's type.
@@ -104,6 +105,7 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
   const intl = useIntl();
   const languagePack = useLanguagePack();
   const feedbackDetailsRef = useRef<HTMLDivElement>(undefined);
+  const chainOfThoughtRef = useRef<CDSAIChatChainOfThought>(null);
   const agentDisplayState = useSelector(
     selectHumanAgentDisplayState,
     shallowEqual,
