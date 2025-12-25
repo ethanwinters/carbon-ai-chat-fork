@@ -351,6 +351,7 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
           MessageErrorState.FAILED_WHILE_STREAMING
         }
         removeHTML={removeHTML}
+        doAutoScroll={props.doAutoScroll}
       />
     );
   }
@@ -404,22 +405,15 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
   }
 
   function renderIFrameMessage(message: LocalMessageItem<IFrameItem>) {
-    const { doAutoScroll, isNestedMessageItem } = props;
+    const { isNestedMessageItem } = props;
     const display = isNestedMessageItem
       ? IFrameItemDisplayOption.INLINE
       : undefined;
 
-    return (
-      <IFrameMessage
-        localMessage={message}
-        doAutoScroll={doAutoScroll}
-        displayOverride={display}
-      />
-    );
+    return <IFrameMessage localMessage={message} displayOverride={display} />;
   }
 
   function renderVideoMessage(message: LocalMessageItem<VideoItem>) {
-    const { doAutoScroll } = props;
     const { item } = message;
     const { source, title, description, alt_text, file_accessibility } = item;
     return (
@@ -430,14 +424,12 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
         baseHeight={getMediaDimensions(item)?.base_height}
         ariaLabel={alt_text}
         subtitle_tracks={file_accessibility?.subtitle_tracks}
-        doAutoScroll={doAutoScroll}
         needsAnnouncement={message.ui_state.needsAnnouncement}
       />
     );
   }
 
   function renderAudioMessage(message: LocalMessageItem<AudioItem>) {
-    const { doAutoScroll } = props;
     const { source, title, description, alt_text, file_accessibility } =
       message.item;
     return (
@@ -447,7 +439,6 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
         description={description}
         ariaLabel={alt_text}
         transcript={file_accessibility?.transcript}
-        doAutoScroll={doAutoScroll}
         needsAnnouncement={message.ui_state.needsAnnouncement}
       />
     );
@@ -467,7 +458,7 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
     message: LocalMessageItem,
     originalMessage: MessageResponse,
   ) {
-    const { serviceManager } = props;
+    const { serviceManager, doAutoScroll } = props;
     return (
       <UserDefinedResponse
         streamingState={message.ui_state.streamingState}
@@ -475,9 +466,9 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
           originalMessage?.history?.error_state ===
           MessageErrorState.FAILED_WHILE_STREAMING
         }
-        doAutoScroll={props.doAutoScroll}
         localMessageID={message.ui_state.id}
         serviceManager={serviceManager}
+        doAutoScroll={doAutoScroll}
       />
     );
   }
