@@ -182,7 +182,7 @@ const renderSnippet = (args, code) => {
 };
 
 export default {
-  title: "Components/Code Snippet",
+  title: "Components/Code snippet",
   argTypes: {
     useCard: {
       control: "boolean",

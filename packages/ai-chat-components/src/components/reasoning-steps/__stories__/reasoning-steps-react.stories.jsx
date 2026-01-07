@@ -220,7 +220,7 @@ const ControlledExample = () => {
 };
 
 export default {
-  title: "Components/Reasoning Steps",
+  title: "Components/Reasoning steps",
   parameters: {
     docs: {
       description: {
