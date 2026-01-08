@@ -14,23 +14,19 @@ import WorkspaceShell, {
   WorkspaceShellFooter,
 } from "@carbon/ai-chat-components/es/react/workspace-shell.js";
 import Toolbar from "@carbon/ai-chat-components/es/react/toolbar.js";
-import AILabel from "@carbon/ai-chat-components/es/react/ai-label.js";
-import InlineNotification from "@carbon/ai-chat-components/es/react/inline-notification.js";
-import Icon from "@carbon/ai-chat-components/es/react/icon.js";
-import Tag from "@carbon/ai-chat-components/es/react/tag.js";
-import Button from "@carbon/ai-chat-components/es/react/button.js";
 
 //icons
-import Edit16 from "@carbon/icons/es/edit/16.js";
-import Version16 from "@carbon/icons/es/version/16.js";
-import Download16 from "@carbon/icons/es/download/16.js";
-import Share16 from "@carbon/icons/es/share/16.js";
-import Launch16 from "@carbon/icons/es/launch/16.js";
-import Maximize16 from "@carbon/icons/es/maximize/16.js";
-import Close16 from "@carbon/icons/es/close/16.js";
+import Edit16 from "@carbon/icons-react/lib/Edit";
+import Version16 from "@carbon/icons-react/lib/Version";
+import Download16 from "@carbon/icons-react/lib/Download";
+import Share16 from "@carbon/icons-react/lib/Share";
+import Launch16 from "@carbon/icons-react/lib/Launch";
+import Maximize16 from "@carbon/icons-react/lib/Maximize";
+import Close16 from "@carbon/icons-react/lib/Close";
 
 import React, { useState } from "react";
 import { ChatInstance, PanelType } from "@carbon/ai-chat";
+import { AILabel, Button, InlineNotification, Tag } from "@carbon/react";
 
 interface WorkspaceExampleProps {
   location: string;
@@ -143,30 +139,22 @@ function WorkspaceWriteableElementExample({
         <div slot="title" data-fixed>
           Optimizing excess inventory
         </div>
-        <AILabel
-          size="2xs"
-          autoalign
-          alignment="bottom"
-          slot="toolbar-ai-label"
-        >
-          <div slot="body-text">
-            <h4 className="margin-bottom-05">Powered by IBM watsonx</h4>
-            <div>
-              IBM watsonx is powered by the latest AI models to intelligently
-              process conversations and provide help whenever and wherever you
-              may need it.
-            </div>
+        <AILabel size="2xs" autoAlign>
+          <h4 className="margin-bottom-05">Powered by IBM watsonx</h4>
+          <div>
+            IBM watsonx is powered by the latest AI models to intelligently
+            process conversations and provide help whenever and wherever you may
+            need it.
           </div>
         </AILabel>
       </Toolbar>
       <InlineNotification
-        slot="notification"
         title="Notification Title"
         subtitle="Notification Subtitle"
         kind="warning"
         lowContrast={true}
         hideCloseButton
-      ></InlineNotification>
+      />
       <WorkspaceShellHeader
         titleText="Optimizing excess inventory plan"
         subTitleText={`Created on: ${new Date().toLocaleDateString()}`}
@@ -182,8 +170,8 @@ function WorkspaceWriteableElementExample({
           </Tag>
         </div>
 
-        <Button kind="tertiary" slot="header-action">
-          Edit Plan <Icon icon={Edit16} slot="icon" />
+        <Button kind="tertiary" slot="header-action" renderIcon={Edit16}>
+          Edit Plan
         </Button>
       </WorkspaceShellHeader>
       <WorkspaceShellBody>
