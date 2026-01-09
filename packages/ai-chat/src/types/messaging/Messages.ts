@@ -307,6 +307,11 @@ enum MessageResponseTypes {
    * Ability to show citations on your RAG result.
    */
   CONVERSATIONAL_SEARCH = "conversational_search",
+
+  /**
+   * Displays a preview card that can take the user flow to a workspace view.
+   */
+  PREVIEW_CARD = "preview_card",
 }
 
 /**
@@ -620,7 +625,8 @@ type GenericItem<TUserDefinedType = Record<string, unknown>> =
   | CarouselItem<TUserDefinedType>
   | ButtonItem<TUserDefinedType>
   | GridItem<TUserDefinedType>
-  | ConversationalSearchItem<TUserDefinedType>;
+  | ConversationalSearchItem<TUserDefinedType>
+  | PreviewCardItem<TUserDefinedType>;
 
 /**
  * A user defined item returned in a message response from an assistant.
@@ -634,6 +640,30 @@ interface UserDefinedItem<
    * If the user_defined response type should be rendered as full width and ignore margin on the "start".
    */
   full_width?: boolean;
+}
+
+/**
+ * This message item represents a preview card that can trigger a workflow view.
+ *
+ * @category Messaging
+ */
+interface PreviewCardItem<
+  TUserDefinedType = Record<string, unknown>,
+> extends BaseGenericItem<TUserDefinedType> {
+  /**
+   * The title of the preview card.
+   */
+  title?: string;
+
+  /**
+   * The subtitle of the preview card.
+   */
+  subtitle?: string;
+
+  /**
+   * Additional data to be passed to workspace.
+   */
+  additional_data?: any;
 }
 
 /**
@@ -1942,4 +1972,5 @@ export {
   ReasoningSteps,
   ReasoningStep,
   ReasoningStepOpenState,
+  PreviewCardItem,
 };

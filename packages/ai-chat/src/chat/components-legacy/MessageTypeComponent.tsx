@@ -32,6 +32,7 @@ import { ConnectToHumanAgent } from "./responseTypes/humanAgent/ConnectToHumanAg
 import { AudioComponent } from "./responseTypes/audio/AudioComponent";
 import { ButtonItemComponent } from "./responseTypes/buttonItem/ButtonItemComponent";
 import { CardItemComponent } from "./responseTypes/card/CardItemComponent";
+import { PreviewCardComponent } from "./responseTypes/previewCard/PreviewCardComponent";
 import { CarouselItemComponent } from "./responseTypes/carousel/CarouselItemComponent";
 import { ConversationalSearch } from "./responseTypes/conversationalSearch/ConversationalSearch";
 import UserDefinedResponse from "./responseTypes/custom/UserDefinedResponse";
@@ -86,6 +87,7 @@ import {
   TextItem,
   UserType,
   VideoItem,
+  PreviewCardItem,
 } from "../../types/messaging/Messages";
 import RichText from "./responseTypes/util/RichText";
 
@@ -304,6 +306,11 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
           localMessageItem as LocalMessageItem<GridItem>,
           message as MessageResponse,
         );
+      case MessageResponseTypes.PREVIEW_CARD:
+        return renderPreviewCard(
+          localMessageItem as LocalMessageItem<PreviewCardItem>,
+          message as MessageResponse,
+        );
       default:
         return renderUserDefinedResponse(
           localMessageItem as LocalMessageItem<TextItem>,
@@ -515,6 +522,18 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
         renderMessageComponent={(childProps) => (
           <MessageTypeComponent {...childProps} />
         )}
+      />
+    );
+  }
+
+  function renderPreviewCard(
+    message: LocalMessageItem<PreviewCardItem>,
+    originalMessage: MessageResponse,
+  ) {
+    return (
+      <PreviewCardComponent
+        localMessageItem={message}
+        fullMessage={originalMessage}
       />
     );
   }
