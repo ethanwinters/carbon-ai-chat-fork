@@ -284,7 +284,7 @@ function Launcher(props: LauncherProps) {
             ? BUTTON_TOOLTIP_POSITION.RIGHT
             : BUTTON_TOOLTIP_POSITION.LEFT
         }
-        tooltipText={closeButtonLabel}
+        tooltip-text={closeButtonLabel}
       >
         <CloseIcon aria-label={closeButtonLabel} slot="icon" />
       </Button>
@@ -294,6 +294,7 @@ function Launcher(props: LauncherProps) {
         role="complementary"
         id={launcherButtonId}
         aria-label={launcherAriaLabel}
+        tooltip-text={launcherAriaLabel}
         className="cds-aichat--launcher__button"
         data-testid={dataTestId}
         kind={BUTTON_KIND.PRIMARY}
