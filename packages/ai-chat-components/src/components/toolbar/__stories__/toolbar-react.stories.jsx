@@ -7,15 +7,9 @@ import {
   OverflowMenuBody,
   OverflowMenuItem,
 } from "../../../react/overflow-menu";
-import {
-  ContentSwitcher,
-  ContentSwitcherItem,
-} from "../../../react/content-switcher";
-import Icon from "../../../react/icon";
-import IconButton from "../../../react/icon-button";
-import AILabel from "../../../react/ai-label";
-import { actionLists } from "./story-data";
-import { Home16, ArrowLeft16, OverflowMenuVertical16 } from "@carbon/icons";
+import { ContentSwitcher, Switch, IconButton, AILabel } from "@carbon/react";
+import { actionLists } from "./story-data-react";
+import { Home, ArrowLeft, OverflowMenuVertical } from "@carbon/icons-react";
 import "./story-styles.scss";
 import { Default as DefaultWC } from "./toolbar.stories";
 
