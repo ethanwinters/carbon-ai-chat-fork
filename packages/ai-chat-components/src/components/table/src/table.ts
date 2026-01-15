@@ -15,6 +15,7 @@ import { tableSkeletonTemplate } from "./table-skeleton.template";
 import { loadTableRuntime } from "./table-loader.js";
 // @ts-ignore
 import styles from "./table.scss?lit";
+import prefix from "../../../globals/settings.js";
 
 type TableRuntimeModule = Awaited<ReturnType<typeof loadTableRuntime>>;
 
@@ -49,8 +50,9 @@ const PAGE_SIZE_WIDTH_THRESHOLD = 400;
 
 /**
  * Class functionality for the Table custom element.
+ * @element cds-aichat-table
  */
-@carbonElement("cds-aichat-table")
+@carbonElement(`${prefix}-table`)
 class CDSAIChatTable extends LitElement {
   /**
    * The optional table title.
