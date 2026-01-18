@@ -7,7 +7,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import throttle from "lodash-es/throttle";
+import throttle from "lodash-es/throttle.js";
 
 const WORKSPACE_MIN_WIDTH_FALLBACK = 640;
 const MESSAGES_MIN_WIDTH_FALLBACK = 320;

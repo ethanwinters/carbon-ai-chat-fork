@@ -10,16 +10,8 @@
 import React, { RefObject, useCallback } from "react";
 import { useSelector } from "../../hooks/useSelector";
 
-import { usePrevious } from "../../hooks/usePrevious";
-import { useServiceManager } from "../../hooks/useServiceManager";
-import {
-  AnimationInType,
-  AnimationOutType,
-} from "../../../types/utilities/Animation";
 import { AppState } from "../../../types/state/AppState";
 import { InputFunctions } from "../input/Input";
-import { OverlayPanel } from "../OverlayPanel";
-import { PageObjectId } from "../../../testing/PageObjectId";
 import { HomeScreen } from "./HomeScreen";
 import { HomeScreenStarterButton } from "../../../types/config/HomeScreenConfig";
 import { SingleOption } from "../../../types/messaging/Messages";
@@ -28,26 +20,6 @@ import { THREAD_ID_MAIN } from "../../utils/messageUtils";
 
 interface HomeScreenContainerProps {
   onClose: () => void;
-
-  /**
-   * Update the panel counter to show a panel has opened, and add any proper focus.
-   */
-  onPanelOpenStart: () => void;
-
-  /**
-   * Called when the panel his finished opening.
-   */
-  onPanelOpenEnd: () => void;
-
-  /**
-   * Update the panel counter to show a panel has started to close.
-   */
-  onPanelCloseStart: () => void;
-
-  /**
-   * Called when the panel has finished closing.
-   */
-  onPanelCloseEnd: () => void;
 
   /**
    * Handling sending information from the text input.
@@ -70,16 +42,6 @@ interface HomeScreenContainerProps {
   onToggleHomeScreen: () => void;
 
   /**
-   * Indicates if the home screen panel should be open.
-   */
-  showHomeScreen: boolean;
-
-  /**
-   * Determines if the hydration panel has closed.
-   */
-  isHydrationAnimationComplete: boolean;
-
-  /**
    * A React ref to the bot {@link Disclaimer} component.
    */
   homeScreenInputRef: RefObject<InputFunctions | null>;
@@ -92,46 +54,24 @@ interface HomeScreenContainerProps {
 }
 
 /**
- * This home screen container is for experimental purposes that renders a home screen variation provided by launch
- * darkly.
+ * This home screen container renders the home screen content.
+ * Note: Animation and visibility are now handled by CdsAiChatPanel wrapper.
  */
 function HomeScreenContainer({
   onClose,
-  onPanelCloseStart,
-  onPanelOpenStart,
-  onPanelCloseEnd,
-  onPanelOpenEnd,
   onSendBotInput,
   onSendButtonInput,
   onRestart,
-  showHomeScreen,
-  isHydrationAnimationComplete,
   homeScreenInputRef,
   onToggleHomeScreen,
 }: HomeScreenContainerProps) {
-  const serviceManager = useServiceManager();
   const homescreen = useSelector(
     (state: AppState) => state.config.public.homescreen,
   );
 
-  const isCustomPanelOpen = useSelector(
-    (state: AppState) => state.customPanelState.isOpen,
-  );
   const inputConfig = useSelector(
     (state: AppState) => state.config.public.input,
   );
-
-  const prevIsHydrationAnimationComplete = usePrevious(
-    isHydrationAnimationComplete,
-  );
-  const shouldHide = isCustomPanelOpen;
-
-  // If we're showing the home screen, hydration has completed, and hydration was complete on the previous render, then
-  // this is a subsequent render.
-  const subsequentRender =
-    showHomeScreen &&
-    isHydrationAnimationComplete &&
-    prevIsHydrationAnimationComplete;
 
   const handleSendInput = useCallback(
     (text: string) => {
@@ -158,34 +98,17 @@ function HomeScreenContainer({
   );
 
   return (
-    <OverlayPanel
-      onOpenStart={onPanelOpenStart}
-      onOpenEnd={onPanelOpenEnd}
-      onCloseStart={onPanelCloseStart}
-      onCloseEnd={onPanelCloseEnd}
-      // If this is a subsequent render lets fade the panel in. On first render don't animate the panel otherwise the
-      // message container will be briefly visible.
-      animationOnOpen={
-        subsequentRender ? AnimationInType.FADE_IN : AnimationInType.NONE
-      }
-      animationOnClose={AnimationOutType.FADE_OUT}
-      shouldOpen={showHomeScreen}
-      shouldHide={shouldHide}
-      serviceManager={serviceManager}
-      overlayPanelName={PageObjectId.HOME_SCREEN_PANEL}
-    >
-      <HomeScreen
-        isHydrated={isHydrationAnimationComplete}
-        homeScreenMessageInputRef={homeScreenInputRef}
-        homescreen={homescreen}
-        onSendInput={handleSendInput}
-        onStarterClick={handlerStarterClick}
-        onClose={onClose}
-        onRestart={onRestart}
-        onToggleHomeScreen={onToggleHomeScreen}
-        inputConfig={inputConfig}
-      />
-    </OverlayPanel>
+    <HomeScreen
+      isHydrated={true}
+      homeScreenMessageInputRef={homeScreenInputRef}
+      homescreen={homescreen}
+      onSendInput={handleSendInput}
+      onStarterClick={handlerStarterClick}
+      onClose={onClose}
+      onRestart={onRestart}
+      onToggleHomeScreen={onToggleHomeScreen}
+      inputConfig={inputConfig}
+    />
   );
 }
 

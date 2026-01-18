@@ -7,58 +7,78 @@
  *  @license
  */
 
-import React from "react";
+import React, { useCallback } from "react";
 
-import HomeScreenContainer from "../components-legacy/homeScreen/HomeScreenContainer";
+import { HomeScreen } from "../components-legacy/homeScreen/HomeScreen";
+import { useSelector } from "../hooks/useSelector";
+import { THREAD_ID_MAIN } from "../utils/messageUtils";
 import type { SingleOption } from "../../types/messaging/Messages";
+import type { HomeScreenStarterButton } from "../../types/config/HomeScreenConfig";
+import type { SendOptions } from "../../types/instance/ChatInstance";
+import type { AppState } from "../../types/state/AppState";
 import type { InputFunctions } from "../components-legacy/input/Input";
 
 interface HomeScreenPanelProps {
-  onPanelOpenStart: () => void;
-  onPanelOpenEnd: () => void;
-  onPanelCloseStart: () => void;
-  onPanelCloseEnd: () => void;
   onClose: () => void;
-  onSendBotInput: (text: string) => void;
-  onSendButtonInput: (input: SingleOption) => void;
+  onSendBotInput: (text: string, options?: SendOptions) => void;
+  onSendButtonInput: (input: SingleOption, threadID: string) => void;
   onRestart: () => void;
-  showHomeScreen: boolean;
-  isHydrationAnimationComplete: boolean;
   homeScreenInputRef: React.RefObject<InputFunctions | null>;
   onToggleHomeScreen: () => void;
-  requestFocus: () => void;
 }
 
 const HomeScreenPanel: React.FC<HomeScreenPanelProps> = ({
-  onPanelOpenStart,
-  onPanelOpenEnd,
-  onPanelCloseStart,
-  onPanelCloseEnd,
   onClose,
   onSendBotInput,
   onSendButtonInput,
   onRestart,
-  showHomeScreen,
-  isHydrationAnimationComplete,
   homeScreenInputRef,
   onToggleHomeScreen,
-  requestFocus,
-}) => (
-  <HomeScreenContainer
-    onPanelOpenStart={onPanelOpenStart}
-    onPanelOpenEnd={onPanelOpenEnd}
-    onPanelCloseStart={onPanelCloseStart}
-    onPanelCloseEnd={onPanelCloseEnd}
-    onClose={onClose}
-    onSendBotInput={onSendBotInput}
-    onSendButtonInput={onSendButtonInput}
-    onRestart={onRestart}
-    showHomeScreen={showHomeScreen}
-    isHydrationAnimationComplete={isHydrationAnimationComplete}
-    homeScreenInputRef={homeScreenInputRef}
-    onToggleHomeScreen={onToggleHomeScreen}
-    requestFocus={requestFocus}
-  />
-);
+}) => {
+  const homescreen = useSelector(
+    (state: AppState) => state.config.public.homescreen,
+  );
+  const inputConfig = useSelector(
+    (state: AppState) => state.config.public.input,
+  );
+
+  const handleSendInput = useCallback(
+    (text: string) => {
+      onSendBotInput(text);
+    },
+    [onSendBotInput],
+  );
+
+  const handleStarterClick = useCallback(
+    (starter: HomeScreenStarterButton) => {
+      onSendButtonInput(
+        {
+          label: starter.label,
+          value: {
+            input: {
+              text: starter.label,
+            },
+          },
+        },
+        THREAD_ID_MAIN,
+      );
+    },
+    [onSendButtonInput],
+  );
+
+  return (
+    <HomeScreen
+      isHydrated={true}
+      homeScreenMessageInputRef={homeScreenInputRef}
+      homescreen={homescreen}
+      onSendInput={handleSendInput}
+      onStarterClick={handleStarterClick}
+      onClose={onClose}
+      onRestart={onRestart}
+      onToggleHomeScreen={onToggleHomeScreen}
+      inputConfig={inputConfig}
+    />
+  );
+};
 
 export default HomeScreenPanel;

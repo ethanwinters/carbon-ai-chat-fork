@@ -8,51 +8,76 @@
  */
 
 import React from "react";
+import Restart16 from "@carbon/icons/es/restart/16.js";
+import cx from "classnames";
+import { useIntl } from "react-intl";
 
-import CatastrophicError from "../components-legacy/CatastrophicError";
-import { OverlayPanel } from "../components-legacy/OverlayPanel";
-import { HasServiceManager } from "../hocs/withServiceManager";
-import {
-  AnimationInType,
-  AnimationOutType,
-} from "../../types/utilities/Animation";
-import { PageObjectId } from "../../testing/PageObjectId";
+import ChatButton, {
+  CHAT_BUTTON_KIND,
+  CHAT_BUTTON_SIZE,
+} from "../components/carbon/ChatButton";
+import { ErrorMessageDark } from "../components-legacy/ErrorMessageDark";
+import { ErrorMessageLight } from "../components-legacy/ErrorMessageLight";
+import RichText from "../components-legacy/responseTypes/util/RichText";
+import { useSelector } from "../hooks/useSelector";
+import { carbonIconToReact } from "../utils/carbonIcon";
 import type { AppState } from "../../types/state/AppState";
+import { CarbonTheme, LanguagePack } from "../../types/config/PublicConfig";
 
-type LanguagePack = AppState["config"]["derived"]["languagePack"];
-
-interface CatastrophicErrorPanelProps extends HasServiceManager {
-  headerDisplayName: string;
+interface CatastrophicErrorPanelProps {
   assistantName: string;
   languagePack: LanguagePack;
-  onClose: () => void;
   onRestart: () => void;
 }
 
 const CatastrophicErrorPanel: React.FC<CatastrophicErrorPanelProps> = ({
-  serviceManager,
-  headerDisplayName,
   assistantName,
   languagePack,
-  onClose,
   onRestart,
-}) => (
-  <OverlayPanel
-    animationOnOpen={AnimationInType.NONE}
-    animationOnClose={AnimationOutType.NONE}
-    shouldOpen
-    serviceManager={serviceManager}
-    overlayPanelName={PageObjectId.CATASTROPHIC_PANEL}
-  >
-    <CatastrophicError
-      onClose={onClose}
-      headerDisplayName={headerDisplayName}
-      languagePack={languagePack}
-      onRestart={onRestart}
-      showHeader
-      assistantName={assistantName}
-    />
-  </OverlayPanel>
-);
+}) => {
+  const intl = useIntl();
+  const carbonTheme = useSelector(
+    (state: AppState) =>
+      state.config.derived.themeWithDefaults.derivedCarbonTheme,
+  );
+  const isDarkTheme =
+    carbonTheme === CarbonTheme.G90 || carbonTheme === CarbonTheme.G100;
+
+  const errorKey: keyof LanguagePack = "errors_communicating";
+  const errorBodyText = intl.formatMessage({ id: errorKey }, { assistantName });
+  const Restart = carbonIconToReact(Restart16);
+
+  return (
+    <div
+      className={cx(
+        "cds-aichat--catastrophic-error",
+        "cds-aichat--panel-content",
+      )}
+    >
+      <div className="cds-aichat--catastrophic-error__error-text-container">
+        {isDarkTheme && <ErrorMessageDark />}
+        {!isDarkTheme && <ErrorMessageLight />}
+        <div className="cds-aichat--catastrophic-error__error-heading">
+          {languagePack.errors_somethingWrong}
+        </div>
+        <div className="cds-aichat--catastrophic-error__error-body">
+          <RichText text={errorBodyText} highlight={true} />
+        </div>
+        {onRestart && (
+          <ChatButton
+            className="cds-aichat--catastrophic-error__restart-button"
+            kind={CHAT_BUTTON_KIND.TERTIARY}
+            size={CHAT_BUTTON_SIZE.SMALL}
+            aria-label={languagePack.buttons_restart}
+            onClick={onRestart}
+          >
+            <Restart slot="icon" />
+            {languagePack.buttons_retry}
+          </ChatButton>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default CatastrophicErrorPanel;

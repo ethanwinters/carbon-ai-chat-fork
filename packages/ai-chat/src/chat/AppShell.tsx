@@ -15,25 +15,30 @@ import React, {
   useState,
 } from "react";
 import cx from "classnames";
-import FocusTrap from "focus-trap-react";
 import CDSButton from "@carbon/web-components/es/components/button/button.js";
 import { useIntl } from "react-intl";
 
 import AppShellErrorBoundary from "./AppShellErrorBoundary";
-import AssistantChat, { ChatClass } from "./components-legacy/AssistantChat";
+// import AssistantChat, { ChatClass } from "./components-legacy/AssistantChat"; // Kept for reference until Phase 5
 import { LauncherContainer } from "./components-legacy/launcher/LauncherContainer";
-import { HideComponent } from "./components-legacy/util/HideComponent";
+// import { HideComponent } from "./components-legacy/util/HideComponent"; // No longer needed with CdsAiChatShell
 import VisuallyHidden from "./components-legacy/util/VisuallyHidden";
 import { InputFunctions } from "./components-legacy/input/Input";
 import Layer from "./components/carbon/Layer";
-import CatastrophicErrorPanel from "./panels/CatastrophicErrorPanel";
-import CustomPanelContainer from "./panels/CustomPanelContainer";
-import DisclaimerPanel from "./panels/DisclaimerPanel";
-import HomeScreenPanel from "./panels/HomeScreenPanel";
-import HydrationPanel from "./panels/HydrationPanel";
-import IFramePanel from "./panels/IFramePanel";
-import ResponsePanel from "./panels/ResponsePanel";
-import ViewSourcePanel from "./panels/ViewSourcePanel";
+import ChatShell from "@carbon/ai-chat-components/es/react/chat-shell.js";
+import { AssistantHeader } from "./components-legacy/header/AssistantHeader";
+import MessagesComponent, {
+  MessagesComponentClass,
+} from "./components-legacy/MessagesComponent";
+import { Input } from "./components-legacy/input/Input";
+import { AppShellWriteableElements } from "./AppShellWriteableElements";
+import { EndHumanAgentChatModal } from "./components-legacy/modals/EndHumanAgentChatModal";
+import { RequestScreenShareModal } from "./components-legacy/modals/RequestScreenShareModal";
+import WorkspaceContainer from "./components-legacy/WorkspaceContainer";
+import { createUnmappingMemoizer } from "./utils/memoizerUtils";
+import { LocalMessageItem } from "../types/messaging/LocalMessageItem";
+import { FileUpload } from "../types/state/AppState";
+import { AppShellPanels } from "./AppShellPanels";
 
 import { HasServiceManager } from "./hocs/withServiceManager";
 import { useMobileViewportLayout } from "./hooks/useMobileViewportLayout";
@@ -43,7 +48,6 @@ import { useSelector } from "./hooks/useSelector";
 import { ModalPortalRootProvider } from "./providers/ModalPortalRootProvider";
 import actions from "./store/actions";
 import {
-  selectHasOpenPanelWithBackButton,
   selectHumanAgentDisplayState,
   selectInputState,
   selectIsInputToHumanAgent,
@@ -187,43 +191,32 @@ export default function AppShell({
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetContainerRef = useRef<HTMLDivElement | null>(null);
   const animationContainerRef = useRef<HTMLDivElement | null>(null);
-  const botChatRef = useRef<ChatClass | null>(null);
+  // const botChatRef = useRef<ChatClass | null>(null); // No longer needed with CdsAiChatShell
   const homeScreenInputRef = useRef<InputFunctions | null>(null);
   const disclaimerRef = useRef<CDSButton | null>(null);
   const iframePanelRef = useRef<HasRequestFocus | null>(null);
   const viewSourcePanelRef = useRef<HasRequestFocus | null>(null);
   const customPanelRef = useRef<HasRequestFocus | null>(null);
   const responsePanelRef = useRef<HasRequestFocus | null>(null);
+  // New refs for CdsAiChatShell slots
+  const messagesRef = useRef<MessagesComponentClass | null>(null);
+  const inputRef = useRef<InputFunctions | null>(null);
   const [open, setOpen] = useState(viewState.mainWindow);
   const [closing, setClosing] = useState(false);
-  const [numPanelsOpen, setNumPanelsOpen] = useState(0);
-  const [numPanelsAnimating, setNumPanelsAnimating] = useState(0);
-  const [, setNumPanelsCovering] = useState(0);
   const [isHydrationAnimationComplete, setIsHydrationAnimationComplete] =
     useState(isHydrated);
   const [shouldAutoFocus, setShouldAutoFocus] = useState(
     publicConfig.shouldTakeFocusIfOpensAutomatically,
   );
-  const useCustomHostElement = Boolean(hostElement);
-  const headerDisplayName = header?.name || publicConfig.assistantName;
-  const focusTrapOptions = useMemo(
-    () => ({
-      fallbackFocus: () => {
-        if (widgetContainerRef.current) {
-          return widgetContainerRef.current;
-        }
-        if (containerRef.current) {
-          return containerRef.current;
-        }
-        if (isBrowser()) {
-          return document.body || document.documentElement;
-        }
-        // Should never happen, but focus-trap requires a node.
-        throw new Error("Focus trap fallback node unavailable");
-      },
-    }),
+  // State for modals extracted from AssistantChat
+  const [showEndChatConfirmation, setShowEndChatConfirmation] = useState(false);
+  // Memoizer for messages array
+  const messagesToArray = useMemo(
+    () => createUnmappingMemoizer<LocalMessageItem>(),
     [],
   );
+  const useCustomHostElement = Boolean(hostElement);
+  const headerDisplayName = header?.name || publicConfig.assistantName;
   const hostname = isBrowser() ? window.location.hostname : "localhost";
   const showDisclaimer =
     publicConfig.disclaimer?.isOn &&
@@ -234,7 +227,6 @@ export default function AppShell({
     !showDisclaimer;
   const inputState = selectInputState(appState);
   const agentDisplayState = selectHumanAgentDisplayState(appState);
-  const hasPanelWithBackButton = selectHasOpenPanelWithBackButton(appState);
   const prevIsHydrated = usePrevious(isHydrated);
   const prevViewState = usePrevious(viewState);
   const prevHasSentNonWelcomeMessage = usePrevious(
@@ -367,8 +359,9 @@ export default function AppShell({
           customPanelRef.current?.requestFocus();
         } else if (responsePanelState.isOpen) {
           responsePanelRef.current?.requestFocus();
-        } else if (botChatRef.current) {
-          botChatRef.current.requestInputFocus();
+        } else if (inputRef.current) {
+          // Updated: direct input ref instead of botChatRef
+          inputRef.current.takeFocus();
         }
       }
     } catch (error) {
@@ -481,15 +474,15 @@ export default function AppShell({
   ]);
 
   const doAutoScroll = useCallback((options?: AutoScrollOptions) => {
-    botChatRef.current?.doAutoScroll(options);
+    messagesRef.current?.doAutoScroll(options);
   }, []);
 
   const getMessagesScrollBottom = useCallback(() => {
-    return botChatRef.current?.getMessagesScrollBottom() ?? 0;
+    return messagesRef.current?.getContainerScrollBottom() ?? 0;
   }, []);
 
   const doScrollToMessage = useCallback((messageID: string, animate = true) => {
-    botChatRef.current?.doScrollToMessage(messageID, animate);
+    messagesRef.current?.doScrollToMessage(messageID, animate);
   }, []);
 
   const mainWindowFunctions = useMemo<MainWindowFunctions>(
@@ -624,6 +617,78 @@ export default function AppShell({
     [serviceManager],
   );
 
+  // Helper functions extracted from AssistantChat
+  const showConfirmEndChat = useCallback(() => {
+    setShowEndChatConfirmation(true);
+  }, []);
+
+  const hideConfirmEndChat = useCallback(() => {
+    setShowEndChatConfirmation(false);
+    setTimeout(() => {
+      inputRef.current?.takeFocus();
+    });
+  }, []);
+
+  const confirmHumanAgentEndChat = useCallback(() => {
+    hideConfirmEndChat();
+    serviceManager.humanAgentService.endChat(true);
+  }, [hideConfirmEndChat, serviceManager]);
+
+  const requestInputFocus = useCallback(() => {
+    try {
+      if (
+        agentDisplayState.isConnectingOrConnected &&
+        agentDisplayState.disableInput
+      ) {
+        if (messagesRef.current?.requestHumanAgentBannerFocus()) {
+          return;
+        }
+      }
+      if (inputRef.current && inputState.fieldVisible) {
+        inputRef.current.takeFocus();
+      }
+    } catch (error) {
+      consoleError("An error occurred in requestInputFocus", error);
+    }
+  }, [agentDisplayState, inputState.fieldVisible]);
+
+  const shouldDisableInput = useCallback(() => {
+    return inputState.isReadonly || agentDisplayState.disableInput;
+  }, [inputState.isReadonly, agentDisplayState.disableInput]);
+
+  const shouldDisableSend = useCallback(() => {
+    return shouldDisableInput() || !isHydrated;
+  }, [shouldDisableInput, isHydrated]);
+
+  const onFilesSelectedForUpload = useCallback(
+    (uploads: FileUpload[]) => {
+      const isInputToHumanAgent = agentDisplayState.isConnectingOrConnected;
+      if (isInputToHumanAgent) {
+        serviceManager.humanAgentService.filesSelectedForUpload(uploads);
+        if (!inputState.allowMultipleFileUploads) {
+          requestInputFocus();
+        }
+      }
+    },
+    [
+      agentDisplayState.isConnectingOrConnected,
+      inputState.allowMultipleFileUploads,
+      requestInputFocus,
+      serviceManager,
+    ],
+  );
+
+  const showUploadButtonDisabled = useMemo(() => {
+    const numFiles = inputState.files?.length ?? 0;
+    const anyCurrentFiles =
+      numFiles > 0 || humanAgentState.fileUploadInProgress;
+    return anyCurrentFiles && !inputState.allowMultipleFileUploads;
+  }, [
+    inputState.files,
+    inputState.allowMultipleFileUploads,
+    humanAgentState.fileUploadInProgress,
+  ]);
+
   const onAcceptDisclaimer = useCallback(() => {
     serviceManager.store.dispatch(actions.acceptDisclaimer());
     serviceManager.fire({
@@ -631,34 +696,21 @@ export default function AppShell({
     });
   }, [serviceManager]);
 
-  const onPanelOpenStart = useCallback(
-    (coverBackground: boolean) => {
-      setNumPanelsOpen((value) => value + 1);
-      setNumPanelsAnimating((value) => value + 1);
-      if (coverBackground) {
-        setNumPanelsCovering((value) => value + 1);
-      }
-      requestFocus();
-    },
-    [requestFocus],
-  );
-
-  const onPanelOpenEnd = useCallback(() => {
-    setNumPanelsAnimating((value) => value - 1);
-  }, []);
-
-  const onPanelCloseStart = useCallback(() => {
-    setNumPanelsAnimating((value) => value + 1);
+  const onPanelOpenStart = () => {
     requestFocus();
-  }, [requestFocus]);
+  };
 
-  const onPanelCloseEnd = useCallback((coverBackground: boolean) => {
-    setNumPanelsOpen((value) => (value > 0 ? value - 1 : 0));
-    setNumPanelsAnimating((value) => value - 1);
-    if (coverBackground) {
-      setNumPanelsCovering((value) => (value > 0 ? value - 1 : 0));
-    }
-  }, []);
+  const onPanelOpenEnd = () => {
+    requestFocus();
+  };
+
+  const onPanelCloseStart = () => {
+    requestFocus();
+  };
+
+  const onPanelCloseEnd = () => {
+    requestFocus();
+  };
 
   const useHomeScreenVersion =
     Boolean(publicConfig.homescreen?.isOn) &&
@@ -668,17 +720,7 @@ export default function AppShell({
     !catastrophicErrorType &&
     viewState.mainWindow;
   const isHydratingComplete = assistantMessageState.isHydratingCounter === 0;
-  const hideAssistantChatContainer =
-    !isHydrationAnimationComplete ||
-    (numPanelsAnimating === 0 && numPanelsOpen > 0 && !hasPanelWithBackButton);
 
-  const activateFocusTrap = Boolean(
-    publicConfig.enableFocusTrap &&
-    open &&
-    !header?.hideMinimizeButton &&
-    isHydrated &&
-    !assistantMessageState.isHydratingCounter,
-  );
   return (
     <div
       className={cx(
@@ -703,231 +745,187 @@ export default function AppShell({
     >
       <AppShellErrorBoundary onError={handleBoundaryError}>
         <ModalPortalRootProvider hostElement={modalPortalHostElement}>
-          <FocusTrap
-            active={activateFocusTrap}
-            focusTrapOptions={focusTrapOptions}
+          <Layer
+            className="cds-aichat--widget__layer"
+            level={
+              theme.derivedCarbonTheme === CarbonTheme.G10 ||
+              theme.derivedCarbonTheme === CarbonTheme.G100
+                ? 1
+                : 0
+            }
           >
-            <Layer
-              className="cds-aichat--widget__layer"
-              level={
-                theme.derivedCarbonTheme === CarbonTheme.G10 ||
-                theme.derivedCarbonTheme === CarbonTheme.G100
-                  ? 1
-                  : 0
-              }
+            <div
+              data-testid={PageObjectId.CHAT_WIDGET}
+              className={cx("cds-aichat--widget", {
+                "cds-aichat--widget--rounded":
+                  theme.corners === CornersType.ROUND,
+                "cds-aichat--widget--frameless": !layout?.showFrame,
+                "cds-aichat--widget--default-element": !useCustomHostElement,
+                "cds-aichat--widget--launched": !closing,
+                "cds-aichat--widget--closing": closing,
+                "cds-aichat--widget--closed": !open,
+                "cds-aichat--widget--max-width":
+                  chatWidthBreakpoint === ChatWidthBreakpoint.WIDE &&
+                  layout.hasContentMaxWidth,
+                [WIDTH_BREAKPOINT_NARROW]:
+                  chatWidthBreakpoint === ChatWidthBreakpoint.NARROW,
+                [WIDTH_BREAKPOINT_STANDARD]:
+                  chatWidthBreakpoint === ChatWidthBreakpoint.STANDARD,
+                [WIDTH_BREAKPOINT_WIDE]:
+                  chatWidthBreakpoint === ChatWidthBreakpoint.WIDE,
+              })}
+              ref={widgetContainerRef}
             >
+              <VisuallyHidden>
+                <h1>{languagePack.window_title}</h1>
+              </VisuallyHidden>
               <div
-                data-testid={PageObjectId.CHAT_WIDGET}
-                className={cx("cds-aichat--widget", {
-                  "cds-aichat--widget--rounded":
-                    theme.corners === CornersType.ROUND,
-                  "cds-aichat--widget--frameless": !layout?.showFrame,
-                  "cds-aichat--widget--default-element": !useCustomHostElement,
-                  "cds-aichat--widget--launched": !closing,
-                  "cds-aichat--widget--closing": closing,
-                  "cds-aichat--widget--closed": !open,
-                  "cds-aichat--widget--max-width":
-                    chatWidthBreakpoint === ChatWidthBreakpoint.WIDE &&
-                    layout.hasContentMaxWidth,
-                  [WIDTH_BREAKPOINT_NARROW]:
-                    chatWidthBreakpoint === ChatWidthBreakpoint.NARROW,
-                  [WIDTH_BREAKPOINT_STANDARD]:
-                    chatWidthBreakpoint === ChatWidthBreakpoint.STANDARD,
-                  [WIDTH_BREAKPOINT_WIDE]:
-                    chatWidthBreakpoint === ChatWidthBreakpoint.WIDE,
-                })}
-                ref={widgetContainerRef}
+                ref={animationContainerRef}
+                className="cds-aichat--widget__animation-container"
+                onScroll={() => {
+                  if (animationContainerRef.current?.scrollTop !== 0) {
+                    animationContainerRef.current.scrollTop = 0;
+                  }
+                }}
               >
-                {activateFocusTrap && (
-                  <div className="cds-aichat--widget__focus-trap-glass" />
-                )}
-                <VisuallyHidden>
-                  <h1>{languagePack.window_title}</h1>
-                </VisuallyHidden>
-                {catastrophicErrorType && (
-                  <CatastrophicErrorPanel
-                    serviceManager={serviceManager}
-                    headerDisplayName={headerDisplayName}
-                    assistantName={publicConfig.assistantName}
-                    languagePack={languagePack}
-                    onClose={onClose}
-                    onRestart={onRestart}
-                  />
-                )}
-                {!catastrophicErrorType && (
-                  <div
-                    ref={animationContainerRef}
-                    className="cds-aichat--widget__animation-container"
-                    onScroll={() => {
-                      if (animationContainerRef.current?.scrollTop !== 0) {
-                        animationContainerRef.current.scrollTop = 0;
-                      }
-                    }}
+                <div className="cds-aichat--widget--content">
+                  <ChatShell
+                    aiEnabled={theme.aiEnabled}
+                    showFrame={layout?.showFrame}
+                    roundedCorners={theme.corners === CornersType.ROUND}
+                    showWorkspace={workspacePanelState.isOpen}
+                    workspaceLocation={
+                      workspacePanelState.options.preferredLocation
+                    }
                   >
-                    <div className="cds-aichat--widget--content">
-                      <HydrationPanel
-                        serviceManager={serviceManager}
+                    <AppShellPanels
+                      serviceManager={serviceManager}
+                      languagePack={languagePack}
+                      headerDisplayName={headerDisplayName}
+                      assistantName={publicConfig.assistantName}
+                      useHomeScreenVersion={useHomeScreenVersion}
+                      isHydratingComplete={isHydratingComplete}
+                      shouldShowHydrationPanel={shouldShowHydrationPanel}
+                      onPanelOpenStart={onPanelOpenStart}
+                      onPanelOpenEnd={onPanelOpenEnd}
+                      onPanelCloseStart={onPanelCloseStart}
+                      onPanelCloseEnd={onPanelCloseEnd}
+                      onHydrationPanelClose={onHydrationPanelClose}
+                      onClose={onClose}
+                      onRestart={onRestart}
+                      customPanelState={customPanelState}
+                      customPanelRef={customPanelRef}
+                      publicConfig={publicConfig}
+                      showDisclaimer={showDisclaimer}
+                      disclaimerRef={disclaimerRef}
+                      onAcceptDisclaimer={onAcceptDisclaimer}
+                      responsePanelState={responsePanelState}
+                      responsePanelRef={responsePanelRef}
+                      requestFocus={requestFocus}
+                      showHomeScreen={showHomeScreen}
+                      onSendInput={onSendInput}
+                      onSendHomeButtonInput={onSendHomeButtonInput}
+                      homeScreenInputRef={homeScreenInputRef}
+                      onToggleHomeScreen={onToggleHomeScreen}
+                      isHydrationAnimationComplete={
+                        isHydrationAnimationComplete
+                      }
+                      iFramePanelState={iFramePanelState}
+                      iframePanelRef={iframePanelRef}
+                      viewSourcePanelState={viewSourcePanelState}
+                      viewSourcePanelRef={viewSourcePanelRef}
+                      allMessagesByID={allMessagesByID}
+                      inputState={inputState}
+                      config={config}
+                      catastrophicErrorType={catastrophicErrorType}
+                    />
+
+                    <div slot="header">
+                      <AssistantHeader
+                        onClose={onClose}
+                        onRestart={onRestart}
                         headerDisplayName={headerDisplayName}
-                        shouldOpen={shouldShowHydrationPanel}
-                        isHydrated={isHydratingComplete}
-                        useHomeScreenVersion={useHomeScreenVersion}
-                        languagePack={languagePack}
-                        onClose={onClose}
-                        onOpenStart={() => onPanelOpenStart(false)}
-                        onCloseStart={onPanelCloseStart}
-                        onOpenEnd={onPanelOpenEnd}
-                        onCloseEnd={() => {
-                          onHydrationPanelClose();
-                          onPanelCloseEnd(false);
-                        }}
+                        onToggleHomeScreen={onToggleHomeScreen}
+                        includeWriteableElement={false}
                       />
-                      <CustomPanelContainer
-                        panelRef={customPanelRef}
-                        onClose={onClose}
-                        onClickRestart={onRestart}
-                        onPanelOpenStart={() => onPanelOpenStart(true)}
-                        onPanelOpenEnd={onPanelOpenEnd}
-                        onPanelCloseStart={onPanelCloseStart}
-                        onPanelCloseEnd={() => onPanelCloseEnd(true)}
-                      />
-                      {isHydrated &&
-                        !assistantMessageState.isHydratingCounter && (
-                          <>
-                            {publicConfig.disclaimer?.isOn && (
-                              <DisclaimerPanel
-                                serviceManager={serviceManager}
-                                shouldOpen={showDisclaimer}
-                                disclaimerHTML={
-                                  publicConfig.disclaimer?.disclaimerHTML
-                                }
-                                disclaimerAcceptButtonRef={disclaimerRef}
-                                onAcceptDisclaimer={onAcceptDisclaimer}
-                                onClose={onClose}
-                                onOpenStart={() => onPanelOpenStart(false)}
-                                onCloseStart={onPanelCloseStart}
-                                onOpenEnd={onPanelOpenEnd}
-                                onCloseEnd={() => onPanelCloseEnd(false)}
-                              />
-                            )}
-                            <ResponsePanel
-                              responsePanelRef={responsePanelRef}
-                              isOpen={responsePanelState.isOpen}
-                              isMessageForInput={
-                                responsePanelState.isMessageForInput
-                              }
-                              localMessageItem={
-                                responsePanelState.localMessageItem
-                              }
-                              requestFocus={requestFocus}
-                              onClose={onClose}
-                              onClickRestart={onRestart}
-                              onClickBack={() =>
-                                serviceManager.store.dispatch(
-                                  actions.setResponsePanelIsOpen(false),
-                                )
-                              }
-                              onPanelOpenStart={() => onPanelOpenStart(true)}
-                              onPanelOpenEnd={onPanelOpenEnd}
-                              onPanelCloseStart={onPanelCloseStart}
-                              onPanelCloseEnd={() => {
-                                onPanelCloseEnd(true);
-                                serviceManager.store.dispatch(
-                                  actions.setResponsePanelContent(null, false),
-                                );
-                              }}
-                            />
-                            <HomeScreenPanel
-                              onPanelOpenStart={() => onPanelOpenStart(false)}
-                              onPanelOpenEnd={onPanelOpenEnd}
-                              onPanelCloseStart={onPanelCloseStart}
-                              onPanelCloseEnd={() => onPanelCloseEnd(false)}
-                              onClose={onClose}
-                              onSendBotInput={(text: string) =>
-                                onSendInput(
-                                  text,
-                                  MessageSendSource.HOME_SCREEN_INPUT,
-                                )
-                              }
-                              onSendButtonInput={onSendHomeButtonInput}
-                              onRestart={onRestart}
-                              showHomeScreen={showHomeScreen}
-                              isHydrationAnimationComplete={
-                                isHydrationAnimationComplete
-                              }
-                              homeScreenInputRef={homeScreenInputRef}
-                              onToggleHomeScreen={onToggleHomeScreen}
-                              requestFocus={requestFocus}
-                            />
-                            <IFramePanel
-                              serviceManager={serviceManager}
-                              isOpen={iFramePanelState.isOpen}
-                              panelRef={iframePanelRef}
-                              onOpenStart={() => onPanelOpenStart(true)}
-                              onOpenEnd={onPanelOpenEnd}
-                              onCloseStart={onPanelCloseStart}
-                              onCloseEnd={() => onPanelCloseEnd(true)}
-                              onClickClose={onClose}
-                              onClickRestart={onRestart}
-                            />
-                            <ViewSourcePanel
-                              serviceManager={serviceManager}
-                              isOpen={viewSourcePanelState.isOpen}
-                              panelRef={viewSourcePanelRef}
-                              onOpenStart={() => onPanelOpenStart(true)}
-                              onOpenEnd={onPanelOpenEnd}
-                              onCloseStart={onPanelCloseStart}
-                              onCloseEnd={() => onPanelCloseEnd(true)}
-                              onClickClose={onClose}
-                              onClickRestart={onRestart}
-                            />
-                            <HideComponent
-                              className="cds-aichat--assistant-container"
-                              hidden={hideAssistantChatContainer}
-                            >
-                              <AssistantChat
-                                assistantName={publicConfig.assistantName}
-                                headerDisplayName={headerDisplayName}
-                                ref={botChatRef}
-                                languagePack={languagePack}
-                                config={config}
-                                serviceManager={serviceManager}
-                                onClose={onClose}
-                                messageState={assistantMessageState}
-                                onSendInput={(text: string) =>
-                                  onSendInput(
-                                    text,
-                                    MessageSendSource.MESSAGE_INPUT,
-                                  )
-                                }
-                                humanAgentState={humanAgentState}
-                                workspacePanelState={workspacePanelState}
-                                agentDisplayState={agentDisplayState}
-                                allMessageItemsByID={allMessageItemsByID}
-                                onRestart={onRestart}
-                                isHydrated={isHydrated}
-                                isHydrationAnimationComplete={
-                                  isHydrationAnimationComplete &&
-                                  !showDisclaimer
-                                }
-                                inputState={inputState}
-                                onToggleHomeScreen={onToggleHomeScreen}
-                                onUserTyping={onUserTyping}
-                                locale={publicConfig.locale || "en"}
-                                useAITheme={theme.aiEnabled}
-                                carbonTheme={theme.derivedCarbonTheme}
-                                shouldHideChatContentForPanel={
-                                  hasPanelWithBackButton
-                                }
-                              />
-                            </HideComponent>
-                          </>
-                        )}
                     </div>
-                  </div>
-                )}
+
+                    <AppShellWriteableElements
+                      serviceManager={serviceManager}
+                    />
+
+                    <div slot="messages">
+                      <MessagesComponent
+                        ref={messagesRef}
+                        messageState={assistantMessageState}
+                        localMessageItems={messagesToArray(
+                          assistantMessageState.localMessageIDs,
+                          allMessageItemsByID,
+                        )}
+                        requestInputFocus={requestInputFocus}
+                        assistantName={publicConfig.assistantName}
+                        intl={intl}
+                        onEndHumanAgentChat={showConfirmEndChat}
+                        locale={publicConfig.locale || "en"}
+                        useAITheme={theme.aiEnabled}
+                        carbonTheme={theme.derivedCarbonTheme}
+                      />
+                    </div>
+
+                    <div slot="input">
+                      <Input
+                        ref={inputRef}
+                        languagePack={languagePack}
+                        serviceManager={serviceManager}
+                        disableInput={shouldDisableInput()}
+                        disableSend={shouldDisableSend()}
+                        isInputVisible={inputState.fieldVisible}
+                        onSendInput={(text: string) =>
+                          onSendInput(text, MessageSendSource.MESSAGE_INPUT)
+                        }
+                        onUserTyping={onUserTyping}
+                        showUploadButton={inputState.allowFileUploads}
+                        disableUploadButton={showUploadButtonDisabled}
+                        allowedFileUploadTypes={
+                          inputState.allowedFileUploadTypes
+                        }
+                        allowMultipleFileUploads={
+                          inputState.allowMultipleFileUploads
+                        }
+                        pendingUploads={inputState.files}
+                        onFilesSelectedForUpload={onFilesSelectedForUpload}
+                        placeholder={
+                          languagePack[agentDisplayState.inputPlaceholderKey]
+                        }
+                        isStopStreamingButtonVisible={
+                          inputState.stopStreamingButtonState.isVisible
+                        }
+                        isStopStreamingButtonDisabled={
+                          inputState.stopStreamingButtonState.isDisabled
+                        }
+                        maxInputChars={config.public.input?.maxInputCharacters}
+                        trackInputState
+                      />
+                    </div>
+
+                    <div slot="workspace">
+                      <WorkspaceContainer serviceManager={serviceManager} />
+                    </div>
+                  </ChatShell>
+                  {/* Modals rendered outside shell */}
+                  {showEndChatConfirmation && (
+                    <EndHumanAgentChatModal
+                      onConfirm={confirmHumanAgentEndChat}
+                      onCancel={hideConfirmEndChat}
+                    />
+                  )}
+                  {humanAgentState.showScreenShareRequest && (
+                    <RequestScreenShareModal />
+                  )}
+                </div>
               </div>
-            </Layer>
-          </FocusTrap>
+            </div>
+          </Layer>
         </ModalPortalRootProvider>
       </AppShellErrorBoundary>
       {showLauncher && <LauncherContainer />}
