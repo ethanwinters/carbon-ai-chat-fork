@@ -306,7 +306,7 @@ $border-radius: var(--#{$prefix}-rounded-modifier-radius, 0.5rem);
 
 @keyframes cds-aichat-slide-out-to-bottom-with-header {
   from {
-    inset-block-start: var(--cds-aichat-header-height, 0);
+    inset-block-start: var(--#{$prefix}-header-height, 0);
   }
 
   to {
