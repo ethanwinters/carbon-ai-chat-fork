@@ -58,7 +58,6 @@ function DemoApp({ config, settings, onChatInstanceReady }: AppProps) {
   const [instance, setInstance] = useState<ChatInstance | null>(null);
   const [stateText, setStateText] = useState<string>("Initial text");
   const isSidebarLayout = settings.layout === "sidebar";
-  const chatElementRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setInterval(() => setStateText(Date.now().toString()), 2000);
@@ -348,7 +347,7 @@ function DemoApp({ config, settings, onChatInstanceReady }: AppProps) {
       serviceDeskFactory={serviceDeskFactory}
     />
   ) : (
-    <div ref={chatElementRef} onTransitionEnd={handleTransitionEnd}>
+    <div onTransitionEnd={handleTransitionEnd}>
       <ChatCustomElement
         {...config}
         className={className as string}
