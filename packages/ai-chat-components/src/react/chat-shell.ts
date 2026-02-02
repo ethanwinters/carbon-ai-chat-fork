@@ -15,7 +15,7 @@ import { withWebComponentBridge } from "./utils/withWebComponentBridge.js";
 const CdsAiChatShell = withWebComponentBridge(
   createComponent({
     tagName: "cds-aichat-shell",
-    elementClass: CdsAiChatShellElement,
+    elementClass: CDSChatShellElement,
     react: React,
   }),
 );
