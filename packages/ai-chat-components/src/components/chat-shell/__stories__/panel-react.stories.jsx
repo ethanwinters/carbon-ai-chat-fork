@@ -1,9 +1,9 @@
 /* eslint-disable */
 import React, { useState } from "react";
 
-import ChatShell from "../../../react/chat-shell";
-import ChatPanel from "../../../react/panel";
-import { CardFooter } from "../../../react/card";
+import ChatShell from "../../../react/chat-shell.js";
+import ChatPanel from "../../../react/panel.js";
+import { CardFooter } from "../../../react/card.js";
 import { cardFooterPresets } from "../../card/__stories__/story-data.js";
 import "./story-styles.scss";
 

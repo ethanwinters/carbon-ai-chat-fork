@@ -323,7 +323,6 @@ export const SidebarWorkspace = {
 
 // Made with Bob
 
-
 export const ResponsiveNavigation = {
   args: {
     aiEnabled: false,
@@ -336,7 +335,13 @@ export const ResponsiveNavigation = {
     showWorkspace: { control: false, table: { disable: true } },
   },
   render: (args) => {
-    const { aiEnabled, showFrame, roundedCorners, showHistory, historyLocation } = args;
+    const {
+      aiEnabled,
+      showFrame,
+      roundedCorners,
+      showHistory,
+      historyLocation,
+    } = args;
     const [showNavMenu, setShowNavMenu] = useState(false);
 
     // Setup ResizeObserver to show/hide overflow menu based on shell width
@@ -382,11 +387,11 @@ export const ResponsiveNavigation = {
             >
               <OverflowMenu>
                 <div className="history slot-sample">
-                    <p>
-                      This demonstrates putting history content into the toolbar's
-                      navigation overflow menu.
-                    </p>
-                  </div>
+                  <p>
+                    This demonstrates putting history content into the toolbar's
+                    navigation overflow menu.
+                  </p>
+                </div>
               </OverflowMenu>
             </div>
           )}

@@ -7,9 +7,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import "../src/shell";
-import "../src/panel";
-import "../../card/src/card-footer";
+import "../src/shell.js";
+import "../src/panel.js";
+import "../../card/src/card-footer.js";
 import { html, nothing } from "lit";
 import styles from "./story-styles.scss?lit";
 import { cardFooterPresets } from "../../card/__stories__/story-data.js";
