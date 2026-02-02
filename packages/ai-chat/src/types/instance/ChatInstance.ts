@@ -430,16 +430,6 @@ export enum WriteableElementName {
   BEFORE_INPUT_ELEMENT = "beforeInputElement",
 
   /**
-   * An element that appears before the messages area.
-   */
-  MESSAGES_BEFORE_ELEMENT = "messagesBeforeElement",
-
-  /**
-   * An element that appears after the messages area.
-   */
-  MESSAGES_AFTER_ELEMENT = "messagesAfterElement",
-
-  /**
    * An element that appears after the input field.
    */
   AFTER_INPUT_ELEMENT = "afterInputElement",

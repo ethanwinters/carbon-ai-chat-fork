@@ -561,32 +561,6 @@ describe("cds-aichat-shell", function () {
     });
 
     describe("Messages Slots Rounded Corners", () => {
-      it("should detect messages-before content", async () => {
-        const el = await fixture<CdsAiChatShell>(
-          html`<cds-aichat-shell rounded-corners>
-            <div slot="messages-before">Messages Before</div>
-          </cds-aichat-shell>`,
-        );
-        await el.updateComplete;
-        const wrapper = el.shadowRoot!.querySelector(
-          '[data-panel-slot="messages-before"]',
-        );
-        expect(wrapper!.classList.contains("has-content")).to.be.true;
-      });
-
-      it("should detect messages-after content", async () => {
-        const el = await fixture<CdsAiChatShell>(
-          html`<cds-aichat-shell rounded-corners>
-            <div slot="messages-after">Messages After</div>
-          </cds-aichat-shell>`,
-        );
-        await el.updateComplete;
-        const wrapper = el.shadowRoot!.querySelector(
-          '[data-panel-slot="messages-after"]',
-        );
-        expect(wrapper!.classList.contains("has-content")).to.be.true;
-      });
-
       it("should always consider messages slot as having content", async () => {
         const el = await fixture<CdsAiChatShell>(
           html`<cds-aichat-shell rounded-corners></cds-aichat-shell>`,

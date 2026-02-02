@@ -58,18 +58,6 @@ const ELEMENT_CONFIGS: ElementConfig[] = [
         : "cds-aichat--header-bottom-element",
   },
   {
-    wrapperSlot: "messages-before",
-    slotName: WriteableElementName.MESSAGES_BEFORE_ELEMENT,
-    idSuffix: "messagesBeforeElement",
-    className: "cds-aichat--messages-before-element",
-  },
-  {
-    wrapperSlot: "messages-after",
-    slotName: WriteableElementName.MESSAGES_AFTER_ELEMENT,
-    idSuffix: "messagesAfterElement",
-    className: "cds-aichat--messages-after-element",
-  },
-  {
     wrapperSlot: "input-before",
     slotName: (show) =>
       show
