@@ -288,9 +288,14 @@
   margin: auto;
   block-size: 100%;
   inline-size: 100%;
-  max-inline-size: $messages-max-width;
   min-block-size: 0;
   min-inline-size: $messages-min-width;
+}
+
+.input-and-messages .messages-max-width {
+  margin: auto;
+  inline-size: 100%;
+  max-inline-size: $messages-max-width;
 }
 
 :host([show-history][history-location="end"]) .input-and-messages {

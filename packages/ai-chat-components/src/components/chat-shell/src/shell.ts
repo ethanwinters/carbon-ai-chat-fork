@@ -28,12 +28,10 @@ class CdsAiChatShell extends LitElement {
   private static readonly OBSERVED_SLOTS = [
     { name: "header", stateKey: "hasHeaderContent" as const },
     { name: "header-after", stateKey: "hasHeaderAfterContent" as const },
-    { name: "messages-before", stateKey: "hasMessagesBeforeContent" as const },
     { name: "footer", stateKey: "hasFooterContent" as const },
     { name: "input-after", stateKey: "hasInputAfterContent" as const },
     { name: "input", stateKey: "hasInputContent" as const },
     { name: "input-before", stateKey: "hasInputBeforeContent" as const },
-    { name: "messages-after", stateKey: "hasMessagesAfterContent" as const },
   ];
 
   /**
@@ -126,11 +124,6 @@ class CdsAiChatShell extends LitElement {
   /**
    * @internal
    */
-  private hasMessagesBeforeContent = false;
-
-  /**
-   * @internal
-   */
   private hasFooterContent = false;
 
   /**
@@ -147,11 +140,6 @@ class CdsAiChatShell extends LitElement {
    * @internal
    */
   private hasInputBeforeContent = false;
-
-  /**
-   * @internal
-   */
-  private hasMessagesAfterContent = false;
 
   /**
    * @internal
@@ -230,8 +218,6 @@ class CdsAiChatShell extends LitElement {
   private getInputAndMessagesClasses(): string {
     return [
       "input-and-messages",
-      this.hasMessagesBeforeContent ? "has-messages-before-content" : "",
-      this.hasMessagesAfterContent ? "has-messages-after-content" : "",
       this.hasInputBeforeContent ? "has-input-before-content" : "",
       this.hasInputContent ? "has-input-content" : "",
       this.hasInputAfterContent ? "has-input-after-content" : "",
@@ -265,8 +251,6 @@ class CdsAiChatShell extends LitElement {
         return this.hasHeaderContent;
       case "header-after":
         return this.hasHeaderAfterContent;
-      case "messages-before":
-        return this.hasMessagesBeforeContent;
       case "footer":
         return this.hasFooterContent;
       case "input-after":
@@ -275,8 +259,6 @@ class CdsAiChatShell extends LitElement {
         return this.hasInputContent;
       case "input-before":
         return this.hasInputBeforeContent;
-      case "messages-after":
-        return this.hasMessagesAfterContent;
       case "messages":
         return true; // messages slot is always considered to have content
       default:
@@ -372,12 +354,10 @@ class CdsAiChatShell extends LitElement {
   private renderMessagesSection() {
     return html`
       <div class=${this.getInputAndMessagesClasses()}>
-        ${this.renderSlot("messages-before", "messages-before")}
         ${this.renderSlot("messages", "messages")}
-        ${this.renderSlot("messages-after", "messages-after")}
-        ${this.renderSlot("input-before", "input-before")}
-        ${this.renderSlot("input", "input")}
-        ${this.renderSlot("input-after", "input-after")}
+        ${this.renderSlot("input-before", "input-before messages-max-width")}
+        ${this.renderSlot("input", "input messages-max-width")}
+        ${this.renderSlot("input-after", "input-after messages-max-width")}
       </div>
     `;
   }

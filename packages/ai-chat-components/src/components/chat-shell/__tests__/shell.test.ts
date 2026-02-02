@@ -261,34 +261,6 @@ describe("cds-aichat-shell", function () {
       expect(assigned.length).to.equal(1);
     });
 
-    it("should render messages-before slot content", async () => {
-      const el = await fixture<CdsAiChatShell>(
-        html`<cds-aichat-shell>
-          <div slot="messages-before">Messages Before Content</div>
-        </cds-aichat-shell>`,
-      );
-      const slot = el.shadowRoot!.querySelector(
-        'slot[name="messages-before"]',
-      ) as HTMLSlotElement;
-      expect(slot).to.exist;
-      const assigned = slot.assignedElements({ flatten: true });
-      expect(assigned.length).to.equal(1);
-    });
-
-    it("should render messages-after slot content", async () => {
-      const el = await fixture<CdsAiChatShell>(
-        html`<cds-aichat-shell>
-          <div slot="messages-after">Messages After Content</div>
-        </cds-aichat-shell>`,
-      );
-      const slot = el.shadowRoot!.querySelector(
-        'slot[name="messages-after"]',
-      ) as HTMLSlotElement;
-      expect(slot).to.exist;
-      const assigned = slot.assignedElements({ flatten: true });
-      expect(assigned.length).to.equal(1);
-    });
-
     it("should render input slot content", async () => {
       const el = await fixture<CdsAiChatShell>(
         html`<cds-aichat-shell>
@@ -648,9 +620,7 @@ describe("cds-aichat-shell", function () {
           html`<cds-aichat-shell rounded-corners>
             <div slot="header">Header</div>
             <div slot="header-after">Header After</div>
-            <div slot="messages-before">Messages Before</div>
             <div slot="messages">Messages</div>
-            <div slot="messages-after">Messages After</div>
             <div slot="input-before">Input Before</div>
             <div slot="input">Input</div>
             <div slot="input-after">Input After</div>
@@ -667,9 +637,7 @@ describe("cds-aichat-shell", function () {
         const slots = [
           "header",
           "header-after",
-          "messages-before",
           "messages",
-          "messages-after",
           "input-before",
           "input",
           "input-after",

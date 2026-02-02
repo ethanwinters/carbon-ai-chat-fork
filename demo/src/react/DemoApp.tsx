@@ -154,18 +154,6 @@ function DemoApp({ config, settings, onChatInstanceReady }: AppProps) {
           parentStateText={stateText}
         />
       ),
-      messagesBeforeElement: (
-        <WriteableElementExample
-          location="messagesBeforeElement"
-          parentStateText={stateText}
-        />
-      ),
-      messagesAfterElement: (
-        <WriteableElementExample
-          location="messagesAfterElement"
-          parentStateText={stateText}
-        />
-      ),
       afterInputElement: (
         <WriteableElementExample
           location="afterInputElement"

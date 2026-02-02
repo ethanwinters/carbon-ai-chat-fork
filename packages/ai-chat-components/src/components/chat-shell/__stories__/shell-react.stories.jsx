@@ -106,9 +106,7 @@ export const Default = {
 const SLOT_CONFIGS = [
   { name: "header", label: "Header", hasCheckbox: true },
   { name: "header-after", label: "Header after", hasCheckbox: true },
-  { name: "messages-before", label: "Messages before", hasCheckbox: true },
   { name: "messages", label: "Messages", hasCheckbox: true },
-  { name: "messages-after", label: "Messages after", hasCheckbox: true },
   { name: "input-before", label: "Input before", hasCheckbox: true },
   { name: "input", label: "Input", hasCheckbox: true },
   { name: "input-after", label: "Input after", hasCheckbox: true },
