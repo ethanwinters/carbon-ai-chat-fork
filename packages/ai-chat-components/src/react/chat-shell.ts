@@ -9,7 +9,7 @@
 
 import { createComponent } from "@lit/react";
 import React from "react";
-import CdsAiChatShellElement from "../components/chat-shell/src/shell.js";
+import CDSChatShellElement from "../components/chat-shell/src/shell.js";
 import { withWebComponentBridge } from "./utils/withWebComponentBridge.js";
 
 const CdsAiChatShell = withWebComponentBridge(
