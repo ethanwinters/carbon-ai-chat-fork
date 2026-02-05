@@ -8,11 +8,13 @@ import "./story-styles.scss";
 // Core slot content for stories
 const CoreSlotContent = () => (
   <>
-    <Toolbar slot="header">
-      <div slot="title" data-fixed>
-        Header
-      </div>
-    </Toolbar>
+    <div slot="header">
+      <Toolbar>
+        <div slot="title" data-fixed>
+          Header
+        </div>
+      </Toolbar>
+    </div>
     <div slot="history" className="history slot-sample">
       History
     </div>
