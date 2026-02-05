@@ -11,8 +11,6 @@ import "../src/shell";
 import "../src/panel";
 import "../../card/src/card-footer";
 import "../../toolbar/src/toolbar";
-import "@carbon/web-components/es/components/ai-label/index.js";
-import "@carbon/web-components/es/components/overflow-menu/index.js";
 import { html, nothing } from "lit";
 import styles from "./story-styles.scss?lit";
 
@@ -343,125 +341,6 @@ export const SidebarWorkspace = {
           </div>
         </div>
         <div slot="input" class="input slot-sample">Input area</div>
-      </cds-aichat-shell>
-    `;
-  },
-};
-
-export const ResponsiveNavigation = {
-  args: {
-    showHistory: true,
-    showWorkspace: false,
-  },
-  argTypes: {
-    showWorkspace: { control: false, table: { disable: true } },
-  },
-  render: (args) => {
-    const {
-      aiEnabled,
-      showFrame,
-      roundedCorners,
-      showHistory,
-      historyLocation,
-    } = args;
-
-    let showNavMenu = false;
-
-    // Setup ResizeObserver to show/hide overflow menu based on shell width
-    setTimeout(() => {
-      const shell = document.querySelector(".responsive-nav-shell");
-      const toolbar = shell?.querySelector("cds-aichat-toolbar");
-
-      if (!shell || !toolbar) {
-        return;
-      }
-
-      const updateNavMenuVisibility = () => {
-        const shellWidth = shell.getBoundingClientRect().width;
-        const messagesMinWidth = 320;
-        const historyWidth = 320;
-        const requiredWidth = messagesMinWidth + historyWidth;
-
-        const shouldShow = shellWidth < requiredWidth;
-
-        if (shouldShow !== showNavMenu) {
-          showNavMenu = shouldShow;
-
-          // Remove existing navigation if present
-          const existingNav = toolbar.querySelector('[slot="navigation"]');
-          if (existingNav) {
-            // Close the overflow menu before removing
-            const overflowMenu = existingNav.querySelector("cds-overflow-menu");
-            if (overflowMenu && overflowMenu.open) {
-              overflowMenu.open = false;
-            }
-            existingNav.remove();
-          }
-
-          // Add navigation if needed
-          if (shouldShow) {
-            const navDiv = document.createElement("div");
-            navDiv.setAttribute("slot", "navigation");
-            navDiv.setAttribute("data-fixed", "");
-            navDiv.setAttribute("data-rounded", "top-left");
-            navDiv.className = "responsive-nav-menu";
-            navDiv.innerHTML = `
-              <cds-overflow-menu
-                size="md"
-                kind="ghost"
-                align="bottom-start"
-                enter-delay-ms="0"
-                leave-delay-ms="0"
-              >
-                <svg slot="icon" class="overflow-menu-svg" width="16" height="16" viewBox="0 0 16 16">
-                  <circle cx="8" cy="3" r="1"></circle>
-                  <circle cx="8" cy="8" r="1"></circle>
-                  <circle cx="8" cy="13" r="1"></circle>
-                </svg>
-                <span slot="tooltip-content">Navigation</span>
-                <cds-overflow-menu-body>
-                  <div class="history slot-sample" style="padding: 1rem;">
-                    <h3 style="margin: 0 0 0.5rem 0;">History</h3>
-                    <p style="margin: 0;">
-                      This demonstrates putting history content into the toolbar's
-                      navigation overflow menu.
-                    </p>
-                  </div>
-                </cds-overflow-menu-body>
-              </cds-overflow-menu>
-            `;
-            toolbar.appendChild(navDiv);
-          }
-        }
-      };
-
-      const observer = new ResizeObserver(updateNavMenuVisibility);
-      observer.observe(shell);
-      updateNavMenuVisibility();
-    }, 0);
-
-    return html`
-      <cds-aichat-shell
-        class="responsive-nav-shell"
-        ?ai-enabled=${aiEnabled}
-        ?show-frame=${showFrame}
-        ?rounded-corners=${roundedCorners}
-        ?show-history=${showHistory}
-        history-location=${historyLocation}
-      >
-        <cds-aichat-toolbar slot="header">
-          <div slot="title">Chat with Responsive Navigation</div>
-        </cds-aichat-toolbar>
-        <div slot="history" class="history slot-sample">
-          <h3>History Sidebar</h3>
-          <p>
-            This sidebar is visible on wider screens but hidden on narrow
-            screens. On narrow screens, access history via the hamburger menu in
-            the toolbar.
-          </p>
-        </div>
-        <div slot="messages" class="messages slot-sample">Messages</div>
-        <div slot="input" class="input slot-sample">Input</div>
       </cds-aichat-shell>
     `;
   },

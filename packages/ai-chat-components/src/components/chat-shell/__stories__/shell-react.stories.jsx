@@ -1,9 +1,8 @@
 /* eslint-disable */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 import ChatShell from "../../../react/chat-shell";
 import Toolbar from "../../../react/toolbar";
-import { OverflowMenu } from "@carbon/react";
 import "./story-styles.scss";
 
 // Core slot content for stories
@@ -313,101 +312,6 @@ export const SidebarWorkspace = {
         </div>
         <div slot="input" className="input slot-sample">
           Input area
-        </div>
-      </ChatShell>
-    );
-  },
-};
-
-// Made with Bob
-
-export const ResponsiveNavigation = {
-  args: {
-    aiEnabled: false,
-    showFrame: true,
-    roundedCorners: true,
-    showHistory: true,
-    historyLocation: "start",
-  },
-  argTypes: {
-    showWorkspace: { control: false, table: { disable: true } },
-  },
-  render: (args) => {
-    const {
-      aiEnabled,
-      showFrame,
-      roundedCorners,
-      showHistory,
-      historyLocation,
-    } = args;
-    const [showNavMenu, setShowNavMenu] = useState(false);
-
-    // Setup ResizeObserver to show/hide overflow menu based on shell width
-    useEffect(() => {
-      const shell = document.querySelector(".responsive-nav-shell");
-
-      if (!shell) {
-        return;
-      }
-
-      const updateNavMenuVisibility = () => {
-        const shellWidth = shell.getBoundingClientRect().width;
-        const messagesMinWidth = 320;
-        const historyWidth = 320;
-        const requiredWidth = messagesMinWidth + historyWidth;
-
-        setShowNavMenu(shellWidth < requiredWidth);
-      };
-
-      const observer = new ResizeObserver(updateNavMenuVisibility);
-      observer.observe(shell);
-      updateNavMenuVisibility();
-
-      return () => observer.disconnect();
-    }, []);
-
-    return (
-      <ChatShell
-        className="responsive-nav-shell"
-        aiEnabled={aiEnabled}
-        showFrame={showFrame}
-        roundedCorners={roundedCorners}
-        showHistory={showHistory}
-        historyLocation={historyLocation}
-      >
-        <Toolbar slot="header">
-          {showNavMenu && (
-            <div
-              slot="navigation"
-              data-fixed
-              data-rounded="top-left"
-              className="responsive-nav-menu"
-            >
-              <OverflowMenu>
-                <div className="history slot-sample">
-                  <p>
-                    This demonstrates putting history content into the toolbar's
-                    navigation overflow menu.
-                  </p>
-                </div>
-              </OverflowMenu>
-            </div>
-          )}
-          <div slot="title">Chat with Responsive Navigation</div>
-        </Toolbar>
-        <div slot="history" className="history slot-sample">
-          <h3>History Sidebar</h3>
-          <p>
-            This sidebar is visible on wider screens but hidden on narrow
-            screens. On narrow screens, access history via the hamburger menu in
-            the toolbar.
-          </p>
-        </div>
-        <div slot="messages" className="messages slot-sample">
-          Messages
-        </div>
-        <div slot="input" className="input slot-sample">
-          Input
         </div>
       </ChatShell>
     );

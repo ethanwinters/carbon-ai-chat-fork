@@ -90,7 +90,6 @@
   overflow: hidden;
   flex: 1 1 0;
   min-inline-size: 0;
-  visibility: hidden;
 }
 
 // During workspace closing, input-and-messages maintains its minimum width
@@ -123,7 +122,8 @@
 
 // --- Workspace Layout Configuration ---
 :host([show-workspace]) .main-content-body,
-.shell.workspace-closing .main-content-body {
+.shell.workspace-closing .main-content-body,
+.shell.workspace-checking-closing .main-content-body {
   flex-direction: row;
   container-name: main-content-body;
   container-type: inline-size;
@@ -131,6 +131,20 @@
 
 :host([show-workspace][workspace-location="end"]) .input-and-messages {
   order: 1;
+}
+
+// When workspace is closing, keep end-ordering even if show-workspace is removed
+// This prevents input-and-messages from jumping to DOM order mid-transition
+:host([workspace-location="end"]) .shell.workspace-closing .input-and-messages,
+:host([workspace-location="end"])
+  .shell.workspace-checking-closing
+  .input-and-messages {
+  order: 1;
+}
+
+:host([workspace-location="end"]) .shell.workspace-closing .workspace,
+:host([workspace-location="end"]) .shell.workspace-checking-closing .workspace {
+  order: 2;
 }
 
 // ============================================================================
