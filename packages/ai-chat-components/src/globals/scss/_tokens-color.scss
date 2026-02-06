@@ -1,0 +1,38 @@
+/* 
+ *  Copyright IBM Corp. 2025
+ *  
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ */
+
+// Color tokens for AI Chat Components
+// These control theming and color customization across components
+
+@use "@carbon/styles/scss/theme";
+@use "@carbon/styles/scss/components/button/tokens" as button;
+
+// ============================================================================
+// Color Tokens - Public Configurable
+// ============================================================================
+// These tokens can be customized by developers to adjust component colors
+
+// Launcher color tokens
+$launcher-color-background: button.$button-primary !default;
+$launcher-color-avatar: theme.$text-on-color !default;
+$launcher-color-background-hover: button.$button-primary-hover !default;
+$launcher-color-background-active: button.$button-primary-active !default;
+$launcher-color-focus-border: theme.$text-on-color !default;
+$launcher-mobile-color-text: theme.$text-on-color !default;
+
+// Launcher expanded message color tokens
+$launcher-expanded-message-color-text: theme.$text-on-color !default;
+$launcher-expanded-message-color-background: button.$button-primary !default;
+$launcher-expanded-message-color-background-hover: button.$button-primary-hover !default;
+$launcher-expanded-message-color-background-active: button.$button-primary-active !default;
+$launcher-expanded-message-color-focus-border: theme.$text-on-color !default;
+
+// Unread indicator color tokens
+$unread-indicator-color-background: theme.$support-error !default;
+$unread-indicator-color-text: theme.$text-on-color !default;
+
+// Made with Bob

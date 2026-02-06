@@ -13,7 +13,7 @@ import WorkspaceShell, {
   WorkspaceShellFooter,
 } from "@carbon/ai-chat-components/es/react/workspace-shell.js";
 import Toolbar from "@carbon/ai-chat-components/es/react/toolbar.js";
-import CodeSnippetCard from "@carbon/ai-chat-components/es/react/code-snippet-card.js";
+import CodeSnippet from "@carbon/ai-chat-components/es/react/code-snippet.js";
 
 // Using @carbon/icons-react for all icons
 import Edit16 from "@carbon/icons-react/es/Edit.js";
@@ -392,9 +392,9 @@ function WorkspaceWriteableElementExample({
         <div>
           <Layer>
             <Layer>
-              <CodeSnippetCard language="typescript" highlight>
+              <CodeSnippet language="typescript" highlight>
                 {multilineCode}
-              </CodeSnippetCard>
+              </CodeSnippet>
               <br />
               <p>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit.

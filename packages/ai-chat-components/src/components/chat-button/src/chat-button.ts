@@ -19,6 +19,7 @@ import {
 import CDSButton from "@carbon/web-components/es/components/button/button.js";
 import { carbonElement } from "../../../globals/decorators/index.js";
 import prefix from "../../../globals/settings.js";
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./chat-button.scss?lit";
 
 export {
@@ -41,7 +42,7 @@ type ChatButtonSize =
  */
 @carbonElement(`${prefix}-button`)
 class CDSAIChatButton extends CDSButton {
-  static styles = styles;
+  static styles = [commonStyles, styles];
 
   /**
    * Specify whether the `ChatButton` should be rendered as a quick action button

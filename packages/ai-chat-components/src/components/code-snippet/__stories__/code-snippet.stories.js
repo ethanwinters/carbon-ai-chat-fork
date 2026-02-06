@@ -8,7 +8,7 @@
  */
 
 import "../src/code-snippet";
-import "../src/code-snippet-card";
+import "../../card/index.js";
 import { html, LitElement } from "lit";
 import { ifDefined } from "lit/directives/if-defined.js";
 
@@ -138,29 +138,7 @@ export class TokenShowcase<T extends TokenSwatch> {
 
 // Helper function to render with or without card wrapper
 const renderSnippet = (args, code) => {
-  if (args.useCard) {
-    return html`
-      <cds-aichat-code-snippet-card
-        ?editable=${args.editable}
-        ?highlight=${args.highlight}
-        ?disabled=${args.disabled}
-        ?hide-copy-button=${args.hideCopyButton}
-        ?wrap-text=${args.wrapText}
-        max-collapsed-number-of-rows=${ifDefined(args.maxCollapsedNumberOfRows)}
-        max-expanded-number-of-rows=${ifDefined(args.maxExpandedNumberOfRows)}
-        min-collapsed-number-of-rows=${ifDefined(args.minCollapsedNumberOfRows)}
-        min-expanded-number-of-rows=${ifDefined(args.minExpandedNumberOfRows)}
-        show-more-text=${ifDefined(args.showMoreText)}
-        show-less-text=${ifDefined(args.showLessText)}
-        tooltip-content=${ifDefined(args.tooltipContent)}
-        feedback=${ifDefined(args.feedback)}
-      >
-        ${code}
-      </cds-aichat-code-snippet-card>
-    `;
-  }
-
-  return html`
+  const snippet = html`
     <cds-aichat-code-snippet
       ?editable=${args.editable}
       ?highlight=${args.highlight}
@@ -179,6 +157,16 @@ const renderSnippet = (args, code) => {
       ${code}
     </cds-aichat-code-snippet>
   `;
+
+  if (args.useCard) {
+    return html`
+      <cds-aichat-card>
+        <div slot="body">${snippet}</div>
+      </cds-aichat-card>
+    `;
+  }
+
+  return snippet;
 };
 
 export default {
@@ -336,31 +324,26 @@ class StreamingDemo extends LitElement {
   }
 
   render() {
+    const snippet = html`
+      <cds-aichat-code-snippet
+        language=${this.language}
+        ?editable=${this.editable}
+        ?highlight=${this.highlight}
+        ?disabled=${this.disabled}
+        ?hide-copy-button=${this.hideCopyButton}
+        ?wrap-text=${this.wrapText}
+      >
+        ${this.streamedContent}
+      </cds-aichat-code-snippet>
+    `;
+
     const snippetContent = this.useCard
       ? html`
-          <cds-aichat-code-snippet-card
-            language=${this.language}
-            ?editable=${this.editable}
-            ?highlight=${this.highlight}
-            ?disabled=${this.disabled}
-            ?hide-copy-button=${this.hideCopyButton}
-            ?wrap-text=${this.wrapText}
-          >
-            ${this.streamedContent}
-          </cds-aichat-code-snippet-card>
+          <cds-aichat-card>
+            <div slot="body">${snippet}</div>
+          </cds-aichat-card>
         `
-      : html`
-          <cds-aichat-code-snippet
-            language=${this.language}
-            ?editable=${this.editable}
-            ?highlight=${this.highlight}
-            ?disabled=${this.disabled}
-            ?hide-copy-button=${this.hideCopyButton}
-            ?wrap-text=${this.wrapText}
-          >
-            ${this.streamedContent}
-          </cds-aichat-code-snippet>
-        `;
+      : snippet;
 
     return html`
       <div>
@@ -460,4 +443,152 @@ export const EditableEmpty = {
     wrapText: false,
   },
   render: (args) => renderSnippet(args, ""),
+};
+
+export const WithActions = {
+  args: {
+    useCard: true,
+    highlight: true,
+    editable: false,
+    disabled: false,
+    hideCopyButton: false,
+    wrapText: false,
+    maxCollapsedNumberOfRows: 15,
+  },
+  render: (args) => {
+    const actions = [
+      {
+        text: "Download",
+        icon: { name: "download", size: 16 },
+        onClick: () => console.log("Download clicked"),
+      },
+      {
+        text: "Share",
+        icon: { name: "share", size: 16 },
+        onClick: () => console.log("Share clicked"),
+      },
+    ];
+
+    const snippet = html`
+      <cds-aichat-code-snippet
+        ?editable=${args.editable}
+        ?highlight=${args.highlight}
+        ?disabled=${args.disabled}
+        ?hide-copy-button=${args.hideCopyButton}
+        ?wrap-text=${args.wrapText}
+        ?overflow=${true}
+        .actions=${actions}
+        max-collapsed-number-of-rows=${ifDefined(args.maxCollapsedNumberOfRows)}
+      >
+        ${multilineCode}
+      </cds-aichat-code-snippet>
+    `;
+
+    return args.useCard
+      ? html`
+          <cds-aichat-card>
+            <div slot="body">${snippet}</div>
+          </cds-aichat-card>
+        `
+      : snippet;
+  },
+};
+
+export const WithActionsAndDecorator = {
+  args: {
+    useCard: true,
+    highlight: true,
+    editable: false,
+    disabled: false,
+    hideCopyButton: false,
+    wrapText: false,
+    maxCollapsedNumberOfRows: 15,
+  },
+  render: (args) => {
+    const actions = [
+      {
+        text: "Download",
+        icon: { name: "download", size: 16 },
+        onClick: () => console.log("Download clicked"),
+      },
+      {
+        text: "Share",
+        icon: { name: "share", size: 16 },
+        onClick: () => console.log("Share clicked"),
+      },
+    ];
+
+    const snippet = html`
+      <cds-aichat-code-snippet
+        ?editable=${args.editable}
+        ?highlight=${args.highlight}
+        ?disabled=${args.disabled}
+        ?hide-copy-button=${args.hideCopyButton}
+        ?wrap-text=${args.wrapText}
+        ?overflow=${true}
+        .actions=${actions}
+        max-collapsed-number-of-rows=${ifDefined(args.maxCollapsedNumberOfRows)}
+      >
+        <cds-ai-label size="2xs" autoalign slot="decorator">
+          <div slot="body-text">
+            <h4 style="margin-bottom: 0.25rem;">AI Generated Code</h4>
+            <div>
+              This code was generated by IBM watsonx AI. Review carefully before
+              use.
+            </div>
+          </div>
+        </cds-ai-label>
+        ${multilineCode}
+      </cds-aichat-code-snippet>
+    `;
+
+    return args.useCard
+      ? html`
+          <cds-aichat-card>
+            <div slot="body">${snippet}</div>
+          </cds-aichat-card>
+        `
+      : snippet;
+  },
+};
+
+export const WithFixedActions = {
+  args: {
+    useCard: false,
+    highlight: true,
+    editable: false,
+    disabled: false,
+    hideCopyButton: false,
+    wrapText: false,
+  },
+  render: (args) => {
+    const actions = [
+      {
+        text: "Download",
+        icon: { name: "download", size: 16 },
+        onClick: () => console.log("Download clicked"),
+      },
+    ];
+
+    return html`
+      <cds-aichat-code-snippet
+        ?editable=${args.editable}
+        ?highlight=${args.highlight}
+        ?disabled=${args.disabled}
+        ?hide-copy-button=${args.hideCopyButton}
+        ?wrap-text=${args.wrapText}
+        .actions=${actions}
+      >
+        <div slot="fixed-actions">
+          <button
+            @click=${() => console.log("Fixed action clicked")}
+            style="padding: 0.5rem; cursor: pointer; border: 1px solid #ccc; background: transparent;"
+          >
+            Fixed Action
+          </button>
+        </div>
+        ${multilineCode}
+      </cds-aichat-code-snippet>
+    `;
+  },
 };

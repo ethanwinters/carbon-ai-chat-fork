@@ -17,6 +17,7 @@ import { Token } from "markdown-it";
 import "@carbon/web-components/es/components/list/index.js";
 import "@carbon/web-components/es/components/checkbox/index.js";
 import "../../code-snippet/index.js";
+import "../../card/index.js";
 import "../../table/index.js";
 import { defaultLineCountText } from "../../code-snippet/src/formatters.js";
 
@@ -172,16 +173,20 @@ export function renderTokenTree(
       getLineCountText = defaultLineCountText,
     } = options;
 
-    return html`<cds-aichat-code-snippet-card
-      .language=${language}
-      .highlight=${highlight}
-      .feedback=${feedback}
-      .showLessText=${showLessText}
-      .showMoreText=${showMoreText}
-      .tooltipContent=${tooltipContent}
-      .getLineCountText=${getLineCountText}
-      >${token.content}</cds-aichat-code-snippet-card
-    >`;
+    return html`<cds-aichat-card>
+      <div slot="body">
+        <cds-aichat-code-snippet
+          .language=${language}
+          .highlight=${highlight}
+          .feedback=${feedback}
+          .showLessText=${showLessText}
+          .showMoreText=${showMoreText}
+          .tooltipContent=${tooltipContent}
+          .getLineCountText=${getLineCountText}
+          >${token.content}</cds-aichat-code-snippet
+        >
+      </div>
+    </cds-aichat-card>`;
   }
 
   // Handle structural elements (paragraphs, headings, lists, etc.)

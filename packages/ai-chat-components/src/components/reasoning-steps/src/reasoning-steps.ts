@@ -9,6 +9,7 @@
 
 import { LitElement, html } from "lit";
 import { property } from "lit/decorators.js";
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./reasoning-steps.scss?lit";
 import prefix from "../../../globals/settings.js";
 import { carbonElement } from "../../../globals/decorators";
@@ -22,7 +23,7 @@ const stepSelector = `${prefix}-reasoning-step`;
  */
 @carbonElement(`${prefix}-reasoning-steps`)
 class CDSAIChatReasoningSteps extends LitElement {
-  static styles = styles;
+  static styles = [commonStyles, styles];
 
   @property({ type: Boolean, attribute: "open", reflect: true })
   open = false;

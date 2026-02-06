@@ -14,6 +14,39 @@ import * as PreviewCardStories from "./preview-card.stories";
 - **Rounded corners**: Makes use of rounded modifier scss utility and can be controlled via `--cds-aichat-rounded-modifier-radius` CSS variable.
 - **OOTB sub-components**: OOTB components `<cds-aichat-card-footer>` and `<cds-aichat-card-steps>` provide consistent styling and can be placed in the provided slots. You can also plug in your own components into these slots.
 
+## Customization
+
+Use CSS custom properties to control card rounding behavior.
+
+```css
+cds-aichat-card {
+  --cds-aichat-card-border-radius: 12px;
+  --cds-aichat-rounded-modifier-radius: 12px;
+}
+```
+
+| Token | Default | Description |
+| --- | --- | --- |
+| `--cds-aichat-card-border-radius` | `0.5rem (8px)` | Card border radius |
+| `--cds-aichat-rounded-modifier-radius` | `0.5rem (8px)` | Base radius for rounded modifier system |
+| `--cds-aichat-rounded-modifier-radius-start-start` | `0.5rem (8px)` | Top-left corner radius |
+| `--cds-aichat-rounded-modifier-radius-start-end` | `0.5rem (8px)` | Top-right corner radius |
+| `--cds-aichat-rounded-modifier-radius-end-start` | `0.5rem (8px)` | Bottom-left corner radius |
+| `--cds-aichat-rounded-modifier-radius-end-end` | `0.5rem (8px)` | Bottom-right corner radius |
+
+Cards map `--cds-aichat-card-border-radius` to `--cds-aichat-rounded-modifier-radius`, so slotted content can use `data-rounded` / `data-stacked` and stay visually aligned.
+
+Use `data-rounded` when your card content has multiple items and you want the system to round the first/last item. If you are styling a single element, read the rounded modifier tokens in your own CSS instead.
+
+```html
+<cds-aichat-card>
+  <div slot="card-body" data-rounded="bottom" data-stacked>
+    <div>Line 1</div>
+    <div>Line 2</div>
+  </div>
+</cds-aichat-card>
+```
+
 ## Getting started
 
 Here's a quick example to get you started.

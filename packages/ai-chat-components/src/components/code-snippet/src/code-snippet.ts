@@ -11,6 +11,7 @@ import { LitElement, html } from "lit";
 import { property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 import ChevronDown16 from "@carbon/icons/es/chevron--down/16.js";
+import Copy16 from "@carbon/icons/es/copy/16.js";
 import FocusMixin from "@carbon/web-components/es/globals/mixins/focus.js";
 import { iconLoader } from "@carbon/web-components/es/globals/internal/icon-loader.js";
 import { carbonElement } from "../../../globals/decorators/index.js";
@@ -31,12 +32,13 @@ import type { EditorView } from "@codemirror/view";
 import { Compartment } from "@codemirror/state";
 import { loadCodeMirrorRuntime } from "./codemirror/codemirror-loader.js";
 import "@carbon/web-components/es/components/skeleton-text/index.js";
+import "../../toolbar/src/toolbar.js";
+import type { Action } from "../../toolbar/src/toolbar.js";
 
 type CodeMirrorRuntime = Awaited<ReturnType<typeof loadCodeMirrorRuntime>>;
 
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./code-snippet.scss?lit";
-import "@carbon/web-components/es/components/copy-button/index.js";
-import "@carbon/web-components/es/components/copy/copy.js";
 import "@carbon/web-components/es/components/button/button.js";
 
 /**
@@ -44,10 +46,21 @@ import "@carbon/web-components/es/components/button/button.js";
  * automatically detects and loads language highlighting, and optionally exposes an editable surface
  * with live language re-detection and change notifications.
  * @element cds-aichat-code-snippet
+ * @slot fixed-actions - Actions that never overflow (passed to toolbar)
+ * @slot decorator - Decorative elements like AI labels (passed to toolbar)
  */
 @carbonElement(`${prefix}-code-snippet`)
 class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
-  static styles = [styles];
+  static styles = [commonStyles, styles];
+
+  // Toolbar properties
+  /** Array of actions that can overflow into a menu when space is limited. */
+  @property({ type: Array, attribute: false })
+  actions: Action[] = [];
+
+  /** Enable overflow behavior for actions. */
+  @property({ type: Boolean, attribute: "overflow", reflect: true })
+  overflow = false;
 
   // CodeMirror properties
   /** Language used for syntax highlighting. */
@@ -623,25 +636,63 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
   }
 
   /**
+   * Gets all actions including the copy button prepended if enabled.
+   * @returns Array of actions for the toolbar
+   */
+  private _getToolbarActions(): Action[] {
+    if (this.hideCopyButton) {
+      return this.actions;
+    }
+
+    const copyAction: Action = {
+      text: this.tooltipContent,
+      icon: Copy16,
+      onClick: () => this._handleCopyClick(),
+    };
+
+    return [copyAction, ...this.actions];
+  }
+
+  /**
+   * Renders the title content for the toolbar (language label and line count).
+   * @returns Template result for title slot
+   */
+  private renderTitle() {
+    return html`
+      <div slot="title" class="cds-aichat--snippet__meta">
+        ${this._detectedLanguage && this._languageLabelLockedIn
+          ? html`<div class="cds-aichat--snippet__language">
+              ${this._detectedLanguage}
+            </div>`
+          : ""}
+        ${this._detectedLanguage &&
+        this._languageLabelLockedIn &&
+        this._lineCount
+          ? html`<div class="cds-aichat--snippet__header-separator">
+              &mdash;
+            </div>`
+          : ""}
+        ${this._lineCount
+          ? html`<div class="cds-aichat--snippet__linecount">
+              ${this.getLineCountText({ count: this._lineCount })}
+            </div>`
+          : ""}
+      </div>
+    `;
+  }
+
+  /**
    * Renders the CodeMirror host along with the controls that make the chat snippet interactive and accessible.
    */
   render() {
     const {
       disabled,
-      feedback,
-      feedbackTimeout,
-      hideCopyButton,
-      tooltipContent,
       showMoreText,
       showLessText,
       _expandedCode: expandedCode,
-      _handleCopyClick: handleCopyClick,
       _shouldShowMoreLessBtn: shouldShowMoreLessBtn,
     } = this;
 
-    const disabledCopyButtonClasses = disabled
-      ? `cds-aichat--snippet--disabled`
-      : "";
     const expandCodeBtnText = expandedCode ? showLessText : showMoreText;
 
     let containerClasses = `cds-aichat--snippet-container cds-aichat--snippet--codemirror`;
@@ -650,43 +701,15 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
     }
 
     return html` <div class="cds-aichat--snippet">
-      <div class="cds-aichat--snippet__header" data-rounded="top">
-        <div class="cds-aichat--snippet__meta">
-          ${this._detectedLanguage && this._languageLabelLockedIn
-            ? html`<div class="cds-aichat--snippet__language">
-                ${this._detectedLanguage}
-              </div>`
-            : ""}
-          ${this._detectedLanguage &&
-          this._languageLabelLockedIn &&
-          this._lineCount
-            ? html`<div class="cds-aichat--snippet__header-separator">
-                &mdash;
-              </div>`
-            : ""}
-          ${this._lineCount
-            ? html`<div class="cds-aichat--snippet__linecount">
-                ${this.getLineCountText({ count: this._lineCount })}
-              </div>`
-            : ""}
-        </div>
-        ${hideCopyButton
-          ? ``
-          : html`
-              <div class="cds-aichat--snippet__copy" data-rounded="top-right">
-                <!-- we need the button part exposed to the top level cds-copy-button  -->
-                <cds-copy-button
-                  ?disabled=${disabled}
-                  button-class-name=${disabledCopyButtonClasses}
-                  feedback=${feedback}
-                  feedback-timeout=${feedbackTimeout}
-                  @click="${handleCopyClick}"
-                >
-                  ${tooltipContent}
-                </cds-copy-button>
-              </div>
-            `}
-      </div>
+      <cds-aichat-toolbar
+        .actions=${this._getToolbarActions()}
+        ?overflow=${this.overflow}
+      >
+        ${this.renderTitle()}
+        <slot name="fixed-actions" slot="fixed-actions"></slot>
+        <slot name="decorator" slot="decorator"></slot>
+      </cds-aichat-toolbar>
+
       <div
         role="${this.editable ? "textbox" : "region"}"
         tabindex="${this.editable && !disabled ? 0 : null}"
@@ -751,3 +774,4 @@ declare global {
 
 export { CDSAIChatCodeSnippet };
 export default CDSAIChatCodeSnippet;
+export type { Action } from "../../toolbar/src/toolbar.js";
