@@ -151,6 +151,7 @@ function WorkspaceWriteableElementExample({
         </div>
       </Toolbar>
       <InlineNotification
+        slot="notification"
         title="Notification Title"
         subtitle="Notification Subtitle"
         kind="warning"
