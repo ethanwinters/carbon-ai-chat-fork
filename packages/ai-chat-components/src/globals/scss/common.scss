@@ -5,13 +5,10 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
-@use "sass:meta";
 @use "@carbon/styles/scss/layout";
-@use "@carbon/styles/scss/type";
+@use "@carbon/styles/scss/utilities/component-reset";
 
 :host {
-  block-size: 100%;
-  font-family: var(--cds-font-family, type.font-family("sans"));
   @include layout.emit-layout-tokens;
-  @include meta.load-css("./AppShellStyles");
+  @include component-reset.reset;
 }

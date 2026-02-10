@@ -10,6 +10,7 @@
 @use "@carbon/layout";
 @use "@carbon/styles/scss/theme";
 @use "@carbon/styles/scss/motion";
+@use "@carbon/styles/scss/type";
 @use "@carbon/styles/scss/utilities/ai-gradient" as *;
 @use "../../../globals/scss/vars" as *;
 @use "variables" as *;
@@ -23,13 +24,6 @@
   background: transparent;
   block-size: 100%;
   container-type: inline-size;
-  font-family: var(
-    --cds-aichat-font-family,
-    "IBM Plex Sans",
-    "Helvetica Neue",
-    arial,
-    sans-serif
-  );
   inline-size: 100%;
 }
 

@@ -34,6 +34,7 @@ import "@carbon/web-components/es/components/skeleton-text/index.js";
 
 type CodeMirrorRuntime = Awaited<ReturnType<typeof loadCodeMirrorRuntime>>;
 
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./code-snippet.scss?lit";
 import "@carbon/web-components/es/components/copy-button/index.js";
 import "@carbon/web-components/es/components/copy/copy.js";
@@ -47,7 +48,7 @@ import "@carbon/web-components/es/components/button/button.js";
  */
 @carbonElement(`${prefix}-code-snippet`)
 class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
-  static styles = [styles];
+  static styles = [commonStyles, styles];
 
   // CodeMirror properties
   /** Language used for syntax highlighting. */

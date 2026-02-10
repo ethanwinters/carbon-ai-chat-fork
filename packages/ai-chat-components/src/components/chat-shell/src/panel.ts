@@ -10,7 +10,9 @@
 import { LitElement, PropertyValues, html } from "lit";
 import { property } from "lit/decorators.js";
 import { carbonElement } from "../../../globals/decorators/carbon-element.js";
+import prefix from "../../../globals/settings.js";
 // @ts-ignore
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./panel.scss?lit";
 
 const ANIMATION_START_DETECTION_DELAY_MS = 120;
@@ -18,9 +20,9 @@ const MESSAGES_MAX_WIDTH_FALLBACK = 672; // Fallback if CSS custom property is n
 
 type AnimationState = "closed" | "closing" | "opening" | "open";
 
-@carbonElement("cds-aichat-panel")
+@carbonElement(`${prefix}-panel`)
 class CDSAIChatPanel extends LitElement {
-  static styles = styles;
+  static styles = [commonStyles, styles];
 
   /**
    * @internal

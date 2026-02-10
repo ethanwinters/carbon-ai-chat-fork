@@ -11,6 +11,7 @@ import { LitElement, html } from "lit";
 import { property } from "lit/decorators.js";
 import { carbonElement } from "../../../globals/decorators/index.js";
 import prefix from "../../../globals/settings.js";
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./workspace-shell-header.scss?lit";
 
 /**
@@ -24,7 +25,7 @@ import styles from "./workspace-shell-header.scss?lit";
  */
 @carbonElement(`${prefix}-workspace-shell-header`)
 class CDSAIChatWorkspaceShellHeader extends LitElement {
-  static styles = styles;
+  static styles = [commonStyles, styles];
 
   /**
    * Sets default slot value to toolbar

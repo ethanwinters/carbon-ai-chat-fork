@@ -11,6 +11,7 @@ import { LitElement, PropertyValues, TemplateResult } from "lit";
 import { property, state } from "lit/decorators.js";
 import { carbonElement } from "../../../globals/decorators/carbon-element.js";
 import prefix from "../../../globals/settings.js";
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./markdown.scss?lit";
 import throttle from "lodash-es/throttle.js";
 import { createRef } from "lit/directives/ref.js";
@@ -26,7 +27,7 @@ import { markdownTemplate } from "./markdown.template.js";
  */
 @carbonElement(`${prefix}-markdown`)
 class CDSAIChatMarkdown extends LitElement {
-  static styles = styles;
+  static styles = [commonStyles, styles];
 
   /**
    * Sanitize any HTML included in the markdown. e.g. remove script tags, onclick handlers, etc.

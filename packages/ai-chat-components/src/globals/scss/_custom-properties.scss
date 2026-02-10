@@ -1,0 +1,126 @@
+/* 
+ *  Copyright IBM Corp. 2025
+ *  
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ */
+
+// CSS Custom Properties for AI Chat Components
+// This file exports all tokens as CSS custom properties that can be customized by consumers
+
+@use "./config" as config;
+@use "./tokens-layout" as layout;
+@use "./tokens-component" as component;
+@use "./tokens-color" as color;
+
+// ============================================================================
+// CSS Custom Properties Export
+// ============================================================================
+// These are the public API for customizing AI Chat Components
+// All properties use the --cds-aichat-* prefix
+:root {
+  // Layout tokens
+  @include config.declaration("messages-max-width", layout.$messages-max-width);
+  @include config.declaration("messages-min-width", layout.$messages-min-width);
+  @include config.declaration(
+    "workspace-min-width",
+    layout.$workspace-min-width
+  );
+  @include config.declaration("history-width", layout.$history-width);
+  @include config.declaration("card-max-width", layout.$card-max-width);
+
+  // Component tokens
+  @include config.declaration("border-radius", component.$border-radius);
+  @include config.declaration(
+    "card-border-radius",
+    component.$card-border-radius
+  );
+  @include config.declaration(
+    "rounded-modifier-radius",
+    component.$rounded-modifier-radius
+  );
+  @include config.declaration(
+    "rounded-modifier-radius-start-start",
+    component.$rounded-modifier-radius-start-start
+  );
+  @include config.declaration(
+    "rounded-modifier-radius-start-end",
+    component.$rounded-modifier-radius-start-end
+  );
+  @include config.declaration(
+    "rounded-modifier-radius-end-start",
+    component.$rounded-modifier-radius-end-start
+  );
+  @include config.declaration(
+    "rounded-modifier-radius-end-end",
+    component.$rounded-modifier-radius-end-end
+  );
+
+  // Color tokens - Launcher
+  @include config.declaration(
+    "launcher-color-background",
+    color.$launcher-color-background
+  );
+  @include config.declaration(
+    "launcher-color-avatar",
+    color.$launcher-color-avatar
+  );
+  @include config.declaration(
+    "launcher-color-background-hover",
+    color.$launcher-color-background-hover
+  );
+  @include config.declaration(
+    "launcher-color-background-active",
+    color.$launcher-color-background-active
+  );
+  @include config.declaration(
+    "launcher-color-focus-border",
+    color.$launcher-color-focus-border
+  );
+  @include config.declaration(
+    "launcher-mobile-color-text",
+    color.$launcher-mobile-color-text
+  );
+
+  // Color tokens - Launcher expanded message
+  @include config.declaration(
+    "launcher-expanded-message-color-text",
+    color.$launcher-expanded-message-color-text
+  );
+  @include config.declaration(
+    "launcher-expanded-message-color-background",
+    color.$launcher-expanded-message-color-background
+  );
+  @include config.declaration(
+    "launcher-expanded-message-color-background-hover",
+    color.$launcher-expanded-message-color-background-hover
+  );
+  @include config.declaration(
+    "launcher-expanded-message-color-background-active",
+    color.$launcher-expanded-message-color-background-active
+  );
+  @include config.declaration(
+    "launcher-expanded-message-color-focus-border",
+    color.$launcher-expanded-message-color-focus-border
+  );
+
+  // Color tokens - Unread indicator
+  @include config.declaration(
+    "unread-indicator-color-background",
+    color.$unread-indicator-color-background
+  );
+  @include config.declaration(
+    "unread-indicator-color-text",
+    color.$unread-indicator-color-text
+  );
+}
+
+// ============================================================================
+// Internal/Computed Properties (Documentation Only)
+// ============================================================================
+// These properties are set at runtime by JavaScript and should not be defined here:
+// - --cds-aichat-header-height: Set dynamically by chat-shell component based on header size
+// - --cds-aichat-scrollbar-width: May be set dynamically based on browser scrollbar width
+// - --cds-aichat-homescreen-starter-index: Set per-element for staggered animations
+
+// Made with Bob
