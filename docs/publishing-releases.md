@@ -126,7 +126,7 @@ available for testing. If there are any issues during the testing period, fixes
 can be pushed to the release branch. We can then publish subsequent prereleases
 from the release branch for further testing. To publish subsequent prereleases,
 
-- [ ] Ensure the new fixes that have been pushed to the release branch have also been cherry-picked into the `main` branch.
+- [ ] Ensure the new fixes that have been pushed to the `main` branch have also been cherry-picked into the release branch.
 - [ ] Run the
       [minor release workflow](https://github.com/carbon-design-system/carbon-ai-chat/actions/workflows/release-start.yml)
       to generate the prerelease versions for the packages
