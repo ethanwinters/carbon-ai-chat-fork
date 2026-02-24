@@ -5,6 +5,10 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
+:host {
+  display: block;
+}
+
 // prevent the table columns from being squished in narrow widths
 cds-table::part(inner-container) {
   display: grid;

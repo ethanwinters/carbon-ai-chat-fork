@@ -319,7 +319,7 @@ const StreamingDemo = (args) => {
 };
 
 export default {
-  title: "Components/Code snippet",
+  title: "Preview/Code snippet",
   argTypes: {
     useCard: {
       control: "boolean",

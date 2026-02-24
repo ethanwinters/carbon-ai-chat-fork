@@ -108,7 +108,7 @@ if (!customElements.get("cds-aichat-reasoning-steps-toggle-demo")) {
 }
 
 export default {
-  title: "Components/Reasoning steps/Toggle",
+  title: "Preview/Reasoning steps/Toggle",
   component: "cds-aichat-reasoning-steps-toggle",
   parameters: {
     docs: {
