@@ -13,7 +13,7 @@ import { ifDefined } from "lit/directives/if-defined.js";
 import { headers, rows } from "./story-data.js";
 
 export default {
-  title: "Preview/Table",
+  title: "Components/Table",
   component: "cds-aichat-table",
   argTypes: {
     tableTitle: {

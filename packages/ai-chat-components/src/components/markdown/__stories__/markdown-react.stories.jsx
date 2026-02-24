@@ -185,7 +185,11 @@ const StreamingMarkdownDemo = () => {
 
     intervalRef.current = setInterval(() => {
       if (chunkIndex < chunks.length) {
-        setStreamedContent((prev) => prev + chunks[chunkIndex]);
+        const chunk = chunks[chunkIndex];
+        // Safety check: ensure chunk is not undefined to prevent "undefined" string in output
+        if (chunk !== undefined) {
+          setStreamedContent((prev) => prev + chunk);
+        }
         chunkIndex += 1;
       } else {
         clearExistingInterval();

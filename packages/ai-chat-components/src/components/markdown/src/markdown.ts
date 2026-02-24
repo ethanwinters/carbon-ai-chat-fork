@@ -11,6 +11,7 @@ import { LitElement, PropertyValues, TemplateResult } from "lit";
 import { property, state } from "lit/decorators.js";
 import { carbonElement } from "../../../globals/decorators/carbon-element.js";
 import prefix from "../../../globals/settings.js";
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./markdown.scss?lit";
 import throttle from "lodash-es/throttle.js";
 import { createRef } from "lit/directives/ref.js";
@@ -26,7 +27,7 @@ import { markdownTemplate } from "./markdown.template.js";
  */
 @carbonElement(`${prefix}-markdown`)
 class CDSAIChatMarkdown extends LitElement {
-  static styles = styles;
+  static styles = [commonStyles, styles];
 
   /**
    * Sanitize any HTML included in the markdown. e.g. remove script tags, onclick handlers, etc.
@@ -114,6 +115,14 @@ class CDSAIChatMarkdown extends LitElement {
   /** Formatter for the code block line count. */
   @property({ type: Object, attribute: false })
   getLineCountText?: ({ count }: { count: number }) => string;
+
+  /** Aria-label for code snippets when in read-only mode. */
+  @property({ type: String, attribute: "code-snippet-aria-label-readonly" })
+  codeSnippetAriaLabelReadOnly = "Code snippet";
+
+  /** Aria-label for code snippets when in editable mode. */
+  @property({ type: String, attribute: "code-snippet-aria-label-editable" })
+  codeSnippetAriaLabelEditable = "Code editor";
 
   /**
    * Watches light DOM text updates so streaming markdown triggers re-render without changing slot assignment.
@@ -270,6 +279,8 @@ class CDSAIChatMarkdown extends LitElement {
         showMoreText: this.showMoreText,
         tooltipContent: this.tooltipContent,
         getLineCountText: this.getLineCountText,
+        codeSnippetAriaLabelReadOnly: this.codeSnippetAriaLabelReadOnly,
+        codeSnippetAriaLabelEditable: this.codeSnippetAriaLabelEditable,
       });
     } catch (error) {
       consoleError("Failed to parse markdown", error);

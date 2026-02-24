@@ -17,6 +17,7 @@ import { Token } from "markdown-it";
 import "@carbon/web-components/es/components/list/index.js";
 import "@carbon/web-components/es/components/checkbox/index.js";
 import "../../code-snippet/index.js";
+import "../../card/index.js";
 import "../../table/index.js";
 import { defaultLineCountText } from "../../code-snippet/src/formatters.js";
 
@@ -116,6 +117,10 @@ export interface RenderTokenTreeOptions {
   tooltipContent?: string;
   /** Function to get formatted line count text */
   getLineCountText?: ({ count }: { count: number }) => string;
+  /** Aria-label for code snippets when in read-only mode */
+  codeSnippetAriaLabelReadOnly?: string;
+  /** Aria-label for code snippets when in editable mode */
+  codeSnippetAriaLabelEditable?: string;
 }
 
 const EMPTY_ATTRS = {};
@@ -170,18 +175,27 @@ export function renderTokenTree(
       showMoreText,
       tooltipContent,
       getLineCountText = defaultLineCountText,
+      codeSnippetAriaLabelReadOnly,
+      codeSnippetAriaLabelEditable,
     } = options;
 
-    return html`<cds-aichat-code-snippet-card
-      .language=${language}
-      .highlight=${highlight}
-      .feedback=${feedback}
-      .showLessText=${showLessText}
-      .showMoreText=${showMoreText}
-      .tooltipContent=${tooltipContent}
-      .getLineCountText=${getLineCountText}
-      >${token.content}</cds-aichat-code-snippet-card
-    >`;
+    return html`<cds-aichat-card>
+      <div slot="body">
+        <cds-aichat-code-snippet
+          data-rounded
+          .language=${language}
+          .highlight=${highlight}
+          .feedback=${feedback}
+          .showLessText=${showLessText}
+          .showMoreText=${showMoreText}
+          .tooltipContent=${tooltipContent}
+          .getLineCountText=${getLineCountText}
+          .ariaLabelReadOnly=${codeSnippetAriaLabelReadOnly}
+          .ariaLabelEditable=${codeSnippetAriaLabelEditable}
+          >${token.content}</cds-aichat-code-snippet
+        >
+      </div>
+    </cds-aichat-card>`;
   }
 
   // Handle structural elements (paragraphs, headings, lists, etc.)
@@ -241,15 +255,18 @@ export function renderTokenTree(
 
         return `stable-${stableKey}`;
       },
-      (c, index) =>
-        renderTokenTree(c, {
+      (c, index) => {
+        const result = renderTokenTree(c, {
           ...options,
           context: {
             ...childContext,
             parentChildren: normalizedChildren,
             currentIndex: index,
           },
-        }),
+        });
+        // Ensure we never return undefined, which Lit would render as the string "undefined"
+        return result ?? html``;
+      },
     )}`;
   }
 

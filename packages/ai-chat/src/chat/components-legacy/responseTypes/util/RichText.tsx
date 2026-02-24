@@ -140,6 +140,8 @@ function RichText(props: RichTextProps) {
       showMoreText={languagePack.codeSnippet_showMoreText}
       tooltipContent={languagePack.codeSnippet_tooltipContent}
       getLineCountText={getLineCountText}
+      codeSnippetAriaLabelReadOnly={languagePack.codeSnippet_ariaLabelReadOnly}
+      codeSnippetAriaLabelEditable={languagePack.codeSnippet_ariaLabelEditable}
     >
       {text}
     </Markdown>

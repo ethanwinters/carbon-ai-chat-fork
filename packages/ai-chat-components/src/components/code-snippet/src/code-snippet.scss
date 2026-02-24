@@ -34,17 +34,30 @@
   }
 }
 
+// In fill mode, the host needs to fill its container
+:host(.cds-aichat--snippet-container--fill-mode) {
+  block-size: 100%;
+}
+
 .#{$prefix}--snippet {
   @extend .#{$cds-prefix}--snippet;
   @extend .#{$cds-prefix}--snippet--multi;
-
-  @include rounded-self;
 
   display: block;
   padding: 0;
 
   background: theme.$background;
+
+  font-family: inherit;
   max-inline-size: 100%;
+
+  @include rounded-self;
+}
+
+:host(.cds-aichat--snippet-container--fill-mode) .#{$prefix}--snippet {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
 }
 
 :host-context([data-theme="g90"]),
@@ -85,12 +98,15 @@
   @extend .#{$cds-prefix}--snippet-container;
 
   position: relative;
+
+  // Use CSS custom properties for dynamic height constraints (CSP-compliant)
+  max-block-size: var(--cds-snippet-max-height, none);
+  min-block-size: var(--cds-snippet-min-height, auto);
 }
 
-:host([expanded-code]) .#{$prefix}--snippet-container {
-  padding-block-end: spacing.$spacing-05;
-  transition: max-height motion.$duration-moderate-01
-    motion(standard, productive);
+.#{$prefix}--snippet-container--fill-mode {
+  block-size: 100%;
+  overflow-y: auto;
 }
 
 .#{$prefix}--snippet--codemirror {
@@ -123,12 +139,7 @@
 }
 
 .#{$prefix}--snippet__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: theme.$layer-01;
   border-block-end: 1px solid theme.$border-subtle-02;
-  padding-inline-start: layout.$spacing-05;
 }
 
 .#{$prefix}--snippet__meta {

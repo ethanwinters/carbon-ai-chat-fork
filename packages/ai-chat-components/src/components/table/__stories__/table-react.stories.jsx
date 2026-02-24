@@ -25,7 +25,7 @@ const Table = createComponent({
 });
 
 export default {
-  title: "Preview/Table",
+  title: "Components/Table",
   argTypes: {
     tableTitle: {
       control: "text",
