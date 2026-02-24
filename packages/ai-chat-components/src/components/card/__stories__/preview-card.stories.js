@@ -38,7 +38,7 @@ const maxWidthWrapper = (width, storyFn) => {
 };
 
 export default {
-  title: "Components/Card/Preview Card",
+  title: "Preview/Card/Preview Card",
   decorators: [
     (story) => html`
       <style>

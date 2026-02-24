@@ -11,6 +11,7 @@ import { LitElement } from "lit";
 import { property } from "lit/decorators.js";
 import { carbonElement } from "../../../globals/decorators/index.js";
 import { reasoningStepsToggleTemplate } from "./reasoning-steps-toggle.template.js";
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./reasoning-steps-toggle.scss?lit";
 import prefix from "../../../globals/settings.js";
 
@@ -20,7 +21,7 @@ import prefix from "../../../globals/settings.js";
  */
 @carbonElement(`${prefix}-reasoning-steps-toggle`)
 class CDSAIChatReasoningStepsToggle extends LitElement {
-  static styles = styles;
+  static styles = [commonStyles, styles];
 
   /**
    * Indicates if the reasoning steps panel is open.

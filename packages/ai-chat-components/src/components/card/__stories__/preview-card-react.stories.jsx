@@ -35,7 +35,7 @@ const Wrapper = ({ width, children }) => {
 };
 
 export default {
-  title: "Components/Card/Preview Card",
+  title: "Preview/Card/Preview Card",
   decorators: [
     (Story, { args }) => (
       <Wrapper width={args.maxWidth}>

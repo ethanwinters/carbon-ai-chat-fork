@@ -29,7 +29,7 @@ const CoreSlotContent = () => (
 );
 
 export default {
-  title: "Components/Chat shell",
+  title: "Preview/Chat shell",
   argTypes: {
     aiEnabled: {
       control: "boolean",

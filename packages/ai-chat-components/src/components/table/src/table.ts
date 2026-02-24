@@ -13,6 +13,7 @@ import { property, state } from "lit/decorators.js";
 import { carbonElement } from "../../../globals/decorators";
 import { tableSkeletonTemplate } from "./table-skeleton.template";
 import { loadTableRuntime } from "./table-loader.js";
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./table.scss?lit";
 import prefix from "../../../globals/settings.js";
 
@@ -217,7 +218,7 @@ class CDSAIChatTable extends LitElement {
   @state()
   public _allowFiltering = true;
 
-  static styles = styles;
+  static styles = [commonStyles, styles];
 
   /**
    * @internal
