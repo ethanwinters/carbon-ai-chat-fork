@@ -21,11 +21,11 @@
   margin: auto;
   background-color: theme.$chat-shell-background;
   border-start-end-radius: var(
-    --cds-aichat-rounded-modifier-radius-start-end,
+    --cds-aichat-border-radius-start-end,
     0
   );
   border-start-start-radius: var(
-    --cds-aichat-rounded-modifier-radius-start-start,
+    --cds-aichat-border-radius-start-start,
     0
   );
   inline-size: 100%;
