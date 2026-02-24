@@ -26,7 +26,7 @@ const coreSlotContent = html`
 `;
 
 export default {
-  title: "Components/Chat shell",
+  title: "Preview/Chat shell",
   args: {
     aiEnabled: false,
     showFrame: true,

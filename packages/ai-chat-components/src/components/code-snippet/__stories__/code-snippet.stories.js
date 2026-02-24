@@ -182,7 +182,7 @@ const renderSnippet = (args, code) => {
 };
 
 export default {
-  title: "Components/Code snippet",
+  title: "Preview/Code snippet",
   component: "cds-aichat-code-snippet-tile-container",
   argTypes: {
     useCard: {

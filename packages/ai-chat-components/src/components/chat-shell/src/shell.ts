@@ -10,17 +10,19 @@
 import { LitElement, PropertyValues, html, nothing } from "lit";
 import { property } from "lit/decorators.js";
 // @ts-ignore
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./shell.scss?lit";
 import { PanelManager } from "./panel-manager.js";
 import { WorkspaceManager } from "./workspace-manager.js";
 import { carbonElement } from "../../../globals/decorators/carbon-element.js";
+import prefix from "../../../globals/settings.js";
 import "./panel.js";
 
 type StartOrEnd = "start" | "end";
 
-@carbonElement("cds-aichat-shell")
+@carbonElement(`${prefix}-shell`)
 class CDSAIChatShell extends LitElement {
-  static styles = styles;
+  static styles = [commonStyles, styles];
 
   /**
    * @internal

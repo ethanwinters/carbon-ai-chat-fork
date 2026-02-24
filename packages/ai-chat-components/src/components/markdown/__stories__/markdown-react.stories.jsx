@@ -220,7 +220,7 @@ const StreamingMarkdownDemo = () => {
 };
 
 export default {
-  title: "Components/Markdown",
+  title: "Preview/Markdown",
   argTypes: {
     markdown: {
       control: "text",

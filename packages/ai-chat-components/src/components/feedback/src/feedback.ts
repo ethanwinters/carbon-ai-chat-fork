@@ -12,6 +12,7 @@ import { property, state } from "lit/decorators.js";
 import { carbonElement } from "../../../globals/decorators/index.js";
 import { feedbackElementTemplate } from "./feedback.template.js";
 import prefix from "../../../globals/settings.js";
+import commonStyles from "../../../globals/scss/common.scss?lit";
 import styles from "./feedback.scss?lit";
 
 /**
@@ -20,7 +21,7 @@ import styles from "./feedback.scss?lit";
  */
 @carbonElement(`${prefix}-feedback`)
 class CDSAIChatFeedback extends LitElement {
-  static styles = styles;
+  static styles = [commonStyles, styles];
 
   /**
    * The CSS class of this panel.

@@ -230,7 +230,7 @@ class StreamingDemo extends LitElement {
 customElements.define("streaming-markdown-demo", StreamingDemo);
 
 export default {
-  title: "Components/Markdown",
+  title: "Preview/Markdown",
   component: "cds-aichat-markdown",
   argTypes: {
     markdown: {

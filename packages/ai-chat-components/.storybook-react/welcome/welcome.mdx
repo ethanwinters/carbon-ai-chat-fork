@@ -1,20 +1,10 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import "@carbon/web-components/es/components/notification/inline-notification.js";
 
 <Meta title="Introduction/Welcome" />
 
 # `@carbon/ai-chat-components` React
 
 Welcome to the React Storybook for the Carbon AI Chat Components. Here you'll find the React wrappers for our Carbon-flavored AI chat web components, ready to drop into React apps.
-
-<cds-inline-notification
-  open
-  kind="warning"
-  title="Beta"
-  subtitle="The Carbon AI Chat components are still stabilizing. Be sure to lock to an exact version until the 1.0.0 release of @carbon/ai-chat-components."
-  low-contrast
-  hide-close-button
-/>
 
 ## Getting started
 
@@ -40,3 +30,129 @@ function App() {
 }
 ```
 
+
+
+## Styling & Modifiers
+
+AI Chat Components use a consistent system of **data attribute modifiers** and **CSS custom properties** to control styling. Understanding how these work together will help you customize components effectively.
+
+### Overview: Two Complementary Systems
+
+**CSS Custom Properties** are always available to all components (defined at `:root` level). You can use them directly in your own CSS at any time.
+
+**Data Attribute Modifiers** are convenience utilities that automatically apply CSS custom properties to child elements based on layout patterns (like first/last child rounding).
+
+---
+
+### Data Attribute Modifiers
+
+Data attributes provide declarative control over layout and styling behavior. Apply them directly to HTML elements.
+
+#### `data-rounded`
+
+Controls corner rounding for containers with multiple child elements. Automatically rounds the first and/or last child based on the specified position.
+
+**Available Values:**
+
+| Value | Description | Behavior |
+|-------|-------------|----------|
+| `""` (empty) | Rounds all corners | Applied to the element itself |
+| `"top"` | Rounds top corners | Applied to first child |
+| `"bottom"` | Rounds bottom corners | Applied to last child |
+| `"top-left"` | Rounds top-left corner | Applied to first child (horizontal) or first child (vertical) |
+| `"top-right"` | Rounds top-right corner | Applied to last child (horizontal) or first child (vertical) |
+| `"bottom-left"` | Rounds bottom-left corner | Applied to first child (horizontal) or last child (vertical) |
+| `"bottom-right"` | Rounds bottom-right corner | Applied to last child (horizontal) or last child (vertical) |
+
+**Behavior with `data-stacked` modifier:**
+
+The `data-stacked` attribute modifies how `data-rounded` applies rounding:
+
+- **Without `data-stacked`** (horizontal/inline layout):
+  - `data-rounded="top"` → first child gets top-left, last child gets top-right
+  - `data-rounded="bottom"` → first child gets bottom-left, last child gets bottom-right
+
+- **With `data-stacked`** (vertical/block layout):
+  - `data-rounded="top"` → first child gets both top corners
+  - `data-rounded="bottom"` → last child gets both bottom corners
+
+**Example - Vertical Layout (with `data-stacked`):**
+
+```jsx
+<div data-rounded="bottom" data-stacked>
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3 (gets both bottom corners rounded)</div>
+</div>
+```
+
+**Example - Horizontal Layout (without `data-stacked`):**
+
+```jsx
+<div data-rounded="top">
+  <button>First (top-left rounded)</button>
+  <button>Middle</button>
+  <button>Last (top-right rounded)</button>
+</div>
+```
+
+**When to Use `data-rounded`:**
+- Multi-item containers where you want automatic first/last rounding
+- Toolbars, button groups, lists
+- When you want consistent rounding that adapts to content
+
+**When NOT to Use:**
+- Single elements (use CSS custom properties directly instead)
+- When you need all children rounded the same way
+- When you need custom rounding logic
+
+---
+
+### CSS Custom Properties
+
+CSS custom properties control the visual appearance of components. They're defined at the `:root` level and available to all components, whether or not you use data attribute modifiers.
+
+#### Rounding System
+
+The rounding system provides CSS custom properties that are defined at `:root` with default values. Corner-specific properties fall back to the base property if not explicitly set.
+
+**Base Modifier Radius**
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `--cds-aichat-rounded-modifier-radius` | `0.5rem` (8px) | Base radius for rounded modifier system |
+
+**Corner-Specific Radius**
+
+Individual corner control using logical properties (for RTL support). Each falls back to `--cds-aichat-rounded-modifier-radius` if not set.
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `--cds-aichat-rounded-modifier-radius-start-start` | `0.5rem` (8px) | Top-left (LTR) / Top-right (RTL) |
+| `--cds-aichat-rounded-modifier-radius-start-end` | `0.5rem` (8px) | Top-right (LTR) / Top-left (RTL) |
+| `--cds-aichat-rounded-modifier-radius-end-start` | `0.5rem` (8px) | Bottom-left (LTR) / Bottom-right (RTL) |
+| `--cds-aichat-rounded-modifier-radius-end-end` | `0.5rem` (8px) | Bottom-right (LTR) / Bottom-left (RTL) |
+
+> **Note:** Individual components (like `Card`) may have their own border radius properties that automatically update `--cds-aichat-rounded-modifier-radius` in their scope. See component-specific documentation for details.
+
+#### Using the Properties in Your CSS
+
+When creating custom components or slotted content, reference these CSS custom properties to align with the rounding system:
+
+```css
+.my-custom-element {
+  /* Use base radius for uniform rounding */
+  border-radius: var(--cds-aichat-rounded-modifier-radius);
+  
+  /* Or use specific corners for more control */
+  border-top-left-radius: var(--cds-aichat-rounded-modifier-radius-start-start);
+  border-top-right-radius: var(--cds-aichat-rounded-modifier-radius-start-end);
+  border-bottom-left-radius: var(--cds-aichat-rounded-modifier-radius-end-start);
+  border-bottom-right-radius: var(--cds-aichat-rounded-modifier-radius-end-end);
+}
+```
+
+**Key Points:**
+- These properties are defined at `:root` with defaults (see table above)
+- Parent components may override these values in their scope
+- Use `data-rounded` for automatic first/last child rounding, or reference the properties directly for custom styling
