@@ -241,7 +241,7 @@ if (!customElements.get("cds-aichat-reasoning-steps-controlled-demo")) {
 }
 
 export default {
-  title: "Preview/Reasoning steps",
+  title: "Components/Reasoning steps",
   component: "cds-aichat-reasoning-steps",
   parameters: {
     docs: {

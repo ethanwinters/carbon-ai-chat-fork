@@ -5,7 +5,7 @@ import Feedback from "../../../react/feedback";
 import FeedbackButtons from "../../../react/feedback-buttons";
 
 export default {
-  title: "Preview/Feedback/Buttons",
+  title: "Components/Feedback/Buttons",
   argTypes: {
     isPositiveSelected: {
       control: "boolean",

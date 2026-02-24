@@ -60,7 +60,7 @@ const renderSteps = (steps) =>
   ));
 
 export default {
-  title: "Preview/Chain of thought/Toggle",
+  title: "Components/Chain of thought/Toggle",
   component: ChainOfThoughtToggle,
   parameters: {
     docs: {

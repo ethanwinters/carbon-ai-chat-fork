@@ -21,7 +21,7 @@ const positiveCategories = [
 ];
 
 export default {
-  title: "Preview/Feedback",
+  title: "Components/Feedback",
   argTypes: {
     isOpen: {
       control: "boolean",

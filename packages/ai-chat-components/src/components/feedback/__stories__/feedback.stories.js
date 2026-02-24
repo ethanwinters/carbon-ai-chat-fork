@@ -28,7 +28,7 @@ const positiveCategories = [
 ];
 
 export default {
-  title: "Preview/Feedback",
+  title: "Components/Feedback",
   component: "cds-aichat-feedback",
   argTypes: {
     isOpen: {
@@ -50,6 +50,10 @@ export default {
     placeholder: {
       control: "text",
       description: "Placeholder for the text area",
+    },
+    categoriesLabel: {
+      control: "text",
+      description: "Accessible label for the categories listbox",
     },
     cancelLabel: {
       control: "text",
@@ -119,6 +123,7 @@ export const WithCategories = {
     title: "What went wrong?",
     prompt: "Select all that apply and provide details",
     placeholder: "Please describe the issue...",
+    categoriesLabel: "Feedback categories",
     cancelLabel: "Cancel",
     submitLabel: "Submit feedback",
     showTextArea: true,
@@ -131,6 +136,7 @@ export const WithCategories = {
       title=${args.title}
       prompt=${args.prompt}
       text-area-placeholder=${args.placeholder}
+      categories-label=${args.categoriesLabel}
       cancel-label=${args.cancelLabel}
       submit-label=${args.submitLabel}
       .showTextArea=${args.showTextArea}

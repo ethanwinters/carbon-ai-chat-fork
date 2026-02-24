@@ -18,7 +18,7 @@ const defaultBody = html`<cds-aichat-markdown>
 </cds-aichat-markdown>`;
 
 export default {
-  title: "Preview/Reasoning steps/Step",
+  title: "Components/Reasoning steps/Step",
   component: "cds-aichat-reasoning-step",
   parameters: {
     docs: {

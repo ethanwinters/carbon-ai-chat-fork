@@ -136,7 +136,7 @@ if (!customElements.get("cds-aichat-chain-of-thought-toggle-demo")) {
 }
 
 export default {
-  title: "Preview/Chain of thought/Toggle",
+  title: "Components/Chain of thought/Toggle",
   component: "cds-aichat-chain-of-thought-toggle",
   parameters: {
     docs: {

@@ -14,7 +14,7 @@ import { useLanguagePack } from "../../../hooks/useLanguagePack";
 import { HasDoAutoScroll } from "../../../../types/utilities/HasDoAutoScroll";
 import { LocalMessageItemStreamingState } from "../../../../types/messaging/LocalMessageItem";
 import InlineError from "../error/InlineError";
-import { RichText } from "./RichText";
+import { MarkdownWithDefaults } from "../../../components/util/MarkdownWithDefaults";
 import { TextItem } from "../../../../types/messaging/Messages";
 
 interface StreamingRichTextProps extends HasDoAutoScroll {
@@ -62,7 +62,7 @@ function StreamingRichText(props: StreamingRichTextProps) {
 
   return (
     <>
-      <RichText
+      <MarkdownWithDefaults
         text={textToUse}
         removeHTML={removeHTML}
         streaming={streamingState && !streamingState.isDone}

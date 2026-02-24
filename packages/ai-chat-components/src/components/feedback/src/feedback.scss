@@ -69,10 +69,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  padding: 0;
-  margin: 0;
   gap: layout.$spacing-03;
-  list-style: none;
 }
 
 .#{$prefix}--feedback-text {

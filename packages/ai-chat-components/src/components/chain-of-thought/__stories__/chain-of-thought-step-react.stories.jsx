@@ -19,7 +19,7 @@ const response = `\`\`\`json
 \`\`\``;
 
 export default {
-  title: "Preview/Chain of thought/Step",
+  title: "Components/Chain of thought/Step",
   component: ChainOfThoughtStep,
   parameters: {
     docs: {

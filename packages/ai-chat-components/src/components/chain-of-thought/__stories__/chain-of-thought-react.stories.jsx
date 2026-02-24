@@ -237,7 +237,7 @@ const renderChainOfThought = (args, steps) => {
 };
 
 export default {
-  title: "Preview/Chain of thought",
+  title: "Components/Chain of thought",
   argTypes: {
     open: {
       control: "boolean",

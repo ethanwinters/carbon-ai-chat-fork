@@ -71,7 +71,7 @@ const Demo = ({ args }) => {
 };
 
 export default {
-  title: "Preview/Reasoning steps/Toggle",
+  title: "Components/Reasoning steps/Toggle",
   args: {
     openLabelText: "Hide reasoning steps",
     closedLabelText: "Show reasoning steps",

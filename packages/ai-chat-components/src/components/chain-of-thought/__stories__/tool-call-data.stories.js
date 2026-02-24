@@ -27,7 +27,7 @@ const response = `\`\`\`json
 \`\`\``;
 
 export default {
-  title: "Preview/Chain of thought/Tool call data",
+  title: "Components/Chain of thought/Tool call data",
   component: "cds-aichat-tool-call-data",
   parameters: {
     docs: {

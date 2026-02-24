@@ -12,7 +12,7 @@ const defaultBody = (
 );
 
 export default {
-  title: "Preview/Reasoning steps/Step",
+  title: "Components/Reasoning steps/Step",
   component: ReasoningStep,
   parameters: {
     docs: {

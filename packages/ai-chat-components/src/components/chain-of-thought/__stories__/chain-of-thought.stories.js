@@ -250,7 +250,7 @@ const renderChainOfThought = (args, steps) => {
 };
 
 export default {
-  title: "Preview/Chain of thought",
+  title: "Components/Chain of thought",
   component: "cds-aichat-chain-of-thought",
   argTypes: {
     open: {
