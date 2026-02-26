@@ -123,6 +123,8 @@ const DisclaimerPanel = ({
           onClick={onAcceptDisclaimer}
           size={chatWidthBreakpoint === ChatWidthBreakpoint.WIDE ? "2xl" : "lg"}
           disabled={!hasReadDisclaimer}
+          role="button"
+          aria-label={languagePack.disclaimer_acceptance_label}
         >
           {languagePack.disclaimer_accept}
         </Button>
