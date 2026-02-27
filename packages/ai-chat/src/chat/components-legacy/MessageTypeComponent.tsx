@@ -375,7 +375,6 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
           MessageErrorState.FAILED_WHILE_STREAMING
         }
         removeHTML={removeHTML}
-        doAutoScroll={props.doAutoScroll}
       />
     );
   }
@@ -482,7 +481,7 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
     message: LocalMessageItem,
     originalMessage: MessageResponse,
   ) {
-    const { serviceManager, doAutoScroll } = props;
+    const { serviceManager } = props;
     return (
       <UserDefinedResponse
         streamingState={message.ui_state.streamingState}
@@ -492,7 +491,6 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
         }
         localMessageID={message.ui_state.id}
         serviceManager={serviceManager}
-        doAutoScroll={doAutoScroll}
       />
     );
   }
@@ -559,7 +557,7 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
     localMessageItem: LocalMessageItem<ConversationalSearchItem>,
     fullMessage: MessageResponse,
   ) {
-    const { scrollElementIntoView, doAutoScroll } = props;
+    const { scrollElementIntoView } = props;
     return (
       <ConversationalSearch
         localMessageItem={localMessageItem}
@@ -568,7 +566,6 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
           fullMessage?.history?.error_state ===
           MessageErrorState.FAILED_WHILE_STREAMING
         }
-        doAutoScroll={doAutoScroll}
       />
     );
   }
