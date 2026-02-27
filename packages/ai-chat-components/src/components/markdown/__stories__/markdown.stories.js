@@ -249,9 +249,10 @@ class StreamingDemo extends LitElement {
             Restart Streaming
           </button>
         </div>
-        <cds-aichat-markdown ?streaming=${this.streaming}>
-          ${this.streamedContent}
-        </cds-aichat-markdown>
+        <cds-aichat-markdown
+          ?streaming=${this.streaming}
+          .markdown=${this.streamedContent}
+        ></cds-aichat-markdown>
       </div>
     `;
   }
@@ -282,10 +283,6 @@ export default {
     highlight: {
       control: "boolean",
       description: "Enable syntax highlighting for code blocks",
-    },
-    debug: {
-      control: "boolean",
-      description: "Enable debug logging",
     },
     feedback: {
       control: "text",
@@ -324,16 +321,12 @@ export default {
       description: "Locale for number formatting",
     },
   },
-};
-
-export const Default = {
   args: {
     markdown: comprehensiveMarkdown,
     streaming: false,
     sanitizeHTML: false,
     removeHTML: false,
     highlight: true,
-    debug: false,
     feedback: "Copied!",
     tooltipContent: "Copy code",
     showMoreText: "Show more",
@@ -344,13 +337,16 @@ export const Default = {
     itemsPerPageText: "Items per page:",
     locale: "en",
   },
+};
+
+export const Default = {
   render: (args) => html`
     <cds-aichat-markdown
       ?streaming=${args.streaming}
       ?sanitize-html=${args.sanitizeHTML}
       ?remove-html=${args.removeHTML}
-      ?highlight=${args.highlight}
-      ?debug=${args.debug}
+      .highlight=${args.highlight}
+      .markdown=${args.markdown}
       feedback=${args.feedback}
       tooltip-content=${args.tooltipContent}
       show-more-text=${args.showMoreText}
@@ -360,14 +356,21 @@ export const Default = {
       next-page-text=${args.nextPageText}
       items-per-page-text=${args.itemsPerPageText}
       locale=${args.locale}
-    >
-      ${args.markdown}
-    </cds-aichat-markdown>
+    ></cds-aichat-markdown>
   `,
 };
 
 export const Streaming = {
-  args: {},
+  args: {
+    markdown: "",
+  },
+  argTypes: {
+    markdown: {
+      table: {
+        disable: true,
+      },
+    },
+  },
   render: () => html` <streaming-markdown-demo></streaming-markdown-demo> `,
 };
 
@@ -378,7 +381,6 @@ export const WithHTMLSanitization = {
     sanitizeHTML: true,
     removeHTML: false,
     highlight: true,
-    debug: false,
   },
   render: (args) => html`
     <div>
@@ -392,10 +394,8 @@ export const WithHTMLSanitization = {
         ?sanitize-html=${args.sanitizeHTML}
         ?remove-html=${args.removeHTML}
         .highlight=${args.highlight}
-        ?debug=${args.debug}
-      >
-        ${args.markdown}
-      </cds-aichat-markdown>
+        .markdown=${args.markdown}
+      ></cds-aichat-markdown>
     </div>
   `,
 };
@@ -407,7 +407,6 @@ export const WithHTMLRemoval = {
     sanitizeHTML: false,
     removeHTML: true,
     highlight: true,
-    debug: false,
   },
   render: (args) => html`
     <div>
@@ -420,10 +419,8 @@ export const WithHTMLRemoval = {
         ?sanitize-html=${args.sanitizeHTML}
         ?remove-html=${args.removeHTML}
         .highlight=${args.highlight}
-        ?debug=${args.debug}
-      >
-        ${args.markdown}
-      </cds-aichat-markdown>
+        .markdown=${args.markdown}
+      ></cds-aichat-markdown>
     </div>
   `,
 };
@@ -435,7 +432,6 @@ export const WithoutHighlighting = {
     sanitizeHTML: false,
     removeHTML: false,
     highlight: false,
-    debug: true,
   },
   render: (args) => html`
     <div>
@@ -444,10 +440,8 @@ export const WithoutHighlighting = {
         ?sanitize-html=${args.sanitizeHTML}
         ?remove-html=${args.removeHTML}
         .highlight=${args.highlight}
-        ?debug=${args.debug}
-      >
-        ${args.markdown}
-      </cds-aichat-markdown>
+        .markdown=${args.markdown}
+      ></cds-aichat-markdown>
     </div>
   `,
 };

@@ -248,7 +248,7 @@ const StreamingMarkdownDemo = () => {
           Restart Streaming
         </button>
       </div>
-      <Markdown streaming={streaming}>{streamedContent}</Markdown>
+      <Markdown streaming={streaming} markdown={streamedContent} />
     </div>
   );
 };
@@ -275,10 +275,6 @@ export default {
     highlight: {
       control: "boolean",
       description: "Enable syntax highlighting for code blocks",
-    },
-    debug: {
-      control: "boolean",
-      description: "Enable debug logging",
     },
     feedback: {
       control: "text",
@@ -323,7 +319,6 @@ export default {
     sanitizeHTML: false,
     removeHTML: false,
     highlight: true,
-    debug: false,
     feedback: "Copied!",
     tooltipContent: "Copy code",
     showMoreText: "Show more",
@@ -337,11 +332,20 @@ export default {
 };
 
 export const Default = {
-  render: (args) => <Markdown {...args}>{args.markdown}</Markdown>,
+  render: (args) => <Markdown {...args} markdown={args.markdown} />,
 };
 
 export const Streaming = {
-  args: {},
+  args: {
+    markdown: "",
+  },
+  argTypes: {
+    markdown: {
+      table: {
+        disable: true,
+      },
+    },
+  },
   render: () => <StreamingMarkdownDemo />,
 };
 
@@ -352,7 +356,6 @@ export const WithHTMLSanitization = {
     sanitizeHTML: true,
     removeHTML: false,
     highlight: true,
-    debug: false,
   },
   render: (args) => (
     <div>
@@ -368,7 +371,7 @@ export const WithHTMLSanitization = {
         <code>onclick</code> attributes are removed while safe HTML is
         preserved.
       </p>
-      <Markdown {...args}>{args.markdown}</Markdown>
+      <Markdown {...args} markdown={args.markdown} />
     </div>
   ),
 };
@@ -380,7 +383,6 @@ export const WithHTMLRemoval = {
     sanitizeHTML: false,
     removeHTML: true,
     highlight: true,
-    debug: false,
   },
   render: (args) => (
     <div>
@@ -394,7 +396,7 @@ export const WithHTMLRemoval = {
         <strong>Note:</strong> With <code>remove-html</code> enabled, all HTML
         tags are stripped, leaving only plain text and markdown.
       </p>
-      <Markdown {...args}>{args.markdown}</Markdown>
+      <Markdown {...args} markdown={args.markdown} />
     </div>
   ),
 };
@@ -406,7 +408,6 @@ export const WithoutHighlighting = {
     sanitizeHTML: false,
     removeHTML: false,
     highlight: false,
-    debug: true,
   },
-  render: (args) => <Markdown {...args}>{args.markdown}</Markdown>,
+  render: (args) => <Markdown {...args} markdown={args.markdown} />,
 };

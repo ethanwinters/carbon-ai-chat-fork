@@ -15,7 +15,6 @@ import { default as Markdown } from "@carbon/ai-chat-components/es/react/markdow
 import { useShouldSanitizeHTML } from "../../hooks/useShouldSanitizeHTML";
 import { AppState } from "../../../types/state/AppState";
 import { useLanguagePack } from "../../hooks/useLanguagePack";
-import { debugLog } from "../../utils/miscUtils";
 
 interface MarkdownWithDefaultsProps {
   /**
@@ -72,7 +71,6 @@ function MarkdownWithDefaults(props: MarkdownWithDefaultsProps) {
   const locale = useSelector(
     (state: AppState) => state.config.public.locale || "en",
   );
-  const debug = useSelector((state: AppState) => state.config.public.debug);
 
   // Memoize string functions to prevent unnecessary re-renders
   const getPaginationSupplementalText = useMemo(
@@ -115,13 +113,9 @@ function MarkdownWithDefaults(props: MarkdownWithDefaultsProps) {
     [formatMessage],
   );
 
-  if (debug) {
-    debugLog("Receiving markdown text", { text, streaming });
-  }
-
   return (
     <Markdown
-      debug={debug}
+      markdown={text}
       sanitizeHTML={doSanitize}
       streaming={streaming}
       highlight={highlight}
@@ -142,9 +136,7 @@ function MarkdownWithDefaults(props: MarkdownWithDefaultsProps) {
       getLineCountText={getLineCountText}
       codeSnippetAriaLabelReadOnly={languagePack.codeSnippet_ariaLabelReadOnly}
       codeSnippetAriaLabelEditable={languagePack.codeSnippet_ariaLabelEditable}
-    >
-      {text}
-    </Markdown>
+    />
   );
 }
 

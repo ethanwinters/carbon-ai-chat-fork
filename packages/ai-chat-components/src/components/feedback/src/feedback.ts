@@ -281,7 +281,9 @@ class CDSAIChatFeedback extends LitElement {
         : ""}
       ${this.disclaimer
         ? html`<div class="${prefix}--disclaimer">
-            <cds-aichat-markdown>${this.disclaimer}</cds-aichat-markdown>
+            <cds-aichat-markdown
+              .markdown=${this.disclaimer}
+            ></cds-aichat-markdown>
           </div>`
         : ""}
       <div class="${prefix}--buttons">
