@@ -484,7 +484,6 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
     const { serviceManager } = props;
     return (
       <UserDefinedResponse
-        streamingState={message.ui_state.streamingState}
         isStreamingError={
           originalMessage?.history?.error_state ===
           MessageErrorState.FAILED_WHILE_STREAMING
