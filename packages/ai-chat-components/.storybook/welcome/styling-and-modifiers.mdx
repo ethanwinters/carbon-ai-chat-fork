@@ -439,6 +439,25 @@ Use `data-flush` when rendering custom content in a `cds-aichat-panel` or worksp
 </div>
 ```
 
+**For child elements that need to match the host's `data-rounded` attribute:**
+
+If you have internal elements (within shadow DOM) that need to match the rounding of the host element, use `rounded-child-positions`:
+
+```scss
+@use "@carbon/ai-chat-components/scss/modifiers";
+
+:host(.my-custom-component) {
+  @include modifiers.rounded-modifiers;
+}
+
+.my-internal-element {
+  // This element will match the host's data-rounded attribute
+  @include modifiers.rounded-child-positions;
+}
+```
+
+This is useful for components with nested structure where internal elements (like containers or iframes) need to match the host's rounding. The mixin generates selectors like `:host([data-rounded="top"]) &` to apply the correct corners based on the host's attribute.
+
 **Key Points:**
 - These properties are defined at `:root` with defaults
 - Parent components (like Card, Panel) may override these values in their scope; child elements inherit the override

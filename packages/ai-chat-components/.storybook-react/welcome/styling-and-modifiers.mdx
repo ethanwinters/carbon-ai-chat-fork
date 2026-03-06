@@ -482,6 +482,25 @@ Use `data-flush` when rendering custom content in a `Panel` or workspace shell t
 </div>
 ```
 
+**For child elements that need to match the parent's `data-rounded` attribute:**
+
+If you have internal elements that need to match the rounding of the parent element, use `rounded-child-positions`:
+
+```scss
+@use "@carbon/ai-chat-components/scss/modifiers";
+
+.my-custom-component {
+  @include modifiers.rounded-modifiers;
+  
+  .my-internal-element {
+    // This element will match the parent's data-rounded attribute
+    @include modifiers.rounded-child-positions;
+  }
+}
+```
+
+This is useful for React components with nested structure where internal elements (like containers or iframes) need to match the parent's rounding. The mixin generates selectors like `[data-rounded="top"] &` to apply the correct corners based on the parent's attribute.
+
 **Key Points:**
 - These properties are defined at `:root` with defaults
 - Parent components (like Card, Panel) may override these values in their scope; child elements inherit the override
