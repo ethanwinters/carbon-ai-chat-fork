@@ -915,15 +915,15 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
               : null
           }
           showTextArea={show_text_area}
-          showPrompt={show_prompt}
+          showBody={show_prompt}
           title={title || languagePack.feedback_defaultTitle}
-          prompt={prompt || languagePack.feedback_defaultPrompt}
+          body={prompt || languagePack.feedback_defaultPrompt}
           categories={filteredCategories}
           categoriesLabel={languagePack.feedback_categoriesLabel}
           placeholder={placeholder || languagePack.feedback_defaultPlaceholder}
           disclaimer={disclaimer}
-          submitLabel={languagePack.feedback_submitLabel}
-          cancelLabel={languagePack.feedback_cancelLabel}
+          primaryLabel={languagePack.feedback_submitLabel}
+          secondaryLabel={languagePack.feedback_cancelLabel}
         />
       );
     }

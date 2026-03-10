@@ -170,7 +170,7 @@ class CDSAIChatShell extends LitElement {
    * slots will extend to full container width without max-width constraints.
    */
   @property({ type: Boolean, attribute: "content-max-width", reflect: true })
-  contentMaxWidth = true;
+  contentMaxWidth = false;
 
   /**
    * @internal

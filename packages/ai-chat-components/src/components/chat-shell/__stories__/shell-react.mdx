@@ -37,7 +37,7 @@ import ChatShell from "@carbon/ai-chat-components/es/react/chat-shell.js";
 
 function MyChatInterface() {
   return (
-    <ChatShell showFrame roundedCorners>
+    <ChatShell contentMaxWidth showFrame roundedCorners>
       <div slot="header">Chat Header</div>
       <div slot="messages">Messages Area</div>
       <div slot="input">Input Area</div>
@@ -58,7 +58,7 @@ function ChatWithPanel() {
   const [isPanelOpen, setIsPanelOpen] = React.useState(false);
 
   return (
-    <ChatShell showFrame>
+    <ChatShell contentMaxWidth showFrame>
       <div slot="header">Chat Header</div>
       <div slot="messages">Messages Area</div>
       <div slot="input">Input Area</div>
@@ -97,7 +97,7 @@ Use CSS custom properties to adjust layout sizing. Apply them to a wrapper aroun
     "--cds-aichat-card-max-width": "460px",
   }}
 >
-  <ChatShell showFrame roundedCorners>
+  <ChatShell contentMaxWidth showFrame roundedCorners>
     <div slot="header">Chat Header</div>
     <div slot="messages">Messages Area</div>
     <div slot="input">Input Area</div>
@@ -127,7 +127,8 @@ function ChatWithWorkspace() {
 
   return (
     <ChatShell 
-      showFrame 
+      showFrame
+      contentMaxWidth 
       showWorkspace={showWorkspace}
       workspaceLocation="end">
       <div slot="header">Chat Header</div>
@@ -152,6 +153,7 @@ function ChatWithHistory() {
   return (
     <ChatShell 
       showFrame 
+      contentMaxWidth
       showHistory={showHistory}
       historyLocation="start">
       <div slot="header">Chat Header</div>

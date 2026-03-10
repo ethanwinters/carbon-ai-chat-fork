@@ -59,7 +59,7 @@ class CDSAIChatFeedback extends LitElement {
   /**
    * The initial values to display in the feedback.
    */
-  @property({ type: Object, attribute: "initial-values", reflect: true })
+  @property({ type: Object, attribute: false, reflect: true })
   initialValues?: FeedbackInitialValues;
 
   /**
@@ -69,15 +69,15 @@ class CDSAIChatFeedback extends LitElement {
   title = "";
 
   /**
-   * The prompt text to display to the user. A default value will be used if no value is provided here.
+   * The body text to display to the user. A default value will be used if no value is provided here.
    */
-  @property({ type: String, attribute: "prompt", reflect: true })
-  prompt = "";
+  @property({ type: String, attribute: "body", reflect: true })
+  body = "";
 
   /**
    * The list of categories to show.
    */
-  @property({ type: Array, attribute: "categories", reflect: true })
+  @property({ type: Array, attribute: false, reflect: true })
   categories?: string[];
 
   /**
@@ -94,16 +94,16 @@ class CDSAIChatFeedback extends LitElement {
   placeholder?: string;
 
   /**
-   * The label for the cancel button. A default value will be used if no value is provided here.
+   * The label for the secondary button. A default value will be used if no value is provided here.
    */
-  @property({ type: String, attribute: "cancel-label", reflect: true })
-  cancelLabel?: string;
+  @property({ type: String, attribute: "secondary-label", reflect: true })
+  secondaryLabel?: string;
 
   /**
-   * The label for the submit button. A default value will be used if no value is provided here.
+   * The label for the primary button. A default value will be used if no value is provided here.
    */
-  @property({ type: String, attribute: "submit-label", reflect: true })
-  submitLabel?: string;
+  @property({ type: String, attribute: "primary-label", reflect: true })
+  primaryLabel?: string;
 
   /**
    * The accessible label for the categories listbox. This label is used by screen readers to describe the purpose of the category selection list.
@@ -115,13 +115,13 @@ class CDSAIChatFeedback extends LitElement {
    * Indicates whether the text area should be shown.
    */
   @property({ type: Boolean, attribute: "show-text-area", reflect: true })
-  showTextArea = true;
+  showTextArea = false;
 
   /**
-   * Indicates whether the prompt line should be shown.
+   * Indicates whether the body line should be shown.
    */
-  @property({ type: Boolean, attribute: "show-prompt", reflect: true })
-  showPrompt = true;
+  @property({ type: Boolean, attribute: "show-body", reflect: true })
+  showBody = false;
 
   /**
    * Internal saved text values for feedback.
@@ -232,9 +232,9 @@ class CDSAIChatFeedback extends LitElement {
           ${this.title || "Provide additional feedback"}
         </div>
       </div>
-      ${this.showPrompt
+      ${this.showBody
         ? html`<div class="${prefix}--prompt">
-            ${this.prompt || "What do you think of this response?"}
+            ${this.body || "What do you think of this response?"}
           </div>`
         : ""}
       ${this.categories?.length
@@ -294,7 +294,7 @@ class CDSAIChatFeedback extends LitElement {
             kind="secondary"
             @click=${this._handleCancel}
           >
-            ${this.cancelLabel || "Cancel"}
+            ${this.secondaryLabel || "Cancel"}
           </cds-button>
         </div>
         <div class="${prefix}--submit" data-rounded="bottom-right">
@@ -304,7 +304,7 @@ class CDSAIChatFeedback extends LitElement {
             kind="primary"
             @click=${this._handleSubmit}
           >
-            ${this.submitLabel || "Submit"}
+            ${this.primaryLabel || "Submit"}
           </cds-button>
         </div>
       </div>
