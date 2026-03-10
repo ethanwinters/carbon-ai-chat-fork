@@ -272,43 +272,39 @@ export default {
       control: "boolean",
       description: "Remove all HTML tags",
     },
-    highlight: {
+    codeSnippetHighlight: {
       control: "boolean",
       description: "Enable syntax highlighting for code blocks",
     },
-    feedback: {
-      control: "text",
-      description: "Feedback text for code copy",
-    },
-    tooltipContent: {
+    codeSnippetCopyButtonTooltipContent: {
       control: "text",
       description: "Tooltip text for copy button",
     },
-    showMoreText: {
+    codeSnippetShowMoreText: {
       control: "text",
       description: "Text for expand button",
     },
-    showLessText: {
+    codeSnippetShowLessText: {
       control: "text",
       description: "Text for collapse button",
     },
-    filterPlaceholderText: {
+    tableFilterPlaceholderText: {
       control: "text",
       description: "Placeholder for table filter",
     },
-    previousPageText: {
+    tablePreviousPageText: {
       control: "text",
       description: "Previous page button text",
     },
-    nextPageText: {
+    tableNextPageText: {
       control: "text",
       description: "Next page button text",
     },
-    itemsPerPageText: {
+    tableItemsPerPageText: {
       control: "text",
       description: "Items per page label",
     },
-    locale: {
+    tableLocale: {
       control: "text",
       description: "Locale for number formatting",
     },
@@ -318,16 +314,15 @@ export default {
     streaming: false,
     sanitizeHTML: false,
     removeHTML: false,
-    highlight: true,
-    feedback: "Copied!",
-    tooltipContent: "Copy code",
-    showMoreText: "Show more",
-    showLessText: "Show less",
-    filterPlaceholderText: "Filter table...",
-    previousPageText: "Previous page",
-    nextPageText: "Next page",
-    itemsPerPageText: "Items per page:",
-    locale: "en",
+    codeSnippetHighlight: false,
+    codeSnippetCopyButtonTooltipContent: "Copy code",
+    codeSnippetShowMoreText: "Show more",
+    codeSnippetShowLessText: "Show less",
+    tableFilterPlaceholderText: "Filter table...",
+    tablePreviousPageText: "Previous page",
+    tableNextPageText: "Next page",
+    tableItemsPerPageText: "Items per page:",
+    tableLocale: "en",
   },
 };
 
@@ -352,10 +347,7 @@ export const Streaming = {
 export const WithHTMLSanitization = {
   args: {
     markdown: htmlSanitizationMarkdown,
-    streaming: false,
     sanitizeHTML: true,
-    removeHTML: false,
-    highlight: true,
   },
   render: (args) => (
     <div>
@@ -379,10 +371,7 @@ export const WithHTMLSanitization = {
 export const WithHTMLRemoval = {
   args: {
     markdown: htmlSanitizationMarkdown,
-    streaming: false,
-    sanitizeHTML: false,
     removeHTML: true,
-    highlight: true,
   },
   render: (args) => (
     <div>
@@ -399,15 +388,4 @@ export const WithHTMLRemoval = {
       <Markdown {...args} markdown={args.markdown} />
     </div>
   ),
-};
-
-export const WithoutHighlighting = {
-  args: {
-    markdown: comprehensiveMarkdown,
-    streaming: false,
-    sanitizeHTML: false,
-    removeHTML: false,
-    highlight: false,
-  },
-  render: (args) => <Markdown {...args} markdown={args.markdown} />,
 };

@@ -1,3 +1,12 @@
+/*
+ *  Copyright IBM Corp. 2026
+ *
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ *
+ *  @license
+ */
+
 /**
  * Sample code content for code snippet stories
  * Separated to avoid JSX/Babel parsing issues with backticks in template literals

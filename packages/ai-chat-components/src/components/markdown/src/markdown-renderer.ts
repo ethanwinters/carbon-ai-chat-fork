@@ -75,28 +75,43 @@ export interface RenderTokenTreeOptions {
     currentIndex?: number;
   };
 
+  // Code snippet properties
   /** Whether to enable syntax highlighting in code blocks */
-  highlight?: boolean;
+  codeSnippetHighlight?: boolean;
+  /** Feedback text shown after copying */
+  codeSnippetFeedback?: string;
+  /** Text for show less button */
+  codeSnippetShowLessText?: string;
+  /** Text for show more button */
+  codeSnippetShowMoreText?: string;
+  /** Tooltip text for copy button */
+  codeSnippetCopyButtonTooltipContent?: string;
+  /** Function to get formatted line count text */
+  codeSnippetGetLineCountText?: ({ count }: { count: number }) => string;
+  /** Aria-label for code snippets when in read-only mode */
+  codeSnippetAriaLabelReadOnly?: string;
+  /** Aria-label for code snippets when in editable mode */
+  codeSnippetAriaLabelEditable?: string;
 
-  // Table strings
+  // Table properties
   /** Placeholder text for table filter input */
-  filterPlaceholderText?: string;
+  tableFilterPlaceholderText?: string;
   /** Text for previous page button tooltip */
-  previousPageText?: string;
+  tablePreviousPageText?: string;
   /** Text for next page button tooltip */
-  nextPageText?: string;
+  tableNextPageText?: string;
   /** Text for items per page label */
-  itemsPerPageText?: string;
+  tableItemsPerPageText?: string;
   /**
    * The text used for the download button's accessible label.
    */
-  downloadLabelText?: string;
+  tableDownloadLabelText?: string;
   /** Locale for table sorting and formatting */
-  locale?: string;
+  tableLocale?: string;
   /** Function to get supplemental pagination text */
-  getPaginationSupplementalText?: ({ count }: { count: number }) => string;
+  tableGetPaginationSupplementalText?: ({ count }: { count: number }) => string;
   /** Function to get pagination status text */
-  getPaginationStatusText?: ({
+  tableGetPaginationStatusText?: ({
     start,
     end,
     count,
@@ -105,22 +120,6 @@ export interface RenderTokenTreeOptions {
     end: number;
     count: number;
   }) => string;
-
-  // Code snippet strings
-  /** Feedback text shown after copying */
-  feedback?: string;
-  /** Text for show less button */
-  showLessText?: string;
-  /** Text for show more button */
-  showMoreText?: string;
-  /** Tooltip text for copy button */
-  tooltipContent?: string;
-  /** Function to get formatted line count text */
-  getLineCountText?: ({ count }: { count: number }) => string;
-  /** Aria-label for code snippets when in read-only mode */
-  codeSnippetAriaLabelReadOnly?: string;
-  /** Aria-label for code snippets when in editable mode */
-  codeSnippetAriaLabelEditable?: string;
 
   /**
    * Force markdown tables to render in loading mode.
@@ -171,12 +170,11 @@ export function renderTokenTree(
   if (token.type === "fence") {
     const language = token.info?.trim() ?? "";
     const {
-      highlight = true,
-      feedback,
-      showLessText,
-      showMoreText,
-      tooltipContent,
-      getLineCountText = defaultLineCountText,
+      codeSnippetHighlight = true,
+      codeSnippetShowLessText,
+      codeSnippetShowMoreText,
+      codeSnippetCopyButtonTooltipContent,
+      codeSnippetGetLineCountText = defaultLineCountText,
       codeSnippetAriaLabelReadOnly,
       codeSnippetAriaLabelEditable,
     } = options;
@@ -186,12 +184,11 @@ export function renderTokenTree(
         <cds-aichat-code-snippet
           data-rounded
           .language=${language}
-          .highlight=${highlight}
-          .feedback=${feedback}
-          .showLessText=${showLessText}
-          .showMoreText=${showMoreText}
-          .tooltipContent=${tooltipContent}
-          .getLineCountText=${getLineCountText}
+          .highlight=${codeSnippetHighlight}
+          .showLessText=${codeSnippetShowLessText}
+          .showMoreText=${codeSnippetShowMoreText}
+          .copyButtonTooltipContent=${codeSnippetCopyButtonTooltipContent}
+          .getLineCountText=${codeSnippetGetLineCountText}
           .ariaLabelReadOnly=${codeSnippetAriaLabelReadOnly}
           .ariaLabelEditable=${codeSnippetAriaLabelEditable}
           .code=${token.content}
@@ -453,14 +450,14 @@ function renderWithStaticTag(
         streaming,
         forceTableLoading,
         context: parentContext,
-        filterPlaceholderText,
-        previousPageText,
-        nextPageText,
-        itemsPerPageText,
-        downloadLabelText,
-        locale,
-        getPaginationSupplementalText,
-        getPaginationStatusText,
+        tableFilterPlaceholderText,
+        tablePreviousPageText,
+        tableNextPageText,
+        tableItemsPerPageText,
+        tableDownloadLabelText,
+        tableLocale,
+        tableGetPaginationSupplementalText,
+        tableGetPaginationStatusText,
       } = options;
 
       // Determine if we should show loading state during streaming
@@ -526,15 +523,16 @@ function renderWithStaticTag(
           .headers=${headers}
           .rows=${tableRows}
           .loading=${false}
-          .filterPlaceholderText=${filterPlaceholderText || "Filter table..."}
-          .previousPageText=${previousPageText || "Previous page"}
-          .nextPageText=${nextPageText || "Next page"}
-          .itemsPerPageText=${itemsPerPageText || "Items per page:"}
-          .downloadLabelText=${downloadLabelText || "Download table data"}
-          .locale=${locale || "en"}
-          .getPaginationSupplementalText=${getPaginationSupplementalText ||
+          .filterPlaceholderText=${tableFilterPlaceholderText ||
+          "Filter table..."}
+          .previousPageText=${tablePreviousPageText || "Previous page"}
+          .nextPageText=${tableNextPageText || "Next page"}
+          .itemsPerPageText=${tableItemsPerPageText || "Items per page:"}
+          .downloadLabelText=${tableDownloadLabelText || "Download table data"}
+          .locale=${tableLocale || "en"}
+          .getPaginationSupplementalText=${tableGetPaginationSupplementalText ||
           DEFAULT_PAGINATION_SUPPLEMENTAL_TEXT}
-          .getPaginationStatusText=${getPaginationStatusText ||
+          .getPaginationStatusText=${tableGetPaginationStatusText ||
           DEFAULT_PAGINATION_STATUS_TEXT}
           ...=${attrs}
         ></cds-aichat-table>

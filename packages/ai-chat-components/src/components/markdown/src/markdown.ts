@@ -106,73 +106,29 @@ class CDSAIChatMarkdown extends LitElement {
   @property({ type: Boolean, attribute: "streaming" })
   streaming = false;
 
-  /**
-   * Enable syntax highlighting for any code fence blocks.
-   */
-  @property({ type: Boolean, attribute: "highlight" })
-  highlight = false;
-
-  // Table strings
-  /** Placeholder text for table filters. */
-  @property({ type: String, attribute: "filter-placeholder-text" })
-  filterPlaceholderText = "Filter table...";
-
-  /** Label for the previous page control in tables. */
-  @property({ type: String, attribute: "previous-page-text" })
-  previousPageText = "Previous page";
-
-  /** Label for the next page control in tables. */
-  @property({ type: String, attribute: "next-page-text" })
-  nextPageText = "Next page";
-
-  /** Label for the items-per-page control in tables. */
-  @property({ type: String, attribute: "items-per-page-text" })
-  itemsPerPageText = "Items per page:";
-
-  /** Label for download of CSV of table data. */
-  @property({ type: String, attribute: "download-label-text" })
-  downloadLabelText = "Download table data";
-
-  /** Locale used for table pagination and formatting. */
-  @property({ type: String, attribute: "locale" })
-  locale = "en";
-
-  /** Optional formatter for supplemental pagination text. */
-  @property({ type: Object, attribute: false })
-  getPaginationSupplementalText?: ({ count }: { count: number }) => string;
-
-  /** Optional formatter for pagination status text. */
-  @property({ type: Object, attribute: false })
-  getPaginationStatusText?: ({
-    start,
-    end,
-    count,
-  }: {
-    start: number;
-    end: number;
-    count: number;
-  }) => string;
-
-  // Code snippet strings
-  /** Feedback text shown after copying code blocks. */
-  @property({ type: String, attribute: "feedback" })
-  feedback = "Copied!";
+  // Code snippet properties
+  /** Enable syntax highlighting for any code fence blocks. */
+  @property({ type: Boolean, attribute: "code-snippet-highlight" })
+  codeSnippetHighlight = false;
 
   /** Label for collapsing long code blocks. */
-  @property({ type: String, attribute: "show-less-text" })
-  showLessText = "Show less";
+  @property({ type: String, attribute: "code-snippet-show-less-text" })
+  codeSnippetShowLessText = "Show less";
 
   /** Label for expanding long code blocks. */
-  @property({ type: String, attribute: "show-more-text" })
-  showMoreText = "Show more";
+  @property({ type: String, attribute: "code-snippet-show-more-text" })
+  codeSnippetShowMoreText = "Show more";
 
   /** Tooltip content for the copy action on code blocks. */
-  @property({ type: String, attribute: "tooltip-content" })
-  tooltipContent = "Copy code";
+  @property({
+    type: String,
+    attribute: "code-snippet-copy-button-tooltip-content",
+  })
+  codeSnippetCopyButtonTooltipContent = "Copy code";
 
   /** Formatter for the code block line count. */
   @property({ type: Object, attribute: false })
-  getLineCountText?: ({ count }: { count: number }) => string;
+  codeSnippetGetLineCountText?: ({ count }: { count: number }) => string;
 
   /** Aria-label for code snippets when in read-only mode. */
   @property({ type: String, attribute: "code-snippet-aria-label-readonly" })
@@ -181,6 +137,47 @@ class CDSAIChatMarkdown extends LitElement {
   /** Aria-label for code snippets when in editable mode. */
   @property({ type: String, attribute: "code-snippet-aria-label-editable" })
   codeSnippetAriaLabelEditable = "Code editor";
+
+  // Table properties
+  /** Placeholder text for table filters. */
+  @property({ type: String, attribute: "table-filter-placeholder-text" })
+  tableFilterPlaceholderText = "Filter table...";
+
+  /** Label for the previous page control in tables. */
+  @property({ type: String, attribute: "table-previous-page-text" })
+  tablePreviousPageText = "Previous page";
+
+  /** Label for the next page control in tables. */
+  @property({ type: String, attribute: "table-next-page-text" })
+  tableNextPageText = "Next page";
+
+  /** Label for the items-per-page control in tables. */
+  @property({ type: String, attribute: "table-items-per-page-text" })
+  tableItemsPerPageText = "Items per page:";
+
+  /** Label for download of CSV of table data. */
+  @property({ type: String, attribute: "table-download-label-text" })
+  tableDownloadLabelText = "Download table data";
+
+  /** Locale used for table pagination and formatting. */
+  @property({ type: String, attribute: "table-locale" })
+  tableLocale = "en";
+
+  /** Optional formatter for supplemental pagination text. */
+  @property({ type: Object, attribute: false })
+  tableGetPaginationSupplementalText?: ({ count }: { count: number }) => string;
+
+  /** Optional formatter for pagination status text. */
+  @property({ type: Object, attribute: false })
+  tableGetPaginationStatusText?: ({
+    start,
+    end,
+    count,
+  }: {
+    start: number;
+    end: number;
+    count: number;
+  }) => string;
 
   /**
    * @internal
@@ -235,19 +232,23 @@ class CDSAIChatMarkdown extends LitElement {
       // - streaming: affects loading states in rendered output
       changed.has("sanitizeHTML") ||
       changed.has("streaming") ||
-      changed.has("filterPlaceholderText") ||
-      changed.has("previousPageText") ||
-      changed.has("nextPageText") ||
-      changed.has("itemsPerPageText") ||
-      changed.has("downloadLabelText") ||
-      changed.has("locale") ||
-      changed.has("getPaginationSupplementalText") ||
-      changed.has("getPaginationStatusText") ||
-      changed.has("feedback") ||
-      changed.has("showLessText") ||
-      changed.has("showMoreText") ||
-      changed.has("tooltipContent") ||
-      changed.has("getLineCountText")
+      // Code snippet properties
+      changed.has("codeSnippetHighlight") ||
+      changed.has("codeSnippetShowLessText") ||
+      changed.has("codeSnippetShowMoreText") ||
+      changed.has("codeSnippetCopyButtonTooltipContent") ||
+      changed.has("codeSnippetGetLineCountText") ||
+      changed.has("codeSnippetAriaLabelReadOnly") ||
+      changed.has("codeSnippetAriaLabelEditable") ||
+      // Table properties
+      changed.has("tableFilterPlaceholderText") ||
+      changed.has("tablePreviousPageText") ||
+      changed.has("tableNextPageText") ||
+      changed.has("tableItemsPerPageText") ||
+      changed.has("tableDownloadLabelText") ||
+      changed.has("tableLocale") ||
+      changed.has("tableGetPaginationSupplementalText") ||
+      changed.has("tableGetPaginationStatusText")
     ) {
       this.scheduleRender();
     }
@@ -336,22 +337,25 @@ class CDSAIChatMarkdown extends LitElement {
           this.renderedContent = renderTokenTree(nextTokenTree, {
             sanitize: this.sanitizeHTML,
             streaming: this.streaming,
-            highlight: this.highlight,
-            // Table strings
-            filterPlaceholderText: this.filterPlaceholderText,
-            previousPageText: this.previousPageText,
-            nextPageText: this.nextPageText,
-            itemsPerPageText: this.itemsPerPageText,
-            downloadLabelText: this.downloadLabelText,
-            locale: this.locale,
-            getPaginationSupplementalText: this.getPaginationSupplementalText,
-            getPaginationStatusText: this.getPaginationStatusText,
-            // Code snippet strings
-            feedback: this.feedback,
-            showLessText: this.showLessText,
-            showMoreText: this.showMoreText,
-            tooltipContent: this.tooltipContent,
-            getLineCountText: this.getLineCountText,
+            // Code snippet properties
+            codeSnippetHighlight: this.codeSnippetHighlight,
+            codeSnippetShowLessText: this.codeSnippetShowLessText,
+            codeSnippetShowMoreText: this.codeSnippetShowMoreText,
+            codeSnippetCopyButtonTooltipContent:
+              this.codeSnippetCopyButtonTooltipContent,
+            codeSnippetGetLineCountText: this.codeSnippetGetLineCountText,
+            codeSnippetAriaLabelReadOnly: this.codeSnippetAriaLabelReadOnly,
+            codeSnippetAriaLabelEditable: this.codeSnippetAriaLabelEditable,
+            // Table properties
+            tableFilterPlaceholderText: this.tableFilterPlaceholderText,
+            tablePreviousPageText: this.tablePreviousPageText,
+            tableNextPageText: this.tableNextPageText,
+            tableItemsPerPageText: this.tableItemsPerPageText,
+            tableDownloadLabelText: this.tableDownloadLabelText,
+            tableLocale: this.tableLocale,
+            tableGetPaginationSupplementalText:
+              this.tableGetPaginationSupplementalText,
+            tableGetPaginationStatusText: this.tableGetPaginationStatusText,
           });
           this.hasRenderedStreamingTableLoadingFrame = true;
           this.stagedStreamingTokenTree = null;
@@ -373,24 +377,25 @@ class CDSAIChatMarkdown extends LitElement {
       this.renderedContent = renderTokenTree(renderTree, {
         sanitize: this.sanitizeHTML,
         streaming: this.streaming,
-        highlight: this.highlight,
-        // Table strings
-        filterPlaceholderText: this.filterPlaceholderText,
-        previousPageText: this.previousPageText,
-        nextPageText: this.nextPageText,
-        itemsPerPageText: this.itemsPerPageText,
-        downloadLabelText: this.downloadLabelText,
-        locale: this.locale,
-        getPaginationSupplementalText: this.getPaginationSupplementalText,
-        getPaginationStatusText: this.getPaginationStatusText,
-        // Code snippet strings
-        feedback: this.feedback,
-        showLessText: this.showLessText,
-        showMoreText: this.showMoreText,
-        tooltipContent: this.tooltipContent,
-        getLineCountText: this.getLineCountText,
+        // Code snippet properties
+        codeSnippetHighlight: this.codeSnippetHighlight,
+        codeSnippetShowLessText: this.codeSnippetShowLessText,
+        codeSnippetShowMoreText: this.codeSnippetShowMoreText,
+        codeSnippetCopyButtonTooltipContent:
+          this.codeSnippetCopyButtonTooltipContent,
+        codeSnippetGetLineCountText: this.codeSnippetGetLineCountText,
         codeSnippetAriaLabelReadOnly: this.codeSnippetAriaLabelReadOnly,
         codeSnippetAriaLabelEditable: this.codeSnippetAriaLabelEditable,
+        // Table properties
+        tableFilterPlaceholderText: this.tableFilterPlaceholderText,
+        tablePreviousPageText: this.tablePreviousPageText,
+        tableNextPageText: this.tableNextPageText,
+        tableItemsPerPageText: this.tableItemsPerPageText,
+        tableDownloadLabelText: this.tableDownloadLabelText,
+        tableLocale: this.tableLocale,
+        tableGetPaginationSupplementalText:
+          this.tableGetPaginationSupplementalText,
+        tableGetPaginationStatusText: this.tableGetPaginationStatusText,
       });
     } catch (error) {
       consoleError("Failed to parse markdown", error);

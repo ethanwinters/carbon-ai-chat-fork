@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -148,6 +148,8 @@ When \`sanitize-html\` is enabled, potentially dangerous HTML is removed:
 
 <script>alert('This would be removed')</script>
 
+Without sanitization, this link runs javascript via onclick to show an alert window.
+
 <a href="https://example.com" onclick="alert('dangerous')">This link is safe, but onclick is removed</a>
 
 ## Emphasis with HTML
@@ -280,43 +282,39 @@ export default {
       control: "boolean",
       description: "Remove all HTML tags",
     },
-    highlight: {
+    codeSnippetHighlight: {
       control: "boolean",
       description: "Enable syntax highlighting for code blocks",
     },
-    feedback: {
-      control: "text",
-      description: "Feedback text for code copy",
-    },
-    tooltipContent: {
+    codeSnippetCopyButtonTooltipContent: {
       control: "text",
       description: "Tooltip text for copy button",
     },
-    showMoreText: {
+    codeSnippetShowMoreText: {
       control: "text",
       description: "Text for expand button",
     },
-    showLessText: {
+    codeSnippetShowLessText: {
       control: "text",
       description: "Text for collapse button",
     },
-    filterPlaceholderText: {
+    tableFilterPlaceholderText: {
       control: "text",
       description: "Placeholder for table filter",
     },
-    previousPageText: {
+    tablePreviousPageText: {
       control: "text",
       description: "Previous page button text",
     },
-    nextPageText: {
+    tableNextPageText: {
       control: "text",
       description: "Next page button text",
     },
-    itemsPerPageText: {
+    tableItemsPerPageText: {
       control: "text",
       description: "Items per page label",
     },
-    locale: {
+    tableLocale: {
       control: "text",
       description: "Locale for number formatting",
     },
@@ -326,16 +324,15 @@ export default {
     streaming: false,
     sanitizeHTML: false,
     removeHTML: false,
-    highlight: true,
-    feedback: "Copied!",
-    tooltipContent: "Copy code",
-    showMoreText: "Show more",
-    showLessText: "Show less",
-    filterPlaceholderText: "Filter table...",
-    previousPageText: "Previous page",
-    nextPageText: "Next page",
-    itemsPerPageText: "Items per page:",
-    locale: "en",
+    codeSnippetHighlight: false,
+    codeSnippetCopyButtonTooltipContent: "Copy code",
+    codeSnippetShowMoreText: "Show more",
+    codeSnippetShowLessText: "Show less",
+    tableFilterPlaceholderText: "Filter table...",
+    tablePreviousPageText: "Previous page",
+    tableNextPageText: "Next page",
+    tableItemsPerPageText: "Items per page:",
+    tableLocale: "en",
   },
 };
 
@@ -345,17 +342,16 @@ export const Default = {
       ?streaming=${args.streaming}
       ?sanitize-html=${args.sanitizeHTML}
       ?remove-html=${args.removeHTML}
-      .highlight=${args.highlight}
+      ?code-snippet-highlight=${args.codeSnippetHighlight}
       .markdown=${args.markdown}
-      feedback=${args.feedback}
-      tooltip-content=${args.tooltipContent}
-      show-more-text=${args.showMoreText}
-      show-less-text=${args.showLessText}
-      filter-placeholder-text=${args.filterPlaceholderText}
-      previous-page-text=${args.previousPageText}
-      next-page-text=${args.nextPageText}
-      items-per-page-text=${args.itemsPerPageText}
-      locale=${args.locale}
+      code-snippet-copy-button-tooltip-content=${args.codeSnippetCopyButtonTooltipContent}
+      code-snippet-show-more-text=${args.codeSnippetShowMoreText}
+      code-snippet-show-less-text=${args.codeSnippetShowLessText}
+      table-filter-placeholder-text=${args.tableFilterPlaceholderText}
+      table-previous-page-text=${args.tablePreviousPageText}
+      table-next-page-text=${args.tableNextPageText}
+      table-items-per-page-text=${args.tableItemsPerPageText}
+      table-locale=${args.tableLocale}
     ></cds-aichat-markdown>
   `,
 };
@@ -380,7 +376,7 @@ export const WithHTMLSanitization = {
     streaming: false,
     sanitizeHTML: true,
     removeHTML: false,
-    highlight: true,
+    codeSnippetHighlight: true,
   },
   render: (args) => html`
     <div>
@@ -393,7 +389,7 @@ export const WithHTMLSanitization = {
         ?streaming=${args.streaming}
         ?sanitize-html=${args.sanitizeHTML}
         ?remove-html=${args.removeHTML}
-        .highlight=${args.highlight}
+        ?code-snippet-highlight=${args.codeSnippetHighlight}
         .markdown=${args.markdown}
       ></cds-aichat-markdown>
     </div>
@@ -406,7 +402,7 @@ export const WithHTMLRemoval = {
     streaming: false,
     sanitizeHTML: false,
     removeHTML: true,
-    highlight: true,
+    codeSnippetHighlight: true,
   },
   render: (args) => html`
     <div>
@@ -418,28 +414,7 @@ export const WithHTMLRemoval = {
         ?streaming=${args.streaming}
         ?sanitize-html=${args.sanitizeHTML}
         ?remove-html=${args.removeHTML}
-        .highlight=${args.highlight}
-        .markdown=${args.markdown}
-      ></cds-aichat-markdown>
-    </div>
-  `,
-};
-
-export const WithoutHighlighting = {
-  args: {
-    markdown: comprehensiveMarkdown,
-    streaming: false,
-    sanitizeHTML: false,
-    removeHTML: false,
-    highlight: false,
-  },
-  render: (args) => html`
-    <div>
-      <cds-aichat-markdown
-        ?streaming=${args.streaming}
-        ?sanitize-html=${args.sanitizeHTML}
-        ?remove-html=${args.removeHTML}
-        .highlight=${args.highlight}
+        ?code-snippet-highlight=${args.codeSnippetHighlight}
         .markdown=${args.markdown}
       ></cds-aichat-markdown>
     </div>
