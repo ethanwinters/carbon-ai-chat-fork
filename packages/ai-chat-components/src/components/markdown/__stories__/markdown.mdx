@@ -23,13 +23,11 @@ Use `cds-aichat-markdown` to render AI responses with a predictable set of Markd
 
 ### Getting started
 
-Here's a quick example to get you started.
+Here's a quick example to get you started using the `markdown` attribute (recommended):
 
 ```html
-<cds-aichat-markdown id="ai-response"></cds-aichat-markdown>
 <script>
-  document.getElementById("ai-response").markdown = `
-## Response
+  const markdownContent = `## Response
 
 Here is a **formatted** answer with a link to the [docs](https://carbondesignsystem.com){target=_blank rel=noopener}.
 
@@ -38,7 +36,28 @@ Here is a **formatted** answer with a link to the [docs](https://carbondesignsys
 * Item one
 * Item two`;
 </script>
+
+<cds-aichat-markdown markdown="${markdownContent}"></cds-aichat-markdown>
 ```
+
+### Using slotted content (alternative)
+
+You can also provide markdown via slotted content, though the attribute-based approach is recommended for better performance, especially when streaming content:
+
+```html
+<cds-aichat-markdown>
+## Response
+
+Here is a **formatted** answer with a link to the [docs](https://carbondesignsystem.com){target=_blank rel=noopener}.
+
+> Remember to set your API key before calling the service.
+
+* Item one
+* Item two
+</cds-aichat-markdown>
+```
+
+**Performance Note:** The `markdown` attribute is more efficient than slotted content because it bypasses the slot change detection mechanism. This is particularly beneficial when streaming markdown content, as it reduces unnecessary DOM operations and improves rendering performance.
 
 ## Component API
 

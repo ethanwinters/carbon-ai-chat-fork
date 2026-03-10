@@ -14,152 +14,27 @@ import { html, LitElement } from "lit";
 import { ifDefined } from "lit/directives/if-defined.js";
 import Download16 from "@carbon/icons/es/download/16.js";
 import Share16 from "@carbon/icons/es/share/16.js";
-
-const multilineCode = `/**
- * Carbon highlight showcase: control keywords, types, literals, doc comments, and more.
- * Designers can compare against https://carbondesignsystem.com
- */
-import type { PaletteDefinition } from "./tokens";
-import { readFile } from "fs/promises";
-
-/**
- * Custom decorator to exercise meta/annotation styling.
- */
-function Showcase(): ClassDecorator {
-  return (target) => Reflect.defineMetadata?.("showcase", true, target);
-}
-
-type Nullable<T> = T | null | undefined;
-
-interface TokenSwatch {
-  readonly name: string;
-  readonly hex: string;
-  emphasis?: "strong" | "emphasis" | "strikethrough";
-  notes?: string;
-}
-
-enum TokenGroup {
-  Keyword = "keyword",
-  Variable = "variable",
-  String = "string",
-  Number = "number",
-  Comment = "comment",
-}
-
-namespace Guides {
-  export const headings = [
-    "# Heading One",
-    "## Heading Two",
-    "### Heading Three",
-    "#### Heading Four",
-    "##### Heading Five",
-    "###### Heading Six",
-  ] as const;
-
-  export const markdown = [
-    "> Quote with *emphasis*, **strong text**, \`code\`, and [link](https://example.com).",
-    "- Bullet item",
-    "1. Ordered item",
-    "---",
-    "~~Strikethrough~~ remains supported.",
-  ];
-}
-
-@Showcase()
-export class TokenShowcase<T extends TokenSwatch> {
-  static readonly version = "1.0.0";
-  static readonly palette: Record<TokenGroup, string> = {
-    [TokenGroup.Keyword]: "--cds-syntax-keyword",
-    [TokenGroup.Variable]: "--cds-syntax-variable",
-    [TokenGroup.String]: "--cds-syntax-string",
-    [TokenGroup.Number]: "--cds-syntax-number",
-    [TokenGroup.Comment]: "--cds-syntax-comment",
-  };
-
-  #pattern = /--cds-syntax-[a-z-]+/g;
-  #cache = new Map<string, T>();
-  private url = new URL("https://carbon.design/components/code-snippet");
-  private pending: Nullable<Promise<void>> = null;
-
-  constructor(private readonly theme: PaletteDefinition, private mutable = false) {
-    if (mutable && theme.allowOverrides === false) {
-      throw new Error("Mutable showcase requires override permission.");
-    }
-  }
-
-  /* multi-line
-     comment demonstrating block syntax */
-
-  async hydrate(path: string): Promise<void> {
-    const file = await readFile(path, { encoding: "utf-8" });
-    const matches = file.match(this.#pattern) ?? [];
-    matches.forEach((token, index) => {
-      const swatch = {
-        name: token,
-        hex: this.theme.tokens[token] ?? "#000000",
-        notes: Guides.headings[index % Guides.headings.length],
-      } as T;
-      this.#cache.set(token, swatch);
-    });
-  }
-
-  annotate(entry: T): void {
-    const local = { ...entry, local: true } as T & { local: boolean };
-    this.#cache.set(entry.name, local);
-  }
-
-  resolve(name: string): Nullable<T> {
-    if (!this.#cache.has(name)) {
-      return null;
-    }
-    const result = this.#cache.get(name) ?? null;
-    return result && { ...result };
-  }
-
-  renderMarkdown(): string {
-    const parts = [...Guides.headings, ...Guides.markdown];
-    return parts.join("\\n");
-  }
-
-  toJSON(): Record<string, unknown> {
-    return {
-      url: this.url.href,
-      version: TokenShowcase.version,
-      mutable: this.mutable,
-      tokens: Array.from(this.#cache.keys()),
-      palette: TokenShowcase.palette,
-    };
-  }
-
-  get summary(): string {
-    return \`Loaded \${this.#cache.size} tokens for \${this.theme.name} (#\${this.theme.revision})\`;
-  }
-}
-
-// trailing comment with TODO inside to exercise single-line states
-`;
+import { multilineCode } from "./sample-code.js";
 
 // Helper function to render with or without card wrapper
 const renderSnippet = (args, code) => {
   const snippet = html`
     <cds-aichat-code-snippet
       ?data-rounded=${args.useCard}
+      .code=${code}
       ?editable=${args.editable}
       ?highlight=${args.highlight}
       ?disabled=${args.disabled}
       ?hide-copy-button=${args.hideCopyButton}
       ?hide-header=${args.hideHeader}
-      ?wrap-text=${args.wrapText}
       max-collapsed-number-of-rows=${ifDefined(args.maxCollapsedNumberOfRows)}
       max-expanded-number-of-rows=${ifDefined(args.maxExpandedNumberOfRows)}
       min-collapsed-number-of-rows=${ifDefined(args.minCollapsedNumberOfRows)}
       min-expanded-number-of-rows=${ifDefined(args.minExpandedNumberOfRows)}
       show-more-text=${ifDefined(args.showMoreText)}
       show-less-text=${ifDefined(args.showLessText)}
-      tooltip-content=${ifDefined(args.tooltipContent)}
-      feedback=${ifDefined(args.feedback)}
+      copy-button-tooltip-content=${ifDefined(args.copyButtonTooltipContent)}
     >
-      ${code}
     </cds-aichat-code-snippet>
   `;
 
@@ -205,10 +80,6 @@ export default {
       control: "boolean",
       description: "Hide the header/toolbar completely",
     },
-    wrapText: {
-      control: "boolean",
-      description: "Wrap text instead of scrolling",
-    },
     maxCollapsedNumberOfRows: {
       control: "number",
       description: "Maximum rows when collapsed",
@@ -233,13 +104,9 @@ export default {
       control: "text",
       description: "Text for collapse button",
     },
-    tooltipContent: {
+    copyButtonTooltipContent: {
       control: "text",
       description: "Tooltip text for copy button",
-    },
-    feedback: {
-      control: "text",
-      description: "Feedback text after copying",
     },
   },
 };
@@ -251,7 +118,6 @@ export const Default = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 15,
     showMoreText: "Show more",
     showLessText: "Show less",
@@ -266,7 +132,6 @@ export const Highlight = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 15,
     showMoreText: "Show more",
     showLessText: "Show less",
@@ -282,7 +147,6 @@ class StreamingDemo extends LitElement {
     highlight: { type: Boolean },
     disabled: { type: Boolean },
     hideCopyButton: { type: Boolean },
-    wrapText: { type: Boolean },
     streamedContent: { type: String },
   };
 
@@ -293,7 +157,6 @@ class StreamingDemo extends LitElement {
     this.highlight = true;
     this.disabled = false;
     this.hideCopyButton = false;
-    this.wrapText = false;
     this.streamedContent = "";
     this.streamInterval = null;
   }
@@ -336,14 +199,13 @@ class StreamingDemo extends LitElement {
     const snippet = html`
       <cds-aichat-code-snippet
         ?data-rounded=${this.useCard}
+        .code=${this.streamedContent}
         language=${this.language}
         ?editable=${this.editable}
         ?highlight=${this.highlight}
         ?disabled=${this.disabled}
         ?hide-copy-button=${this.hideCopyButton}
-        ?wrap-text=${this.wrapText}
       >
-        ${this.streamedContent}
       </cds-aichat-code-snippet>
     `;
 
@@ -378,7 +240,6 @@ export const StreamingWithLanguageDetection = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
   },
   render: (args) => html`
     <streaming-demo
@@ -388,7 +249,6 @@ export const StreamingWithLanguageDetection = {
       ?highlight=${args.highlight}
       ?disabled=${args.disabled}
       ?hide-copy-button=${args.hideCopyButton}
-      ?wrap-text=${args.wrapText}
     ></streaming-demo>
   `,
 };
@@ -401,7 +261,6 @@ export const StreamingWithLanguageSet = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
   },
   render: (args) => html`
     <streaming-demo
@@ -411,7 +270,6 @@ export const StreamingWithLanguageSet = {
       ?highlight=${args.highlight}
       ?disabled=${args.disabled}
       ?hide-copy-button=${args.hideCopyButton}
-      ?wrap-text=${args.wrapText}
     ></streaming-demo>
   `,
 };
@@ -423,7 +281,6 @@ export const WithNoCard = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 15,
     showMoreText: "Show more",
     showLessText: "Show less",
@@ -438,7 +295,6 @@ export const Editable = {
     editable: true,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
   },
   render: (args) => renderSnippet(args, multilineCode),
 };
@@ -451,7 +307,6 @@ export const EditableEmpty = {
     disabled: false,
     hideCopyButton: false,
     hideHeader: true,
-    wrapText: false,
   },
   render: (args) => renderSnippet(args, ""),
 };
@@ -463,7 +318,6 @@ export const WithActions = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 15,
   },
   render: (args) => {
@@ -483,16 +337,15 @@ export const WithActions = {
     const snippet = html`
       <cds-aichat-code-snippet
         ?data-rounded=${args.useCard}
+        .code=${multilineCode}
         ?editable=${args.editable}
         ?highlight=${args.highlight}
         ?disabled=${args.disabled}
         ?hide-copy-button=${args.hideCopyButton}
-        ?wrap-text=${args.wrapText}
         ?overflow=${true}
         .actions=${actions}
         max-collapsed-number-of-rows=${ifDefined(args.maxCollapsedNumberOfRows)}
       >
-        ${multilineCode}
       </cds-aichat-code-snippet>
     `;
 
@@ -513,7 +366,6 @@ export const WithActionsAndDecorator = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 15,
   },
   render: (args) => {
@@ -533,11 +385,11 @@ export const WithActionsAndDecorator = {
     const snippet = html`
       <cds-aichat-code-snippet
         ?data-rounded=${args.useCard}
+        .code=${multilineCode}
         ?editable=${args.editable}
         ?highlight=${args.highlight}
         ?disabled=${args.disabled}
         ?hide-copy-button=${args.hideCopyButton}
-        ?wrap-text=${args.wrapText}
         ?overflow=${true}
         .actions=${actions}
         max-collapsed-number-of-rows=${ifDefined(args.maxCollapsedNumberOfRows)}
@@ -550,7 +402,6 @@ export const WithActionsAndDecorator = {
             </div>
           </div>
         </cds-ai-label>
-        ${multilineCode}
       </cds-aichat-code-snippet>
     `;
 
@@ -571,7 +422,6 @@ export const WithFixedActions = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
   },
   render: (args) => {
     const actions = [
@@ -584,11 +434,11 @@ export const WithFixedActions = {
 
     return html`
       <cds-aichat-code-snippet
+        .code=${multilineCode}
         ?editable=${args.editable}
         ?highlight=${args.highlight}
         ?disabled=${args.disabled}
         ?hide-copy-button=${args.hideCopyButton}
-        ?wrap-text=${args.wrapText}
         .actions=${actions}
       >
         <div slot="fixed-actions">
@@ -599,7 +449,6 @@ export const WithFixedActions = {
             Fixed Action
           </button>
         </div>
-        ${multilineCode}
       </cds-aichat-code-snippet>
     `;
   },
@@ -686,7 +535,6 @@ export const FullHeightMode = {
     editable: true,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 0,
     maxExpandedNumberOfRows: 0,
   },
@@ -703,15 +551,14 @@ export const FullHeightMode = {
       <div style="flex: 1; min-height: 0;">
         <cds-aichat-code-snippet
           language="sql"
+          .code=${sqlCode}
           ?editable=${args.editable}
           ?highlight=${args.highlight}
           ?disabled=${args.disabled}
           ?hide-copy-button=${args.hideCopyButton}
-          ?wrap-text=${args.wrapText}
           max-collapsed-number-of-rows=${args.maxCollapsedNumberOfRows}
           max-expanded-number-of-rows=${args.maxExpandedNumberOfRows}
         >
-          ${sqlCode}
         </cds-aichat-code-snippet>
       </div>
     </div>

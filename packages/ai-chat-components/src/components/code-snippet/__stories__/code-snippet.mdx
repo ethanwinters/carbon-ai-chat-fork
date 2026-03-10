@@ -23,7 +23,24 @@ Use `cds-aichat-code-snippet` to present generated code with syntax highlighting
 
 ### Getting started
 
-Here's a quick example to get you started.
+Here's a quick example to get you started using the `code` attribute (recommended):
+
+```html
+<script>
+  const code = `import { summarize } from "./summarizer";
+export async function summarizeReply(prompt) {
+  const result = await summarize(prompt);
+  return result.text;
+}`;
+</script>
+
+<cds-aichat-code-snippet highlight code="${code}">
+</cds-aichat-code-snippet>
+```
+
+### Using slotted content (alternative)
+
+You can also provide code via slotted content, though the attribute-based approach is recommended for better performance, especially when streaming content:
 
 ```html
 <cds-aichat-code-snippet highlight>
@@ -34,6 +51,8 @@ Here's a quick example to get you started.
   }
 </cds-aichat-code-snippet>
 ```
+
+**Performance Note:** The `code` attribute is more efficient than slotted content because it bypasses the slot change detection mechanism. This is particularly beneficial when streaming code content, as it reduces unnecessary DOM operations and improves rendering performance.
 
 ## Component API
 

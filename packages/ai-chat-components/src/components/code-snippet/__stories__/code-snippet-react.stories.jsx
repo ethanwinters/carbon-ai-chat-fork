@@ -11,130 +11,7 @@ import CodeSnippet from "../../../react/code-snippet";
 import Card from "../../../react/card";
 import { Download, Share } from "@carbon/icons-react";
 import { AILabel, AILabelContent } from "@carbon/react";
-
-const multilineCode = `/**
- * Carbon highlight showcase: control keywords, types, literals, doc comments, and more.
- * Designers can compare against https://carbondesignsystem.com
- */
-import type { PaletteDefinition } from "./tokens";
-import { readFile } from "fs/promises";
-
-/**
- * Custom decorator to exercise meta/annotation styling.
- */
-function Showcase(): ClassDecorator {
-  return (target) => Reflect.defineMetadata?.("showcase", true, target);
-}
-
-type Nullable<T> = T | null | undefined;
-
-interface TokenSwatch {
-  readonly name: string;
-  readonly hex: string;
-  emphasis?: "strong" | "emphasis" | "strikethrough";
-  notes?: string;
-}
-
-enum TokenGroup {
-  Keyword = "keyword",
-  Variable = "variable",
-  String = "string",
-  Number = "number",
-  Comment = "comment",
-}
-
-namespace Guides {
-  export const headings = [
-    "# Heading One",
-    "## Heading Two",
-    "### Heading Three",
-    "#### Heading Four",
-    "##### Heading Five",
-    "###### Heading Six",
-  ] as const;
-
-  export const markdown = [
-    "> Quote with *emphasis*, **strong text**, \`code\`, and [link](https://example.com).",
-    "- Bullet item",
-    "1. Ordered item",
-    "---",
-    "~~Strikethrough~~ remains supported.",
-  ];
-}
-
-@Showcase()
-export class TokenShowcase<T extends TokenSwatch> {
-  static readonly version = "1.0.0";
-  static readonly palette: Record<TokenGroup, string> = {
-    [TokenGroup.Keyword]: "--cds-syntax-keyword",
-    [TokenGroup.Variable]: "--cds-syntax-variable",
-    [TokenGroup.String]: "--cds-syntax-string",
-    [TokenGroup.Number]: "--cds-syntax-number",
-    [TokenGroup.Comment]: "--cds-syntax-comment",
-  };
-
-  #pattern = /--cds-syntax-[a-z-]+/g;
-  #cache = new Map<string, T>();
-  private url = new URL("https://carbon.design/components/code-snippet");
-  private pending: Nullable<Promise<void>> = null;
-
-  constructor(private readonly theme: PaletteDefinition, private mutable = false) {
-    if (mutable && theme.allowOverrides === false) {
-      throw new Error("Mutable showcase requires override permission.");
-    }
-  }
-
-  /* multi-line
-     comment demonstrating block syntax */
-
-  async hydrate(path: string): Promise<void> {
-    const file = await readFile(path, { encoding: "utf-8" });
-    const matches = file.match(this.#pattern) ?? [];
-    matches.forEach((token, index) => {
-      const swatch = {
-        name: token,
-        hex: this.theme.tokens[token] ?? "#000000",
-        notes: Guides.headings[index % Guides.headings.length],
-      } as T;
-      this.#cache.set(token, swatch);
-    });
-  }
-
-  annotate(entry: T): void {
-    const local = { ...entry, local: true } as T & { local: boolean };
-    this.#cache.set(entry.name, local);
-  }
-
-  resolve(name: string): Nullable<T> {
-    if (!this.#cache.has(name)) {
-      return null;
-    }
-    const result = this.#cache.get(name) ?? null;
-    return result && { ...result };
-  }
-
-  renderMarkdown(): string {
-    const parts = [...Guides.headings, ...Guides.markdown];
-    return parts.join("\\n");
-  }
-
-  toJSON(): Record<string, unknown> {
-    return {
-      url: this.url.href,
-      version: TokenShowcase.version,
-      mutable: this.mutable,
-      tokens: Array.from(this.#cache.keys()),
-      palette: TokenShowcase.palette,
-    };
-  }
-
-  get summary(): string {
-    return \`Loaded \${this.#cache.size} tokens for \${this.theme.name} (#\${this.theme.revision})\`;
-  }
-}
-
-// trailing comment with TODO inside to exercise single-line states
-`;
+import { multilineCode } from "./sample-code.js";
 
 const renderSnippet = (args, code) => {
   const {
@@ -143,26 +20,24 @@ const renderSnippet = (args, code) => {
     editable,
     disabled,
     hideCopyButton,
-    wrapText,
     maxCollapsedNumberOfRows,
     maxExpandedNumberOfRows,
     minCollapsedNumberOfRows,
     minExpandedNumberOfRows,
     showMoreText,
     showLessText,
-    tooltipContent,
-    feedback,
+    copyButtonTooltipContent,
     language,
     defaultLanguage,
     onChange,
   } = args;
 
   const commonProps = {
+    code,
     highlight,
     editable,
     disabled,
     hideCopyButton,
-    wrapText,
   };
 
   if (typeof maxCollapsedNumberOfRows !== "undefined") {
@@ -183,11 +58,8 @@ const renderSnippet = (args, code) => {
   if (typeof showLessText !== "undefined") {
     commonProps.showLessText = showLessText;
   }
-  if (typeof tooltipContent !== "undefined") {
-    commonProps.tooltipContent = tooltipContent;
-  }
-  if (typeof feedback !== "undefined") {
-    commonProps.feedback = feedback;
+  if (typeof copyButtonTooltipContent !== "undefined") {
+    commonProps.copyButtonTooltipContent = copyButtonTooltipContent;
   }
   if (typeof language !== "undefined") {
     commonProps.language = language;
@@ -199,7 +71,7 @@ const renderSnippet = (args, code) => {
     commonProps.onChange = onChange;
   }
 
-  const snippet = <CodeSnippet {...commonProps}>{code}</CodeSnippet>;
+  const snippet = <CodeSnippet {...commonProps} />;
 
   return useCard ? (
     <Card isFlush>
@@ -219,7 +91,6 @@ const StreamingDemo = (args) => {
     editable,
     disabled,
     hideCopyButton,
-    wrapText,
     language,
     defaultLanguage,
     maxCollapsedNumberOfRows,
@@ -228,8 +99,7 @@ const StreamingDemo = (args) => {
     minExpandedNumberOfRows,
     showMoreText,
     showLessText,
-    tooltipContent,
-    feedback,
+    copyButtonTooltipContent,
   } = args;
 
   const [streamedContent, setStreamedContent] = useState("");
@@ -264,11 +134,11 @@ const StreamingDemo = (args) => {
   }, [startStreaming, clearExistingInterval]);
 
   const commonProps = {
+    code: streamedContent,
     highlight,
     editable,
     disabled,
     hideCopyButton,
-    wrapText,
   };
 
   if (typeof language !== "undefined") {
@@ -295,14 +165,11 @@ const StreamingDemo = (args) => {
   if (typeof showLessText !== "undefined") {
     commonProps.showLessText = showLessText;
   }
-  if (typeof tooltipContent !== "undefined") {
-    commonProps.tooltipContent = tooltipContent;
-  }
-  if (typeof feedback !== "undefined") {
-    commonProps.feedback = feedback;
+  if (typeof copyButtonTooltipContent !== "undefined") {
+    commonProps.copyButtonTooltipContent = copyButtonTooltipContent;
   }
 
-  const snippet = <CodeSnippet {...commonProps}>{streamedContent}</CodeSnippet>;
+  const snippet = <CodeSnippet {...commonProps} />;
 
   return (
     <div>
@@ -354,10 +221,6 @@ export default {
       control: "boolean",
       description: "Hide the copy button",
     },
-    wrapText: {
-      control: "boolean",
-      description: "Wrap text instead of scrolling",
-    },
     maxCollapsedNumberOfRows: {
       control: "number",
       description: "Maximum rows when collapsed",
@@ -382,7 +245,7 @@ export default {
       control: "text",
       description: "Text for collapse button",
     },
-    tooltipContent: {
+    copyButtonTooltipContent: {
       control: "text",
       description: "Tooltip text for copy button",
     },
@@ -417,7 +280,6 @@ export const Default = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 15,
     showMoreText: "Show more",
     showLessText: "Show less",
@@ -432,7 +294,6 @@ export const Highlight = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 15,
     showMoreText: "Show more",
     showLessText: "Show less",
@@ -447,7 +308,6 @@ export const StreamingWithLanguageDetection = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
   },
   render: (args) => <StreamingDemo {...args} />,
 };
@@ -460,7 +320,6 @@ export const StreamingWithLanguageSet = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
   },
   render: (args) => <StreamingDemo {...args} />,
 };
@@ -472,7 +331,6 @@ export const WithNoCard = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 15,
     showMoreText: "Show more",
     showLessText: "Show less",
@@ -487,7 +345,6 @@ export const Editable = {
     editable: true,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
   },
   render: (args) => renderSnippet(args, multilineCode),
 };
@@ -499,7 +356,6 @@ export const EditableEmpty = {
     editable: true,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
   },
   render: (args) => renderSnippet(args, ""),
 };
@@ -511,7 +367,6 @@ export const WithActions = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 15,
   },
   render: (args) => {
@@ -529,9 +384,7 @@ export const WithActions = {
     ];
 
     const snippet = (
-      <CodeSnippet {...args} actions={actions} overflow>
-        {multilineCode}
-      </CodeSnippet>
+      <CodeSnippet {...args} code={multilineCode} actions={actions} overflow />
     );
 
     return args.useCard ? (
@@ -551,7 +404,6 @@ export const WithActionsAndDecorator = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 15,
   },
   render: (args) => {
@@ -571,6 +423,7 @@ export const WithActionsAndDecorator = {
     const snippet = (
       <CodeSnippet
         {...args}
+        code={multilineCode}
         data-rounded={args.useCard}
         actions={actions}
         overflow
@@ -580,7 +433,6 @@ export const WithActionsAndDecorator = {
             <div>This code was generated. Review carefully before use.</div>
           </AILabelContent>
         </AILabel>
-        {multilineCode}
       </CodeSnippet>
     );
 
@@ -601,7 +453,6 @@ export const WithFixedActions = {
     editable: false,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
   },
   render: (args) => {
     const actions = [
@@ -613,7 +464,7 @@ export const WithFixedActions = {
     ];
 
     return (
-      <CodeSnippet {...args} actions={actions}>
+      <CodeSnippet {...args} code={multilineCode} actions={actions}>
         <div slot="fixed-actions">
           <button
             onClick={() => console.log("Fixed action clicked")}
@@ -627,7 +478,6 @@ export const WithFixedActions = {
             Fixed Action
           </button>
         </div>
-        {multilineCode}
       </CodeSnippet>
     );
   },
@@ -714,7 +564,6 @@ export const FullHeightMode = {
     editable: true,
     disabled: false,
     hideCopyButton: false,
-    wrapText: false,
     maxCollapsedNumberOfRows: 0,
     maxExpandedNumberOfRows: 0,
   },
@@ -743,9 +592,7 @@ export const FullHeightMode = {
             overflow: "hidden",
           }}
         >
-          <CodeSnippet {...args} language="sql">
-            {sqlCode}
-          </CodeSnippet>
+          <CodeSnippet {...args} code={sqlCode} language="sql" />
         </div>
       </div>
     );

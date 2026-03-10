@@ -64,6 +64,12 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
   overflow = false;
 
   // CodeMirror properties
+  /**
+   * Direct code source input.
+   */
+  @property({ type: String })
+  code = "";
+
   /** Language used for syntax highlighting. */
   @property({ type: String, attribute: "language" }) language = "";
   /** Whether the snippet should be editable. */
@@ -80,14 +86,6 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
   /** Disable interactions on the snippet. */
   @property({ type: Boolean, reflect: true, attribute: "disabled" })
   disabled = false;
-
-  /** Feedback text shown after copy. */
-  @property({ attribute: "feedback" })
-  feedback = "Copied!";
-
-  /** Duration (ms) to show feedback text. */
-  @property({ type: Number, attribute: "feedback-timeout" })
-  feedbackTimeout = 2000;
 
   /** Hide the copy button. */
   @property({ type: Boolean, reflect: true, attribute: "hide-copy-button" })
@@ -129,12 +127,8 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
   showMoreText = "Show more";
 
   /** Tooltip label for the copy action. */
-  @property({ attribute: "tooltip-content" })
-  tooltipContent = "Copy to clipboard";
-
-  /** Wrap text instead of horizontal scrolling. */
-  @property({ type: Boolean, reflect: true, attribute: "wrap-text" })
-  wrapText = false;
+  @property({ attribute: "copy-button-tooltip-content" })
+  copyButtonTooltipContent = "Copy to clipboard";
 
   /** Label for folding/collapsing code. */
   @property({ attribute: "fold-collapse-label" })
@@ -212,6 +206,11 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
    * @internal
    */
   private _hObserveResize: { release(): null } | null = null;
+
+  /**
+   * @internal
+   */
+  private hasAdoptedLightDomCode = false;
 
   /**
    * @internal
@@ -310,11 +309,27 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
       getHost: () => this,
       onContentUpdate: (content) => {
         const previous = this._slottedContent;
-        if (content !== previous) {
+        // Only update from slot if code property is not set
+        if (!this.code && content !== previous) {
           this._slottedContent = content;
         }
       },
     });
+  }
+
+  private adoptLightDomCode() {
+    if (this.hasAdoptedLightDomCode || this.code) {
+      return;
+    }
+
+    // Backward compatibility: treat static light-DOM text as initial code
+    // when the explicit `code` property was not provided.
+    const lightDomCode = this.textContent?.trim() ?? "";
+    if (lightDomCode) {
+      this.code = lightDomCode;
+    }
+
+    this.hasAdoptedLightDomCode = true;
   }
 
   private _applyLanguageState(update: LanguageStateUpdate) {
@@ -403,6 +418,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
           },
           isLanguageLabelLocked: () => this._languageLabelLockedIn,
           getDefaultLanguage: () => this.defaultLanguage,
+          getDetectedLanguage: () => this._detectedLanguage,
           updateState: (update) => this._applyLanguageState(update),
         });
         this.requestUpdate();
@@ -562,7 +578,6 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
         contentAttributesCompartment,
         editable: this.editable,
         disabled: this.disabled,
-        wrapText: this.wrapText,
         ariaLabel: this._getAriaLabel(),
         onDocChanged: ({ content, lineCount }) => {
           this._lineCount = lineCount;
@@ -692,6 +707,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
    */
   connectedCallback() {
     super.connectedCallback();
+    this.adoptLightDomCode();
     if (this._hObserveResize) {
       this._hObserveResize = this._hObserveResize.release();
     }
@@ -714,7 +730,14 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
   /**
    * Ensures we capture any pre-rendered slot content before the initial paint, keeping the editor in sync from the first frame.
    */
-  willUpdate(_changedProperties: Map<string, any>) {
+  willUpdate(changedProperties: Map<string, any>) {
+    if (changedProperties.has("code")) {
+      // When code property changes, update internal content
+      if (this.code) {
+        this._slottedContent = this.code;
+      }
+    }
+
     this.streamingManager.ensureInitialContent();
 
     // Update expanded-code attribute before render to avoid change-in-update warning
@@ -782,7 +805,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
     }
 
     const copyAction: Action = {
-      text: this.tooltipContent,
+      text: this.copyButtonTooltipContent,
       icon: Copy16,
       onClick: () => this._handleCopyClick(),
     };

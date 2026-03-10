@@ -31,7 +31,6 @@ interface EditorCreationOptions {
   contentAttributesCompartment: Compartment;
   editable: boolean;
   disabled: boolean;
-  wrapText: boolean;
   ariaLabel: string;
   onDocChanged?(payload: EditorDocChangePayload): void;
   setupOptions?: BaseCodeMirrorSetupOptions;

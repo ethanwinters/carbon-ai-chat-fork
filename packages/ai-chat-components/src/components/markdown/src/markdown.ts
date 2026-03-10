@@ -110,7 +110,7 @@ class CDSAIChatMarkdown extends LitElement {
    * Enable syntax highlighting for any code fence blocks.
    */
   @property({ type: Boolean, attribute: "highlight" })
-  highlight = true;
+  highlight = false;
 
   // Table strings
   /** Placeholder text for table filters. */
@@ -197,28 +197,28 @@ class CDSAIChatMarkdown extends LitElement {
   private hasRenderedStreamingTableLoadingFrame = false;
   private stagedStreamingTokenTree: TokenTree | null = null;
   private isStreamingTableLoadingMode = false;
-  private hasAdoptedLegacyLightDomMarkdown = false;
+  private hasAdoptedLightDomMarkdown = false;
 
   connectedCallback() {
     super.connectedCallback();
-    this.adoptLegacyLightDomMarkdown();
+    this.adoptLightDomMarkdown();
     this.needsReparse = true;
     this.scheduleRender();
   }
 
-  private adoptLegacyLightDomMarkdown() {
-    if (this.hasAdoptedLegacyLightDomMarkdown || this.markdown) {
+  private adoptLightDomMarkdown() {
+    if (this.hasAdoptedLightDomMarkdown || this.markdown) {
       return;
     }
 
     // Backward compatibility: treat static light-DOM text as initial markdown
     // when the explicit `markdown` property was not provided.
-    const legacyLightDomMarkdown = this.textContent?.trim() ?? "";
-    if (legacyLightDomMarkdown) {
-      this.markdown = legacyLightDomMarkdown;
+    const lightDomMarkdown = this.textContent?.trim() ?? "";
+    if (lightDomMarkdown) {
+      this.markdown = lightDomMarkdown;
     }
 
-    this.hasAdoptedLegacyLightDomMarkdown = true;
+    this.hasAdoptedLightDomMarkdown = true;
   }
 
   protected willUpdate(changed: PropertyValues<this>) {

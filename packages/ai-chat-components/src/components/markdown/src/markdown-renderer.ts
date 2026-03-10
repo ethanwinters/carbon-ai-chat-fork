@@ -194,8 +194,8 @@ export function renderTokenTree(
           .getLineCountText=${getLineCountText}
           .ariaLabelReadOnly=${codeSnippetAriaLabelReadOnly}
           .ariaLabelEditable=${codeSnippetAriaLabelEditable}
-          >${token.content}</cds-aichat-code-snippet
-        >
+          .code=${token.content}
+        ></cds-aichat-code-snippet>
       </div>
     </cds-aichat-card>`;
   }

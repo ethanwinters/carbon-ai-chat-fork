@@ -21,19 +21,35 @@ The `<CodeSnippet>` and `<CodeSnippetCard>` components wrap the `cds-aichat-code
 
 ### Getting started
 
-Here's a quick example to get you started.
+Here's a quick example to get you started using the `code` prop (recommended):
 
 ```jsx
 import CodeSnippet from "@carbon/ai-chat-components/es/react/code-snippet.js";
 
 function ReadOnlySnippet({ code }) {
   return (
-    <CodeSnippet highlight wrapText>
+    <CodeSnippet highlight code={code} />
+  );
+}
+```
+
+### Using children (alternative)
+
+You can also provide code via children, though the `code` prop is recommended for better performance, especially when streaming content:
+
+```jsx
+import CodeSnippet from "@carbon/ai-chat-components/es/react/code-snippet.js";
+
+function ReadOnlySnippet({ code }) {
+  return (
+    <CodeSnippet highlight>
       {code}
     </CodeSnippet>
   );
 }
 ```
+
+**Performance Note:** The `code` prop is more efficient than children because it bypasses the slot change detection mechanism. This is particularly beneficial when streaming code content, as it reduces unnecessary DOM operations and improves rendering performance.
 
 ## Component API
 
@@ -46,7 +62,7 @@ Use the streaming stories to see how the component responds to real-time content
 
 ### Usage Patterns
 
-#### Streaming With AI Responses
+#### Streaming With AI Responses (Recommended)
 
 ```jsx
 function StreamingSnippet({ stream }) {
@@ -60,9 +76,7 @@ function StreamingSnippet({ stream }) {
   }, [stream]);
 
   return (
-    <CodeSnippet highlight wrapText>
-      {content}
-    </CodeSnippet>
+    <CodeSnippet highlight code={content} />
   );
 }
 ```
@@ -77,12 +91,11 @@ function EditableSnippet() {
     <CodeSnippet
       editable
       highlight
+      code={content}
       onChange={(event) => {
         setContent(event.detail.value);
       }}
-    >
-      {content}
-    </CodeSnippet>
+    />
   );
 }
 ```

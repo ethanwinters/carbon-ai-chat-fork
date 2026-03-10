@@ -70,7 +70,7 @@ $block-class: #{$prefix}-toolbar;
   .#{$block-class}__name {
     font-weight: bold;
   }
-  
+
   .#{$block-class}__navigation:has(::slotted(*)) ~ .#{$block-class}__title {
     padding-inline-start: 0;
   }

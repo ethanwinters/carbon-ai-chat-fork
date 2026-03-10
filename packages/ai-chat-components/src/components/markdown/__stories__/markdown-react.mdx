@@ -21,7 +21,7 @@ The `<Markdown>` component wraps `cds-aichat-markdown` to render rich markdown c
 
 ### Getting started
 
-Here's a quick example to get you started.
+Here's a quick example to get you started using the `markdown` prop (recommended):
 
 ```jsx
 import Markdown from "@carbon/ai-chat-components/es/react/markdown.js";
@@ -30,6 +30,20 @@ function MarkdownExample({ content }) {
   return <Markdown highlight markdown={content} />;
 }
 ```
+
+### Using children (alternative)
+
+You can also provide markdown via children, though the `markdown` prop is recommended for better performance, especially when streaming content:
+
+```jsx
+import Markdown from "@carbon/ai-chat-components/es/react/markdown.js";
+
+function MarkdownExample({ content }) {
+  return <Markdown highlight>{content}</Markdown>;
+}
+```
+
+**Performance Note:** The `markdown` prop is more efficient than children because it bypasses the slot change detection mechanism. This is particularly beneficial when streaming markdown content, as it reduces unnecessary DOM operations and improves rendering performance.
 
 ## Component API
 
@@ -122,9 +136,9 @@ Set `sanitizeHTML` to remove potentially dangerous elements and attributes while
 
 Set `removeHTML` to strip all HTML tags from the content, leaving only plain text and markdown.
 
-### Streaming Mode
+### Streaming Mode (Recommended)
 
-Use streaming mode to gradually reveal markdown content:
+Use streaming mode to gradually reveal markdown content. The `markdown` prop is recommended for optimal performance:
 
 ```jsx
 function StreamingMarkdown({ generator }) {
