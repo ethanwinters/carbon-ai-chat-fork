@@ -22,11 +22,21 @@ export class HeaderCollapsibleManager {
   private resizeObserver?: ResizeObserver;
   private mutationObserver?: MutationObserver;
   private onStateChangeCallback?: (state: CollapsibleState) => void;
+  private isManagerControlled = false;
+  private hadInitialAttribute = false;
 
   constructor(
     private readonly shellRoot: ShadowRoot,
     private readonly hostElement: HTMLElement,
-  ) {}
+  ) {
+    // Check if header already has collapsible attribute at initialization
+    const headerSlot = this.shellRoot.querySelector<HTMLSlotElement>(
+      'slot[name="header"]',
+    );
+    const headerElement = headerSlot?.assignedElements()[0] as HTMLElement;
+    this.hadInitialAttribute =
+      headerElement?.hasAttribute("collapsible") || false;
+  }
 
   /**
    * Start observing slot heights and managing collapsible state
@@ -43,6 +53,7 @@ export class HeaderCollapsibleManager {
     this.resizeObserver?.disconnect();
     this.mutationObserver?.disconnect();
     this.onStateChangeCallback = undefined;
+    this.isManagerControlled = false;
   }
 
   /**
@@ -161,11 +172,22 @@ export class HeaderCollapsibleManager {
    * Check if a header element has a manually set collapsible attribute
    */
   hasManualOverride(): boolean {
+    // If attribute existed at initialization, it's a manual override
+    if (this.hadInitialAttribute) {
+      return true;
+    }
+
     const headerSlot = this.shellRoot.querySelector<HTMLSlotElement>(
       'slot[name="header"]',
     );
     const headerElement = headerSlot?.assignedElements()[0] as HTMLElement;
-    return headerElement?.hasAttribute("collapsible") || false;
+
+    if (!headerElement?.hasAttribute("collapsible")) {
+      return false;
+    }
+
+    // If manager set it, it's not a manual override
+    return !this.isManagerControlled;
   }
 
   /**
@@ -180,8 +202,10 @@ export class HeaderCollapsibleManager {
     if (headerElement && !this.hasManualOverride()) {
       if (shouldCollapse) {
         headerElement.setAttribute("collapsible", "");
+        this.isManagerControlled = true;
       } else {
         headerElement.removeAttribute("collapsible");
+        this.isManagerControlled = false;
       }
     }
   }

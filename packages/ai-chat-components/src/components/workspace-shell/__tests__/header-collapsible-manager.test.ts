@@ -189,7 +189,6 @@ describe("HeaderCollapsibleManager", () => {
 
   it("should remove header collapsible attribute when shouldCollapse is false", () => {
     const headerElement = document.createElement("div");
-    headerElement.setAttribute("collapsible", "");
 
     shadowRoot = createMockShadowRoot({
       toolbar: [createMockElement(50)],
@@ -199,8 +198,13 @@ describe("HeaderCollapsibleManager", () => {
     });
 
     manager = new HeaderCollapsibleManager(shadowRoot, hostElement);
-    manager.updateHeaderCollapsible(false);
 
+    // First set it via the manager
+    manager.updateHeaderCollapsible(true);
+    expect(headerElement.hasAttribute("collapsible")).to.be.true;
+
+    // Then remove it via the manager
+    manager.updateHeaderCollapsible(false);
     expect(headerElement.hasAttribute("collapsible")).to.be.false;
   });
 
