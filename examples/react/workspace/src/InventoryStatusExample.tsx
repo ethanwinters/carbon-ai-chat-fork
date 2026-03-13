@@ -93,7 +93,7 @@ function InventoryStatusExample({
   };
 
   return (
-    <WorkspaceShell>
+    <WorkspaceShell autoCollapsibleHeader>
       <Toolbar slot="toolbar" actions={toolbarActions} overflow>
         <div slot="title" data-fixed>
           Current inventory status

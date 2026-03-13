@@ -36,8 +36,14 @@ export type Action = {
 class CDSAIChatWorkspaceShellFooter extends LitElement {
   static styles = [commonStyles, styles];
 
+  /**
+   * @internal
+   */
   private _ro!: ResizeObserver;
 
+  /**
+   * @internal
+   */
   @state()
   private _isStacked = false;
 
@@ -54,16 +60,14 @@ class CDSAIChatWorkspaceShellFooter extends LitElement {
     super.connectedCallback();
     this.setAttribute("data-rounded", "bottom");
 
-    // Observe parent size changes
+    // Observe component's own size changes
     // Use requestAnimationFrame to avoid ResizeObserver loop errors
     this._ro = new ResizeObserver(() => {
       requestAnimationFrame(() => {
         this._updateStacked();
       });
     });
-    if (this.parentElement) {
-      this._ro.observe(this.parentElement);
-    }
+    this._ro.observe(this);
   }
 
   updated(changedProps: Map<string, any>) {
@@ -124,7 +128,7 @@ class CDSAIChatWorkspaceShellFooter extends LitElement {
   }
 
   private _updateStacked() {
-    const shouldStack = window.innerWidth < 671;
+    const shouldStack = this.offsetWidth < 671;
 
     if (shouldStack !== this._isStacked) {
       this._isStacked = shouldStack;

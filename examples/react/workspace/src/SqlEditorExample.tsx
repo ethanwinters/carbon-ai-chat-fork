@@ -164,7 +164,7 @@ export function SqlEditorExample({
   }, [workspaceId, additionalData]);
 
   return (
-    <WorkspaceShell>
+    <WorkspaceShell autoCollapsibleHeader>
       <Toolbar slot="toolbar" overflow actions={toolbarActions}>
         <div slot="title" data-fixed>
           SQL Query Editor

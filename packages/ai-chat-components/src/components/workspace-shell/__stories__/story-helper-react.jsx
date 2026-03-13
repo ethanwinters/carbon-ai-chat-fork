@@ -47,21 +47,27 @@ export function getHeaderDescription(type) {
             ad minim veniam, quis nostrud exercitation ullamco.
           </div>
           <div slot="header-description">
-            <Tag size="sm" type="gray">
-              Tag
-            </Tag>
-            <Tag size="sm" type="gray">
-              Tag
-            </Tag>
-            <Tag size="sm" type="gray">
-              Tag
-            </Tag>
-            <Tag size="sm" type="gray">
-              Tag
-            </Tag>
-            <Tag size="sm" type="gray">
-              Tag
-            </Tag>
+            <div className="tags">
+              <Tag size="sm" type="gray">
+                Tag
+              </Tag>
+
+              <Tag size="sm" type="gray">
+                Tag
+              </Tag>
+
+              <Tag size="sm" type="gray">
+                Tag
+              </Tag>
+
+              <Tag size="sm" type="gray">
+                Tag
+              </Tag>
+
+              <Tag size="sm" type="gray">
+                Tag
+              </Tag>
+            </div>
           </div>
         </>
       );

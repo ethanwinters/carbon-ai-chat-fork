@@ -168,6 +168,86 @@
     @include type.type-style("heading-01");
   }
 
+  // List styles - following Carbon Design System patterns
+  ol,
+  ul {
+    @include type.type-style("body-01");
+
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  // Unordered lists
+  ul {
+    margin-inline-start: layout.$spacing-05;
+  }
+
+  ul > li {
+    position: relative;
+    color: theme.$text-primary;
+
+    &::before {
+      position: absolute;
+      // – en dash
+      content: "\002013";
+      inset-inline-start: calc(-1 * #{layout.$spacing-05});
+    }
+  }
+
+  // Ordered lists
+  ol {
+    counter-reset: item;
+    margin-inline-start: layout.$spacing-05;
+  }
+
+  ol > li {
+    position: relative;
+    color: theme.$text-primary;
+
+    &::before {
+      position: absolute;
+      content: counter(item) ".";
+      counter-increment: item;
+      inset-inline-start: calc(-1 * #{layout.$spacing-05});
+    }
+  }
+
+  // Nested lists
+  ul ul,
+  ol ol,
+  ul ol,
+  ol ul {
+    margin-block-start: layout.$spacing-03;
+    margin-inline-start: layout.$spacing-07;
+  }
+
+  // Nested unordered lists use square bullets
+  ul ul > li::before {
+    // ▪ square
+    content: "\0025AA";
+    // offset to account for smaller ▪ vs –
+    inset-inline-start: calc(-1 * #{layout.$spacing-04});
+  }
+
+  // Nested ordered lists use lower-latin
+  ol ol {
+    list-style-type: lower-latin;
+  }
+
+  ol ol > li::before {
+    content: counter(item, lower-latin) ".";
+  }
+
+  // List item spacing
+  li {
+    padding-inline-start: layout.$spacing-02;
+  }
+
+  li + li {
+    margin-block-start: layout.$spacing-03;
+  }
+
   .cds-aichat-table--square {
     --#{$prefix}-border-radius-start-start: 0;
     --#{$prefix}-border-radius-start-end: 0;

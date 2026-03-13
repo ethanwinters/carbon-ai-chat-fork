@@ -13,6 +13,7 @@ import "@carbon/web-components/es/components/button/index.js";
 import { PanelType } from "@carbon/ai-chat";
 import "@carbon/ai-chat-components/es/components/workspace-shell/index.js";
 import "@carbon/ai-chat-components/es/components/toolbar/index.js";
+import "@carbon/ai-chat-components/es/components/code-snippet/index.js";
 import "@carbon/web-components/es/components/tag/index.js";
 import "@carbon/web-components/es/components/button/button.js";
 import "@carbon/web-components/es/components/tag/tag.js";
@@ -217,7 +218,7 @@ class InventoryReportExample extends LitElement {
       },
     ];
 
-    return html` <cds-aichat-workspace-shell>
+    return html` <cds-aichat-workspace-shell auto-collapsible-header>
       <cds-aichat-toolbar
         slot="toolbar"
         overflow
@@ -275,7 +276,9 @@ class InventoryReportExample extends LitElement {
         </p>
         <br />
         <h4>Additional Data from Preview Card:</h4>
-        <pre>${JSON.stringify(this.additionalData, null, 2)}</pre>
+        <cds-aichat-code-snippet
+          code=${JSON.stringify(this.additionalData, null, 2)}
+        ></cds-aichat-code-snippet>
         <br />
         <cds-layer>
           <br />

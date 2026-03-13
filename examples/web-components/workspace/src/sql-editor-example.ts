@@ -179,7 +179,7 @@ LIMIT 100;`;
 
   render() {
     return html`
-      <cds-aichat-workspace-shell>
+      <cds-aichat-workspace-shell auto-collapsible-header>
         <cds-aichat-toolbar
           slot="toolbar"
           overflow
