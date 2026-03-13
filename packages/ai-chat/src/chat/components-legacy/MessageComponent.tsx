@@ -667,8 +667,9 @@ class MessageComponent extends PureComponent<MessageProps, MessageState> {
 
     return (
       <div
-        className={cx("cds-aichat--message__reasoning-steps", 
-          { "cds-aichat--message__reasoning-steps--open": containerOpen})}
+        className={cx("cds-aichat--message__reasoning-steps", {
+          "cds-aichat--message__reasoning-steps--open": containerOpen,
+        })}
       >
         <ReasoningStepsComponent
           controlled

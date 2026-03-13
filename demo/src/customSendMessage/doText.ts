@@ -262,7 +262,6 @@ async function doTextStreaming(
 ) {
   const signal = requestOptions?.signal;
   const responseID = crypto.randomUUID();
-  text += ` The time is ${new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`;
   const words = text.split(" ");
   const totalWords = words.length;
 
@@ -577,8 +576,6 @@ function doText(
   feedback?: GenericItemMessageFeedbackOptions,
   reasoning?: ReasoningSteps,
 ) {
-  text += ` The time is ${new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`;
-
   const genericItem = {
     response_type: MessageResponseTypes.TEXT,
     text,
