@@ -97,7 +97,7 @@ class CDSAIChatPanel extends LitElement {
    * ARIA label for the panel. Describes the panel's purpose to screen readers.
    */
   @property({ type: String, attribute: "panel-aria-label" })
-  panelAriaLabel?: string;
+  panelAriaLabel = "Panel"
 
   /**
    * ID of element that labels this panel. Takes precedence over panelAriaLabel.

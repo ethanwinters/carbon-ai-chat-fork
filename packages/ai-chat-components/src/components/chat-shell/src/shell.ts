@@ -290,9 +290,21 @@ class CDSAIChatShell extends LitElement {
   private handlePanelOpen = (event: Event): void => {
     // Only announce for non-workspace panels (workspace has its own announcement)
     const target = event.target as HTMLElement;
+
+    // Check if the event target is the internal workspace panel
+    // or if it's a child of the internal panel
     if (target?.hasAttribute("data-internal-panel")) {
       return;
     }
+
+    // Also check if the target is inside an internal panel
+    const closestPanel = target?.closest?.(
+      "cds-aichat-panel[data-internal-panel]",
+    );
+    if (closestPanel) {
+      return;
+    }
+
     this.ariaAnnouncerManager?.announce(this.panelOpenedAnnouncement);
   };
 
@@ -303,9 +315,21 @@ class CDSAIChatShell extends LitElement {
   private handlePanelClose = (event: Event): void => {
     // Only announce for non-workspace panels (workspace has its own announcement)
     const target = event.target as HTMLElement;
+
+    // Check if the event target is the internal workspace panel
+    // or if it's a child of the internal panel
     if (target?.hasAttribute("data-internal-panel")) {
       return;
     }
+
+    // Also check if the target is inside an internal panel
+    const closestPanel = target?.closest?.(
+      "cds-aichat-panel[data-internal-panel]",
+    );
+    if (closestPanel) {
+      return;
+    }
+
     this.ariaAnnouncerManager?.announce(this.panelClosedAnnouncement);
   };
 

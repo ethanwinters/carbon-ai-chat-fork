@@ -26,6 +26,48 @@ export default {
             ? ts.getDecorators(node)
             : node.decorators) ?? [];
 
+        // Helper function to extract tag name from decorator argument
+        const extractTagName = (arg, sourceFile) => {
+          // Handle string literals: @carbonElement("cds-aichat-chat-header")
+          if (ts.isStringLiteral(arg)) {
+            return arg.text;
+          }
+
+          // Handle template literals without substitutions: @carbonElement(`cds-aichat-shell`)
+          if (ts.isNoSubstitutionTemplateLiteral(arg)) {
+            return arg.text;
+          }
+
+          // Handle template expressions: @carbonElement(`${prefix}-shell`)
+          if (ts.isTemplateExpression(arg)) {
+            let tagName = "";
+
+            // Process the head (text before first ${})
+            tagName += arg.head.text;
+
+            // Process each template span
+            for (const span of arg.templateSpans) {
+              // Check if the expression is an identifier named "prefix"
+              if (
+                ts.isIdentifier(span.expression) &&
+                span.expression.text === "prefix"
+              ) {
+                // Replace ${prefix} with the actual prefix value
+                tagName += "cds-aichat";
+              } else {
+                // For other expressions, try to get the text
+                tagName += span.expression.getText(sourceFile);
+              }
+              // Add the literal text after the expression
+              tagName += span.literal.text;
+            }
+
+            return tagName;
+          }
+
+          return null;
+        };
+
         const decorator = decorators.find((decorator) => {
           if (!ts.isCallExpression(decorator.expression)) {
             return false;
@@ -40,8 +82,7 @@ export default {
 
           return (
             decoratorName === "carbonElement" &&
-            decorator.expression.arguments.length > 0 &&
-            ts.isStringLiteral(decorator.expression.arguments[0])
+            decorator.expression.arguments.length > 0
           );
         });
 
@@ -49,7 +90,14 @@ export default {
           return;
         }
 
-        const tagName = decorator.expression.arguments[0].text;
+        const arg = decorator.expression.arguments[0];
+        const sourceFile = node.getSourceFile();
+        const tagName = extractTagName(arg, sourceFile);
+
+        if (!tagName) {
+          return;
+        }
+
         moduleDoc.declarations ??= [];
         const declaration = moduleDoc.declarations.find(
           (decl) => decl?.name === node.name?.text,
