@@ -55,61 +55,24 @@ const renderTable = (args) => {
 
 export default {
   title: "Components/Table",
+  component: Table,
   argTypes: {
+    // Story-specific control (not a component property)
     useCard: {
       control: "boolean",
-      description: "Wrap in card wrapper",
+      description: "Wrap in card wrapper (story-only control)",
       table: {
-        category: "Wrapper",
+        category: "Story",
       },
     },
-    tableTitle: {
-      control: "text",
-      description: "Optional heading displayed above the table.",
-    },
-    tableDescription: {
-      control: "text",
-      description: "Optional helper text under the title.",
-    },
+    // Disable controls for complex array/object properties
     headers: {
       control: false,
-      description: "Header cells for the table.",
-      table: { category: "data" },
+      table: { category: "Data" },
     },
     rows: {
       control: false,
-      description: "Row data for the table.",
-      table: { category: "data" },
-    },
-    loading: {
-      control: "boolean",
-      description:
-        "Show a skeleton state while data loads. Filters and pagination are disabled when loading.",
-    },
-    filterPlaceholderText: {
-      control: "text",
-      description: "Placeholder text for the filter search input.",
-    },
-    previousPageText: {
-      control: "text",
-      description: "Tooltip text for the pagination previous button.",
-    },
-    nextPageText: {
-      control: "text",
-      description: "Tooltip text for the pagination next button.",
-    },
-    itemsPerPageText: {
-      control: "text",
-      description: "Label text for the items-per-page selector.",
-    },
-    locale: {
-      control: "text",
-      description: "Locale used for sorting and pagination formatting.",
-    },
-    defaultPageSize: {
-      control: "number",
-      description:
-        "Initial page size. Defaults to 5 on narrow containers and 10 on wide containers.",
+      table: { category: "Data" },
     },
   },
 };

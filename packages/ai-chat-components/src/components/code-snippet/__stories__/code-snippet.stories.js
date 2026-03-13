@@ -51,62 +51,21 @@ const renderSnippet = (args, code) => {
 
 export default {
   title: "Components/Code snippet",
-  component: "cds-aichat-code-snippet-tile-container",
+  component: "cds-aichat-code-snippet",
   argTypes: {
+    // Story-specific control (not a component property)
     useCard: {
       control: "boolean",
-      description: "Wrap in card wrapper",
+      description: "Wrap in card wrapper (story-only control)",
       table: {
-        category: "Wrapper",
+        category: "Story",
       },
     },
-    highlight: {
-      control: "boolean",
-      description: "Enable syntax highlighting",
-    },
-    editable: {
-      control: "boolean",
-      description: "Enable editing",
-    },
-    disabled: {
-      control: "boolean",
-      description: "Disable the snippet",
-    },
-    hideCopyButton: {
-      control: "boolean",
-      description: "Hide the copy button",
-    },
-    hideHeader: {
-      control: "boolean",
-      description: "Hide the header/toolbar completely",
-    },
-    maxCollapsedNumberOfRows: {
-      control: "number",
-      description: "Maximum rows when collapsed",
-    },
-    maxExpandedNumberOfRows: {
-      control: "number",
-      description: "Maximum rows when expanded (0 = unlimited)",
-    },
-    minCollapsedNumberOfRows: {
-      control: "number",
-      description: "Minimum rows when collapsed",
-    },
-    minExpandedNumberOfRows: {
-      control: "number",
-      description: "Minimum rows when expanded",
-    },
-    showMoreText: {
-      control: "text",
-      description: "Text for expand button",
-    },
-    showLessText: {
-      control: "text",
-      description: "Text for collapse button",
-    },
-    copyButtonTooltipContent: {
-      control: "text",
-      description: "Tooltip text for copy button",
+    // Disable control for complex array property
+    actions: {
+      control: false,
+      description:
+        "Array of actions that can overflow into a menu when space is limited.",
     },
   },
 };
@@ -115,20 +74,6 @@ export const Default = {
   args: {
     useCard: true,
     highlight: false,
-    editable: false,
-    disabled: false,
-    hideCopyButton: false,
-    maxCollapsedNumberOfRows: 15,
-    showMoreText: "Show more",
-    showLessText: "Show less",
-  },
-  render: (args) => renderSnippet(args, multilineCode),
-};
-
-export const Highlight = {
-  args: {
-    useCard: true,
-    highlight: true,
     editable: false,
     disabled: false,
     hideCopyButton: false,
@@ -211,7 +156,7 @@ class StreamingDemo extends LitElement {
 
     const snippetContent = this.useCard
       ? html`
-          <cds-aichat-card>
+          <cds-aichat-card is-flush>
             <div slot="body">${snippet}</div>
           </cds-aichat-card>
         `
@@ -233,7 +178,7 @@ class StreamingDemo extends LitElement {
 
 customElements.define("streaming-demo", StreamingDemo);
 
-export const StreamingWithLanguageDetection = {
+export const Streaming = {
   args: {
     useCard: true,
     highlight: true,
@@ -253,113 +198,7 @@ export const StreamingWithLanguageDetection = {
   `,
 };
 
-export const StreamingWithLanguageSet = {
-  args: {
-    useCard: true,
-    language: "typescript",
-    highlight: true,
-    editable: false,
-    disabled: false,
-    hideCopyButton: false,
-  },
-  render: (args) => html`
-    <streaming-demo
-      ?use-card=${args.useCard}
-      language=${args.language}
-      ?editable=${args.editable}
-      ?highlight=${args.highlight}
-      ?disabled=${args.disabled}
-      ?hide-copy-button=${args.hideCopyButton}
-    ></streaming-demo>
-  `,
-};
-
-export const WithNoCard = {
-  args: {
-    useCard: false,
-    highlight: true,
-    editable: false,
-    disabled: false,
-    hideCopyButton: false,
-    maxCollapsedNumberOfRows: 15,
-    showMoreText: "Show more",
-    showLessText: "Show less",
-  },
-  render: (args) => renderSnippet(args, multilineCode),
-};
-
-export const Editable = {
-  args: {
-    useCard: false,
-    highlight: true,
-    editable: true,
-    disabled: false,
-    hideCopyButton: false,
-  },
-  render: (args) => renderSnippet(args, multilineCode),
-};
-
-export const EditableEmpty = {
-  args: {
-    useCard: false,
-    highlight: true,
-    editable: true,
-    disabled: false,
-    hideCopyButton: false,
-    hideHeader: true,
-  },
-  render: (args) => renderSnippet(args, ""),
-};
-
-export const WithActions = {
-  args: {
-    useCard: true,
-    highlight: true,
-    editable: false,
-    disabled: false,
-    hideCopyButton: false,
-    maxCollapsedNumberOfRows: 15,
-  },
-  render: (args) => {
-    const actions = [
-      {
-        text: "Download",
-        icon: Download16,
-        onClick: () => console.log("Download clicked"),
-      },
-      {
-        text: "Share",
-        icon: Share16,
-        onClick: () => console.log("Share clicked"),
-      },
-    ];
-
-    const snippet = html`
-      <cds-aichat-code-snippet
-        ?data-rounded=${args.useCard}
-        .code=${multilineCode}
-        ?editable=${args.editable}
-        ?highlight=${args.highlight}
-        ?disabled=${args.disabled}
-        ?hide-copy-button=${args.hideCopyButton}
-        ?overflow=${true}
-        .actions=${actions}
-        max-collapsed-number-of-rows=${ifDefined(args.maxCollapsedNumberOfRows)}
-      >
-      </cds-aichat-code-snippet>
-    `;
-
-    return args.useCard
-      ? html`
-          <cds-aichat-card>
-            <div slot="body">${snippet}</div>
-          </cds-aichat-card>
-        `
-      : snippet;
-  },
-};
-
-export const WithActionsAndDecorator = {
+export const WithHeaderSlotsFilled = {
   args: {
     useCard: true,
     highlight: true,
@@ -402,45 +241,6 @@ export const WithActionsAndDecorator = {
             </div>
           </div>
         </cds-ai-label>
-      </cds-aichat-code-snippet>
-    `;
-
-    return args.useCard
-      ? html`
-          <cds-aichat-card>
-            <div slot="body">${snippet}</div>
-          </cds-aichat-card>
-        `
-      : snippet;
-  },
-};
-
-export const WithFixedActions = {
-  args: {
-    useCard: false,
-    highlight: true,
-    editable: false,
-    disabled: false,
-    hideCopyButton: false,
-  },
-  render: (args) => {
-    const actions = [
-      {
-        text: "Download",
-        icon: Download16,
-        onClick: () => console.log("Download clicked"),
-      },
-    ];
-
-    return html`
-      <cds-aichat-code-snippet
-        .code=${multilineCode}
-        ?editable=${args.editable}
-        ?highlight=${args.highlight}
-        ?disabled=${args.disabled}
-        ?hide-copy-button=${args.hideCopyButton}
-        .actions=${actions}
-      >
         <div slot="fixed-actions">
           <button
             @click=${() => console.log("Fixed action clicked")}
@@ -451,6 +251,14 @@ export const WithFixedActions = {
         </div>
       </cds-aichat-code-snippet>
     `;
+
+    return args.useCard
+      ? html`
+          <cds-aichat-card is-flush>
+            <div slot="body">${snippet}</div>
+          </cds-aichat-card>
+        `
+      : snippet;
   },
 };
 
@@ -538,29 +346,42 @@ export const FullHeightMode = {
     maxCollapsedNumberOfRows: 0,
     maxExpandedNumberOfRows: 0,
   },
-  render: (args) => html`
-    <div
-      style="height: 500px; display: flex; flex-direction: column; border: 1px solid #ccc; padding: 1rem;"
-    >
-      <h3 style="margin: 0 0 1rem 0;">SQL Editor (Full-Height Mode)</h3>
-      <p style="margin: 0 0 1rem 0; color: #666;">
-        When both max-collapsed-number-of-rows and max-expanded-number-of-rows
-        are set to 0, the component fills its container's height with a
-        scrollbar. Perfect for edit mode scenarios.
-      </p>
-      <div style="flex: 1; min-height: 0;">
-        <cds-aichat-code-snippet
-          language="sql"
-          .code=${sqlCode}
-          ?editable=${args.editable}
-          ?highlight=${args.highlight}
-          ?disabled=${args.disabled}
-          ?hide-copy-button=${args.hideCopyButton}
-          max-collapsed-number-of-rows=${args.maxCollapsedNumberOfRows}
-          max-expanded-number-of-rows=${args.maxExpandedNumberOfRows}
-        >
-        </cds-aichat-code-snippet>
+  render: (args) => {
+    const snippet = html`
+      <cds-aichat-code-snippet
+        ?data-rounded=${args.useCard}
+        language="sql"
+        .code=${sqlCode}
+        ?editable=${args.editable}
+        ?highlight=${args.highlight}
+        ?disabled=${args.disabled}
+        ?hide-copy-button=${args.hideCopyButton}
+        max-collapsed-number-of-rows=${args.maxCollapsedNumberOfRows}
+        max-expanded-number-of-rows=${args.maxExpandedNumberOfRows}
+      >
+      </cds-aichat-code-snippet>
+    `;
+
+    const content = args.useCard
+      ? html`
+          <cds-aichat-card is-flush>
+            <div slot="body">${snippet}</div>
+          </cds-aichat-card>
+        `
+      : snippet;
+
+    return html`
+      <div
+        style="height: 500px; display: flex; flex-direction: column; border: 1px solid #ccc; padding: 1rem;"
+      >
+        <h3 style="margin: 0 0 1rem 0;">SQL Editor (Full-Height Mode)</h3>
+        <p style="margin: 0 0 1rem 0; color: #666;">
+          When both max-collapsed-number-of-rows and max-expanded-number-of-rows
+          are set to 0, the component fills its container's height with a
+          scrollbar. Perfect for edit mode scenarios.
+        </p>
+        <div style="flex: 1; min-height: 0;">${content}</div>
       </div>
-    </div>
-  `,
+    `;
+  },
 };

@@ -3,15 +3,8 @@
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
- */
-
-/**
- * @license
  *
- * Copyright IBM Corp. 2025
- *
- * This source code is licensed under the Apache-2.0 license found in the
- * LICENSE file in the root directory of this source tree.
+ *  @license
  */
 
 export default {
@@ -64,6 +57,51 @@ export default {
         if (declaration) {
           declaration.tagName = tagName;
         }
+      },
+    },
+    {
+      name: "internal-members",
+      analyzePhase({ ts, node, moduleDoc }) {
+        // Handle class members (fields, methods, properties)
+        if (!ts.isClassDeclaration(node) || !node.name) {
+          return;
+        }
+
+        const className = node.name.text;
+        moduleDoc.declarations ??= [];
+        const classDeclaration = moduleDoc.declarations.find(
+          (decl) => decl?.name === className,
+        );
+
+        if (!classDeclaration || !classDeclaration.members) {
+          return;
+        }
+
+        // Check each member for @internal JSDoc tag
+        node.members.forEach((member) => {
+          const memberName = member.name?.getText();
+          if (!memberName) {
+            return;
+          }
+
+          // Get JSDoc comments for this member
+          const jsDocTags = ts.getJSDocTags(member);
+          const hasInternalTag = jsDocTags.some(
+            (tag) => tag.tagName.text === "internal",
+          );
+
+          if (hasInternalTag) {
+            // Find the corresponding member in the manifest
+            const manifestMember = classDeclaration.members.find(
+              (m) => m.name === memberName,
+            );
+
+            if (manifestMember) {
+              // Mark as private to hide from Storybook
+              manifestMember.privacy = "private";
+            }
+          }
+        });
       },
     },
   ],

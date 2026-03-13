@@ -185,7 +185,7 @@ const StreamingDemo = (args) => {
         Restart Streaming
       </button>
       {useCard ? (
-        <Card>
+        <Card isFlush>
           <div slot="body">{snippet}</div>
         </Card>
       ) : (
@@ -197,75 +197,26 @@ const StreamingDemo = (args) => {
 
 export default {
   title: "Components/Code snippet",
+  component: CodeSnippet,
   argTypes: {
+    // Story-specific control (not a component property)
     useCard: {
       control: "boolean",
-      description: "Wrap in Card",
+      description: "Wrap in Card (story-only control)",
       table: {
-        category: "Wrapper",
+        category: "Story",
       },
     },
-    highlight: {
-      control: "boolean",
-      description: "Enable syntax highlighting",
+    // Disable control for complex array property
+    actions: {
+      control: false,
+      description:
+        "Array of actions that can overflow into a menu when space is limited.",
     },
-    editable: {
-      control: "boolean",
-      description: "Enable editing",
-    },
-    disabled: {
-      control: "boolean",
-      description: "Disable the snippet",
-    },
-    hideCopyButton: {
-      control: "boolean",
-      description: "Hide the copy button",
-    },
-    maxCollapsedNumberOfRows: {
-      control: "number",
-      description: "Maximum rows when collapsed",
-    },
-    maxExpandedNumberOfRows: {
-      control: "number",
-      description: "Maximum rows when expanded (0 = unlimited)",
-    },
-    minCollapsedNumberOfRows: {
-      control: "number",
-      description: "Minimum rows when collapsed",
-    },
-    minExpandedNumberOfRows: {
-      control: "number",
-      description: "Minimum rows when expanded",
-    },
-    showMoreText: {
-      control: "text",
-      description: "Text for expand button",
-    },
-    showLessText: {
-      control: "text",
-      description: "Text for collapse button",
-    },
-    copyButtonTooltipContent: {
-      control: "text",
-      description: "Tooltip text for copy button",
-    },
-    feedback: {
-      control: "text",
-      description: "Feedback text after copying",
-    },
-    language: {
-      control: "text",
-      description: "Explicit language override",
-    },
-    defaultLanguage: {
-      control: "text",
-      description: "Default language used when detection fails",
-    },
+    // Event handler
     onChange: {
       action: "onChange",
       table: { category: "events" },
-      description:
-        "Fires when editable content changes. `event.detail.value` contains the new string.",
     },
   },
   args: {
@@ -287,21 +238,7 @@ export const Default = {
   render: (args) => renderSnippet(args, multilineCode),
 };
 
-export const Highlight = {
-  args: {
-    useCard: true,
-    highlight: true,
-    editable: false,
-    disabled: false,
-    hideCopyButton: false,
-    maxCollapsedNumberOfRows: 15,
-    showMoreText: "Show more",
-    showLessText: "Show less",
-  },
-  render: (args) => renderSnippet(args, multilineCode),
-};
-
-export const StreamingWithLanguageDetection = {
+export const Streaming = {
   args: {
     useCard: true,
     highlight: true,
@@ -312,92 +249,7 @@ export const StreamingWithLanguageDetection = {
   render: (args) => <StreamingDemo {...args} />,
 };
 
-export const StreamingWithLanguageSet = {
-  args: {
-    useCard: true,
-    language: "typescript",
-    highlight: true,
-    editable: false,
-    disabled: false,
-    hideCopyButton: false,
-  },
-  render: (args) => <StreamingDemo {...args} />,
-};
-
-export const WithNoCard = {
-  args: {
-    useCard: false,
-    highlight: true,
-    editable: false,
-    disabled: false,
-    hideCopyButton: false,
-    maxCollapsedNumberOfRows: 15,
-    showMoreText: "Show more",
-    showLessText: "Show less",
-  },
-  render: (args) => renderSnippet(args, multilineCode),
-};
-
-export const Editable = {
-  args: {
-    useCard: false,
-    highlight: true,
-    editable: true,
-    disabled: false,
-    hideCopyButton: false,
-  },
-  render: (args) => renderSnippet(args, multilineCode),
-};
-
-export const EditableEmpty = {
-  args: {
-    useCard: false,
-    highlight: true,
-    editable: true,
-    disabled: false,
-    hideCopyButton: false,
-  },
-  render: (args) => renderSnippet(args, ""),
-};
-
-export const WithActions = {
-  args: {
-    useCard: true,
-    highlight: true,
-    editable: false,
-    disabled: false,
-    hideCopyButton: false,
-    maxCollapsedNumberOfRows: 15,
-  },
-  render: (args) => {
-    const actions = [
-      {
-        text: "Download",
-        icon: Download,
-        onClick: () => console.log("Download clicked"),
-      },
-      {
-        text: "Share",
-        icon: Share,
-        onClick: () => console.log("Share clicked"),
-      },
-    ];
-
-    const snippet = (
-      <CodeSnippet {...args} code={multilineCode} actions={actions} overflow />
-    );
-
-    return args.useCard ? (
-      <Card>
-        <div slot="body">{snippet}</div>
-      </Card>
-    ) : (
-      snippet
-    );
-  },
-};
-
-export const WithActionsAndDecorator = {
+export const WithHeaderSlotsFilled = {
   args: {
     useCard: true,
     highlight: true,
@@ -433,38 +285,6 @@ export const WithActionsAndDecorator = {
             <div>This code was generated. Review carefully before use.</div>
           </AILabelContent>
         </AILabel>
-      </CodeSnippet>
-    );
-
-    return args.useCard ? (
-      <Card>
-        <div slot="body">{snippet}</div>
-      </Card>
-    ) : (
-      snippet
-    );
-  },
-};
-
-export const WithFixedActions = {
-  args: {
-    useCard: false,
-    highlight: true,
-    editable: false,
-    disabled: false,
-    hideCopyButton: false,
-  },
-  render: (args) => {
-    const actions = [
-      {
-        text: "Download",
-        icon: Download,
-        onClick: () => console.log("Download clicked"),
-      },
-    ];
-
-    return (
-      <CodeSnippet {...args} code={multilineCode} actions={actions}>
         <div slot="fixed-actions">
           <button
             onClick={() => console.log("Fixed action clicked")}
@@ -479,6 +299,14 @@ export const WithFixedActions = {
           </button>
         </div>
       </CodeSnippet>
+    );
+
+    return args.useCard ? (
+      <Card isFlush>
+        <div slot="body">{snippet}</div>
+      </Card>
+    ) : (
+      snippet
     );
   },
 };
@@ -568,8 +396,17 @@ export const FullHeightMode = {
     maxExpandedNumberOfRows: 0,
   },
   render: (args) => {
-    // Create a wrapper component to properly handle the height constraint
-    const Wrapper = () => (
+    const snippet = <CodeSnippet {...args} code={sqlCode} language="sql" />;
+
+    const content = args.useCard ? (
+      <Card isFlush>
+        <div slot="body">{snippet}</div>
+      </Card>
+    ) : (
+      snippet
+    );
+
+    return (
       <div
         style={{
           height: "500px",
@@ -592,10 +429,9 @@ export const FullHeightMode = {
             overflow: "hidden",
           }}
         >
-          <CodeSnippet {...args} code={sqlCode} language="sql" />
+          {content}
         </div>
       </div>
     );
-    return <Wrapper />;
   },
 };

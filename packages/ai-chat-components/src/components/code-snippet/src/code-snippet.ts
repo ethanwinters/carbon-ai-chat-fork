@@ -270,7 +270,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
   /**
    * @internal
    */
-  private streamingManager: StreamingManager;
+  private streamingManager?: StreamingManager;
 
   /**
    * @internal
@@ -713,8 +713,9 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
     }
     this._hObserveResize = observeResize(this._resizeObserver, this);
 
-    this.streamingManager.reset(this._slottedContent);
-    this.streamingManager.connect();
+    this.streamingManager?.reset(this._slottedContent);
+    this.streamingManager?.connect();
+
     void this.ensureCodeMirrorRuntime();
   }
 
@@ -722,7 +723,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
    * Hooks into the rendered slot once Lit has stamped the template so we can observe streaming updates.
    */
   protected firstUpdated() {
-    this.streamingManager.syncSlotObservers();
+    this.streamingManager?.syncSlotObservers();
     // Apply initial container styles (CSP-compliant)
     this._applyContainerStyles();
   }
@@ -738,7 +739,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
       }
     }
 
-    this.streamingManager.ensureInitialContent();
+    this.streamingManager?.ensureInitialContent();
 
     // Update expanded-code attribute before render to avoid change-in-update warning
     if (this._expandedCode) {
@@ -752,7 +753,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
    * Responds to slot churn caused by streaming tokens emitted from the chat pipeline, forcing a full rescan when the slot re-projects.
    */
   private _handleSlotChange() {
-    this.streamingManager.handleSlotChange();
+    this.streamingManager?.handleSlotChange();
   }
 
   /**
@@ -765,7 +766,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
     }
     // Cancel any pending throttled updates
     this.contentSync?.cancel();
-    this.streamingManager.dispose();
+    this.streamingManager?.dispose();
     this.languageController?.dispose();
     this.destroyEditor();
   }
