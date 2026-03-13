@@ -8,7 +8,7 @@
 // CSS Custom Properties for AI Chat Components
 // This file exports all tokens as CSS custom properties that can be customized by consumers
 
-@use "./config" as config;
+@use "./utilities" as utilities;
 @use "./tokens-layout" as layout;
 @use "./tokens-component" as component;
 
@@ -19,35 +19,41 @@
 // All properties use the --cds-aichat-* prefix
 :root {
   // Layout tokens
-  @include config.declaration("messages-max-width", layout.$messages-max-width);
-  @include config.declaration("messages-min-width", layout.$messages-min-width);
-  @include config.declaration(
+  @include utilities.declaration(
+    "messages-max-width",
+    layout.$messages-max-width
+  );
+  @include utilities.declaration(
+    "messages-min-width",
+    layout.$messages-min-width
+  );
+  @include utilities.declaration(
     "workspace-min-width",
     layout.$workspace-min-width
   );
-  @include config.declaration("history-width", layout.$history-width);
-  @include config.declaration("card-max-width", layout.$card-max-width);
+  @include utilities.declaration("history-width", layout.$history-width);
+  @include utilities.declaration("card-max-width", layout.$card-max-width);
 
   // Component tokens
-  @include config.declaration("border-radius", component.$border-radius);
-  @include config.declaration(
+  @include utilities.declaration("border-radius", component.$border-radius);
+  @include utilities.declaration(
     "card-border-radius",
     component.$card-border-radius
   );
-  @include config.declaration("border-radius", component.$border-radius);
-  @include config.declaration(
+  @include utilities.declaration("border-radius", component.$border-radius);
+  @include utilities.declaration(
     "border-radius-start-start",
     component.$border-radius-start-start
   );
-  @include config.declaration(
+  @include utilities.declaration(
     "border-radius-start-end",
     component.$border-radius-start-end
   );
-  @include config.declaration(
+  @include utilities.declaration(
     "border-radius-end-start",
     component.$border-radius-end-start
   );
-  @include config.declaration(
+  @include utilities.declaration(
     "border-radius-end-end",
     component.$border-radius-end-end
   );
