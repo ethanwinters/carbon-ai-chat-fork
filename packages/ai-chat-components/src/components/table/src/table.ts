@@ -142,13 +142,14 @@ class CDSAIChatTable extends LitElement {
    * The function used to get the supplemental text for the pagination component.
    */
   @property({ type: Function, attribute: false })
-  getPaginationSupplementalText?: ({ count }: { count: number }) => string;
+  getPaginationSupplementalText = ({ count }: { count: number }) =>
+    `${count} items`;
 
   /**
    * The function used to get the status text for the pagination component.
    */
   @property({ type: Function, attribute: false })
-  getPaginationStatusText?: ({
+  getPaginationStatusText = ({
     start,
     end,
     count,
@@ -156,7 +157,7 @@ class CDSAIChatTable extends LitElement {
     start: number;
     end: number;
     count: number;
-  }) => string;
+  }) => `${start}–${end} of ${count} items`;
 
   /**
    * If the table is valid or not.

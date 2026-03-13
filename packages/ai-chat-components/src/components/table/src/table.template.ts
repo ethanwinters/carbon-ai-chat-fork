@@ -37,6 +37,11 @@ function tableTemplate(tableElement: CDSAIChatTable) {
   } = tableElement;
 
   function toolbarElement() {
+    // Check if RTL direction is set
+    const isRTL =
+      document.dir === "rtl" || document.documentElement.dir === "rtl";
+    const tooltipPosition = isRTL ? "right-start" : "left-start";
+
     return html`<cds-table-toolbar slot="toolbar">
       <cds-table-toolbar-content>
         ${allowTableFiltering
@@ -46,7 +51,11 @@ function tableTemplate(tableElement: CDSAIChatTable) {
               aria-label=${filterPlaceholderText}
             ></cds-table-toolbar-search>`
           : ""}
-        <cds-button @click=${handleDownload} tooltip-text=${downloadLabelText}>
+        <cds-button
+          @click=${handleDownload}
+          tooltip-text=${downloadLabelText}
+          tooltip-position=${tooltipPosition}
+        >
           ${iconLoader(Download16)}
           <span slot="tooltip-content">${downloadLabelText}</span>
         </cds-button>

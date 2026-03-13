@@ -25,11 +25,7 @@ import type {
   TableCellContent,
   TableRowContent,
 } from "../../table/src/table.js";
-import {
-  DEFAULT_PAGINATION_STATUS_TEXT,
-  DEFAULT_PAGINATION_SUPPLEMENTAL_TEXT,
-  extractTableData,
-} from "./utils/table-helpers.js";
+import { extractTableData } from "./utils/table-helpers.js";
 import type { TableCellData } from "./utils/table-helpers.js";
 import { combineConsecutiveHtmlInline } from "./utils/html-helpers.js";
 import type { TokenTree } from "./markdown-token-tree.js";
@@ -523,17 +519,14 @@ function renderWithStaticTag(
           .headers=${headers}
           .rows=${tableRows}
           .loading=${false}
-          .filterPlaceholderText=${tableFilterPlaceholderText ||
-          "Filter table..."}
-          .previousPageText=${tablePreviousPageText || "Previous page"}
-          .nextPageText=${tableNextPageText || "Next page"}
-          .itemsPerPageText=${tableItemsPerPageText || "Items per page:"}
-          .downloadLabelText=${tableDownloadLabelText || "Download table data"}
-          .locale=${tableLocale || "en"}
-          .getPaginationSupplementalText=${tableGetPaginationSupplementalText ||
-          DEFAULT_PAGINATION_SUPPLEMENTAL_TEXT}
-          .getPaginationStatusText=${tableGetPaginationStatusText ||
-          DEFAULT_PAGINATION_STATUS_TEXT}
+          .filterPlaceholderText=${tableFilterPlaceholderText}
+          .previousPageText=${tablePreviousPageText}
+          .nextPageText=${tableNextPageText}
+          .itemsPerPageText=${tableItemsPerPageText}
+          .downloadLabelText=${tableDownloadLabelText}
+          .locale=${tableLocale}
+          .getPaginationSupplementalText=${tableGetPaginationSupplementalText}
+          .getPaginationStatusText=${tableGetPaginationStatusText}
           ...=${attrs}
         ></cds-aichat-table>
       </div>`;

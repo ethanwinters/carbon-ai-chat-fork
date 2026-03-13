@@ -9,6 +9,7 @@
 
 import { LitElement, html } from "lit";
 import { property, state } from "lit/decorators.js";
+import { classMap } from "lit/directives/class-map.js";
 import { createRef, ref } from "lit/directives/ref.js";
 import ChevronDown16 from "@carbon/icons/es/chevron--down/16.js";
 import Copy16 from "@carbon/icons/es/copy/16.js";
@@ -694,7 +695,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
     }
 
     return html`<div
-      class="cds-aichat--snippet__editor-skeleton"
+      class="${prefix}--snippet__editor-skeleton"
       aria-hidden="true"
     >
       <cds-skeleton-text lines="4"></cds-skeleton-text>
@@ -790,9 +791,9 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
 
     // Apply fill-mode class to host element
     if (this._isFillMode) {
-      this.classList.add("cds-aichat--snippet-container--fill-mode");
+      this.classList.add(`${prefix}--snippet-container--fill-mode`);
     } else {
-      this.classList.remove("cds-aichat--snippet-container--fill-mode");
+      this.classList.remove(`${prefix}--snippet-container--fill-mode`);
     }
   }
 
@@ -820,21 +821,21 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
    */
   private renderTitle() {
     return html`
-      <div slot="title" data-rounded="top" class="cds-aichat--snippet__meta">
+      <div slot="title" data-rounded="top" class="${prefix}--snippet__meta">
         ${this._detectedLanguage && this._languageLabelLockedIn
-          ? html`<div class="cds-aichat--snippet__language">
+          ? html`<div class="${prefix}--snippet__language">
               ${this._detectedLanguage}
             </div>`
           : ""}
         ${this._detectedLanguage &&
         this._languageLabelLockedIn &&
         this._lineCount
-          ? html`<div class="cds-aichat--snippet__header-separator">
+          ? html`<div class="${prefix}--snippet__header-separator">
               &mdash;
             </div>`
           : ""}
         ${this._lineCount
-          ? html`<div class="cds-aichat--snippet__linecount">
+          ? html`<div class="${prefix}--snippet__linecount">
               ${this.getLineCountText({ count: this._lineCount })}
             </div>`
           : ""}
@@ -856,19 +857,18 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
 
     const expandCodeBtnText = expandedCode ? showLessText : showMoreText;
 
-    let containerClasses = `cds-aichat--snippet-container cds-aichat--snippet--codemirror`;
-    if (!expandedCode) {
-      containerClasses += ` cds-aichat--snippet-container--collapsed`;
-    }
-    if (this._isFillMode) {
-      containerClasses += ` cds-aichat--snippet-container--fill-mode`;
-    }
+    const containerClasses = {
+      [`${prefix}--snippet-container`]: true,
+      [`${prefix}--snippet--codemirror`]: true,
+      [`${prefix}--snippet-container--collapsed`]: !expandedCode,
+      [`${prefix}--snippet-container--fill-mode`]: this._isFillMode,
+    };
 
-    return html` <div class="cds-aichat--snippet">
+    return html` <div class="${prefix}--snippet">
       ${!this.hideHeader
         ? html`
             <cds-aichat-toolbar
-              class="cds-aichat--snippet__header"
+              class="${prefix}--snippet__header"
               .actions=${this._getToolbarActions()}
               ?overflow=${this.overflow}
             >
@@ -880,35 +880,32 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
         : ""}
 
       <div
-        class="${containerClasses}"
+        class="${classMap(containerClasses)}"
         data-rounded="bottom"
         ${this.editable
           ? `aria-label="${this.ariaLabelEditable}" aria-readonly="false" aria-multiline="true" role="textbox" tabindex="0"`
           : ""}
         ${ref(this.snippetContainer)}
       >
-        <div class="cds-aichat--code-editor" ${ref(this.editorContainer)}></div>
+        <div class="${prefix}--code-editor" ${ref(this.editorContainer)}></div>
         ${this.renderEditorFallback()}
       </div>
 
       ${shouldShowMoreLessBtn
         ? html`
-            <div
-              class="cds-aichat--snippet__footer"
-              data-rounded="bottom-right"
-            >
+            <div class="${prefix}--snippet__footer" data-rounded="bottom-right">
               <cds-button
                 kind="ghost"
                 size="sm"
-                button-class-name="cds-aichat--snippet-btn--expand"
+                button-class-name="${prefix}--snippet-btn--expand"
                 ?disabled=${disabled}
                 @click=${() => this._handleClickExpanded()}
               >
-                <span class="cds-aichat--snippet-btn--text">
+                <span class="${prefix}--snippet-btn--text">
                   ${expandCodeBtnText}
                 </span>
                 ${iconLoader(ChevronDown16, {
-                  class: `cds-aichat--icon-chevron--down cds-aichat--snippet__icon`,
+                  class: `${prefix}--icon-chevron--down ${prefix}--snippet__icon`,
                   role: "img",
                   slot: "icon",
                 })}
@@ -916,7 +913,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
             </div>
           `
         : ``}
-      <div class="cds-aichat--visually-hidden">
+      <div class="${prefix}--visually-hidden">
         <slot
           ${ref(this.contentSlot)}
           @slotchange=${this._handleSlotChange}

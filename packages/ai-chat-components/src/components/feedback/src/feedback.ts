@@ -16,6 +16,7 @@ import "@carbon/web-components/es/components/textarea/index.js";
 
 import { html, LitElement, PropertyValues } from "lit";
 import { property, state } from "lit/decorators.js";
+import { classMap } from "lit/directives/class-map.js";
 import { carbonElement } from "../../../globals/decorators/index.js";
 import prefix from "../../../globals/settings.js";
 import commonStyles from "../../../globals/scss/common.scss?lit";
@@ -66,13 +67,13 @@ class CDSAIChatFeedback extends LitElement {
    * The title to display in the popup. A default value will be used if no value is provided here.
    */
   @property({ type: String, attribute: "title", reflect: true })
-  title = "";
+  title = "Provide additional feedback";
 
   /**
    * The body text to display to the user. A default value will be used if no value is provided here.
    */
   @property({ type: String, attribute: "body", reflect: true })
-  body = "";
+  body = "What do you think of this response?";
 
   /**
    * The list of categories to show.
@@ -91,7 +92,7 @@ class CDSAIChatFeedback extends LitElement {
    * The placeholder to show in the text area. A default value will be used if no value is provided here.
    */
   @property({ type: String, attribute: "text-area-placeholder", reflect: true })
-  placeholder?: string;
+  placeholder = "Provide additional feedback...";
 
   /**
    * The label for the secondary button. A default value will be used if no value is provided here.
@@ -221,21 +222,17 @@ class CDSAIChatFeedback extends LitElement {
   }
 
   render() {
-    const containerClasses = [`${prefix}--container`];
-    if (!this.isOpen) {
-      containerClasses.push(`${prefix}--is-closed`);
-    }
+    const containerClasses = {
+      [`${prefix}--container`]: true,
+      [`${prefix}--is-closed`]: !this.isOpen,
+    };
 
-    return html`<div class="${containerClasses.join(" ")}">
+    return html`<div class="${classMap(containerClasses)}">
       <div class="${prefix}--title-row">
-        <div class="${prefix}--title">
-          ${this.title || "Provide additional feedback"}
-        </div>
+        <div class="${prefix}--title">${this.title}</div>
       </div>
       ${this.showBody
-        ? html`<div class="${prefix}--prompt">
-            ${this.body || "What do you think of this response?"}
-          </div>`
+        ? html`<div class="${prefix}--prompt">${this.body}</div>`
         : ""}
       ${this.categories?.length
         ? html`<div class="${prefix}--categories">
@@ -271,8 +268,7 @@ class CDSAIChatFeedback extends LitElement {
               value="${this._textInput}"
               class="${prefix}--feedback-text-area"
               ?disabled=${this.isReadonly}
-              placeholder="${this.placeholder ||
-              "Provide additional feedback..."}"
+              placeholder="${this.placeholder}"
               rows="3"
               max-count="${MAX_TEXT_COUNT}"
               @input=${this._handleTextInput}
