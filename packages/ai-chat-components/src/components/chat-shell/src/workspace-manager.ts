@@ -655,6 +655,10 @@ export class WorkspaceManager {
   }
 
   private finishWorkspaceClosing(): void {
+    // Phase 1: Remove workspace container from DOM and clear attributes.
+    // isContracting stays true so workspace-closing class remains active
+    // until finalizeClosing() (Phase 2) is called by the shell.
+
     // IMPORTANT: Remove workspace container from DOM FIRST while attributes are still present
     // This prevents input-and-messages from expanding while workspace is still in DOM
     this.setShowWorkspaceContainer(false);
@@ -663,7 +667,24 @@ export class WorkspaceManager {
     this.hostElement.removeAttribute("workspace-in-panel");
     this.hostElement.removeAttribute("workspace-in-container");
 
-    // Reset workspace state to original values
+    // Clear the timers
+    this.clearContractionTimers();
+
+    // Reset tracking
+    this.contractionLastInlineSize = undefined;
+    this.contractionInitialInlineSize = undefined;
+  }
+
+  /**
+   * Phase 2 of workspace closing. Called by the shell from updated() after
+   * the Phase 1 render has committed (workspace div removed from DOM).
+   * Clears isContracting, removing the workspace-closing class, and schedules
+   * the final render so at-max-width lands in the same frame.
+   */
+  finalizeClosing(): void {
+    if (!this.state.isContracting) {
+      return;
+    }
     this.setState({
       inPanel: false,
       contentVisible: true,
@@ -673,13 +694,7 @@ export class WorkspaceManager {
       isCheckingContracting: false,
       isContracting: false,
     });
-
-    // Clear the timers
-    this.clearContractionTimers();
-
-    // Reset tracking
-    this.contractionLastInlineSize = undefined;
-    this.contractionInitialInlineSize = undefined;
+    this.requestHostUpdate();
   }
 
   private trackExpectedExpansion(inlineSize: number): void {

@@ -820,6 +820,26 @@ class CDSAIChatShell extends LitElement {
       this.suppressWorkspacePanelOpenAnimation = false;
     }
 
+    // Phase 1 → Phase 2: workspace container was just removed from DOM (Phase 1 render
+    // committed), but isContracting is still true. Synchronously compute at-max-width
+    // against the freshly-committed DOM, then call finalizeClosing() to clear
+    // isContracting and schedule the final render so everything lands in one frame.
+    if (
+      this.lastWorkspaceContainerVisible &&
+      !(workspaceState?.containerVisible ?? true) &&
+      (workspaceState?.isContracting ?? false)
+    ) {
+      const hostWidth = this.getBoundingClientRect().width;
+      const maxWidth =
+        this.resizeObserverManager?.getMessagesMaxWidth() ?? 1056;
+      const isAtMaxWidth = hostWidth < maxWidth;
+      if (this.inputAndMessagesAtMaxWidth !== isAtMaxWidth) {
+        this.inputAndMessagesAtMaxWidth = isAtMaxWidth;
+        // No requestUpdate needed — finalizeClosing() will trigger one
+      }
+      this.workspaceManager?.finalizeClosing();
+    }
+
     this.lastShouldRenderWorkspacePanel = shouldRenderPanel;
     this.lastWorkspaceInPanel = workspaceState?.inPanel ?? false;
     this.lastWorkspaceContainerVisible =
