@@ -1,0 +1,1 @@
+{"id":"363b7757-1963-4bc5-9840-7405d46f9d9a","ts":"2026-03-17T13:47:39.461Z","version":"1.0.2","toolName":"apply_diff","taskID":"41e44b64-d96b-4217-a024-e855541b620c","path":"packages/ai-chat-components/src/components/chat-shell/src/resize-observer-manager.ts","numLinesApplied":1,"currentRange":{"startLine":46,"endLine":47}}
