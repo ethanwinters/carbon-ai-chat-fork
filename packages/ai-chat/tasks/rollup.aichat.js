@@ -237,6 +237,18 @@ async function postBuild() {
   // Copy `es` directory to `es-custom`
   await fs.copy(sourceDir, targetDir);
 
+  // Copy SCSS files from src/scss to dist/scss (public exports)
+  const scssSourceDir = path.resolve(__dirname, "../src/scss");
+  const scssTargetDir = path.resolve(__dirname, "../dist/scss");
+  await fs.copy(scssSourceDir, scssTargetDir);
+  console.log("Copied public SCSS files to dist/scss");
+
+  // Copy internal SCSS files from src/chat/styles to dist/chat/styles
+  const chatStylesSourceDir = path.resolve(__dirname, "../src/chat/styles");
+  const chatStylesTargetDir = path.resolve(__dirname, "../dist/chat/styles");
+  await fs.copy(chatStylesSourceDir, chatStylesTargetDir);
+  console.log("Copied internal SCSS files to dist/chat/styles");
+
   // Find all files in the `es-custom` directory
   const files = await globby([`${targetDir}/**/*`], { onlyFiles: true });
 

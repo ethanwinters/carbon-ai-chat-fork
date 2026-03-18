@@ -1,0 +1,23 @@
+/*
+ *  Copyright IBM Corp. 2026
+ *
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ */
+
+/**
+ * Public export of chat layout styles including float positioning.
+ *
+ * Usage Option 1 - Include the mixin:
+ * @use "@carbon/ai-chat/scss/chat-layout";
+ * @include chat-layout.float-positioning;
+ *
+ * Usage Option 2 - Direct import (auto-generates classes for lazy loading):
+ * @use "@carbon/ai-chat/scss/chat-layout.scss";
+ */
+
+@forward "../chat/styles/chat-layout";
+
+// Auto-include for direct imports (lazy loading scenarios)
+@use "../chat/styles/chat-layout";
+@include chat-layout.float-positioning;

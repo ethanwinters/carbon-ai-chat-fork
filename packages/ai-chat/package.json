@@ -32,6 +32,7 @@
       "types": "./dist/types/aiChatEntry.d.ts",
       "import": "./dist/es/web-components/cds-aichat-custom-element/index.js"
     },
+    "./scss/*": "./dist/scss/*",
     "./dist/es/": "./dist/es/",
     "./dist/es-custom/": "./dist/es-custom/"
   },
@@ -58,6 +59,8 @@
     "dist/es",
     "dist/es-custom",
     "dist/types",
+    "dist/scss",
+    "dist/chat",
     "telemetry.yml"
   ],
   "browserslist": [
