@@ -1,0 +1,1 @@
+{"id":"e9f99714-ed1d-4869-b5af-aa265cf28a9d","ts":"2026-03-31T17:34:42.579Z","version":"1.0.2","toolName":"apply_diff","taskID":"093876a9-5913-4218-affa-48fb7ea503ef","path":"packages/ai-chat/src/chat/components/util/MarkdownWithDefaults.tsx","numLinesApplied":6,"currentRange":{"startLine":122,"endLine":127}}
