@@ -1,0 +1,1 @@
+{"id":"eb86d3b6-73be-4dd6-8971-03df754c5454","ts":"2026-03-31T16:49:28.197Z","version":"1.0.2","toolName":"apply_diff","taskID":"cf875e46-2e8d-40f6-bcb1-9450167e6cb7","path":"packages/ai-chat/src/react/ChatContainer.tsx","numLinesApplied":31,"currentRange":{"startLine":131,"endLine":162}}
