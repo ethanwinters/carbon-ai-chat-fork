@@ -258,6 +258,8 @@ export {
   FileFieldValue,
 } from "./types/messaging/Messages";
 
+export type { SystemMessageVariant } from "./types/messaging/Messages";
+
 export { HistoryItem } from "./types/messaging/History";
 
 export { MessageErrorState } from "./types/messaging/LocalMessageItem";

@@ -90,7 +90,12 @@ const RESPONSE_MAP: Record<
   "option list": (instance) => doOption(instance),
   "ordered list": (instance) => doOrderedList(instance),
   "system message (inline)": (instance) => doSystemMessage(instance, true),
-  "system message (stand alone)": (instance) => doSystemMessage(instance),
+  "system message (stand alone, default variant)": (instance) =>
+    doSystemMessage(instance, false, "default"),
+  "system message (stand alone, date variant)": (instance) =>
+    doSystemMessage(instance, false, "date"),
+  "system message (stand alone, agent variant)": (instance) =>
+    doSystemMessage(instance, false, "agent"),
   table: (instance) => doTable(instance),
   "table (stream)": (instance, requestOptions) =>
     doTableStreaming(instance, requestOptions),

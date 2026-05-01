@@ -940,7 +940,8 @@ type GenericItem<TUserDefinedType = Record<string, unknown>> =
   | ButtonItem<TUserDefinedType>
   | GridItem<TUserDefinedType>
   | ConversationalSearchItem<TUserDefinedType>
-  | PreviewCardItem<TUserDefinedType>;
+  | PreviewCardItem<TUserDefinedType>
+  | SystemMessageItem<TUserDefinedType>;
 
 /**
  * A user defined item returned in a message response from an assistant.
@@ -1071,6 +1072,13 @@ interface TextItem<
 }
 
 /**
+ * Visual layout for a {@link SystemMessageItem}.
+ *
+ * @category Messaging
+ */
+export type SystemMessageVariant = "default" | "date" | "agent";
+
+/**
  * A system message item that can be returned in a message response. System messages are used for
  * status updates, progress indicators, or informational notices.
  *
@@ -1091,6 +1099,15 @@ interface SystemMessageItem<
    * The title text to display in the system message.
    */
   title: string;
+
+  /**
+   * How the system line is presented when the message renders as a **standalone** system line
+   * (response contains only system items): default helper text, date separator with rules, or
+   * agent with a rule above and helper text. When system items render **inline** inside a
+   * bubble, `variant` is ignored and the default inline style is used.
+   * @default 'default'
+   */
+  variant?: SystemMessageVariant;
 }
 
 /**
