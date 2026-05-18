@@ -8,6 +8,15 @@
  */
 
 /*
+ *  Copyright IBM Corp. 2025, 2026
+ *
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ *
+ *  @license
+ */
+
+/*
  *  Copyright IBM Corp. 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
@@ -23,7 +32,7 @@
 */
 
 /*!
-* focus-trap 7.8.0
+* focus-trap 8.2.0
 * @license MIT, https://github.com/focus-trap/focus-trap/blob/master/LICENSE
 */
 
@@ -33,6 +42,8 @@
 */
 
 /*! @license DOMPurify 3.4.0 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/3.4.0/LICENSE */
+
+/*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */
 
 /**
  * @license
@@ -134,7 +145,17 @@
 
 /**
  * @license React
- * use-sync-external-store-with-selector.production.js
+ * use-sync-external-store-shim.production.js
+ *
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/**
+ * @license React
+ * use-sync-external-store-shim/with-selector.production.js
  *
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
