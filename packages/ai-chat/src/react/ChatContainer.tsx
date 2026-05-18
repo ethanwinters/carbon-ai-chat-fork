@@ -141,6 +141,9 @@ function ChatContainer(
       input,
       keyboardShortcuts,
       upload,
+      strings,
+      serviceDeskFactory,
+      serviceDesk,
     }),
     [
       onError,
@@ -168,6 +171,9 @@ function ChatContainer(
       input,
       keyboardShortcuts,
       upload,
+      strings,
+      serviceDeskFactory,
+      serviceDesk,
     ],
   );
 
@@ -288,9 +294,6 @@ function ChatContainer(
           <ChatAppEntry
             key="stable-chat-instance"
             config={config}
-            strings={strings}
-            serviceDeskFactory={serviceDeskFactory}
-            serviceDesk={serviceDesk}
             renderUserDefinedResponse={renderUserDefinedResponse}
             renderCustomMessageFooter={renderCustomMessageFooter}
             renderWriteableElements={renderWriteableElements}
