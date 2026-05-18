@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -126,7 +126,11 @@ class CDSAIChatReasoningStep extends LitElement {
   }
 
   private handleBodySlotChange(event: Event) {
-    const slot = event.target as HTMLSlotElement;
+    // Use currentTarget, not target: slotchange events bubble, so a nested <slot> inside slotted
+    // content (e.g. the named slot inside a user_defined response wrapper) can fire its own
+    // slotchange that reaches this handler with event.target pointing at that nested slot.
+    // event.currentTarget is always this component's unnamed body slot.
+    const slot = event.currentTarget as HTMLSlotElement;
     const nodes = slot.assignedNodes({ flatten: true });
 
     this.evaluateBodyContent(nodes);

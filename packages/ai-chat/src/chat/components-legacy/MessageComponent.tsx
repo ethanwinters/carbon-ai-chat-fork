@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -84,6 +84,7 @@ import { timestampToTimeString } from "../utils/timeUtils";
 import { type ScrollElementIntoViewFunction } from "./MessagesComponent";
 import { MessageTypeComponent } from "./MessageTypeComponent";
 import {
+  GenericItem,
   HumanAgentMessageType,
   Message,
   MessageRequest,
@@ -99,6 +100,10 @@ import { LanguagePack } from "../../types/config/PublicConfig";
 import { ResponseUserAvatar } from "./ResponseUserAvatar";
 import { CarbonTheme } from "../../types/config/PublicConfig";
 import { MarkdownWithDefaults } from "../components/util/MarkdownWithDefaults";
+import {
+  hasReasoningContent,
+  synthesizeReasoningLocalMessageItem,
+} from "../utils/reasoningContent";
 
 const ChatBot = carbonIconToReact(ChatBot32);
 const CheckmarkFilled = carbonIconToReact(CheckmarkFilled16);
@@ -308,6 +313,8 @@ class MessageComponent extends PureComponent<MessageProps, MessageState> {
 
   private isAgent: boolean;
 
+  private firedReasoningUserDefinedIds = new Set<string>();
+
   /**
    * Returns an ARIA message that can be used to indicate that the widget (either assistant or agent) was responsible for
    * saying a specific message.
@@ -357,6 +364,7 @@ class MessageComponent extends PureComponent<MessageProps, MessageState> {
     }
     this.syncAutoReasoningState();
     this.syncUserControlReasoningState();
+    this.fireReasoningUserDefinedResponseEvents();
   }
 
   componentDidUpdate() {
@@ -369,6 +377,7 @@ class MessageComponent extends PureComponent<MessageProps, MessageState> {
     }
     this.syncAutoReasoningState();
     this.syncUserControlReasoningState();
+    this.fireReasoningUserDefinedResponseEvents();
   }
 
   /**
@@ -561,7 +570,10 @@ class MessageComponent extends PureComponent<MessageProps, MessageState> {
       );
 
       const reasoningData = message.message_options?.reasoning;
-      if (reasoningData?.steps?.length || reasoningData?.content) {
+      if (
+        reasoningData?.steps?.length ||
+        hasReasoningContent(reasoningData?.content)
+      ) {
         const isOpen = this.getReasoningContainerOpen(reasoningData);
         reasoning = (
           <>
@@ -662,7 +674,7 @@ class MessageComponent extends PureComponent<MessageProps, MessageState> {
     const steps = reasoning?.steps;
 
     const hasSteps = Boolean(steps && steps.length);
-    const hasContent = Boolean(reasoning?.content);
+    const hasContent = hasReasoningContent(reasoning?.content);
 
     if (!hasSteps && !hasContent) {
       return null;
@@ -685,13 +697,8 @@ class MessageComponent extends PureComponent<MessageProps, MessageState> {
             isAutoControlled ? this.handleAutoReasoningToggle : undefined
           }
         >
-          {hasContent && reasoning?.content && (
-            <MarkdownWithDefaults
-              text={reasoning.content}
-              highlight={true}
-              streaming={streaming}
-            />
-          )}
+          {hasContent &&
+            this.renderReasoningContent(reasoning?.content, streaming, "intro")}
           {(steps ?? []).map((step: ReasoningStepData, index: number) => {
             const stepOpenState = step.open_state;
             const hasExplicitStepState =
@@ -717,13 +724,13 @@ class MessageComponent extends PureComponent<MessageProps, MessageState> {
               this.handleAutoReasoningStepToggle(index, event);
             };
 
-            const stepContent = step.content ? (
-              <MarkdownWithDefaults
-                text={step.content}
-                highlight={true}
-                streaming={streaming}
-              />
-            ) : null;
+            const stepContent = hasReasoningContent(step.content)
+              ? this.renderReasoningContent(
+                  step.content,
+                  streaming,
+                  `step-${index}`,
+                )
+              : null;
 
             return (
               <ReasoningStepComponent
@@ -742,13 +749,123 @@ class MessageComponent extends PureComponent<MessageProps, MessageState> {
     );
   }
 
+  private renderReasoningContent(
+    content: string | GenericItem[] | undefined,
+    streaming: boolean | undefined,
+    slotKey: string,
+  ) {
+    if (typeof content === "string") {
+      return (
+        <MarkdownWithDefaults
+          text={content}
+          highlight={true}
+          streaming={streaming}
+        />
+      );
+    }
+
+    if (!Array.isArray(content)) {
+      return null;
+    }
+
+    const {
+      serviceManager,
+      languagePack,
+      requestInputFocus,
+      message,
+      disableUserInputs,
+      isMessageForInput,
+      config,
+      scrollElementIntoView,
+      hideFeedback,
+    } = this.props;
+
+    return content.map((item, itemIndex) => {
+      const stableId = `${message.id}-reasoning-${slotKey}-item-${itemIndex}`;
+      const localItem = synthesizeReasoningLocalMessageItem(
+        item,
+        message.id,
+        stableId,
+      );
+      return (
+        <MessageTypeComponent
+          key={stableId}
+          serviceManager={serviceManager}
+          languagePack={languagePack}
+          requestInputFocus={requestInputFocus}
+          message={localItem}
+          originalMessage={message}
+          disableUserInputs={disableUserInputs}
+          isMessageForInput={isMessageForInput}
+          config={config}
+          scrollElementIntoView={scrollElementIntoView}
+          showChainOfThought={false}
+          hideFeedback={hideFeedback}
+          allowNewFeedback={false}
+        />
+      );
+    });
+  }
+
+  /**
+   * Fires the USER_DEFINED_RESPONSE bus event for any `user_defined` items embedded in reasoning content
+   * (either `ReasoningSteps.content` or `ReasoningStep.content`). These items are rendered through synthesized
+   * `LocalMessageItem` wrappers that never pass through `handleUserDefinedResponseItems`, so without this
+   * the host app's portal/slot machinery would never be notified and the items would render as empty slots.
+   *
+   * Tracked per-item by stable id so each item fires the event once across the message's lifetime.
+   */
+  private fireReasoningUserDefinedResponseEvents() {
+    const { message } = this.props;
+    if (!isResponse(message)) {
+      return;
+    }
+    const reasoning = message.message_options?.reasoning;
+    if (!reasoning) {
+      return;
+    }
+
+    const fireForArray = (
+      content: string | GenericItem[] | undefined,
+      slotKey: string,
+    ) => {
+      if (!Array.isArray(content)) {
+        return;
+      }
+      content.forEach((item, itemIndex) => {
+        if (item.response_type !== MessageResponseTypes.USER_DEFINED) {
+          return;
+        }
+        const stableId = `${message.id}-reasoning-${slotKey}-item-${itemIndex}`;
+        if (this.firedReasoningUserDefinedIds.has(stableId)) {
+          return;
+        }
+        this.firedReasoningUserDefinedIds.add(stableId);
+        const localItem = synthesizeReasoningLocalMessageItem(
+          item,
+          message.id,
+          stableId,
+        );
+        void this.props.serviceManager.actions.handleUserDefinedResponseItems(
+          localItem,
+          message,
+        );
+      });
+    };
+
+    fireForArray(reasoning.content, "intro");
+    reasoning.steps?.forEach((step, index) => {
+      fireForArray(step.content, `step-${index}`);
+    });
+  }
+
   private isAutoReasoning(message: Message) {
     if (!isResponse(message)) {
       return false;
     }
     const reasoning = message.message_options?.reasoning;
     const hasSteps = Boolean(reasoning?.steps && reasoning.steps.length);
-    const hasContent = Boolean(reasoning?.content);
+    const hasContent = hasReasoningContent(reasoning?.content);
     if (!hasSteps && !hasContent) {
       return false;
     }

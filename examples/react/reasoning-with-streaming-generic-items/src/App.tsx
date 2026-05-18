@@ -1,0 +1,36 @@
+/*
+ *  Copyright IBM Corp. 2026
+ *
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ *
+ *  @license
+ */
+
+import { ChatContainer, PublicConfig } from "@carbon/ai-chat";
+import React from "react";
+import { createRoot } from "react-dom/client";
+
+import { customSendMessage } from "./customSendMessage";
+import { renderUserDefinedResponse } from "./renderUserDefinedResponse";
+import "@carbon/styles/css/styles.css";
+import "./reasoning-summary.css";
+
+const config: PublicConfig = {
+  messaging: {
+    customSendMessage,
+  },
+};
+
+function App() {
+  return (
+    <ChatContainer
+      {...config}
+      renderUserDefinedResponse={renderUserDefinedResponse}
+    />
+  );
+}
+
+const root = createRoot(document.querySelector("#root") as Element);
+
+root.render(<App />);

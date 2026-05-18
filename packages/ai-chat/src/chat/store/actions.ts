@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -642,8 +642,6 @@ const actions = {
   /**
    * Updates the pending structured data in the input state. The updater function receives the current
    * pending structured data and should return the new value (or undefined to clear it).
-   *
-   * @experimental
    */
   updateStructuredData(
     structuredData: StructuredData | undefined,
@@ -659,8 +657,6 @@ const actions = {
   /**
    * Clears the pending structured data from the input state after it has been merged into an outgoing message.
    * Also clears all pending uploads and manual structured data.
-   *
-   * @experimental
    */
   clearStructuredData(isInputToHumanAgent: boolean) {
     return { type: CLEAR_STRUCTURED_DATA, isInputToHumanAgent };
@@ -668,8 +664,6 @@ const actions = {
 
   /**
    * Adds a new pending upload entry to the input state.
-   *
-   * @experimental
    */
   addPendingUpload(
     upload: import("../../types/state/AppState").PendingUpload,
@@ -680,8 +674,6 @@ const actions = {
 
   /**
    * Updates an existing pending upload entry (e.g. to mark it complete or errored).
-   *
-   * @experimental
    */
   updatePendingUpload(
     uploadId: string,
@@ -698,8 +690,6 @@ const actions = {
 
   /**
    * Removes a pending upload entry by ID (e.g. when the user deletes an attachment).
-   *
-   * @experimental
    */
   removePendingUpload(uploadId: string, isInputToHumanAgent: boolean) {
     return { type: REMOVE_PENDING_UPLOAD, uploadId, isInputToHumanAgent };
