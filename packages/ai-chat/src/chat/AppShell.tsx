@@ -95,7 +95,7 @@ import {
 } from "../types/utilities/HasDoAutoScroll";
 import { HasRequestFocus } from "../types/utilities/HasRequestFocus";
 import { MessageSendSource, BusEventType } from "../types/events/eventBusTypes";
-import { CarbonTheme } from "../types/config/PublicConfig";
+import { CarbonTheme } from "../types/config/CarbonTheme";
 import { FileStatusValue } from "./utils/constants";
 import type { FileUpload } from "../types/config/ServiceDeskConfig";
 

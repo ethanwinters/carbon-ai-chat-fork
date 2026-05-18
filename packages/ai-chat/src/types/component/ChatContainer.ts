@@ -8,7 +8,8 @@
  */
 
 import { type ReactNode } from "react";
-import { type ChatInstance, WriteableElements } from "../instance/ChatInstance";
+import { type ChatInstance } from "../instance/ChatInstance";
+import { WriteableElements } from "../instance/WriteableElements";
 import { GenericItem, Message, MessageResponse } from "../messaging/Messages";
 import { PublicConfig } from "../config/PublicConfig";
 import { DeepPartial } from "../utilities/DeepPartial";

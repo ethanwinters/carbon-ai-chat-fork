@@ -108,11 +108,9 @@ import {
   MessageSendSource,
   ViewChangeReason,
 } from "../../types/events/eventBusTypes";
-import {
-  PublicChatState,
-  SendOptions,
-} from "../../types/instance/ChatInstance";
-import { OnErrorData, OnErrorType } from "../../types/config/PublicConfig";
+import { SendOptions } from "../../types/instance/ChatInstance";
+import { PublicChatState } from "../../types/instance/PublicChatState";
+import { OnErrorData, OnErrorType } from "../../types/config/ErrorConfig";
 import { DeepPartial } from "../../types/utilities/DeepPartial";
 
 /**

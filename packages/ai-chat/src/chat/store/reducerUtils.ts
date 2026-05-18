@@ -45,9 +45,9 @@ import {
 import { deepFreeze } from "../utils/lang/objectUtils";
 import {
   HeaderConfig,
-  LayoutConfig,
   MinimizeButtonIconType,
-} from "../../types/config/PublicConfig";
+} from "../../types/config/HeaderConfig";
+import { LayoutConfig } from "../../types/config/LayoutConfig";
 import { LocalMessageUIState } from "../../types/messaging/LocalMessageItem";
 import { Message } from "../../types/messaging/Messages";
 
