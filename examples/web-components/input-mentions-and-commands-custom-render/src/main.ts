@@ -17,10 +17,10 @@
  *
  * APIs exercised:
  *   - `<cds-aichat-custom-element>`
+ *   - `PublicConfig.layout.showFrame`
  *   - `PublicConfig.openChatByDefault`
- *   - `PublicConfig.input.suggestions` + `SuggestionType.MENTION` /
- *     `COMMAND`
- *   - `renderCustomToken` for mention chip rendering
+ *   - `PublicConfig.input.mention` + `PublicConfig.input.command`
+ *   - `mention.renderCustomToken` for chip rendering
  *
  * Start reading at: the `renderCustomToken` callback below.
  */
@@ -28,11 +28,9 @@
 import "@carbon/ai-chat/dist/es/web-components/cds-aichat-custom-element/index.js";
 import "@carbon/web-components/es/components/tooltip/definition-tooltip.js";
 import {
-  CarbonTheme,
   type ChatInstance,
   type PublicConfig,
   type SuggestionItem,
-  SuggestionType,
 } from "@carbon/ai-chat";
 import { css, html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
@@ -84,8 +82,6 @@ export class Demo extends LitElement {
     return {
       // Routes user input through a local mock instead of a real backend so the example runs offline.
       messaging: { customSendMessage },
-      // Pins the Carbon theme so screenshots and visual regressions are deterministic regardless of host page.
-      injectCarbonTheme: CarbonTheme.WHITE,
       layout: {
         // Hide the default chat frame so the custom element fills its host edge-to-edge — required for the canonical fullscreen surface.
         showFrame: false,
@@ -93,61 +89,56 @@ export class Demo extends LitElement {
       // Auto-open the conversation so readers land on the input the example exists to showcase, not a launcher.
       openChatByDefault: true,
       input: {
-        // Declares the mention and command suggestion pickers that drive the inline chip UI.
-        suggestions: [
-          {
-            type: SuggestionType.MENTION,
-            trigger: "@",
-            items: async (query: string) => {
-              if (!query) {
-                return mentionItems;
-              }
-              return mentionItems.filter((m) =>
-                m.label.toLowerCase().includes(query.toLowerCase()),
-              );
-            },
-            onSelect: (item: SuggestionItem) => {
-              // Mirrors the picked mention into structured_data so customSendMessage can read it on submit.
-              this.instance?.input.updateStructuredData((prev) => ({
-                ...prev,
-                fields: [
-                  ...(prev?.fields ?? []),
-                  {
-                    id: `mention_${item.id}`,
-                    label: item.label,
-                    type: SuggestionType.MENTION,
-                    value: item.id,
-                  },
-                ],
-              }));
-            },
-            // Replaces the default chip with a definition tooltip so hovering a mention reveals the user's role.
-            renderCustomToken: (item: SuggestionItem) =>
-              createMentionToken(item),
+        // `@`-mention slot — drives the inline chip UI customized below via renderCustomToken.
+        mention: {
+          trigger: "@",
+          items: async (query: string) => {
+            if (!query) {
+              return mentionItems;
+            }
+            return mentionItems.filter((m) =>
+              m.label.toLowerCase().includes(query.toLowerCase()),
+            );
           },
-          {
-            type: SuggestionType.COMMAND,
-            trigger: "/",
-            triggerPosition: "start",
-            items: commandItems,
-            onSelect: (item: SuggestionItem) => {
-              // Mirrors the picked command into structured_data so customSendMessage can read it on submit.
-              this.instance?.input.updateStructuredData((prev) => ({
-                ...prev,
-                fields: [
-                  ...(prev?.fields ?? []),
-                  {
-                    id: `command_${item.id}`,
-                    label: item.label,
-                    type: SuggestionType.COMMAND,
-                    value: item.id,
-                  },
-                ],
-              }));
-            },
-            // Commands intentionally omit renderCustomToken to keep the default chip and contrast with mentions.
+          onSelect: (item: SuggestionItem) => {
+            // Mirrors the picked mention into structured_data so customSendMessage can read it on submit.
+            this.instance?.input.updateStructuredData((prev) => ({
+              ...prev,
+              fields: [
+                ...(prev?.fields ?? []),
+                {
+                  id: `mention_${item.id}`,
+                  label: item.label,
+                  type: "mention",
+                  value: item.id,
+                },
+              ],
+            }));
           },
-        ],
+          // Replaces the default chip with a definition tooltip so hovering a mention reveals the user's role.
+          renderCustomToken: (item: SuggestionItem) => createMentionToken(item),
+        },
+        command: {
+          trigger: "/",
+          triggerPosition: "start",
+          items: commandItems,
+          onSelect: (item: SuggestionItem) => {
+            // Mirrors the picked command into structured_data so customSendMessage can read it on submit.
+            this.instance?.input.updateStructuredData((prev) => ({
+              ...prev,
+              fields: [
+                ...(prev?.fields ?? []),
+                {
+                  id: `command_${item.id}`,
+                  label: item.label,
+                  type: "command",
+                  value: item.id,
+                },
+              ],
+            }));
+          },
+          // Commands intentionally omit renderCustomToken to keep the default chip and contrast with mentions.
+        },
       },
     };
   }
@@ -160,7 +151,6 @@ export class Demo extends LitElement {
         .onBeforeRender=${this.onBeforeRender}
         .messaging=${cfg.messaging}
         .input=${cfg.input}
-        .injectCarbonTheme=${cfg.injectCarbonTheme}
         .layout=${cfg.layout}
         .openChatByDefault=${cfg.openChatByDefault}
       ></cds-aichat-custom-element>
