@@ -63,6 +63,8 @@ This component requires a `className` prop that defines the size and positioning
 
 If you don't want these behaviors, you can also listen for {@link BusEventType.VIEW_PRE_CHANGE} and {@link BusEventType.VIEW_CHANGE} events directly. These events fire in sequence (PRE_CHANGE -> view state update -> CHANGE), and both are awaited, making async handlers ideal for animations. See the event type documentation for complete details on timing and usage. Just be aware that the {@link ChatCustomElementProps.onViewChange} default behavior will still run if you don't replace that function with your own.
 
+{@link ChatContainerProps.onViewChange} and {@link ChatContainerProps.onViewPreChange} are also available on {@link ChatContainer} as opt-in observation hooks — useful for analytics or mirroring the chat's open state into your own UI. The float container has no wrapping element to size, so there is no default visibility behavior on the container: the callbacks simply fire when provided.
+
 See {@link ChatCustomElementProps} for an explanation of the various accepted props.
 
 ```javascript

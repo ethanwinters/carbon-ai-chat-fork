@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -44,9 +44,13 @@ import {
   BusEventCustomFooterSlot,
   BusEventType,
   BusEventUserDefinedResponse,
+  BusEventViewChange,
+  BusEventViewPreChange,
 } from "../../types/events/eventBusTypes";
 import type {
+  RenderCustomMessageFooterState,
   RenderUserDefinedState,
+  WCRenderCustomMessageFooter,
   WCRenderUserDefinedResponse,
 } from "../../types/component/ChatContainer";
 
@@ -195,6 +199,27 @@ class ChatContainer extends LitElement {
   onAfterRender: (instance: ChatInstance) => Promise<void> | void;
 
   /**
+   * Called before a view change (the chat opening or closing). Async — return a
+   * Promise to defer the view change until it resolves.
+   *
+   * This is an opt-in observation hook. Unlike `cds-aichat-custom-element`, the
+   * container has no wrapping element to size, so no default visibility
+   * behavior runs when this property is omitted.
+   */
+  @property()
+  onViewPreChange?: (event: BusEventViewPreChange) => Promise<void> | void;
+
+  /**
+   * Called when a view change (the chat opening or closing) is complete.
+   *
+   * This is an opt-in observation hook. Unlike `cds-aichat-custom-element`, the
+   * container has no wrapping element to size, so no default visibility
+   * behavior runs when this property is omitted.
+   */
+  @property()
+  onViewChange?: (event: BusEventViewChange, instance: ChatInstance) => void;
+
+  /**
    * Optional callback to render user defined responses. When provided, the library manages all event listening,
    * slot tracking, streaming state, and element lifecycle. The callback receives the accumulated state and should
    * return an HTMLElement or null.
@@ -203,6 +228,16 @@ class ChatContainer extends LitElement {
    */
   @property({ attribute: false })
   renderUserDefinedResponse?: WCRenderUserDefinedResponse;
+
+  /**
+   * Optional callback to render custom message footers. When provided, the library manages all event listening,
+   * slot tracking, and element lifecycle. The callback receives the accumulated state and should
+   * return an HTMLElement or null.
+   *
+   * When this property is not set, the existing event + manual slot approach continues to work.
+   */
+  @property({ attribute: false })
+  renderCustomMessageFooter?: WCRenderCustomMessageFooter;
 
   /**
    * The existing array of slot names for all user_defined components.
@@ -235,9 +270,20 @@ class ChatContainer extends LitElement {
   _userDefinedStateBySlot: Record<string, RenderUserDefinedState> = {};
 
   /**
+   * Accumulated state per slot for custom message footers when renderCustomMessageFooter is provided.
+   */
+  @state()
+  _customFooterStateBySlot: Record<string, RenderCustomMessageFooterState> = {};
+
+  /**
    * Tracks the wrapper elements created by the callback rendering path.
    */
   private _callbackElements = new Map<string, HTMLElement>();
+
+  /**
+   * Tracks the wrapper elements created by the custom-footer callback rendering path.
+   */
+  private _callbackFooterElements = new Map<string, HTMLElement>();
 
   /**
    * Adds the slot attribute to the element for the user_defined response type and then injects it into the component by
@@ -263,6 +309,26 @@ class ChatContainer extends LitElement {
     if (!this._customFooterSlotNames.includes(slotName)) {
       this._customFooterSlotNames = [...this._customFooterSlotNames, slotName];
     }
+  };
+
+  /**
+   * Enhanced handler for CUSTOM_FOOTER_SLOT when the renderCustomMessageFooter callback is provided.
+   * Tracks both slot names and the full per-slot state used by the callback rendering path.
+   */
+  private enhancedCustomFooterHandler = (event: BusEventCustomFooterSlot) => {
+    const { slotName, message, messageItem, additionalData } = event.data;
+    if (!this._customFooterSlotNames.includes(slotName)) {
+      this._customFooterSlotNames = [...this._customFooterSlotNames, slotName];
+    }
+    this._customFooterStateBySlot = {
+      ...this._customFooterStateBySlot,
+      [slotName]: {
+        slotName,
+        message,
+        messageItem,
+        additionalData: additionalData as Record<string, unknown> | undefined,
+      },
+    };
   };
 
   /**
@@ -313,8 +379,11 @@ class ChatContainer extends LitElement {
   };
 
   /**
-   * Handles RESTART_CONVERSATION when renderUserDefinedResponse callback is provided.
-   * Clears all accumulated state and removes callback-rendered elements from the DOM.
+   * Handles RESTART_CONVERSATION when the renderUserDefinedResponse and/or renderCustomMessageFooter
+   * callback is provided. Clears all accumulated state and removes callback-rendered elements from the DOM.
+   *
+   * The custom-footer cleanup is guarded by renderCustomMessageFooter so the legacy footer passthrough
+   * path (which the host clears itself) is left untouched.
    */
   private restartHandler = () => {
     this._userDefinedStateBySlot = {};
@@ -323,6 +392,15 @@ class ChatContainer extends LitElement {
       el.remove();
     }
     this._callbackElements.clear();
+
+    if (this.renderCustomMessageFooter) {
+      this._customFooterStateBySlot = {};
+      this._customFooterSlotNames = [];
+      for (const el of this._callbackFooterElements.values()) {
+        el.remove();
+      }
+      this._callbackFooterElements.clear();
+    }
   };
 
   /**
@@ -361,6 +439,47 @@ class ChatContainer extends LitElement {
       if (!(slot in this._userDefinedStateBySlot)) {
         el.remove();
         this._callbackElements.delete(slot);
+      }
+    }
+  }
+
+  /**
+   * Synchronizes custom-footer callback-rendered elements in the light DOM based on current state.
+   * Called from render() when renderCustomMessageFooter is provided. Direct analogue of
+   * syncCallbackRenderedElements().
+   */
+  private syncCallbackRenderedFooterElements() {
+    for (const [slotName, slotState] of Object.entries(
+      this._customFooterStateBySlot,
+    )) {
+      const newContent =
+        this.renderCustomMessageFooter?.(slotState, this._instance) ?? null;
+
+      if (!newContent) {
+        const existing = this._callbackFooterElements.get(slotName);
+        if (existing) {
+          existing.remove();
+          this._callbackFooterElements.delete(slotName);
+        }
+        continue;
+      }
+
+      let wrapper = this._callbackFooterElements.get(slotName);
+      if (!wrapper) {
+        wrapper = document.createElement("div");
+        wrapper.setAttribute("slot", slotName);
+        this._callbackFooterElements.set(slotName, wrapper);
+        this.appendChild(wrapper);
+      }
+
+      wrapper.replaceChildren(newContent);
+    }
+
+    // Clean up wrappers for slots that no longer exist in state
+    for (const [slotName, el] of this._callbackFooterElements.entries()) {
+      if (!(slotName in this._customFooterStateBySlot)) {
+        el.remove();
+        this._callbackFooterElements.delete(slotName);
       }
     }
   }
@@ -457,6 +576,22 @@ class ChatContainer extends LitElement {
   onBeforeRenderOverride = async (instance: ChatInstance) => {
     this._instance = instance;
 
+    // Opt-in view-change observation hooks. The float container manages its own
+    // visibility, so there is no default handler — a prop is only subscribed
+    // when the consumer provides it.
+    if (this.onViewPreChange) {
+      this._instance.on({
+        type: BusEventType.VIEW_PRE_CHANGE,
+        handler: this.onViewPreChange,
+      });
+    }
+    if (this.onViewChange) {
+      this._instance.on({
+        type: BusEventType.VIEW_CHANGE,
+        handler: this.onViewChange,
+      });
+    }
+
     if (this.renderUserDefinedResponse) {
       // Enhanced path: library manages full state for callback rendering
       this._instance.on({
@@ -466,10 +601,6 @@ class ChatContainer extends LitElement {
       this._instance.on({
         type: BusEventType.CHUNK_USER_DEFINED_RESPONSE,
         handler: this.enhancedUserDefinedChunkHandler,
-      });
-      this._instance.on({
-        type: BusEventType.RESTART_CONVERSATION,
-        handler: this.restartHandler,
       });
     } else {
       // Legacy path: container only tracks slot names
@@ -483,10 +614,25 @@ class ChatContainer extends LitElement {
       });
     }
 
+    // Enhanced path manages full per-slot state for callback rendering; the
+    // legacy path only tracks slot names for manual slotting.
     this._instance.on({
       type: BusEventType.CUSTOM_FOOTER_SLOT,
-      handler: this.customFooterHandler,
+      handler: this.renderCustomMessageFooter
+        ? this.enhancedCustomFooterHandler
+        : this.customFooterHandler,
     });
+
+    // A single RESTART_CONVERSATION subscription clears whichever callback
+    // paths are active. Registered once so the handler does not fire twice
+    // when both callbacks are provided.
+    if (this.renderUserDefinedResponse || this.renderCustomMessageFooter) {
+      this._instance.on({
+        type: BusEventType.RESTART_CONVERSATION,
+        handler: this.restartHandler,
+      });
+    }
+
     this.addWriteableElementSlots();
     this.attachWriteableElements();
     await this.onBeforeRender?.(instance);
@@ -528,6 +674,9 @@ class ChatContainer extends LitElement {
     if (this.renderUserDefinedResponse) {
       this.syncCallbackRenderedElements();
     }
+    if (this.renderCustomMessageFooter) {
+      this.syncCallbackRenderedFooterElements();
+    }
 
     return html`<cds-aichat-internal
       .config=${this.resolvedConfig}
@@ -541,9 +690,13 @@ class ChatContainer extends LitElement {
       ${this._userDefinedSlotNames.map(
         (slot) => html`<slot name=${slot} slot=${slot}></slot>`,
       )}
-      ${this._customFooterSlotNames.map(
-        (slot) => html`<div slot=${slot}><slot name=${slot}></slot></div>`,
-      )}
+      ${this.renderCustomMessageFooter
+        ? this._customFooterSlotNames.map(
+            (slot) => html`<slot name=${slot} slot=${slot}></slot>`,
+          )
+        : this._customFooterSlotNames.map(
+            (slot) => html`<div slot=${slot}><slot name=${slot}></slot></div>`,
+          )}
     </cds-aichat-internal>`;
   }
 }
@@ -574,10 +727,28 @@ interface CdsAiChatContainerAttributes extends PublicConfig {
   onAfterRender?: (instance: ChatInstance) => Promise<void> | void;
 
   /**
+   * Called before a view change (the chat opening or closing). Async — return a Promise to defer the view
+   * change until it resolves. This is an opt-in observation hook with no default visibility behavior.
+   */
+  onViewPreChange?: (event: BusEventViewPreChange) => Promise<void> | void;
+
+  /**
+   * Called when a view change (the chat opening or closing) is complete. This is an opt-in observation hook
+   * with no default visibility behavior.
+   */
+  onViewChange?: (event: BusEventViewChange, instance: ChatInstance) => void;
+
+  /**
    * Optional callback to render user defined responses. When provided, the library manages all event listening,
    * slot tracking, streaming state, and element lifecycle.
    */
   renderUserDefinedResponse?: WCRenderUserDefinedResponse;
+
+  /**
+   * Optional callback to render custom message footers. When provided, the library manages all event listening,
+   * slot tracking, and element lifecycle. When omitted, the legacy event + manual slot approach continues to work.
+   */
+  renderCustomMessageFooter?: WCRenderCustomMessageFooter;
 }
 
 export { CdsAiChatContainerAttributes };

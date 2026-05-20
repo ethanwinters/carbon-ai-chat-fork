@@ -23,6 +23,7 @@ import ChatAppEntry from "../chat/ChatAppEntry";
 import { carbonElement } from "@carbon/ai-chat-components/es/globals/decorators/index.js";
 import { ChatContainerProps } from "../types/component/ChatContainer";
 import { ChatInstance } from "../types/instance/ChatInstance";
+import { BusEventType } from "../types/events/eventBusTypes";
 import { PublicConfig } from "../types/config/PublicConfig";
 import { isBrowser } from "../chat/utils/browserUtils";
 
@@ -78,6 +79,8 @@ function ChatContainer(
   const {
     onBeforeRender,
     onAfterRender,
+    onViewChange,
+    onViewPreChange,
     strings,
     serviceDeskFactory,
     serviceDesk,
@@ -268,10 +271,27 @@ function ChatContainer(
         };
 
         addWriteableElementSlots();
+
+        // Opt-in view-change observation hooks. The float container manages
+        // its own visibility, so there is no default handler — a prop is only
+        // subscribed when the consumer provides it.
+        if (onViewPreChange) {
+          instance.on({
+            type: BusEventType.VIEW_PRE_CHANGE,
+            handler: onViewPreChange,
+          });
+        }
+        if (onViewChange) {
+          instance.on({
+            type: BusEventType.VIEW_CHANGE,
+            handler: onViewChange,
+          });
+        }
+
         onBeforeRender?.(instance);
       }
     },
-    [onBeforeRender],
+    [onBeforeRender, onViewChange, onViewPreChange],
   );
 
   // If we are in SSR mode, just short circuit here. This prevents all of our window.* and document.* stuff from trying
