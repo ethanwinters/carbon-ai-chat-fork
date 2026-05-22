@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -48,7 +48,10 @@ import {
   BusEventViewChange,
   BusEventViewPreChange,
 } from "../../types/events/eventBusTypes";
-import type { WCRenderUserDefinedResponse } from "../../types/component/ChatContainer";
+import type {
+  WCRenderCustomMessageFooter,
+  WCRenderUserDefinedResponse,
+} from "../../types/component/ChatContainer";
 
 /**
  * cds-aichat-custom-element will is a pass through to cds-aichat-container. It takes any user_defined and writeable element
@@ -270,6 +273,13 @@ class ChatCustomElement extends LitElement {
   @property({ attribute: false })
   renderUserDefinedResponse?: WCRenderUserDefinedResponse;
 
+  /**
+   * Optional callback to render custom message footers. When provided, the inner cds-aichat-container
+   * manages all event listening, slot tracking, and element lifecycle.
+   */
+  @property({ attribute: false })
+  renderCustomMessageFooter?: WCRenderCustomMessageFooter;
+
   @state()
   private _userDefinedSlotNames: string[] = [];
 
@@ -421,10 +431,14 @@ class ChatCustomElement extends LitElement {
       });
     }
 
-    this._instance.on({
-      type: BusEventType.CUSTOM_FOOTER_SLOT,
-      handler: this.customFooterHandler,
-    });
+    if (!this.renderCustomMessageFooter) {
+      // Legacy path: custom-element tracks slot names for manual slotting.
+      // When renderCustomMessageFooter is set, the inner cds-aichat-container handles everything.
+      this._instance.on({
+        type: BusEventType.CUSTOM_FOOTER_SLOT,
+        handler: this.customFooterHandler,
+      });
+    }
     this.addWriteableElementSlots();
     await this.onBeforeRender?.(instance);
   };
@@ -441,6 +455,7 @@ class ChatCustomElement extends LitElement {
         .onBeforeRender=${this.onBeforeRenderOverride}
         .element=${this}
         .renderUserDefinedResponse=${this.renderUserDefinedResponse}
+        .renderCustomMessageFooter=${this.renderCustomMessageFooter}
       >
         ${this._writeableElementSlots.map(
           (slot) => html`<slot name=${slot} slot=${slot}></slot>`,
@@ -450,9 +465,12 @@ class ChatCustomElement extends LitElement {
           : this._userDefinedSlotNames.map(
               (slot) => html`<slot name=${slot} slot=${slot}></slot>`,
             )}
-        ${this._customFooterSlotNames.map(
-          (slot) => html`<div slot=${slot}><slot name=${slot}></slot></div>`,
-        )}
+        ${this.renderCustomMessageFooter
+          ? null
+          : this._customFooterSlotNames.map(
+              (slot) =>
+                html`<div slot=${slot}><slot name=${slot}></slot></div>`,
+            )}
       </cds-aichat-container>
     `;
   }
@@ -460,7 +478,7 @@ class ChatCustomElement extends LitElement {
 
 /**
  * Attributes interface for the cds-aichat-custom-element web component.
- * This interface extends {@link CdsAiChatContainerAttributes} and {@link PublicConfig} with additional component-specific props,
+ * This interface extends {@link PublicConfig} with additional component-specific props,
  * flattening all config properties as top-level properties for better TypeScript IntelliSense.
  *
  * @category Web component
@@ -496,6 +514,12 @@ interface CdsAiChatCustomElementAttributes extends PublicConfig {
    * manages all event listening, slot tracking, streaming state, and element lifecycle.
    */
   renderUserDefinedResponse?: WCRenderUserDefinedResponse;
+
+  /**
+   * Optional callback to render custom message footers. When provided, the inner cds-aichat-container
+   * manages all event listening, slot tracking, and element lifecycle.
+   */
+  renderCustomMessageFooter?: WCRenderCustomMessageFooter;
 }
 
 export { CdsAiChatCustomElementAttributes };

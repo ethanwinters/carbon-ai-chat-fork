@@ -78,6 +78,8 @@ If you don't want these behaviors, then provide your own `onViewChange` prop to 
 
 Just be aware that the `onViewChange` default behavior will still run if you don't replace that function with your own.
 
+`onViewChange` and `onViewPreChange` are also available on `cds-aichat-container` as opt-in observation hooks — useful for analytics or mirroring the chat's open state into your own UI. Because the float container has no wrapping element to size, there is no default visibility behavior on the container: the callbacks simply fire when provided.
+
 See {@link CdsAiChatCustomElementAttributes} for an explanation of the various accepted properties and attributes.
 
 ```typescript
@@ -426,11 +428,11 @@ export class MyApp extends LitElement {
 
 ### Custom Message Footer
 
-This component allows you to insert a `custom_footer_slot` in chatbot messages. The Carbon AI Chat throws a {@link BusEventType.CUSTOM_FOOTER_SLOT} event when it receives a message from your custom backend with `custom_footer_slot` configured. The event contains an `additional_data` object where you can pass in custom data needed to render the footer.
+This component is capable of managing custom message footers — extra content rendered beneath an assistant message. The recommended approach is to use the `renderCustomMessageFooter` callback property, which handles all event listening, slot tracking, and element lifecycle for you.
 
-Then, you dynamically generate the custom slot content and pass it to the correct message footer slot inside the Carbon AI Chat.
+The Carbon AI Chat fires a {@link BusEventType.CUSTOM_FOOTER_SLOT} event when it receives a message from your custom backend with `custom_footer_slot` configured. The event carries an `additional_data` object where you can pass in custom data needed to render the footer.
 
-Refer to the following example.
+The examples below share a `custom-footer-example` component for the footer UI:
 
 ```typescript
 import { GenericItem } from "@carbon/ai-chat";
@@ -510,6 +512,69 @@ class CustomFooterExample extends LitElement {
 
 export default CustomFooterExample;
 ```
+
+#### Using the `renderCustomMessageFooter` callback
+
+Provide a callback that receives the accumulated state for a custom footer slot and returns an `HTMLElement` (or `null`). The library subscribes to the footer event, tracks each slot, and manages the rendered elements for you.
+
+```typescript
+import "@carbon/ai-chat/dist/es/web-components/cds-aichat-container/index.js";
+
+import {
+  type ChatInstance,
+  type PublicConfig,
+  type RenderCustomMessageFooterState,
+} from "@carbon/ai-chat";
+import { html, LitElement } from "lit";
+import { customElement, state } from "lit/decorators.js";
+
+// The side-effect import registers the <custom-footer-example> custom element;
+// the `import type` only supplies the class for typing the created element.
+import "./custom-footer-example";
+import type CustomFooterExample from "./custom-footer-example";
+import { customSendMessage } from "./customSendMessage";
+
+const config: PublicConfig = {
+  messaging: {
+    customSendMessage,
+  },
+};
+
+@customElement("my-app")
+export class Demo extends LitElement {
+  @state()
+  accessor instance!: ChatInstance;
+
+  onBeforeRender = (instance: ChatInstance) => {
+    this.instance = instance;
+  };
+
+  renderCustomMessageFooterCallback = (
+    state: RenderCustomMessageFooterState,
+    instance: ChatInstance,
+  ): HTMLElement | null => {
+    const footer = document.createElement("custom-footer-example");
+    (footer as CustomFooterExample).messageItem = state.messageItem;
+    (footer as CustomFooterExample).additionalData = state.additionalData;
+    return footer;
+  };
+
+  render() {
+    return html`
+      <h1>Welcome!</h1>
+      <cds-aichat-container
+        .onBeforeRender=${this.onBeforeRender}
+        .messaging=${config.messaging}
+        .renderCustomMessageFooter=${this.renderCustomMessageFooterCallback}
+      ></cds-aichat-container>
+    `;
+  }
+}
+```
+
+#### Legacy: Manual event handling
+
+If you need fine-grained control over event handling and slot management, you can subscribe to the {@link BusEventType.CUSTOM_FOOTER_SLOT} event directly, maintain your own slot map, and render slotted content manually.
 
 ```typescript
 import "@carbon/ai-chat/dist/es/web-components/cds-aichat-container/index.js";

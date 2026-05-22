@@ -267,6 +267,7 @@ export {
 
 export {
   RenderCustomMessageFooter,
+  RenderCustomMessageFooterState,
   RenderUserDefinedResponse,
   RenderUserDefinedState,
   RenderWriteableElementResponse,

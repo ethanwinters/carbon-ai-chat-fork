@@ -11,38 +11,18 @@ import React, { ReactNode, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 
 import { ChatInstance } from "../../types/instance/ChatInstance";
-import { RenderCustomMessageFooter } from "../../types/component/ChatContainer";
-import { MessageResponse, GenericItem } from "../../types/messaging/Messages";
+import {
+  RenderCustomMessageFooter,
+  RenderCustomMessageFooterState,
+} from "../../types/component/ChatContainer";
 
 /**
  * Internal state object used by CustomFooterPortalsContainer to track each custom footer slot.
+ *
+ * Structurally identical to the public {@link RenderCustomMessageFooterState}; aliased here so the
+ * type has a single source of truth while keeping the name `ChatAppEntry` imports.
  */
-interface CustomFooterSlotState {
-  /**
-   * The unique identifier for this footer slot (e.g., "footer-msg-123").
-   * Used as the key in the customFooterSlotsByName record and passed to renderCustomMessageFooter.
-   */
-  slotName: string;
-
-  /**
-   * The complete assistant response message that contains the messageItem.
-   * Passed to renderCustomMessageFooter as the second parameter.
-   */
-  message: MessageResponse;
-
-  /**
-   * The specific message item (text, card, etc.) that has the custom footer.
-   * Passed to renderCustomMessageFooter as the third parameter.
-   */
-  messageItem: GenericItem;
-
-  /**
-   * Optional custom data from message_item_options.custom_footer_slot.additional_data.
-   * Can contain any application-specific data needed to render the footer.
-   * Passed to renderCustomMessageFooter as the fifth parameter.
-   */
-  additionalData?: Record<string, unknown>;
-}
+type CustomFooterSlotState = RenderCustomMessageFooterState;
 
 interface CustomFooterPortalsContainerProps {
   /**

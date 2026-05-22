@@ -12,6 +12,10 @@ import { type ChatInstance, WriteableElements } from "../instance/ChatInstance";
 import { GenericItem, Message, MessageResponse } from "../messaging/Messages";
 import { PublicConfig } from "../config/PublicConfig";
 import { DeepPartial } from "../utilities/DeepPartial";
+import {
+  BusEventViewChange,
+  BusEventViewPreChange,
+} from "../events/eventBusTypes";
 
 /**
  * The user_defined message object passed into the renderUserDefinedResponse property on the main chat components.
@@ -95,6 +99,45 @@ type WCRenderUserDefinedResponse = (
 ) => HTMLElement | null;
 
 /**
+ * The accumulated state for one custom message footer slot, passed to the
+ * web component {@link WCRenderCustomMessageFooter} callback.
+ *
+ * @category Web component
+ */
+interface RenderCustomMessageFooterState {
+  /** The unique identifier for this footer slot. */
+  slotName: string;
+
+  /** The assistant response object that contains the messageItem. */
+  message: MessageResponse;
+
+  /** The message item that the footer is attached to. */
+  messageItem: GenericItem;
+
+  /** Optional application data supplied with the footer slot. */
+  additionalData?: Record<string, unknown>;
+}
+
+/**
+ * The render function used to render a custom message footer in web
+ * components. When provided, the library manages all event listening, slot
+ * tracking, and element lifecycle. The callback receives the accumulated state
+ * and should return an HTMLElement to display, or null to render nothing.
+ *
+ * This is the web component analogue of {@link RenderCustomMessageFooter} and
+ * mirrors the contract of {@link WCRenderUserDefinedResponse}.
+ *
+ * @param state The accumulated state for this custom footer slot.
+ * @param instance The current instance of Carbon AI Chat.
+ *
+ * @category Web component
+ */
+type WCRenderCustomMessageFooter = (
+  state: RenderCustomMessageFooterState,
+  instance: ChatInstance,
+) => HTMLElement | null;
+
+/**
  * A map of writeable element keys to a ReactNode to render to them.
  *
  * @category React
@@ -128,6 +171,28 @@ interface ChatContainerProps extends PublicConfig {
   onAfterRender?: (instance: ChatInstance) => Promise<void> | void;
 
   /**
+   * Called before a view change (the chat opening or closing). Async — return a
+   * Promise to defer the view change until it resolves.
+   *
+   * This is an opt-in observation hook. Unlike {@link ChatCustomElementProps},
+   * the container has no wrapping element to size, so no default visibility
+   * behavior runs when this prop is omitted.
+   */
+  onViewPreChange?: (
+    event: BusEventViewPreChange,
+    instance: ChatInstance,
+  ) => Promise<void> | void;
+
+  /**
+   * Called when a view change (the chat opening or closing) is complete.
+   *
+   * This is an opt-in observation hook. Unlike {@link ChatCustomElementProps},
+   * the container has no wrapping element to size, so no default visibility
+   * behavior runs when this prop is omitted.
+   */
+  onViewChange?: (event: BusEventViewChange, instance: ChatInstance) => void;
+
+  /**
    * This is the function that this component will call when a custom footer should be rendered.
    */
   renderCustomMessageFooter?: RenderCustomMessageFooter;
@@ -152,8 +217,10 @@ interface ChatContainerProps extends PublicConfig {
 export {
   ChatContainerProps,
   RenderCustomMessageFooter,
+  RenderCustomMessageFooterState,
   RenderUserDefinedResponse,
   RenderWriteableElementResponse,
   RenderUserDefinedState,
+  WCRenderCustomMessageFooter,
   WCRenderUserDefinedResponse,
 };

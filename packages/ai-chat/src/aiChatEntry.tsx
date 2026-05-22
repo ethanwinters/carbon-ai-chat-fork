@@ -278,9 +278,11 @@ export { CdsAiChatCustomElementAttributes } from "./web-components/cds-aichat-cu
 
 export {
   RenderCustomMessageFooter,
+  RenderCustomMessageFooterState,
   RenderUserDefinedResponse,
   RenderUserDefinedState,
   RenderWriteableElementResponse,
+  WCRenderCustomMessageFooter,
   WCRenderUserDefinedResponse,
 } from "./types/component/ChatContainer";
 
