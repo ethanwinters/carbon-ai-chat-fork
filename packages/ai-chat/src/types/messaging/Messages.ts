@@ -1971,9 +1971,14 @@ interface ReasoningStep {
   open_state?: ReasoningStepOpenState;
 
   /**
-   * Optional markdown content to explain what the step is doing.
+   * Optional markdown content (string) or a list of {@link GenericItem} response items to render inside this
+   * reasoning step. When an array is supplied, each item is rendered through the standard message renderer.
+   *
+   * GenericItem variants that render purely from their own item data (TextItem, ImageItem, UserDefinedItem,
+   * ButtonItem, InlineErrorItem, etc.) are fully supported. Variants whose renderers rely on nested-body
+   * hydration (Card, Carousel, Grid bodies) will not hydrate those nested children when used here.
    */
-  content?: string;
+  content?: string | GenericItem[];
 }
 
 /**
@@ -1998,9 +2003,15 @@ interface ReasoningSteps {
   steps?: ReasoningStep[];
 
   /**
-   * Optional markdown content to explain what the step is doing.
+   * Optional markdown content (string) or a list of {@link GenericItem} response items to render as a preamble
+   * above the reasoning steps. When an array is supplied, each item is rendered through the standard message
+   * renderer.
+   *
+   * GenericItem variants that render purely from their own item data (TextItem, ImageItem, UserDefinedItem,
+   * ButtonItem, InlineErrorItem, etc.) are fully supported. Variants whose renderers rely on nested-body
+   * hydration (Card, Carousel, Grid bodies) will not hydrate those nested children when used here.
    */
-  content?: string;
+  content?: string | GenericItem[];
 }
 
 /**

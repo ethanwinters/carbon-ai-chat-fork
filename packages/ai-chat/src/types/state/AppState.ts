@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -296,8 +296,6 @@ interface InputState extends FileUploadCapabilities {
    * {@link ChatInstanceInput.updateStructuredData}.  This is the "manual" portion of
    * `pendingStructuredData` and is kept separate so that upload contributions can be
    * merged on top without overwriting host-page data.
-   *
-   * @experimental
    */
   manualStructuredData?: StructuredData;
 
@@ -305,8 +303,6 @@ interface InputState extends FileUploadCapabilities {
    * In-flight and completed file uploads initiated via {@link UploadConfig.onFileUpload}.
    * Each entry tracks the lifecycle of one file.  The widget rebuilds
    * `pendingStructuredData` whenever this array changes.
-   *
-   * @experimental
    */
   pendingUploads: PendingUpload[];
 
@@ -317,8 +313,6 @@ interface InputState extends FileUploadCapabilities {
    *
    * Rebuilt automatically by the reducer whenever `manualStructuredData` or
    * `pendingUploads` changes.
-   *
-   * @experimental
    */
   pendingStructuredData?: StructuredData;
 }

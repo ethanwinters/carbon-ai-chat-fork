@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -417,8 +417,6 @@ class ChatActionsImpl {
    * Updates the pending structured data in the input state. The updater function receives the current
    * manual structured data (or undefined if none is set) and should return the new value.
    * Return undefined to clear the manual structured data.
-   *
-   * @experimental
    */
   updateStructuredData(
     updater: (
@@ -456,8 +454,6 @@ class ChatActionsImpl {
   /**
    * Removes a pending upload from the input state by its ID.
    * If the upload is still in progress, its AbortController is signalled.
-   *
-   * @experimental
    */
   removePendingUpload(uploadId: string) {
     // Abort the upload if it is still in progress.
@@ -486,8 +482,6 @@ class ChatActionsImpl {
    * 4. On success: dispatches UPDATE_PENDING_UPLOAD with status "complete" + contributedData.
    * 5. On failure: dispatches UPDATE_PENDING_UPLOAD with status "error" + errorMessage.
    * 6. If the upload was aborted (user removed the file mid-upload): silently returns.
-   *
-   * @experimental
    */
   async handleFileSelectedForUpload(file: File): Promise<void> {
     const { store } = this.serviceManager;
