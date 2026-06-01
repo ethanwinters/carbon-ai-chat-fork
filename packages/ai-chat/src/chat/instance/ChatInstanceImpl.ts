@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -300,6 +300,16 @@ function createChatInstance({
           consoleError("Error in addMessageChunk", error);
           throw error;
         }
+      },
+
+      upsertMessage: async (messageID, state, updater) => {
+        debugLog("Called instance.messaging.upsertMessage", messageID, state);
+        serviceManager.messageService.messageLoadingManager.end();
+        return serviceManager.messageUpsertCoordinator.upsert(
+          messageID,
+          state,
+          updater,
+        );
       },
 
       removeMessages: async (messageIDs: string[]) => {

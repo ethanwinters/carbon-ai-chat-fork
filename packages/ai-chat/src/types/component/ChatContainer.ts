@@ -16,6 +16,7 @@ import {
   BusEventViewChange,
   BusEventViewPreChange,
 } from "../events/eventBusTypes";
+import { MessageState } from "../config/MessagingConfig";
 
 /**
  * The user_defined message object passed into the renderUserDefinedResponse property on the main chat components.
@@ -42,6 +43,16 @@ interface RenderUserDefinedState {
    * to avoid memory leaks.
    */
   partialItems?: DeepPartial<GenericItem>[];
+
+  /**
+   * The current {@link MessageState} of the containing message at the moment the renderer
+   * was invoked. Use this to drive in-widget streaming indicators or error treatments
+   * without inspecting the message items directly.
+   *
+   * @experimental Field is additive; its presence and semantics may evolve as the
+   * lifecycle model stabilizes.
+   */
+  state?: MessageState;
 }
 
 /**

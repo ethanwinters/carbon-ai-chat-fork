@@ -210,6 +210,7 @@ class ChatContainer extends FlattenedConfigElement {
       [slot]: {
         fullMessage: event.data.fullMessage,
         messageItem: event.data.message,
+        state: event.data.state,
       },
     };
   };

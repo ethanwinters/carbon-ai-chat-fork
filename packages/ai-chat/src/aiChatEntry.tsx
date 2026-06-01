@@ -126,6 +126,8 @@ export {
   CancellationReason,
   ChatInstanceMessaging,
   CustomSendMessageOptions,
+  MessageState,
+  UpsertMessageUpdater,
 } from "./types/config/MessagingConfig";
 
 export {

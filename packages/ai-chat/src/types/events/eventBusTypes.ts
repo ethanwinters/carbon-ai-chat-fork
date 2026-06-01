@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -26,6 +26,7 @@ import { ViewState } from "../instance/apiTypes";
 import { FileUpload } from "../config/ServiceDeskConfig";
 import { HumanAgentsOnlineStatus } from "../config/ServiceDeskConfig";
 import { PublicChatState } from "../instance/ChatInstance";
+import { MessageState } from "../config/MessagingConfig";
 
 /** @category Events */
 export enum BusEventType {
@@ -575,6 +576,19 @@ export interface BusEventUserDefinedResponse extends BusEvent {
      * The slot name for users of the web components cds-aichat-container or cds-aichat-custom-element.
      */
     slot?: string;
+
+    /**
+     * The current {@link MessageState} of the containing message at the moment this event
+     * fired. Carbon AI Chat populates this whenever it has a recorded lifecycle state for
+     * the message — including messages produced through
+     * {@link ChatInstanceMessaging.upsertMessage}, {@link ChatInstanceMessaging.addMessage},
+     * and the final-response transition of {@link ChatInstanceMessaging.addMessageChunk}.
+     * See {@link MessageState} for the lifecycle values.
+     *
+     * @experimental Field is additive; its presence and semantics may evolve as the
+     * lifecycle model stabilizes.
+     */
+    state?: MessageState;
   };
 }
 
