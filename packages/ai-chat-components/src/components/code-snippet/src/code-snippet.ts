@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
  *  @license
  */
 
-import { LitElement, html } from "lit";
+import { LitElement, html, nothing } from "lit";
 import { property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { createRef, ref } from "lit/directives/ref.js";
@@ -128,7 +128,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
    * Maximum rows to show when collapsed.
    * Set to 0 along with maxExpandedNumberOfRows to enable fill-container mode.
    */
-  @property({ attribute: "max-collapsed-number-of-rows" })
+  @property({ type: Number, attribute: "max-collapsed-number-of-rows" })
   maxCollapsedNumberOfRows = 15;
 
   /**
@@ -136,15 +136,15 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
    * Set to 0 along with maxCollapsedNumberOfRows to enable fill-container mode,
    * where the component fills its container's height with a scrollbar.
    */
-  @property({ attribute: "max-expanded-number-of-rows" })
+  @property({ type: Number, attribute: "max-expanded-number-of-rows" })
   maxExpandedNumberOfRows = 0;
 
   /** Minimum rows to show when collapsed. */
-  @property({ attribute: "min-collapsed-number-of-rows" })
+  @property({ type: Number, attribute: "min-collapsed-number-of-rows" })
   minCollapsedNumberOfRows = 3;
 
   /** Minimum rows to show when expanded. */
-  @property({ attribute: "min-expanded-number-of-rows" })
+  @property({ type: Number, attribute: "min-expanded-number-of-rows" })
   minExpandedNumberOfRows = 16;
 
   /** Label for the “show less” control. */
@@ -218,6 +218,13 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
    */
   @state()
   private _isEditorLoading = true;
+
+  /**
+   * Set by `focusEditor()` when CodeMirror has not finished loading yet;
+   * drained from `createEditor()` once the editor view exists.
+   * @internal
+   */
+  private _focusOnEditorReady = false;
 
   /**
    * @internal
@@ -650,6 +657,11 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
       this._checkShowMoreButton();
     });
 
+    if (this._focusOnEditorReady) {
+      this._focusOnEditorReady = false;
+      this.editorView.focus();
+    }
+
     languageController.handleStreamingLanguageDetection();
   }
 
@@ -745,6 +757,25 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
     >
       <cds-skeleton-text lines="4"></cds-skeleton-text>
     </div>`;
+  }
+
+  /**
+   * Focus the editor surface — the contenteditable that accepts text input.
+   * Prefer this over `host.focus()`, which delegates via `delegatesFocus`
+   * to the first sequentially-focusable child in the shadow tree
+   * (`.cm-scroller`, focusable for accessibility but not editable). When
+   * CodeMirror is still loading, the call is queued and forwarded once
+   * the editor view is created. Useful right after inserting the snippet
+   * into a contenteditable host (e.g. a Tiptap atom block) so the next
+   * keystroke enters the editor instead of replacing the node.
+   */
+  focusEditor(): void {
+    if (this.editorView) {
+      this.editorView.focus();
+      return;
+    }
+    this._focusOnEditorReady = true;
+    void this.ensureCodeMirrorRuntime();
   }
 
   // Lifecycle methods
@@ -906,11 +937,16 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
     const containerClasses = {
       [`${prefix}--snippet-container`]: true,
       [`${prefix}--snippet--codemirror`]: true,
-      [`${prefix}--snippet-container--collapsed`]: !expandedCode,
+      // Fill mode shows no expand affordance, so it is never a "collapsed"
+      // state. Applying `--collapsed` here would clip with `overflow-y: hidden`
+      // (it is defined later in the stylesheet and wins by source order),
+      // defeating fill mode's `overflow-y: auto` scroll.
+      [`${prefix}--snippet-container--collapsed`]:
+        !expandedCode && !this._isFillMode,
       [`${prefix}--snippet-container--fill-mode`]: this._isFillMode,
     };
 
-    return html` <div class="${prefix}--snippet">
+    return html`<div class="${prefix}--snippet">
       ${!this.hideHeader
         ? html`
             <cds-aichat-toolbar
@@ -923,7 +959,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
               <slot name="decorator" slot="decorator"></slot>
             </cds-aichat-toolbar>
           `
-        : ""}
+        : nothing}
 
       <div
         class="${classMap(containerClasses)}"
@@ -958,7 +994,7 @@ class CDSAIChatCodeSnippet extends FocusMixin(LitElement) {
               </cds-button>
             </div>
           `
-        : ``}
+        : nothing}
       <div class="${prefix}--visually-hidden">
         <slot
           ${ref(this.contentSlot)}
