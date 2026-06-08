@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -16,6 +16,7 @@ import { AppState } from "../../types/state/AppState";
 import { HumanAgentService } from "./haa/HumanAgentService";
 import { CustomPanelManager } from "./CustomPanelManager";
 import { HistoryService } from "./HistoryService";
+import { MessageUpsertCoordinator } from "./MessageUpsertCoordinator";
 import MessageService from "./MessageService";
 import { NamespaceService } from "./NamespaceService";
 import { ThemeWatcherService } from "./ThemeWatcherService";
@@ -91,6 +92,15 @@ class ServiceManager {
    * The message service used to send and receive messages.
    */
   messageService: MessageService;
+
+  /**
+   * Engine for {@link ChatInstanceMessaging#upsertMessage}: serializes calls for the
+   * same message ID and tracks {@link MessageState} per ID so `addMessage`,
+   * `addMessageChunk`, and `upsertMessage` can be mixed without double-firing
+   * `pre:receive` / `receive`. {@link messageService} still owns the send / stream /
+   * receive arc.
+   */
+  messageUpsertCoordinator: MessageUpsertCoordinator;
 
   /**
    * The service to use to connect to a human agent. Note that this value will not be defined if no service desk is
