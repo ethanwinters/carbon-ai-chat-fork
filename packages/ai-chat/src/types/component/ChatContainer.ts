@@ -150,7 +150,7 @@ type WCRenderCustomMessageFooter = (
  * `display_content` — typically a consumer-registered custom node such as a
  * task card, file pill, or mention with rich rendering.
  *
- * @category Composition
+ * @category React
  * @experimental
  */
 interface RenderUserDefinedInputNodeState {
@@ -166,7 +166,7 @@ interface RenderUserDefinedInputNodeState {
  * library manages the slot lifecycle — register a renderer that returns the
  * React node for nodes you care about and `null` for everything else.
  *
- * @category Composition
+ * @category React
  * @experimental
  */
 type RenderUserDefinedInputNode = (
@@ -180,7 +180,7 @@ type RenderUserDefinedInputNode = (
  * `HTMLElement` (or `null`). The library moves / removes the element as
  * messages mount and unmount.
  *
- * @category Composition
+ * @category Web component
  * @experimental
  */
 type WCRenderUserDefinedInputNode = (
