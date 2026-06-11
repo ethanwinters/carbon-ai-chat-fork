@@ -113,7 +113,10 @@ import { PublicChatState } from "../../types/instance/PublicChatState";
 import { OnErrorData, OnErrorType } from "../../types/config/ErrorConfig";
 import { DeepPartial } from "../../types/utilities/DeepPartial";
 import type { Editor, JSONContent } from "@tiptap/core";
-import { getRawText } from "@carbon/ai-chat-components/es/components/input/index.js";
+import {
+  getRawText,
+  textToDoc,
+} from "@carbon/ai-chat-components/es/components/input/index.js";
 
 /**
  * Module-scoped flag so the deprecation warning for `updateRawValue` is
@@ -574,24 +577,53 @@ class ChatActionsImpl {
   }
 
   /**
-   * Replace the input content with the result of an updater that receives
-   * the current JSONContent doc. Throws when the input is not currently
-   * rendered.
+   * Replace the input content with the result of an updater that receives the
+   * current JSONContent doc.
+   *
+   * - When the rich Tiptap editor is mounted, the doc is applied directly, so
+   *   rich nodes and marks are preserved.
+   * - When the surface is the lightweight textarea and the updater returns a
+   *   doc with non-text nodes or marked text, the rich editor is loaded on
+   *   demand (upgrading in place, with any host `tiptap.extensions` installed)
+   *   and the returned promise resolves once the rich content is applied.
+   * - A plain-text result is staged through the pending `rawValue` whenever
+   *   there is no live editor — covering the mounted textarea, a hidden input,
+   *   and a not-yet-rendered input alike (the field is seeded on mount). This
+   *   is the behavior the deprecated `updateRawValue` provided.
+   *
+   * A non-text result throws when there is no surface to upgrade (the input is
+   * hidden or not yet rendered), because nothing can render rich content there.
    */
-  updateInputContent(updater: (previous: JSONContent) => JSONContent): void {
+  async updateInputContent(
+    updater: (previous: JSONContent) => JSONContent,
+  ): Promise<void> {
     if (typeof updater !== "function") {
       consoleError("Input content updater must be a function");
       return;
     }
 
+    const { store } = this.serviceManager;
+    const state = store.getState();
     const ref = this.serviceManager.getInputFunctionsRef();
-    if (!ref) {
-      throw new Error("Input is not currently rendered");
+    const editor = ref?.getEditor() ?? null;
+
+    // The updater's `previous`: the live editor doc when rich, otherwise the doc
+    // rebuilt from the tracked `rawValue` (kept in lockstep with the textarea,
+    // and the same source of truth `updateRawValue` reads). This is also what a
+    // pending pre-mount seed reads back.
+    let previous: JSONContent;
+    if (editor) {
+      previous = editor.getJSON();
+    } else {
+      let previousRaw = (selectInputState(state).rawValue ?? "") as string;
+      // An empty textarea whose only keystroke was Enter reports a lone "\n"
+      // (the native newline the empty-Enter guard lets through). Treat it as
+      // empty so the updater sees an empty doc, not a spurious blank paragraph.
+      if (previousRaw === "\n") {
+        previousRaw = "";
+      }
+      previous = textToDoc(previousRaw);
     }
-    const editor = ref.getEditor();
-    const previous: JSONContent = editor
-      ? editor.getJSON()
-      : { type: "doc", content: [] };
 
     let next: JSONContent;
     try {
@@ -601,16 +633,49 @@ class ChatActionsImpl {
       return;
     }
 
+    // Rich editor mounted: apply directly so rich nodes / marks survive.
+    if (editor) {
+      ref!.setContent(next);
+      return;
+    }
+
+    // No live editor. A plain-text result is staged through Redux: the Input
+    // mirrors `rawValue` into a mounted textarea and seeds the field on mount,
+    // so this one path covers the mounted-textarea, hidden, and pre-mount
+    // cases.
+    if (isPlainTextDoc(next)) {
+      store.dispatch(
+        actions.updateInputState(
+          { rawValue: getRawText(next), content: next },
+          selectIsInputToHumanAgent(state),
+        ),
+      );
+      return;
+    }
+
+    // Non-text result needs the rich editor. Upgrade a mounted textarea in
+    // place (loading Tiptap with any staged host extensions), then apply; reject
+    // when there is no surface to upgrade (hidden / not yet rendered).
+    if (!ref) {
+      throw new Error(
+        "ChatInstance.input.updateContent cannot seed non-text content before the input is rendered. Wait for the input to mount, or write plain text.",
+      );
+    }
+    await ref.ensureEditor();
     ref.setContent(next);
   }
 
   /**
-   * Returns the live Tiptap `Editor`, or `null` when the input is
-   * not currently rendered. Probe-style; never throws.
+   * Loads Tiptap on demand (upgrading the input surface to the rich editor in
+   * place), then resolves with the live `Editor`. Rejects when the input is not
+   * currently rendered.
    */
-  getInputEditor(): Editor | null {
+  ensureInputEditor(): Promise<Editor> {
     const ref = this.serviceManager.getInputFunctionsRef();
-    return ref?.getEditor() ?? null;
+    if (!ref) {
+      return Promise.reject(new Error("Input is not currently rendered"));
+    }
+    return ref.ensureEditor();
   }
 
   /**

@@ -188,12 +188,12 @@ function createChatInstance({
 
       updateContent: (updater) => {
         debugLog("Called instance.input.updateContent");
-        serviceManager.actions.updateInputContent(updater);
+        return serviceManager.actions.updateInputContent(updater);
       },
 
       getEditor: () => {
         debugLog("Called instance.input.getEditor()");
-        return serviceManager.actions.getInputEditor();
+        return serviceManager.actions.ensureInputEditor();
       },
     },
 

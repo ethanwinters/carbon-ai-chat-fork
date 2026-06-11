@@ -175,6 +175,7 @@ export {
   mapNodes,
   findNodesByType,
   getRawText,
+  textToDoc,
 } from "./types/utilities/inputUtils";
 
 export { DeepPartial } from "../src/types/utilities/DeepPartial";
