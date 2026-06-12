@@ -27,6 +27,12 @@ exports[`ChatContainer should open chat when launcher is clicked 1`] = `
     slot="afterInputElement"
   />
   <div
+    slot="promptLineActionsEnd"
+  />
+  <div
+    slot="promptLineSendButtonStart"
+  />
+  <div
     slot="footerElement"
   />
   <div
@@ -75,6 +81,12 @@ exports[`ChatContainer should render PageObjectId elements in shadow DOM 1`] = `
   />
   <div
     slot="afterInputElement"
+  />
+  <div
+    slot="promptLineActionsEnd"
+  />
+  <div
+    slot="promptLineSendButtonStart"
   />
   <div
     slot="footerElement"
@@ -131,6 +143,12 @@ exports[`ChatContainer should render slotted content 1`] = `
   />
   <div
     slot="afterInputElement"
+  />
+  <div
+    slot="promptLineActionsEnd"
+  />
+  <div
+    slot="promptLineSendButtonStart"
   />
   <div
     slot="footerElement"

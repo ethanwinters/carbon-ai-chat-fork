@@ -81,6 +81,8 @@ When `aiChat:start` is running in another terminal, example webpack servers hot-
 
 `npm run ci-check` does **not** run `build`, and workspace deps resolve through built artifacts (`es/`, `dist/es/`) rather than TS sources. **Always run `build` BEFORE `ci-check`** — running them the other way around (or running `ci-check` on its own after edits) makes tests resolve consumer imports against a stale `es/`, which surfaces as confusing "no exported member 'X'" errors even though the source clearly exports X. Pick the minimum gate for the area you edited:
 
+**Before running any `build` row below, ask the user whether `npm run aiChat:start` is already running** — a parallel build races the watcher (canonical rule: [Common commands](#common-commands), and TL;DR above). This applies to the `build` gates here, not to `ci-check`/`test`/`lint`, which write no artifacts.
+
 | Area edited                       | Minimum gate before shipping                                                                                                                                             |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Cross-cutting / multiple packages | `npm run build && npm run ci-check`                                                                                                                                      |

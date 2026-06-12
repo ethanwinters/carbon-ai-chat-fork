@@ -40,7 +40,10 @@ import Add16 from "@carbon/icons/es/add--large/16.js";
 import Attachment16 from "@carbon/icons/es/attachment/16.js";
 import { carbonIconToReact } from "../../utils/carbonIcon";
 import { InputActionsMenu } from "./InputActionsMenu";
-import type { InputMenuOption } from "../../../types/config/InputConfig";
+import { InputActionsInline } from "./InputActionsInline";
+import type { ToolbarAction } from "../../../types/config/HeaderConfig";
+import { WriteableElementName } from "../../../types/instance/WriteableElements";
+import PromptLineWriteableSlot from "./PromptLineWriteableSlot";
 
 const AddIcon = carbonIconToReact(Add16);
 
@@ -234,7 +237,9 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
     starters,
     hostExtensions,
     isSendDisabledFromConfig,
-    menuOptions,
+    // Aliased to avoid colliding with the store `actions` import above.
+    actions: inputActions,
+    expanded,
   } = useInputConfig();
 
   // Surface mode (textarea "lite" vs rich Tiptap) + sticky latch + the curated
@@ -416,20 +421,28 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
     latchRich,
   });
 
-  const effectiveMenuOptions = useMemo<InputMenuOption[] | undefined>(() => {
-    if (!menuOptions) {
+  const effectiveActions = useMemo<ToolbarAction[] | undefined>(() => {
+    if (!inputActions) {
       return undefined;
     }
     if (!showUploadButton) {
-      return menuOptions;
+      return inputActions;
     }
-    const uploadOption: InputMenuOption = {
+    const uploadOption: ToolbarAction = {
       text: languagePack.input_uploadButtonLabel,
-      icon: Attachment16,
-      handler: () => fileInputRef.current?.click(),
+      // Inline (expanded) actions are icon-only, so use the Add icon to match
+      // the standalone upload button; the labeled popover keeps the more
+      // descriptive Attachment icon next to its text.
+      icon: expanded ? Add16 : Attachment16,
+      onClick: () => fileInputRef.current?.click(),
     };
-    return [uploadOption, ...menuOptions];
-  }, [menuOptions, showUploadButton, languagePack.input_uploadButtonLabel]);
+    return [uploadOption, ...inputActions];
+  }, [
+    inputActions,
+    showUploadButton,
+    languagePack.input_uploadButtonLabel,
+    expanded,
+  ]);
 
   if (!isInputVisible) {
     return null;
@@ -448,7 +461,7 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
     : null;
 
   return (
-    <InputShell rounded={rounded}>
+    <InputShell rounded={rounded} expanded={expanded}>
       <PromptLine
         slot="editor"
         ref={promptLineRef}
@@ -481,7 +494,7 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
         </div>
       )}
 
-      {(showUploadButton || effectiveMenuOptions) && (
+      {(showUploadButton || effectiveActions) && (
         <div slot="message-actions">
           {showUploadButton && (
             <input
@@ -495,12 +508,20 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
               onChange={handleFileSelect}
             />
           )}
-          {effectiveMenuOptions ? (
-            <InputActionsMenu
-              disabled={disableInput}
-              menuOptions={effectiveMenuOptions}
-              menuLabel={languagePack.input_actionsMenuLabel}
-            />
+          {effectiveActions ? (
+            expanded ? (
+              <InputActionsInline
+                disabled={disableInput}
+                actions={effectiveActions}
+                overflowMenuLabel={languagePack.input_actionsOverflowLabel}
+              />
+            ) : (
+              <InputActionsMenu
+                disabled={disableInput}
+                actions={effectiveActions}
+                menuLabel={languagePack.input_actionsMenuLabel}
+              />
+            )
           ) : showUploadButton ? (
             <IconButton
               kind={BUTTON_KIND.GHOST}
@@ -517,6 +538,23 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
         </div>
       )}
 
+      {/*
+        Writeable slot rendered after the action buttons and before the prompt
+        line. Lives in the `message-actions` slot (ordered after the actions
+        block); the `data-prompt-line-slot` marker keeps the shell's
+        `--has-message-actions` padding from reacting to this passthrough.
+
+        Only rendered in the expanded layout: the actions row (where this slot
+        sits) only exists as a usable track when expanded. In the compact
+        layout the slot is omitted, so host content assigned to it is not shown.
+      */}
+      {expanded && (
+        <PromptLineWriteableSlot
+          slotName={WriteableElementName.PROMPT_LINE_ACTIONS_END}
+          wrapperSlot="message-actions"
+        />
+      )}
+
       {/* File uploads — pending file status display */}
       {pendingUploads && pendingUploads.length > 0 && (
         <FileUploads
@@ -527,6 +565,16 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
           onFileRemove={handleRemoveFile}
         />
       )}
+
+      {/*
+        Writeable slot rendered after the prompt line and directly before the
+        send button. Lives in the `send-control` slot, ordered before the send
+        control so slot assignment places it ahead of the button.
+      */}
+      <PromptLineWriteableSlot
+        slotName={WriteableElementName.PROMPT_LINE_SEND_BUTTON_START}
+        wrapperSlot="send-control"
+      />
 
       {/* Send control — send button / stop streaming button */}
       <InputSendControl

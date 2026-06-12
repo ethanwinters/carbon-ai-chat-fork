@@ -61,6 +61,44 @@ describe("<cds-aichat-input-shell>", () => {
     expect(el.hasAttribute("rounded")).to.equal(true);
   });
 
+  it("reflects the `expanded` boolean property to attribute", async () => {
+    const el: InputShellElement = await fixture(html`
+      <cds-aichat-input-shell></cds-aichat-input-shell>
+    `);
+    await el.updateComplete;
+    expect(el.hasAttribute("expanded")).to.equal(false);
+
+    el.expanded = true;
+    await el.updateComplete;
+    expect(el.hasAttribute("expanded")).to.equal(true);
+  });
+
+  it("toggles the `--expanded` container class with the `expanded` property", async () => {
+    const el: InputShellElement = await fixture(html`
+      <cds-aichat-input-shell></cds-aichat-input-shell>
+    `);
+    await el.updateComplete;
+
+    const container = el.shadowRoot?.querySelector(
+      ".cds-aichat--input-container",
+    ) as HTMLElement;
+    expect(
+      container.classList.contains("cds-aichat--input-container--expanded"),
+    ).to.equal(false);
+
+    el.expanded = true;
+    await el.updateComplete;
+    expect(
+      container.classList.contains("cds-aichat--input-container--expanded"),
+    ).to.equal(true);
+
+    el.expanded = false;
+    await el.updateComplete;
+    expect(
+      container.classList.contains("cds-aichat--input-container--expanded"),
+    ).to.equal(false);
+  });
+
   it("toggles the `--has-message-actions` class when message-actions slot is filled", async () => {
     const el: InputShellElement = await fixture(html`
       <cds-aichat-input-shell></cds-aichat-input-shell>
@@ -98,6 +136,79 @@ describe("<cds-aichat-input-shell>", () => {
         "cds-aichat--input-container--has-message-actions",
       ),
     ).to.equal(false);
+  });
+
+  it("ignores writeable passthrough slots when toggling `--has-message-actions`", async () => {
+    const el: InputShellElement = await fixture(html`
+      <cds-aichat-input-shell></cds-aichat-input-shell>
+    `);
+    await el.updateComplete;
+
+    const container = el.shadowRoot?.querySelector(
+      ".cds-aichat--input-container",
+    ) as HTMLElement;
+
+    // A passthrough alone (marked) must not count as real action content.
+    const passthrough = document.createElement("div");
+    passthrough.setAttribute("slot", "message-actions");
+    passthrough.setAttribute("data-prompt-line-slot", "");
+    el.appendChild(passthrough);
+    await Promise.resolve();
+    await el.updateComplete;
+
+    expect(
+      container.classList.contains(
+        "cds-aichat--input-container--has-message-actions",
+      ),
+    ).to.equal(false);
+
+    // A real action alongside the passthrough flips the class on.
+    const action = document.createElement("button");
+    action.setAttribute("slot", "message-actions");
+    el.appendChild(action);
+    await Promise.resolve();
+    await el.updateComplete;
+
+    expect(
+      container.classList.contains(
+        "cds-aichat--input-container--has-message-actions",
+      ),
+    ).to.equal(true);
+  });
+
+  it("reconciles a stale `--has-message-actions` against the settled assignment on the next render", async () => {
+    const el: InputShellElement = await fixture(html`
+      <cds-aichat-input-shell></cds-aichat-input-shell>
+    `);
+    await el.updateComplete;
+
+    const container = el.shadowRoot?.querySelector(
+      ".cds-aichat--input-container",
+    ) as HTMLElement;
+    const hasMessageActions = () =>
+      container.classList.contains(
+        "cds-aichat--input-container--has-message-actions",
+      );
+
+    // A real action turns the padding treatment on.
+    const action = document.createElement("button");
+    action.setAttribute("slot", "message-actions");
+    el.appendChild(action);
+    await Promise.resolve();
+    await el.updateComplete;
+    expect(hasMessageActions()).to.equal(true);
+
+    // It becomes a passthrough via an attribute-only change, which emits no
+    // `slotchange`, so the slotchange-driven snapshot is now stale (a stand-in
+    // for the transient miscount an async/runtime projection can leave behind).
+    action.setAttribute("data-prompt-line-slot", "");
+    expect(hasMessageActions()).to.equal(true);
+
+    // Any subsequent render reconciles against the settled assignment.
+    el.requestUpdate();
+    await el.updateComplete;
+    await el.updateComplete;
+    expect(hasMessageActions()).to.equal(false);
   });
 
   it("renders consumer-slotted children inside their named slots", async () => {

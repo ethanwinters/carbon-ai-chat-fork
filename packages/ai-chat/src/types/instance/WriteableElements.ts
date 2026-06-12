@@ -65,6 +65,20 @@ export enum WriteableElementName {
   AFTER_INPUT_ELEMENT = "afterInputElement",
 
   /**
+   * A slot rendered in the input composer's actions row, after the action
+   * buttons. Only present when the input uses the expanded layout
+   * ({@link InputConfig.expanded}); in the default compact layout this slot is
+   * not rendered, so content assigned to it is not shown.
+   */
+  PROMPT_LINE_ACTIONS_END = "promptLineActionsEnd",
+
+  /**
+   * A slot rendered inside the input composer, after the prompt line and directly before
+   * the send button.
+   */
+  PROMPT_LINE_SEND_BUTTON_START = "promptLineSendButtonStart",
+
+  /**
    * An element that appears in the footer area.
    */
   FOOTER_ELEMENT = "footerElement",
