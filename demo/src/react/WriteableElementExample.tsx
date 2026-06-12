@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -25,7 +25,11 @@ function WriteableElementExample({
   }
 
   // Special compact display for header fixed actions
-  if (location === "headerFixedActionsElement") {
+  if (
+    location === "headerFixedActionsElement" ||
+    location === "promptLineActionsEnd" ||
+    location === "promptLineSendButtonStart"
+  ) {
     return (
       <div className="writeable-element-external writeable-element-external--compact">
         {location}

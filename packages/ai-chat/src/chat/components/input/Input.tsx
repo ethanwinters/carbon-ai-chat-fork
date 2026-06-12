@@ -47,6 +47,7 @@ import Attachment16 from "@carbon/icons/es/attachment/16.js";
 import { carbonIconToReact } from "../../utils/carbonIcon";
 import { InputActionsMenu } from "./InputActionsMenu";
 import type { InputMenuOption } from "../../../types/config/InputConfig";
+import { WriteableElementName } from "../../../types/instance/WriteableElements";
 
 const AddIcon = carbonIconToReact(Add16);
 
@@ -627,6 +628,20 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
         </div>
       )}
 
+      {/*
+        Writeable slot rendered after the action buttons and before the prompt
+        line. Lives in the `message-actions` slot (ordered after the actions
+        block); the `data-prompt-line-slot` marker keeps the shell's
+        `--has-message-actions` padding from reacting to this passthrough.
+      */}
+      <div
+        slot="message-actions"
+        data-prompt-line-slot
+        data-floating-menu-container
+      >
+        <slot name={WriteableElementName.PROMPT_LINE_ACTIONS_END} />
+      </div>
+
       {/* File uploads — pending file status display */}
       {pendingUploads && pendingUploads.length > 0 && (
         <FileUploads
@@ -637,6 +652,19 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
           onFileRemove={handleRemoveFile}
         />
       )}
+
+      {/*
+        Writeable slot rendered after the prompt line and directly before the
+        send button. Lives in the `send-control` slot, ordered before the send
+        control so slot assignment places it ahead of the button.
+      */}
+      <div
+        slot="send-control"
+        data-prompt-line-slot
+        data-floating-menu-container
+      >
+        <slot name={WriteableElementName.PROMPT_LINE_SEND_BUTTON_START} />
+      </div>
 
       {/* Send control — send button / stop streaming button */}
       <InputSendControl

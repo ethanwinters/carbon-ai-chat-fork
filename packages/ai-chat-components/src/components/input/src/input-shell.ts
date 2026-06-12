@@ -83,7 +83,13 @@ class InputShellElement extends LitElement {
 
   private _handleMessageActionsSlotChange = (event: Event): void => {
     const slot = event.target as HTMLSlotElement;
-    this._hasMessageActions = slot.assignedElements().length > 0;
+    // Consumers may project a writeable passthrough slot into `message-actions`
+    // (marked with `data-prompt-line-slot`). That passthrough is always present
+    // even when empty, so it must not drive the `--has-message-actions` padding
+    // treatment — only real action content should.
+    this._hasMessageActions = slot
+      .assignedElements()
+      .some((element) => !element.hasAttribute("data-prompt-line-slot"));
   };
 }
 

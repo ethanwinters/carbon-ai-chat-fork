@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -47,8 +47,13 @@ class WriteableElementExample extends LitElement {
       classNames += " writeable-element-external--not-rounded";
     }
 
-    // Special compact display for header fixed actions
-    if (this.location === "headerFixedActionsElement") {
+    // Special compact display for header fixed actions and the in-composer
+    // prompt-line slots, which need to fit inside the input row.
+    if (
+      this.location === "headerFixedActionsElement" ||
+      this.location === "promptLineActionsEnd" ||
+      this.location === "promptLineSendButtonStart"
+    ) {
       return html`<div class="external external--compact">
         ${this.location}
       </div>`;

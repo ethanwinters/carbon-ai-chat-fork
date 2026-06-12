@@ -100,6 +100,44 @@ describe("<cds-aichat-input-shell>", () => {
     ).to.equal(false);
   });
 
+  it("ignores writeable passthrough slots when toggling `--has-message-actions`", async () => {
+    const el: InputShellElement = await fixture(html`
+      <cds-aichat-input-shell></cds-aichat-input-shell>
+    `);
+    await el.updateComplete;
+
+    const container = el.shadowRoot?.querySelector(
+      ".cds-aichat--input-container",
+    ) as HTMLElement;
+
+    // A passthrough alone (marked) must not count as real action content.
+    const passthrough = document.createElement("div");
+    passthrough.setAttribute("slot", "message-actions");
+    passthrough.setAttribute("data-prompt-line-slot", "");
+    el.appendChild(passthrough);
+    await Promise.resolve();
+    await el.updateComplete;
+
+    expect(
+      container.classList.contains(
+        "cds-aichat--input-container--has-message-actions",
+      ),
+    ).to.equal(false);
+
+    // A real action alongside the passthrough flips the class on.
+    const action = document.createElement("button");
+    action.setAttribute("slot", "message-actions");
+    el.appendChild(action);
+    await Promise.resolve();
+    await el.updateComplete;
+
+    expect(
+      container.classList.contains(
+        "cds-aichat--input-container--has-message-actions",
+      ),
+    ).to.equal(true);
+  });
+
   it("renders consumer-slotted children inside their named slots", async () => {
     const el: InputShellElement = await fixture(html`
       <cds-aichat-input-shell>
