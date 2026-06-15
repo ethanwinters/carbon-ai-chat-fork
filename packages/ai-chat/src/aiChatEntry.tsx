@@ -278,6 +278,8 @@ export {
   HumanAgentMessageType,
   ChainOfThoughtStep,
   ChainOfThoughtStepStatus,
+  CHAT_BUTTON_KIND,
+  CHAT_BUTTON_SIZE,
   ReasoningSteps,
   ReasoningStep,
   ReasoningStepOpenState,
