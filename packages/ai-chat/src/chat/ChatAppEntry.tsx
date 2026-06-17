@@ -47,6 +47,10 @@ import {
   RenderCustomMessageFooter,
   RenderWriteableElementResponse,
 } from "../types/component/ChatContainer";
+import {
+  MarkdownConfigContext,
+  type MarkdownConfigContextValue,
+} from "./contexts/MarkdownConfigContext";
 import { ChatInstance } from "../types/instance/ChatInstance";
 import { PublicConfig } from "../types/config/PublicConfig";
 import { Dimension } from "../types/utilities/Dimension";
@@ -65,6 +69,14 @@ interface AppProps {
   renderUserDefinedInputNode?: RenderUserDefinedInputNode;
   renderCustomMessageFooter?: RenderCustomMessageFooter;
   renderWriteableElements?: RenderWriteableElementResponse;
+  /**
+   * Merged markdown config provided through {@link MarkdownConfigContext} for
+   * deep consumers. Accepts either the React-flavor (`ChatContainerProps`) or
+   * the web-component flavor (`WCMarkdown`) thanks to the permissive
+   * {@link MarkdownConfigContextValue} type.
+   * @experimental
+   */
+  markdown?: MarkdownConfigContextValue;
   container: HTMLElement;
   element?: HTMLElement;
   setParentInstance?: React.Dispatch<React.SetStateAction<ChatInstance>>;
@@ -86,6 +98,7 @@ export function ChatAppEntry({
   renderUserDefinedInputNode,
   renderCustomMessageFooter,
   renderWriteableElements,
+  markdown,
   container,
   setParentInstance,
   element,
@@ -271,49 +284,51 @@ export function ChatAppEntry({
         <ServiceManagerProvider serviceManager={serviceManager}>
           <IntlProvider intl={serviceManager.intl}>
             <LanguagePackProvider>
-              <AriaAnnouncerProvider>
-                <AppShell
-                  serviceManager={serviceManager}
-                  hostElement={serviceManager.customHostElement}
-                  renderWriteableElements={renderWriteableElements}
-                />
-                {renderUserDefinedResponse && (
-                  <UserDefinedResponsePortalsContainer
-                    chatInstance={instance}
-                    renderUserDefinedResponse={renderUserDefinedResponse}
-                    userDefinedResponseEventsBySlot={
-                      userDefinedResponseEventsBySlot
-                    }
-                    chatWrapper={chatWrapper}
+              <MarkdownConfigContext.Provider value={markdown}>
+                <AriaAnnouncerProvider>
+                  <AppShell
+                    serviceManager={serviceManager}
+                    hostElement={serviceManager.customHostElement}
+                    renderWriteableElements={renderWriteableElements}
                   />
-                )}
+                  {renderUserDefinedResponse && (
+                    <UserDefinedResponsePortalsContainer
+                      chatInstance={instance}
+                      renderUserDefinedResponse={renderUserDefinedResponse}
+                      userDefinedResponseEventsBySlot={
+                        userDefinedResponseEventsBySlot
+                      }
+                      chatWrapper={chatWrapper}
+                    />
+                  )}
 
-                {renderCustomMessageFooter && (
-                  <CustomFooterPortalsContainer
-                    chatInstance={instance}
-                    renderCustomMessageFooter={renderCustomMessageFooter}
-                    customFooterEventsBySlot={customFooterSlotsByName}
-                    chatWrapper={chatWrapper}
-                  />
-                )}
+                  {renderCustomMessageFooter && (
+                    <CustomFooterPortalsContainer
+                      chatInstance={instance}
+                      renderCustomMessageFooter={renderCustomMessageFooter}
+                      customFooterEventsBySlot={customFooterSlotsByName}
+                      chatWrapper={chatWrapper}
+                    />
+                  )}
 
-                {renderWriteableElements && (
-                  <WriteableElementsPortalsContainer
-                    chatInstance={instance}
-                    renderResponseMap={renderWriteableElements}
-                  />
-                )}
+                  {renderWriteableElements && (
+                    <WriteableElementsPortalsContainer
+                      chatInstance={instance}
+                      renderResponseMap={renderWriteableElements}
+                    />
+                  )}
 
-                <LightDomPortalsContainer chatWrapper={chatWrapper} />
+                  <LightDomPortalsContainer chatWrapper={chatWrapper} />
 
-                {renderUserDefinedInputNode && (
-                  <InputNodePortalsContainer
-                    chatInstance={instance}
-                    renderUserDefinedInputNode={renderUserDefinedInputNode}
-                    chatWrapper={chatWrapper}
-                  />
-                )}
-              </AriaAnnouncerProvider>
+                  {renderUserDefinedInputNode && (
+                    <InputNodePortalsContainer
+                      chatInstance={instance}
+                      renderUserDefinedInputNode={renderUserDefinedInputNode}
+                      chatWrapper={chatWrapper}
+                    />
+                  )}
+                </AriaAnnouncerProvider>
+              </MarkdownConfigContext.Provider>
             </LanguagePackProvider>
           </IntlProvider>
         </ServiceManagerProvider>

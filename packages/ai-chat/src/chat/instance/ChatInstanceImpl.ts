@@ -312,6 +312,16 @@ function createChatInstance({
         }
       },
 
+      upsertMessage: async (messageID, state, updater) => {
+        debugLog("Called instance.messaging.upsertMessage", messageID, state);
+        serviceManager.messageService.messageLoadingManager.end();
+        return serviceManager.messageUpsertCoordinator.upsert(
+          messageID,
+          state,
+          updater,
+        );
+      },
+
       removeMessages: async (messageIDs: string[]) => {
         debugLog("Called instance.messaging.removeMessages", messageIDs);
         return serviceManager.actions.removeMessages(messageIDs);

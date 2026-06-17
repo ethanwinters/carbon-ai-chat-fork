@@ -94,7 +94,10 @@ import {
   resolveChunkContext,
   shouldShowStopStreaming,
 } from "../utils/streamingUtils";
-import { AddMessageOptions } from "../../types/config/MessagingConfig";
+import {
+  AddMessageOptions,
+  MessageState,
+} from "../../types/config/MessagingConfig";
 import {
   BusEventChunkUserDefinedResponse,
   BusEventCustomFooterSlot,
@@ -993,6 +996,10 @@ class ChatActionsImpl {
       type: BusEventType.RECEIVE,
       data: message,
     });
+
+    // Record COMPLETE so a later `upsertMessage(id, MessageState.COMPLETE, ...)` for
+    // the same id suppresses a second `pre:receive` / `receive`.
+    this.serviceManager.messageUpsertCoordinator.markComplete(message.id);
   }
 
   /**
@@ -1000,6 +1007,9 @@ class ChatActionsImpl {
    */
   async removeMessages(messageIDs: string[]) {
     this.serviceManager.store.dispatch(actions.removeMessages(messageIDs));
+    for (const id of messageIDs) {
+      this.serviceManager.messageUpsertCoordinator.clear(id);
+    }
   }
 
   /**
@@ -1056,6 +1066,19 @@ class ChatActionsImpl {
     this.serviceManager.store.dispatch(
       actions.hydrateMessageHistory(newAppStateMessages),
     );
+
+    // History messages are semantically COMPLETE — record so a later upsertMessage on
+    // a historical id suppresses `pre:receive` / `receive`.
+    const upsertCoordinator = this.serviceManager.messageUpsertCoordinator;
+    for (const historicalID of history.messageHistory.assistantMessageState
+      .messageIDs) {
+      const historicalMessage =
+        history.messageHistory.allMessagesByID[historicalID];
+      if (historicalMessage && isResponse(historicalMessage)) {
+        upsertCoordinator.markComplete(historicalID);
+      }
+    }
+
     const mergedIDs = newAppStateMessages.assistantMessageState.messageIDs;
     // The active response is simply the last message response in order (requests are ignored).
     const lastId =
@@ -1097,6 +1120,12 @@ class ChatActionsImpl {
       this.serviceManager.messageService.markCurrentMessageAsStreaming(
         extractedMessageID,
         chunk.partial_item?.streaming_metadata?.id,
+      );
+
+      // Record STREAMING so a mixed flow of addMessageChunk + upsertMessage does not
+      // double-fire `pre:receive` / `receive`.
+      this.serviceManager.messageUpsertCoordinator.markStreaming(
+        extractedMessageID || undefined,
       );
 
       // Check if this chunk contains reasoning steps
@@ -1536,6 +1565,7 @@ class ChatActionsImpl {
   async handleUserDefinedResponseItems(
     localMessage: LocalMessageItem,
     originalMessage: Message,
+    messageState?: MessageState,
   ) {
     if (renderAsUserDefinedMessage(localMessage.item)) {
       let slotName: string;
@@ -1552,6 +1582,7 @@ class ChatActionsImpl {
           message: localMessage.item,
           fullMessage: originalMessage,
           slot: slotName,
+          state: messageState,
         },
       };
 
@@ -1575,6 +1606,7 @@ class ChatActionsImpl {
         return this.handleUserDefinedResponseItems(
           nestedLocalMessage,
           originalMessage,
+          messageState,
         );
       };
 
@@ -1843,6 +1875,7 @@ class ChatActionsImpl {
           await this.handleUserDefinedResponseItems(
             localMessageItem,
             fullMessage,
+            MessageState.COMPLETE,
           );
           // eslint-disable-next-line no-await-in-loop
           await this.handleCustomFooterSlot(localMessageItem, fullMessage);
@@ -2122,6 +2155,10 @@ class ChatActionsImpl {
       // Hide the stop streaming button since we've cancelled all streams
       resetStopStreamingButton(store);
 
+      // Drop any in-flight upsertMessage chains and recorded state so upserts queued
+      // before the restart do not resolve against the new session.
+      this.serviceManager.messageUpsertCoordinator.clearAll();
+
       store.dispatch(actions.restartConversation());
       if (!skipHydration) {
         // Clear this promise in case the restart event below triggers another hydration.
@@ -2174,6 +2211,8 @@ class ChatActionsImpl {
     }
     this.serviceManager.messageService.cancelAllMessageRequests();
 
+    this.serviceManager.messageUpsertCoordinator.clearAll();
+
     this.serviceManager.userSessionStorageService.clearSession();
 
     this.serviceManager.store.dispatch(
@@ -2216,9 +2255,13 @@ class ChatActionsImpl {
       (localMessage) => {
         const originalMessage =
           messages.allMessagesByID[localMessage.fullMessageID];
+        const messageState = isResponse(originalMessage)
+          ? MessageState.COMPLETE
+          : undefined;
         return this.handleUserDefinedResponseItems(
           localMessage,
           originalMessage,
+          messageState,
         );
       },
     );
