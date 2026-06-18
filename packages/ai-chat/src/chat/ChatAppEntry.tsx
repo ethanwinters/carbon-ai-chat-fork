@@ -39,6 +39,9 @@ import { isBrowser } from "./utils/browserUtils";
 
 import { detectConfigChanges } from "./utils/configChangeDetection";
 import { applyConfigChangesDynamically } from "./utils/dynamicConfigUpdates";
+import { resolvePromptLineMode } from "./components/input/promptLineMode";
+import { preloadBuildCarbonExtensions } from "./components/input/buildExtensionsLoader";
+import { preloadPromptLineRich } from "@carbon/ai-chat-components/es/components/input/src/prompt-line-rich-loader.js";
 
 import {
   RenderUserDefinedState,
@@ -161,6 +164,18 @@ export function ChatAppEntry({
 
         if (onBeforeRender) {
           await onBeforeRender(instance);
+        }
+
+        // Warm the Tiptap chunks before the first render commits so a chat
+        // configured for the rich editor mounts it directly (no textarea→editor
+        // flash) and the prompt-line is present before hydration completes and
+        // before `onAfterRender` resolves. Lite chats skip this and never
+        // download Tiptap.
+        if (resolvePromptLineMode(publicConfig.input) === "rich") {
+          await Promise.all([
+            preloadPromptLineRich(),
+            preloadBuildCarbonExtensions(),
+          ]);
         }
 
         setServiceManager(serviceManager);

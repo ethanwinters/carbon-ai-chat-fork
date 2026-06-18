@@ -189,6 +189,7 @@ export {
   mapNodes,
   findNodesByType,
   getRawText,
+  textToDoc,
   renderTokenChip,
   renderInLightDom,
 } from "./types/utilities/inputUtils";
