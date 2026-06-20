@@ -6,7 +6,7 @@ Guidance for authoring inside [packages/ai-chat/docs/](.). The documents here sh
 
 ## Authoring net-new docs
 
-For markdown structure (heading hierarchy, code blocks, lists, links, tables, admonitions), see [AGENTS_DOC_STYLE.md](AGENTS_DOC_STYLE.md). Routine edits don't need it.
+For markdown structure (page anatomy, cross-linking, code blocks, tables), see [AGENTS_DOC_STYLE.md](AGENTS_DOC_STYLE.md). For voice and word economy, see [AGENTS_TONE.md](../../../AGENTS_TONE.md). Routine edits don't need them.
 
 ## Authoring rules
 
@@ -60,5 +60,6 @@ From [../](../) (the package root): `npm run build` runs rollup + typedoc; `npm 
 
 - [packages/ai-chat/AGENTS.md](../AGENTS.md) — package overview
 - [AGENTS_DOC_STYLE.md](AGENTS_DOC_STYLE.md) — markdown structure for net-new docs
+- [AGENTS_TONE.md](../../../AGENTS_TONE.md) — voice and word economy
 - [../src/types/AGENTS.md](../src/types/AGENTS.md) — JSDoc standards for API docs
 - [../../typedoc-theme/AGENTS.md](../../typedoc-theme/AGENTS.md) — theme customization

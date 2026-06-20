@@ -1,6 +1,6 @@
 {
   "name": "@carbon/ai-chat-examples-web-components-workspace",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "private": true,
   "type": "module",
   "description": "An example using @carbon/ai-chat's Web Component workspace feature",
@@ -40,6 +40,6 @@
     "typescript": "^5.6.3",
     "webpack": "^5.95.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.2.4"
+    "webpack-dev-server": "^5.2.5"
   }
 }

@@ -12,6 +12,7 @@ import throttle from "lodash-es/throttle.js";
 import React, { Fragment, PureComponent, ReactNode } from "react";
 import { useSelector } from "../hooks/useSelector";
 import DownToBottom16 from "@carbon/icons/es/down-to-bottom/16.js";
+import prefix from "@carbon/ai-chat-components/es/globals/settings.js";
 import { HumanAgentBannerContainer } from "./humanAgent/HumanAgentBannerContainer";
 import { MessagesScrollHandle } from "./MessagesScrollHandle";
 import { MessagesScrollToBottomButton } from "./MessagesScrollToBottomButton";
@@ -302,7 +303,22 @@ class MessagesComponent extends PureComponent<MessagesProps, MessagesState> {
           // Always adjust spacer — keeps scrollHeight stable regardless of scroll position.
           // Inverse delta: content grows (+delta) → spacer shrinks (-delta)
           //                content shrinks (-delta) → spacer grows (+delta)
-          this.domSpacerHeight = Math.max(0, this.domSpacerHeight - delta);
+          // Cap growth at the minimum needed to keep pinnedScrollTop reachable —
+          // otherwise post-stream below-viewport shrinkage (e.g., typing indicator
+          // collapsing after a long response finishes) blindly inflates the spacer.
+          const deltaCompensated = Math.max(0, this.domSpacerHeight - delta);
+          const contentHeightWithoutSpacer =
+            scrollElement.scrollHeight - this.domSpacerHeight;
+          const minSpacerForPin = Math.max(
+            0,
+            this.pinnedScrollTop +
+              scrollElement.clientHeight -
+              contentHeightWithoutSpacer,
+          );
+          this.domSpacerHeight = Math.min(
+            deltaCompensated,
+            Math.max(this.domSpacerHeight, minSpacerForPin),
+          );
           applySpacerDeficit(spacerElem, this.domSpacerHeight);
 
           // Restore scrollTop if user is near the pin, or if browser capped scrollTop.
@@ -499,6 +515,31 @@ class MessagesComponent extends PureComponent<MessagesProps, MessagesState> {
   }
 
   /**
+   * Waits for nested markdown component to finish rendering before measuring
+   * the message for pinning and scrolling.
+   */
+  private async waitForMessageComponentLayout(
+    messageComponent: MessageClass,
+  ): Promise<void> {
+    const targetElem = messageComponent?.ref?.current;
+    if (!targetElem) {
+      return;
+    }
+
+    const markdownElement = targetElem.querySelector(`${prefix}-markdown`);
+
+    if (!markdownElement) {
+      return;
+    }
+
+    await markdownElement.updateComplete?.catch((): undefined => undefined);
+
+    await new Promise<void>((resolve): void => {
+      requestAnimationFrame(() => resolve());
+    });
+  }
+
+  /**
    * Recalculate the spacer height for the currently pinned message without touching scrollTop.
    * Used when content below the pin changes (resize, non-streaming response, streaming done).
    * Runs synchronously inside a requestAnimationFrame — must only be called from within one.
@@ -517,10 +558,10 @@ class MessagesComponent extends PureComponent<MessagesProps, MessagesState> {
     this.domSpacerHeight = result.deficit;
   }
 
-  private executeResolvedAutoScrollAction(
+  private async executeResolvedAutoScrollAction(
     options: AutoScrollOptions,
     scrollElement: HTMLElement,
-  ): void {
+  ): Promise<void> {
     const action = resolveAutoScrollAction({
       allMessagesByID: this.props.allMessagesByID,
       localMessageItems: this.props.localMessageItems,
@@ -559,6 +600,10 @@ class MessagesComponent extends PureComponent<MessagesProps, MessagesState> {
         scrollElement.scrollTop = 0;
         return;
       case "pin_message":
+        await this.waitForMessageComponentLayout(action.messageComponent);
+        if (!scrollElement.isConnected) {
+          return;
+        }
         this.executePinAndScroll(action.messageComponent, scrollElement);
         return;
       case "recalculate_spacer":
@@ -733,17 +778,19 @@ class MessagesComponent extends PureComponent<MessagesProps, MessagesState> {
     includePublicSpacerReconciliation = false,
   ) => {
     requestAnimationFrame(() => {
-      // Execute after DOM/layout settles for the current frame so measurements
-      // (scrollHeight, rects) match what the user can actually see.
-      const scrollElement = this.messagesContainerWithScrollingRef.current;
-      if (!scrollElement) {
-        return;
-      }
+      void (async () => {
+        // Execute after DOM/layout settles for the current frame so measurements
+        // (scrollHeight, rects) match what the user can actually see.
+        const scrollElement = this.messagesContainerWithScrollingRef.current;
+        if (!scrollElement) {
+          return;
+        }
 
-      this.executeResolvedAutoScrollAction(options, scrollElement);
-      if (includePublicSpacerReconciliation) {
-        this.reconcileSpacerAfterPublicDoAutoScroll(scrollElement);
-      }
+        await this.executeResolvedAutoScrollAction(options, scrollElement);
+        if (includePublicSpacerReconciliation) {
+          this.reconcileSpacerAfterPublicDoAutoScroll(scrollElement);
+        }
+      })();
     });
   };
 

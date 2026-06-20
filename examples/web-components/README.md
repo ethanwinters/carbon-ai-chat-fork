@@ -251,7 +251,7 @@ Float-layout chat that exposes a custom history panel slot backed by `customLoad
 | `onBeforeRender`                       | property       | Captures the `ChatInstance`.                                     |
 | `instance.messaging.clearConversation` | method         | Resets the current conversation before inserting history.        |
 | `instance.messaging.insertHistory`     | method         | Rehydrates the chat with loaded history.                         |
-| `historyPanelElement`                  | slot           | Writeable-element slot hosting the custom history panel.         |
+| `historyPanelElement`                  | slot           | Slot hosting the custom history panel.                           |
 | `history-panel-load-chat`              | custom event   | Dispatched by the slot element when a user picks a conversation. |
 
 </details>
@@ -277,7 +277,7 @@ Fullscreen chat driven by `<cds-aichat-custom-element>` that exposes a custom hi
 | `BusEventType.STATE_CHANGE`            | event          | Tracks `customPanels.history.isMobile`.                   |
 | `instance.messaging.clearConversation` | method         | Resets the current conversation before inserting history. |
 | `instance.messaging.insertHistory`     | method         | Rehydrates the chat with loaded history.                  |
-| `historyPanelElement`                  | slot           | Writeable-element slot hosting the custom history panel.  |
+| `historyPanelElement`                  | slot           | Slot hosting the custom history panel.                    |
 | `history-panel-load-chat`              | custom event   | Listened for on the host element to drive the loader.     |
 
 </details>
@@ -597,6 +597,27 @@ Connects the chat to IBM watsonx.ai via a local Express proxy that streams token
 | `WCMarkdown`                                  | `@carbon/ai-chat` type        | Shape of the value bound to `.markdown`.                           |
 | `.messaging`, `.layout`, `.openChatByDefault` | properties                    | Standard fullscreen baseline (`showFrame: false`, opens on mount). |
 | `messaging.customSendMessage`                 | property                      | Mock backend that emits markdown with KaTeX math.                  |
+
+</details>
+
+### [Custom message footer](./messages-custom-footer/README.md)
+
+Render your own content beneath an assistant message — here a copy button — with the `renderCustomMessageFooter` callback.
+
+**Start command:** `npm run start --workspace=@carbon/ai-chat-examples-web-components-messages-custom-footer`
+
+<details>
+<summary>APIs and props demonstrated</summary>
+
+| Symbol                                    | Kind           | Role in this example                              |
+| ----------------------------------------- | -------------- | ------------------------------------------------- |
+| `<cds-aichat-custom-element>`             | custom element | Mounts the chat into a host element you style.    |
+| `renderCustomMessageFooter`               | property       | Returns the footer element for each footer slot.  |
+| `RenderCustomMessageFooterState`          | type           | Shape passed to the footer callback.              |
+| `messaging.customSendMessage`             | config prop    | Mock backend that attaches the footer slot.       |
+| `message_item_options.custom_footer_slot` | message field  | Enables the footer and carries `additional_data`. |
+| `<custom-footer-example>`                 | custom element | Footer UI rendered into the slot.                 |
+| `layout.showFrame` / `openChatByDefault`  | config props   | Full-screen baseline.                             |
 
 </details>
 

@@ -1,6 +1,6 @@
 {
   "name": "@carbon/ai-chat-examples-web-components-input-file-upload",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "private": true,
   "type": "module",
   "description": "An example showing how to integrate file uploads into a Carbon AI Chat web component application.",
@@ -35,6 +35,6 @@
     "typescript": "^5.6.3",
     "webpack": "^5.95.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.2.3"
+    "webpack-dev-server": "^5.2.5"
   }
 }

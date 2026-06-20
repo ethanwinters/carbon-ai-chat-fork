@@ -21,6 +21,7 @@ This file provides guidance to agents when working with code in this repository.
 - **Writing a plan** (when the user asks you to draft a multi-PR plan, design doc, or implementation plan before code is written) follow the rubric in [AGENTS_PLAN_AUTHORING.md](AGENTS_PLAN_AUTHORING.md). Plan files (`PLAN.md`, `PLAN-{N}-{title}.md`) live at the repo root and are git-ignored.
 - **Plan reviews** (when the user asks you to review PLAN.md, a design doc, or a multi-PR series before any code is written) follow the rubric in [AGENTS_PLAN_REVIEW.md](AGENTS_PLAN_REVIEW.md).
 - **Writing a PR description**: when asked to draft or write up a PR, follow [AGENTS_PR.md](AGENTS_PR.md).
+- **Writing developer-facing copy** (README, JSDoc, Storybook MDX, `packages/ai-chat/docs/`): follow [AGENTS_TONE.md](AGENTS_TONE.md) for voice and word economy.
 
 ## Repository layout
 

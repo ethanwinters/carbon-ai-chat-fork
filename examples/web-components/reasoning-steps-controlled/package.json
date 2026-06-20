@@ -1,6 +1,6 @@
 {
   "name": "@carbon/ai-chat-examples-web-components-reasoning-steps-controlled",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "private": true,
   "type": "module",
   "description": "Controlled reasoning-step open state with a custom loading counter, using @carbon/ai-chat as a web component.",

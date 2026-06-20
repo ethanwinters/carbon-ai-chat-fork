@@ -47,9 +47,15 @@ function typeInto(el: PromptLineElement, value: string): void {
   ta.dispatchEvent(new InputEvent("input", { bubbles: true }));
 }
 
-/** Poll until the rich editor has finished loading + mounting. */
+/**
+ * Poll until the rich editor has finished loading + mounting. Tiptap is loaded
+ * via a lazy `import()` (see #1578), so the first upgrade in a test file pays a
+ * cold-load cost that can approach a couple seconds on Chromium — poll long
+ * enough to cover it (the runner's Mocha timeout is raised to match in
+ * web-test-runner.config.js).
+ */
 async function waitForRich(el: PromptLineElement): Promise<void> {
-  for (let i = 0; i < 200; i += 1) {
+  for (let i = 0; i < 500; i += 1) {
     if (el.getEditor()) {
       return;
     }

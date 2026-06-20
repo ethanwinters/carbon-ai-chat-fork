@@ -639,7 +639,7 @@ export class DemoBody extends LitElement {
                       class="config-section__title"
                       id="writeable-elements-heading"
                     >
-                      Writeable Elements
+                      Slots
                     </div>
                     <demo-writeable-elements-switcher
                       .settings=${this.settings}

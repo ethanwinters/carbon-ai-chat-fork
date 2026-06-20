@@ -305,7 +305,7 @@ Vite-powered React example that mounts `ChatContainer` with a minimal mock backe
 
 ### [History / Float](./history-float/README.md)
 
-`ChatContainer` with the history feature enabled, using the writeable `historyPanelElement` slot to render a custom conversation picker in the default float layout.
+`ChatContainer` with the history feature enabled, using the `historyPanelElement` slot to render a custom conversation picker in the default float layout.
 
 **Start command:** `npm run start --workspace=@carbon/ai-chat-examples-react-history-float`
 
@@ -698,6 +698,26 @@ Connects `ChatCustomElement` to IBM watsonx.ai for real streaming text generatio
 
 </details>
 
+### [Custom message footer](./messages-custom-footer/README.md)
+
+Render your own content beneath an assistant message — here a copy button — with the `renderCustomMessageFooter` render prop.
+
+**Start command:** `npm run start --workspace=@carbon/ai-chat-examples-react-messages-custom-footer`
+
+<details>
+<summary>APIs and props demonstrated</summary>
+
+| Symbol                                    | Package / kind                   | Role in this example                              |
+| ----------------------------------------- | -------------------------------- | ------------------------------------------------- |
+| `ChatCustomElement`                       | `@carbon/ai-chat` component      | Mounts the chat into a host element you style.    |
+| `renderCustomMessageFooter`               | `@carbon/ai-chat` component prop | Renders the footer for each `custom_footer_slot`. |
+| `RenderCustomMessageFooter`               | `@carbon/ai-chat` type           | Types the footer render prop.                     |
+| `messaging.customSendMessage`             | `@carbon/ai-chat` config prop    | Mock backend that attaches the footer slot.       |
+| `message_item_options.custom_footer_slot` | `@carbon/ai-chat` message field  | Enables the footer and carries `additional_data`. |
+| `layout.showFrame` / `openChatByDefault`  | `@carbon/ai-chat` config props   | Full-screen baseline.                             |
+
+</details>
+
 ### [Reasoning steps](./reasoning-steps/README.md)
 
 Mocks two reasoning-streaming patterns — discrete `ReasoningStep` items (the default behavior) and a single long-form `reasoning.content` trace — picked from a dropdown on the welcome message.
@@ -800,15 +820,15 @@ Baseline Jest + `jest-environment-jsdom` setup that verifies `ChatContainer` mou
 <details>
 <summary>APIs and props demonstrated</summary>
 
-| Symbol                                        | Package / kind              | Role in this example                                          |
-| --------------------------------------------- | --------------------------- | ------------------------------------------------------------- |
-| `ChatContainer`                               | `@carbon/ai-chat` component | Mounted under test.                                           |
-| `messaging.customSendMessage`                 | config prop                 | Inline no-op mock.                                            |
-| `renderWriteableElements.headerBottomElement` | component prop              | React node inserted into the header bottom writeable element. |
-| `data-testid`                                 | component prop              | Passed through to the root element for querying.              |
-| `@testing-library/react`                      | test util                   | `render`, `act`, `waitFor`.                                   |
-| `@testing-library/jest-dom`                   | test util                   | DOM matchers.                                                 |
-| `jest-environment-jsdom`                      | jest env                    | Default Jest DOM environment (no shadow-DOM support).         |
+| Symbol                                        | Package / kind              | Role in this example                                  |
+| --------------------------------------------- | --------------------------- | ----------------------------------------------------- |
+| `ChatContainer`                               | `@carbon/ai-chat` component | Mounted under test.                                   |
+| `messaging.customSendMessage`                 | config prop                 | Inline no-op mock.                                    |
+| `renderWriteableElements.headerBottomElement` | component prop              | React node inserted into the header bottom slot.      |
+| `data-testid`                                 | component prop              | Passed through to the root element for querying.      |
+| `@testing-library/react`                      | test util                   | `render`, `act`, `waitFor`.                           |
+| `@testing-library/jest-dom`                   | test util                   | DOM matchers.                                         |
+| `jest-environment-jsdom`                      | jest env                    | Default Jest DOM environment (no shadow-DOM support). |
 
 </details>
 
