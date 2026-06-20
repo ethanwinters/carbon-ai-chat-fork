@@ -22,7 +22,7 @@ A {@link MessageResponse} is what your server returns. Its core shape:
 
 - `id` — a unique identifier for the response. When you stream, this must match the `response_id` carried on your chunks (see [Streaming](#streaming)). When you update a message later, it is the key you pass to {@link ChatInstanceMessaging.upsertMessage}.
 - `output` ({@link MessageOutput}) — `output.generic` is an ordered array of response items. Each item is a {@link GenericItem}; navigate that type to see every supported `response_type` ({@link MessageResponseTypes}) — text, image, button, card, user_defined, conversational search, and more — and its properties.
-- `message_options` ({@link MessageResponseOptions}) — message-level options such as `response_user_profile` and `chain_of_thought`.
+- `message_options` ({@link MessageResponseOptions}) — message-level options such as `response_user_profile` and `reasoning`.
 - `history` ({@link MessageResponseHistory}) — response metadata (timestamps, labels, error states, feedback) that you persist and replay through [Conversation history](./CustomHistory.md).
 
 A minimal response looks like this:

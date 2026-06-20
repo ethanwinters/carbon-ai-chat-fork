@@ -40,7 +40,7 @@ const chunk: StreamChunk = {
   partial_response: {
     message_options: {
       response_user_profile: userProfile,
-      chain_of_thought: currentSteps,
+      reasoning: currentReasoning,
     },
   },
 };
@@ -75,7 +75,7 @@ const chunk: StreamChunk = {
   partial_response: {
     message_options: {
       response_user_profile: userProfile,
-      chain_of_thought: finalSteps,
+      reasoning: finalReasoning,
     },
   },
 };
@@ -114,7 +114,7 @@ const finalResponse: MessageResponse = {
   },
   message_options: {
     response_user_profile: userProfile,
-    chain_of_thought: chainOfThought,
+    reasoning: reasoningSteps,
   },
 };
 
