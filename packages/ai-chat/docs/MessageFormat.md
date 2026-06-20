@@ -2,13 +2,13 @@
 title: Message format
 ---
 
-### Overview
+## Overview
 
 Build the payloads your server exchanges with Carbon AI Chat: the request the chat sends you and the response it expects back. This page is aimed at the author of the server, assistant, or API that produces those payloads. If you are wiring the chat up to that server in your host application, start with [Server communication](./CustomServer.md) and the delivery guides it links to.
 
 When someone sends a message, the chat hands your {@link PublicConfigMessaging.customSendMessage} function a {@link MessageRequest}. Your code is responsible for producing a {@link MessageResponse} and delivering it back to the chat. You can navigate the full field-level reference for every type from the linked symbols below.
 
-### Requests
+## Requests
 
 A {@link MessageRequest} represents an outgoing user message. The fields you most commonly read:
 
@@ -16,7 +16,7 @@ A {@link MessageRequest} represents an outgoing user message. The fields you mos
 - `history` ({@link MessageRequestHistory}) — request metadata. `history.is_welcome_request` is `true` for the synthetic request the chat sends when a user first opens the chat (see [Welcome messages](./CustomServer.md#welcome-messages)).
 - `context` — an opaque pass-through you can use to carry your own per-request data.
 
-### Responses
+## Responses
 
 A {@link MessageResponse} is what your server returns. Its core shape:
 
@@ -41,7 +41,7 @@ const response: MessageResponse = {
 };
 ```
 
-### Streaming
+## Streaming
 
 The shapes above describe a complete message. When you produce a response incrementally, you wrap items in chunk envelopes and apply them one at a time. There are two delivery mechanisms:
 
@@ -50,7 +50,7 @@ The shapes above describe a complete message. When you produce a response increm
 
 Both ultimately render the same {@link MessageResponse} shape described above.
 
-### Related
+## Related
 
 - [Server communication](./CustomServer.md) — wire the chat to your server.
 - [Structured data](./StructuredData.md) — send typed fields and uploaded files on the request.

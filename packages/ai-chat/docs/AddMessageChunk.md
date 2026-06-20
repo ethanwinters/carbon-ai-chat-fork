@@ -2,7 +2,7 @@
 title: Adding messages (legacy)
 ---
 
-### Overview
+## Overview
 
 Stream a response onto the screen as your assistant produces it with {@link ChatInstanceMessaging.addMessageChunk}. The examples below call `instance.messaging`, so you need a {@link ChatInstance} first — get one from the `onBeforeRender` prop. It uses three types of chunks ({@link StreamChunk}) to progressively build and finalize a message response:
 
@@ -16,7 +16,7 @@ For one-shot, non-streaming inserts use {@link ChatInstanceMessaging.addMessage}
 
 The item and response shapes referenced below are documented in [Message format](./MessageFormat.md).
 
-### Partial item chunks
+## Partial item chunks
 
 Stream incremental updates to individual message items with a {@link PartialItemChunk}. Each chunk carries a {@link DeepPartial} of a {@link GenericItem} in `partial_item`, a per-message `streaming_metadata.response_id`, and a `streaming_metadata` on the item whose `id` picks the item to update and whose optional `cancellable` flag shows the "stop streaming" button. See {@link PartialItemChunk} and {@link StreamChunk} for the full field reference.
 
@@ -47,7 +47,7 @@ const chunk: StreamChunk = {
 await instance.messaging.addMessageChunk(chunk);
 ```
 
-### Complete item chunks
+## Complete item chunks
 
 A complete item chunk ({@link CompleteItemChunk}) finalizes a specific item before the entire message is done. Use a complete item chunk when you:
 
@@ -84,7 +84,7 @@ await instance.messaging.addMessageChunk(chunk);
 
 If you're only streaming a single item, you can skip this step and go directly to the final response.
 
-### Final response chunks
+## Final response chunks
 
 The final response chunk ({@link FinalResponseChunk}) signals the end of all streaming and provides the authoritative final state. It carries the complete {@link MessageResponse} with all items. See {@link FinalResponseChunk} for the full field reference. When you send it:
 
@@ -123,7 +123,7 @@ await instance.messaging.addMessageChunk({
 });
 ```
 
-### Typical streaming flow
+## Typical streaming flow
 
 1. Generate a unique `response_id` for the message
 2. Loop through your streaming source, sending partial item chunks for each update
@@ -132,11 +132,11 @@ await instance.messaging.addMessageChunk({
 
 The Carbon AI Chat appends partial text updates at draw time (for {@link TextItem} and {@link ConversationalSearchItem}), renders streaming text, and transitions to the final state when the final response chunk arrives.
 
-### Cancellation
+## Cancellation
 
 The "stop streaming" button appears when a partial item chunk has `streaming_metadata.cancellable: true`, and the abort signal lets you stop your stream. The cancellation mechanism is identical across delivery flows — see [Cancelling request (stop streaming)](./CustomServer.md#cancelling-request-stop-streaming) on the Server communication page for the full pattern, including how to deliver the final state with either `addMessageChunk` or `upsertMessage`.
 
-### Related
+## Related
 
 - [Adding messages (experimental)](./UpsertMessage.md) — accumulate state in your app and apply one update per call.
 - [Message format](./MessageFormat.md) — the item and response shapes used here.

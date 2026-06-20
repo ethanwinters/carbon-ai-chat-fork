@@ -2,7 +2,7 @@
 title: Adding messages (experimental)
 ---
 
-### Overview
+## Overview
 
 {@link ChatInstanceMessaging.upsertMessage} inserts or updates a single message identified by a stable `messageID`. One method covers inserting, streaming, correcting, and regenerating a message. The updater you pass receives the message's current value and returns what replaces it.
 
@@ -19,7 +19,7 @@ Reach for `upsertMessage` over {@link ChatInstanceMessaging.addMessage} / {@link
 
 The {@link MessageResponse} shape you return is the same one described in [Message format](./MessageFormat.md).
 
-### The updater contract
+## The updater contract
 
 See {@link ChatInstanceMessaging.upsertMessage} for the exact signature and {@link UpsertMessageUpdater} for the updater type.
 
@@ -31,7 +31,7 @@ ID rules:
 - A returned message whose `id` differs from `messageID` throws a `TypeError`.
 - Returning `null`/`undefined`, or a non-assistant message (a request or a human-agent message), throws a `TypeError`.
 
-### The `state` argument
+## The `state` argument
 
 The second argument is a {@link MessageState} describing the lifecycle the chat records for this message after it applies the upsert:
 
@@ -41,11 +41,11 @@ The second argument is a {@link MessageState} describing the lifecycle the chat 
 
 Required on every call; the chat does not preserve state across calls and applies it uniformly to every item in the returned message. There are no locked-terminal states for `STREAMING`/`COMPLETE`: "complete" means "complete as of now," so you can call `upsertMessage(id, MessageState.STREAMING, ...)` on an already-complete message to start re-streaming it (for example, a regenerate-with-streaming flow).
 
-### Per-messageID serialization
+## Per-messageID serialization
 
 Calls targeting the same `messageID` are serialized — each call awaits the previous call for that ID before running. Calls targeting different `messageID`s run independently and in parallel. This lets several messages stream or update concurrently while each individual message stays internally consistent.
 
-### When receive fires
+## When receive fires
 
 `upsertMessage` fires {@link BusEventType.PRE_RECEIVE} and {@link BusEventType.RECEIVE} exactly when a call transitions the message into `MessageState.COMPLETE` from any other state — including the case where the message did not previously exist. `STREAMING`-to-`STREAMING` and `COMPLETE`-to-`COMPLETE` upserts do **not** fire these events.
 
@@ -56,7 +56,7 @@ This is the same rule the other delivery methods follow:
 
 So regenerating a message that is already `COMPLETE` does not fire {@link BusEventType.RECEIVE} (it is not a new turn landing), while inserting a brand-new `COMPLETE` message does.
 
-### User-defined responses
+## User-defined responses
 
 `upsertMessage` reuses the existing {@link BusEventType.USER_DEFINED_RESPONSE} event for `user_defined` items; it fires once per user-defined item per call, for both inserts and updates. The payload's optional `state` field ({@link BusEventUserDefinedResponse}) carries the current {@link MessageState} whenever the chat has a recorded lifecycle for the message — including messages produced through `upsertMessage`, {@link ChatInstanceMessaging.addMessage}, and the final-response transition of {@link ChatInstanceMessaging.addMessageChunk}. The field is additive, so existing consumers ignore it. In React, the same value is available on {@link RenderUserDefinedState} as `state`.
 
@@ -87,7 +87,7 @@ function renderUserDefinedResponse(state: RenderUserDefinedState) {
 }
 ```
 
-### Code patterns
+## Code patterns
 
 **Streaming a single message (SSE-style).** One call per delta. The first call creates the message; subsequent calls update it. {@link BusEventType.RECEIVE} fires once, on the final transition to `COMPLETE`. Each call returns a {@link MessageResponse}.
 
@@ -166,11 +166,11 @@ await instance.messaging.upsertMessage(
 );
 ```
 
-### Cancellation
+## Cancellation
 
 Cancellation works the same way regardless of which delivery method you use. When the abort signal fires, stop your stream and call `upsertMessage` with `MessageState.COMPLETE` to transition the message out of streaming and hide the "stop streaming" button. See [Cancelling request (stop streaming)](./CustomServer.md#cancelling-request-stop-streaming) for the full pattern and an `upsertMessage` finalization example.
 
-### Related
+## Related
 
 - [Adding messages (legacy)](./AddMessageChunk.md) — the stable chunk-based streaming flow.
 - [Server communication](./CustomServer.md) — wiring up {@link PublicConfigMessaging.customSendMessage} and cancellation.

@@ -324,7 +324,11 @@ export const defaultLayout = (context, template, props) => {
     ),
     JSX.createElement(
       "body",
-      { class: "cds-theme-zone-white" },
+      // `cds-theme-zone-white` (CDN web-components themes.css) defines core
+      // tokens like --cds-text-primary but NOT the --cds-syntax-* tokens the
+      // code-snippet highlighter reads. `cds--white` (vendored @carbon/styles)
+      // supplies those, so both classes are needed for syntax highlighting.
+      { class: "cds-theme-zone-white cds--white" },
       context.hook("body.begin", context),
       // Carbon UI Shell header
       JSX.createElement(

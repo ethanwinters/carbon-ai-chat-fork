@@ -2,11 +2,11 @@
 title: Custom panels
 ---
 
-### Overview
+## Overview
 
 Open an overlay panel with your own content — for pre-chat forms, post-chat feedback, or multi-step flows — at any time.
 
-### Opening a panel
+## Opening a panel
 
 Use a panel for pre-chat forms, post-chat feedback, or multi-step flows. You can open it from an event, a `user_defined` response, or an action a user takes on your website.
 
@@ -43,7 +43,7 @@ panel.close();
 
 The custom panel renders content through the {@link WriteableElementName.CUSTOM_PANEL_ELEMENT} slot. See [Slots](./WriteableElements.md) for how to render into a slot.
 
-#### Align rounded corners in a panel
+### Align rounded corners in a panel
 
 Custom panel content can use `data-rounded` attributes to align with the panel's corner rounding.
 
@@ -70,7 +70,7 @@ if (panelElement) {
 
 See [Rounded corners](./Layout.md#rounded-corners).
 
-### Related
+## Related
 
 - [Slots](./WriteableElements.md) — the {@link WriteableElementName.CUSTOM_PANEL_ELEMENT} slot a panel renders through.
 - [Layout](./Layout.md) — corner-rounding tokens used by `data-rounded`.

@@ -2,7 +2,7 @@
 title: Structured data
 ---
 
-### Overview
+## Overview
 
 Sometimes a user's message needs to carry more than text — a form selection, a rating, or an uploaded file. {@link StructuredData} is a typed payload that rides along with the user's input so your agent receives that extra context.
 
@@ -13,7 +13,7 @@ It is request-side only: it travels on {@link MessageInput.structured_data} in t
 
 > This API is experimental. Its shape may still change.
 
-### The shape
+## The shape
 
 A {@link StructuredData} payload has two parts: `fields`, an array of typed {@link StructuredField} entries (each with an `id`, optional `label`, a {@link StructuredFieldType} such as `text`, `select`, `multi_select`, or `file`, and a `value`); and `user_defined`, an escape hatch for arbitrary data that does not fit a typed field.
 
@@ -27,7 +27,7 @@ const data: StructuredData = {
 };
 ```
 
-### Setting structured data from the host
+## Setting structured data from the host
 
 Call {@link ChatInstanceInput.updateStructuredData} with an updater that receives the current pending data (or `undefined`) and returns the next value — return `undefined` to clear it. Whatever is pending is merged into the next message the user sends.
 
@@ -41,7 +41,7 @@ instance.input.updateStructuredData((prev) => ({
 
 Host data and upload contributions are kept separate: uploads merge on top of what you set and never overwrite it, so you never reconcile the two. Read the current merged snapshot from `instance.getState().input.structuredData`.
 
-### Reading it on your server
+## Reading it on your server
 
 Inside {@link PublicConfigMessaging.customSendMessage}, read the payload off the request. It is cleared after each send, so the next message starts clean.
 
@@ -53,7 +53,7 @@ async function customSendMessage(request, requestOptions, instance) {
 }
 ```
 
-### File uploads
+## File uploads
 
 A file upload is one kind of structured data: an uploaded file becomes a `file`-typed {@link StructuredField}, read on the server exactly like any other field.
 
@@ -104,7 +104,7 @@ Honor the `abortSignal` — it fires when the user removes a pending upload or t
 
 The value of a `file` field is a {@link FileFieldValue} — either an {@link ExternalFileReference} (`type: "reference"`, a pointer to a file you uploaded yourself, the common case shown above) or an {@link InlineFile} (`type: "inline"`, the raw `File` carried through to `customSendMessage` for you to upload there).
 
-### Related
+## Related
 
 - [Message format](./MessageFormat.md) — the request and response shapes, including `input.structured_data`.
 - [Server communication](./CustomServer.md) — wire the chat to your server.
