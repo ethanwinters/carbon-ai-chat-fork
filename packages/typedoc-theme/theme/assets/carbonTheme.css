@@ -133,6 +133,14 @@ p:first-child {
   margin: 0;
 }
 
+/* Carbon list web components default to display: inline, so vertical margins
+ * are ignored. Make them block-level and give them the same top spacing as p. */
+cds-ordered-list,
+cds-unordered-list {
+  display: block;
+  margin-top: var(--cds-spacing-04, 0.75rem);
+}
+
 a {
   color: var(--cds-link-primary, #0f62fe);
   text-decoration: none;

@@ -2,11 +2,11 @@
 title: Theming
 ---
 
-### Overview
+## Overview
 
 Customize the Carbon theme of the chat. By default, it inherits a Carbon theme from the host page. If your site doesn't use Carbon and you don't set `injectCarbonTheme`, the chat renders the white theme — it reads your page background and switches to a dark theme only if your page is dark. To take control, pick one of four built-in themes or inject your own and override specific colors.
 
-### Pick a built-in theme
+## Pick a built-in theme
 
 If your site doesn't use Carbon, set {@link PublicConfig.injectCarbonTheme} to one of four themes:
 
@@ -34,7 +34,7 @@ function App() {
 
 See [React](./React.md) and [web components](./WebComponent.md) for how config reaches the chat.
 
-### Override specific colors
+## Override specific colors
 
 The chat exposes two layers of CSS custom properties you can override from your own stylesheet:
 
@@ -57,7 +57,7 @@ The chat picks up your `--cds-*` overrides whenever it inherits its theme from t
 
 [Layout](./Layout.md) documents the `--cds-aichat-*` sizing and placement tokens and how to set them through {@link LayoutConfig.customProperties}; [Launcher](./Launcher.md) documents the launcher and unread-indicator tokens.
 
-### Related
+## Related
 
 - [Layout](./Layout.md) — override `--cds-aichat-*` tokens and size the chat.
 - [@carbon/themes](https://github.com/carbon-design-system/carbon/tree/main/packages/themes) — theme tokens and palette.

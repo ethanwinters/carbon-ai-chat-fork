@@ -8,7 +8,7 @@ children:
   - ./CustomHistory.md
 ---
 
-### Overview
+## Overview
 
 You can connect the Carbon AI Chat to your own server. It supports both streaming and non-streaming results, or a mixture of both. There are two responsibilities you can implement:
 
@@ -23,7 +23,7 @@ This page is the entry point. Depending on what you are building, continue to:
 - [Structured data](./StructuredData.md) — send typed fields and uploaded files alongside the user's text.
 - [Conversation history](./CustomHistory.md) — loading and restoring previous conversations.
 
-### Connecting your server
+## Connecting your server
 
 The Carbon AI Chat takes custom messaging server configuration as part of its {@link PublicConfig}. You must provide a {@link PublicConfigMessaging.customSendMessage} function that the Carbon AI Chat calls any time the user sends a message. It also gets called when you use {@link ChatInstance.send}.
 
@@ -43,7 +43,7 @@ This function can return nothing or it can return a promise object. If you retur
 
 If you do not return a promise object, the Carbon AI Chat does not queue messages for you or show any loading indicator if no first chunk is returned.
 
-### Delivering responses
+## Delivering responses
 
 Once you have a response (or part of one), you push it onto the screen through {@link ChatInstanceMessaging}. There are two flows, and your assistant can return responses in either format and switch between them:
 
@@ -52,7 +52,7 @@ Once you have a response (or part of one), you push it onto the screen through {
 
 For the shape of the data you return in either flow, see [Message format](./MessageFormat.md).
 
-### Cancelling request (stop streaming)
+## Cancelling request (stop streaming)
 
 When streaming content, users can request to stop the stream in two ways:
 
@@ -61,7 +61,7 @@ When streaming content, users can request to stop the stream in two ways:
 
 Both actions trigger request cancellation. The cancellation mechanism is identical across delivery flows — the same abort signal works whether you deliver responses with {@link ChatInstanceMessaging.addMessageChunk} or {@link ChatInstanceMessaging.upsertMessage}. Only the way you deliver the final state differs.
 
-#### 1. Mark your stream as cancellable
+### 1. Mark your stream as cancellable
 
 Set `cancellable: true` in the {@link ItemStreamingMetadata} of the items you are streaming. The "stop streaming" button appears whenever a streaming item has `cancellable: true`.
 
@@ -85,7 +85,7 @@ const chunk: StreamChunk = {
 
 With {@link ChatInstanceMessaging.upsertMessage}, set it on the item in the message your updater returns while the message is in {@link MessageState.STREAMING}.
 
-#### 2. Listen for cancellation
+### 2. Listen for cancellation
 
 The {@link CustomSendMessageOptions.signal} abort signal is triggered when a message request is cancelled. When aborted, the signal's `reason` property contains one of the values from the {@link CancellationReason} enum:
 
@@ -134,11 +134,11 @@ async function customSendMessage(
 }
 ```
 
-#### 3. Deliver the final state
+### 3. Deliver the final state
 
 When cancellation is detected, exit your streaming loop and transition the message out of the streaming state. How you deliver that final state depends on which flow you are using.
 
-##### With addMessageChunk
+#### With addMessageChunk
 
 Send a {@link FinalResponseChunk}. Optionally send a {@link CompleteItemChunk} with `stream_stopped: true` first to trigger the appropriate a11y states:
 
@@ -174,7 +174,7 @@ await instance.messaging.addMessageChunk({
 });
 ```
 
-##### With upsertMessage
+#### With upsertMessage
 
 Call {@link ChatInstanceMessaging.upsertMessage} with {@link MessageState.COMPLETE}. This transitions the message out of streaming and hides the "stop streaming" button. Set `streaming_metadata.stream_stopped: true` on the items to trigger the "Response stopped" a11y announcement:
 
@@ -198,7 +198,7 @@ await instance.messaging.upsertMessage(
 );
 ```
 
-#### Important notes
+### Important notes
 
 - The "stop streaming" button appears when a streaming item has `cancellable: true`.
 - Clicking the button triggers the abort signal (with reason {@link CancellationReason.STOP_STREAMING}), but does not automatically stop your streaming.
@@ -207,17 +207,17 @@ await instance.messaging.upsertMessage(
 - With {@link ChatInstanceMessaging.addMessageChunk}, the button remains visible (disabled) until a {@link FinalResponseChunk} is received; with {@link ChatInstanceMessaging.upsertMessage}, it hides when the message transitions to {@link MessageState.COMPLETE} (or {@link MessageState.ERROR}). Always deliver the final state, even when cancelled, to properly clean up UI state.
 - If the message was cancelled because of a {@link CancellationReason.TIMEOUT}, the UI marks the message as errored.
 
-### Welcome messages
+## Welcome messages
 
 By default, if the homescreen is disabled, the Carbon AI Chat sends a {@link MessageRequest} with `input.text` set to a blank string and `history.is_welcome_request` set to true when a user first opens the chat. This lets you inject a hard-coded greeting. To skip it, set {@link PublicConfigMessaging.skipWelcome} to `true`.
 
 If you want to send your own "welcome" message (e.g. you send different text depending on the user and respond in kind) you can set {@link PublicConfigMessaging.skipWelcome} to `true` and deliver the greeting yourself — call {@link ChatInstanceMessaging.addMessage} for a one-shot greeting, or {@link ChatInstanceMessaging.upsertMessage} if you want to update that greeting later.
 
-### Message loading indicators
+## Message loading indicators
 
 By default, the chat shows a loading indicator if it does not get back a chunk or message before {@link PublicConfigMessaging.messageLoadingIndicatorTimeoutSecs} expires. You can turn off this auto-showing of a loading indicator in this case by setting {@link PublicConfigMessaging.messageLoadingIndicatorTimeoutSecs} to 0. If your message is taking a long time to stream or has many thinking steps or long running API calls, toggle the loading indicator on manually using {@link ChatInstance.updateIsChatLoadingCounter}.
 
-### Related
+## Related
 
 - [Message format](./MessageFormat.md) — the shape of the requests you receive and responses you return.
 - [Adding messages (legacy)](./AddMessageChunk.md) — the chunk-based streaming flow.

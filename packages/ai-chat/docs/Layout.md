@@ -2,11 +2,11 @@
 title: Layout
 ---
 
-### Overview
+## Overview
 
 Control where the chat renders, size it through CSS custom properties, float it in the corner of the page, and round its corners.
 
-### Layout modes
+## Layout modes
 
 The standard way to use Carbon AI Chat is the custom element — {@link ChatCustomElement} in React or `cds-aichat-custom-element` as a web component. You size and place the element in your DOM and the chat grows to fill it: a sidebar, a full-screen view, or a panel nested in your UI.
 
@@ -14,7 +14,7 @@ The classic floating widget — a launcher in the corner and a window that opens
 
 For more information, see the documentation for [React](./React.md) and [web components](./WebComponent.md).
 
-### Layout CSS custom properties
+## Layout CSS custom properties
 
 Size and place the chat by overriding its `--cds-aichat-*` custom properties in your own stylesheet. The properties inherit through the chat's shadow boundary, so setting them on a host element flows into the chat:
 
@@ -37,7 +37,7 @@ These shared tokens apply to both the floating and custom-element layouts:
 
 You can also set these tokens from config through {@link LayoutConfig.customProperties} (keys come from {@link LayoutCustomProperties}) if you'd rather keep them out of a stylesheet.
 
-### Floating layout
+## Floating layout
 
 To float the chat, apply the exported float classes to your custom element and import the float stylesheet:
 
@@ -74,7 +74,7 @@ Size and placement of the floating container come from these tokens:
 
 The launcher that opens the floating window has its own configuration and styling tokens — see [Launcher](./Launcher.md).
 
-### Rounded corners
+## Rounded corners
 
 AI Chat components use a shared rounded modifier system to keep corners consistent across slotted content. There are two ways to use it:
 
@@ -100,7 +100,7 @@ Supported values for `data-rounded`:
 
 Use `data-stacked` when children are arranged in a vertical stack. Without `data-stacked`, `data-rounded="top"` and `data-rounded="bottom"` round the first and last child in a horizontal row.
 
-#### Per-corner configuration
+### Per-corner configuration
 
 You can configure corners individually using {@link LayoutConfig.corners}. Pass a single {@link CornersType} value to round every corner, or a {@link PerCornerConfig} object to control each corner:
 
@@ -147,7 +147,7 @@ import { CornersType, PerCornerConfig } from '@carbon/ai-chat';
 
 > **Note:** Corner names use CSS logical properties for RTL support. `startStart` means "block-start inline-start" which automatically maps to the correct physical corner based on text direction.
 
-#### Corner CSS custom properties
+### Corner CSS custom properties
 
 To round your own slotted content to match, read the per-corner radius tokens. Each is RTL-safe and defaults to `layout.$spacing-03` (`0.5rem` / `8px`):
 
@@ -182,7 +182,7 @@ Or let the system apply rounding for you with `data-rounded`. Render this into a
 </div>
 ```
 
-### Related
+## Related
 
 - [Launcher](./Launcher.md) — configure or replace the launcher and style its tokens.
 - [Header](./Header.md) — title, buttons, menus, and the AI label in the header bar.
