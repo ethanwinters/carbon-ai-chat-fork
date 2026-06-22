@@ -2,7 +2,7 @@
 title: Using with React
 ---
 
-### Overview
+## Overview
 
 Carbon AI Chat exports two React components.
 
@@ -16,7 +16,7 @@ For more information, see [the examples page](https://github.com/carbon-design-s
 
 > **Note**: This component doesn't support SSR. In Next.js or similar frameworks, render it client-side only.
 
-### Installation
+## Installation
 
 Install with npm:
 
@@ -28,7 +28,7 @@ Or with yarn:
 
 > **Note**: Install the required `peerDependencies`. See the [peer dependency changes](https://github.com/carbon-design-system/carbon-ai-chat/blob/main/docs/peer-dependency-changes.md) for a history of additions, removals, and version updates across releases.
 
-#### Basic example
+### Basic example
 
 Render this component in your application and provide the configuration options for the Carbon AI Chat as individual props. Give it a `className` that sizes it.
 
@@ -55,7 +55,7 @@ function App() {
 }
 ```
 
-### Using ChatCustomElement
+## Using ChatCustomElement
 
 Use {@link ChatCustomElement} to render the Carbon AI Chat inside a custom element, controlling where the chat renders. This component renders an element in your React app and uses it as the custom element for the chat. See {@link ChatCustomElementProps} for the accepted props.
 
@@ -96,21 +96,21 @@ function App() {
 }
 ```
 
-#### Float layout
+### Float layout
 
 The float layout pins the chat to the corner of the page as a launcher button that opens a floating window — the widget {@link ChatContainer} renders for you. To get that same layout on your own {@link ChatCustomElement} instead, import `@carbon/ai-chat/css/chat-float-layout.css` and apply the `cds-aichat-float--*` classes through `className`, driven by the chat's view-change events. See [Float layout classes](./Layout.md#floating-layout) for the class list, and the [custom-element-as-float example](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/react/custom-element-as-float) for the full pattern. To skip this wiring, use {@link ChatContainer}.
 
-### Using ChatContainer
+## Using ChatContainer
 
 {@link ChatContainer} renders the floating widget for you — it applies the [float layout classes](./Layout.md#floating-layout) and has no element to size. Reach for it when you want the classic corner launcher and pop-over window with no layout work.
 
 See {@link ChatContainerProps} for the accepted props.
 
-### Accessing instance methods
+## Accessing instance methods
 
 Capture the {@link ChatInstance} from {@link ChatContainerProps.onBeforeRender} (or {@link ChatContainerProps.onAfterRender}) when you need to call instance methods later. See those props for an example.
 
-### User-defined responses
+## User-defined responses
 
 This component can also manage `user_defined` responses. (See {@link UserDefinedItem}). For what `user_defined` responses are and how they're styled, see [Customizing responses](./Responses.md). You must pass a {@link ChatContainerProps.renderUserDefinedResponse} function as a render prop. This function returns a React component that renders content for the specific message that relates to that response.
 
@@ -183,7 +183,7 @@ function renderUserDefinedResponse(
 
 You may also want the renderer to read your app's state, or to stream. Wrap the prop in `useCallback` so it only changes when your state does, and read {@link RenderUserDefinedState.partialItems} for streaming — see [the streaming model](./Responses.md#streaming-and-updates) for how `partialItems` and chunk correlation work. For runnable versions, see the [basic](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/react/basic) and [streaming](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/react/reasoning-with-streaming-generic-items) examples.
 
-### Slots
+## Slots
 
 This component also has several elements inside the chat that you can add extra content to with a slot. The {@link ChatContainerProps.renderWriteableElements} prop is an object with the key as the area you want to render a component to and the value being the component to render there. See [Slots](./WriteableElements.md) for the available slots and the corner-alignment attributes (`data-rounded`/`data-stacked`).
 
@@ -219,13 +219,13 @@ function App() {
 
 For a runnable version, see the [workspace example](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/react/workspace).
 
-### Testing with Jest
+## Testing with Jest
 
 Carbon AI Chat exports as an ES module and does not include a CJS build. Please refer to the [Jest documentation](https://jestjs.io/docs/code-transformation) for information about transforming ESM to CJS for Jest using `babel-jest` or `ts-jest`.
 
 See [jsdom examples](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/react/jest-jsdom) and [happydom examples](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/react/jest-happydom).
 
-### Custom message footer
+## Custom message footer
 
 Insert a `custom_footer_slot` in assistant messages to render your own content beneath them — copy and share actions, ratings, or links. See [Custom message footer](./CustomMessageFooter.md) for the concept. In React, pass a {@link ChatContainerProps.renderCustomMessageFooter} render prop that returns the footer component:
 
@@ -249,6 +249,6 @@ Insert a `custom_footer_slot` in assistant messages to render your own content b
 
 Like {@link ChatContainerProps.renderUserDefinedResponse}, it runs on every render, so keep per-render work out of it. For the full footer component and the mock backend that attaches the slot, see the [custom message footer example](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/react/messages-custom-footer).
 
-### Related
+## Related
 
 - [UI customization](./Customization.md) — theme the chat, control its layout, and inject your own content into slots, panels, responses, and footers.

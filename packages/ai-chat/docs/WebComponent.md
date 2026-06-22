@@ -2,7 +2,7 @@
 title: Using as a Web component
 ---
 
-### Overview
+## Overview
 
 Carbon AI Chat exports two web components.
 
@@ -14,7 +14,7 @@ You receive the {@link ChatInstance} from {@link CdsAiChatContainerAttributes.on
 
 > **Note**: This page covers only what's specific to web components. For theming, layout, slotting your own content, and the rest of the configuration shared across every framework, see [UI customization](./Customization.md).
 
-### Installation
+## Installation
 
 Install by using `npm`:
 
@@ -26,7 +26,7 @@ Or using `yarn`:
 
 > **Note**: Install the required `peerDependencies`. See the [peer dependency changes](https://github.com/carbon-design-system/carbon-ai-chat/blob/main/docs/peer-dependency-changes.md) for a history of additions, removals, and version updates across releases.
 
-#### Basic example
+### Basic example
 
 Render this component, give it a class that sizes it, and pass your configuration as props.
 
@@ -53,7 +53,7 @@ export class MyApp extends LitElement {
 }
 ```
 
-### Using cds-aichat-custom-element
+## Using cds-aichat-custom-element
 
 This library provides the component `cds-aichat-custom-element`, which you can use to render the Carbon AI Chat inside a custom element. Use this if you need to change the location where the Carbon AI Chat renders.
 
@@ -91,11 +91,11 @@ export class MyApp extends LitElement {
 }
 ```
 
-#### Float layout
+### Float layout
 
 The float layout pins the chat to the corner of the page as a launcher button that opens a floating window — the widget {@link CdsAiChatContainerAttributes | cds-aichat-container} renders for you. To get that same layout on your own `cds-aichat-custom-element` instead, import `@carbon/ai-chat/css/chat-float-layout.css` and apply the `cds-aichat-float--*` classes to the element, driven by the chat's view-change events. See [Float layout classes](./Layout.md#floating-layout) for the class list, and the [custom-element-as-float example](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/web-components/custom-element-as-float) for the full pattern. To skip this wiring, use {@link CdsAiChatContainerAttributes | cds-aichat-container}.
 
-### Using cds-aichat-container
+## Using cds-aichat-container
 
 {@link CdsAiChatContainerAttributes | cds-aichat-container} renders the floating widget for you — it applies the [float layout classes](./Layout.md#floating-layout) and has no element to size. Reach for it when you want the classic corner launcher and pop-over window with no layout work.
 
@@ -105,17 +105,17 @@ The `cds-aichat-container` component creates the chat instance when it mounts an
 
 See {@link CdsAiChatContainerAttributes} for an explanation of the various accepted properties and attributes.
 
-### Accessing instance methods
+## Accessing instance methods
 
 Capture the {@link ChatInstance} from {@link CdsAiChatContainerAttributes.onBeforeRender} (or {@link CdsAiChatContainerAttributes.onAfterRender}) when you need to call instance methods later. See those props for an example.
 
-### User defined responses
+## User defined responses
 
 For what `user_defined` responses are and how they're styled, see [Customizing responses](./Responses.md).
 
 Render `user_defined` responses with the {@link CdsAiChatContainerAttributes.renderUserDefinedResponse} callback property. It handles event listening, slot tracking, streaming state, and element lifecycle for you.
 
-#### Using the renderUserDefinedResponse callback
+### Using the renderUserDefinedResponse callback
 
 Provide a callback that receives the accumulated {@link RenderUserDefinedState} for a `user_defined` response and returns an `HTMLElement` (or `null`). The callback reads the {@link UserDefinedItem} from that state. The library manages everything else.
 
@@ -178,7 +178,7 @@ export class Demo extends LitElement {
 }
 ```
 
-#### Streaming with the callback
+### Streaming with the callback
 
 The callback is invoked on every state update (new chunk, complete item, full message). Use `partialItems` to render streaming content and `messageItem` for the final response.
 
@@ -212,7 +212,7 @@ See [the streaming model](./Responses.md#streaming-and-updates) for how `partial
 
 For fine-grained control, you can instead subscribe to {@link BusEventType.USER_DEFINED_RESPONSE} and {@link BusEventType.CHUNK_USER_DEFINED_RESPONSE} directly and manage the slots yourself. The [chat-history-float example](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/web-components/chat-history-float) uses this approach.
 
-### Slots
+## Slots
 
 See [Slots](./WriteableElements.md) for the slot concept and the available {@link WriteableElementName} slots.
 
@@ -237,7 +237,7 @@ export class MyApp extends LitElement {
 }
 ```
 
-### Custom message footer
+## Custom message footer
 
 For the custom footer concept — the `custom_footer_slot`, the {@link BusEventType.CUSTOM_FOOTER_SLOT} event, and `additionalData` — see [Custom message footer](./CustomMessageFooter.md).
 
@@ -254,6 +254,6 @@ renderCustomMessageFooter = (state, instance) => {
 
 For the full footer element and the mock backend that attaches the slot, see the [custom message footer example](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/web-components/messages-custom-footer). For fine-grained control, subscribe to {@link BusEventType.CUSTOM_FOOTER_SLOT} directly and manage slots yourself.
 
-### Related
+## Related
 
 - [UI customization](./Customization.md) — theme the chat, control its layout, and inject your own content into slots, panels, responses, and footers.
