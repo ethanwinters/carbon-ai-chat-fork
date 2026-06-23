@@ -1,6 +1,6 @@
 # Plan-review rubric
 
-This file tells agents how to review an implementation plan before any code is written. It is the planning-phase analog of [AGENTS_CODE_REVIEW.md](AGENTS_CODE_REVIEW.md).
+This file tells agents how to review an implementation plan before any code is written. It is the planning-phase analog of [code-review.md](code-review.md).
 
 Use this rubric when the user asks you to "review the plan", "look over PLAN.md", "check the design", "give feedback before I start", or anything similar — for any plan document or set of plan documents (PLAN.md, design docs, multi-PR series, RFC drafts).
 

@@ -22,6 +22,15 @@ export interface EventHandlers {
    *
    * @param handlers The handler or handlers along with the event type to start listening for events.
    * @returns The instance for method chaining.
+   *
+   * @example Listen for received messages, chaining a second subscription
+   * ```ts
+   * import { BusEventType } from "@carbon/ai-chat";
+   *
+   * instance
+   *   .on({ type: BusEventType.RECEIVE, handler: (event) => console.log(event.data) })
+   *   .on({ type: BusEventType.VIEW_CHANGE, handler: (event) => console.log(event.newViewState) });
+   * ```
    */
   on: (handlers: TypeAndHandler | TypeAndHandler[]) => EventHandlers;
 
@@ -30,6 +39,16 @@ export interface EventHandlers {
    *
    * @param handlers The handler or handlers along with the event type to stop listening for events.
    * @returns The instance for method chaining.
+   *
+   * @example Remove a previously registered handler
+   * ```ts
+   * import { BusEventType } from "@carbon/ai-chat";
+   *
+   * // off requires the same handler reference passed to on.
+   * const onReceive = (event) => console.log(event.data);
+   * instance.on({ type: BusEventType.RECEIVE, handler: onReceive });
+   * instance.off({ type: BusEventType.RECEIVE, handler: onReceive });
+   * ```
    */
   off: (handlers: TypeAndHandler | TypeAndHandler[]) => EventHandlers;
 
@@ -39,6 +58,16 @@ export interface EventHandlers {
    *
    * @param handlers The handler or handlers along with the event type to start listening for an event.
    * @returns The instance for method chaining.
+   *
+   * @example Run a handler only on the first chat-ready event
+   * ```ts
+   * import { BusEventType } from "@carbon/ai-chat";
+   *
+   * instance.once({
+   *   type: BusEventType.CHAT_READY,
+   *   handler: () => console.log("chat is ready"),
+   * });
+   * ```
    */
   once: (handlers: TypeAndHandler | TypeAndHandler[]) => EventHandlers;
 }

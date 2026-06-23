@@ -52,7 +52,7 @@ export interface ChatInstanceInput {
    * as the pending value and seeds the field when it renders; a result with
    * non-text content throws, because there is no surface to upgrade.
    *
-   * @example
+   * @example Replace the input with a paragraph containing a mention
    * ```ts
    * await instance.input.updateContent(() => ({
    *   type: "doc",
@@ -85,23 +85,26 @@ export interface ChatInstanceInput {
    * This is the primary mechanism for pushing structured inputs (form fields, file references, etc.)
    * into the active input so they are included when the user hits Send.
    *
-   * @example
+   * @example Add a field to the pending structured data
    * ```ts
-   * // Add a field to the pending structured data
    * instance.input.updateStructuredData((prev) => ({
    *   ...prev,
    *   fields: [
    *     ...(prev?.fields ?? []),
-   *     { id: 'rating', type: 'number', value: 4 }
-   *   ]
+   *     { id: "rating", type: "number", value: 4 },
+   *   ],
    * }));
+   * ```
    *
-   * // Replace all pending structured data
+   * @example Replace all pending structured data
+   * ```ts
    * instance.input.updateStructuredData(() => ({
-   *   fields: [{ id: 'selection', type: 'multi_select', value: ['a', 'b'] }]
+   *   fields: [{ id: "selection", type: "multi_select", value: ["a", "b"] }],
    * }));
+   * ```
    *
-   * // Clear pending structured data
+   * @example Clear the pending structured data
+   * ```ts
    * instance.input.updateStructuredData(() => undefined);
    * ```
    *
@@ -145,7 +148,7 @@ export interface ChatInstanceInput {
    * - `editor.extensionStorage` for per-extension state
    * - `editor.on(...)` for low-level event subscriptions
    *
-   * @example
+   * @example Load the editor on demand and focus it
    * ```ts
    * const editor = await instance.input.getEditor();
    * editor.commands.focus();

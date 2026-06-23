@@ -1,4 +1,4 @@
-# AGENTS_INDEXER_CONTRACT.md — examples README format
+# indexer-contract.md — examples README format
 
 Every example README must follow this structure so the repo indexer can parse and display it. Validation runs as part of `ci-check`.
 
@@ -68,9 +68,9 @@ If validation fails, the example won't appear on the docs site.
 
 ## Templates
 
-- **Reference implementation**: [examples/react/basic-custom-element-fullscreen/README.md](react/basic-custom-element-fullscreen/README.md)
-- **New-example template**: [examples/README_TEMPLATE.md](README_TEMPLATE.md)
+- **Reference implementation**: [examples/react/basic-custom-element-fullscreen/README.md](../react/basic-custom-element-fullscreen/README.md)
+- **New-example template**: [examples/README_TEMPLATE.md](../README_TEMPLATE.md)
 
 ## Related guidance
 
-- [examples/AGENTS.md](AGENTS.md) — example authoring rules
+- [examples/AGENTS.md](../AGENTS.md) — example authoring rules

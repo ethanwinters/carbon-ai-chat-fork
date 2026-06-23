@@ -1,4 +1,4 @@
-This rubric governs every code review in this repo — both user-requested reviews and the self-review an agent runs against its own diff before marking a task done (see [AGENTS.md](AGENTS.md)).
+This rubric governs every code review in this repo — both user-requested reviews and the self-review an agent runs against its own diff before marking a task done (see [AGENTS.md](../AGENTS.md)).
 
 ## How to review
 
@@ -22,13 +22,7 @@ This rubric governs every code review in this repo — both user-requested revie
 
 ### If the PR contains code changes
 
-- **Favor simplicity** — code should be obvious to someone new to the codebase; prefer the simpler, more readable approach even when a cleverer one is shorter:
-  - Smaller, single-purpose functions over large multi-job ones.
-  - No hidden side effects — a function's effects should be evident from its name and signature.
-  - Flatten control flow with early returns / guard clauses; flag nesting beyond ~2–3 levels.
-  - Minimize state and mutation — prefer pure functions and explicit inputs/outputs; flag module-level or shared mutable state.
-  - No premature abstraction — no indirection, generality, config, or flag params for a single caller (see scope creep below).
-  - Avoid cleverness — no dense one-liners or nested ternaries when a plain version reads clearer.
+- **Favor simplicity** — confirm the diff follows the least-code discipline and simplicity principles in [code-patterns.md](code-patterns.md#writing-the-least-code-laziness-ladder); flag violations (over-built code, large multi-job functions, hidden side effects, deep nesting, shared mutable state, single-caller abstractions, cleverness over a plain version).
 - Analyze logic for bugs, inefficiencies, and security risks (OWASP-style: injection, XSS, unsafe deserialization, secrets in code).
 - Check variable names, function structure, and error handling for clarity and correctness.
 - Confirm edge-case handling — empty/null inputs, error paths, concurrency, cancellation, large inputs.
@@ -43,17 +37,18 @@ This rubric governs every code review in this repo — both user-requested revie
   - `@carbon/ai-chat` — Jest, specs under `packages/ai-chat/tests/spec/**/*_spec.ts(x)`.
   - `@carbon/ai-chat-components` — `@web/test-runner` for Lit components (colocated `__tests__/*.test.ts`) and Jest for the React wrappers.
   - `demo/` — Playwright under `demo/tests/`.
-  - `examples/**` — Playwright smoke tests (see [examples/AGENTS_PLAYWRIGHT.md](examples/AGENTS_PLAYWRIGHT.md)).
+  - `examples/**` — Playwright smoke tests (see [../examples/references/playwright.md](../examples/references/playwright.md)).
 - For UI changes, call out whether a visual/interaction check in the browser is required in addition to automated tests.
 
 ## Repo-specific checks
 
-For each changed file, read every `AGENTS.md` on the path from its directory up to the repo root, plus any `AGENTS_<TOPIC>.md` they link to — e.g. a change under `packages/ai-chat-components/src/components/audio-player/` is governed by [packages/ai-chat-components/AGENTS.md](packages/ai-chat-components/AGENTS.md) then the root [AGENTS.md](AGENTS.md). Flag any of:
+For each changed file, read every `AGENTS.md` on the path from its directory up to the repo root, plus any topic docs under their `references/` folders they link to — e.g. a change under `packages/ai-chat-components/src/components/audio-player/` is governed by [packages/ai-chat-components/AGENTS.md](../packages/ai-chat-components/AGENTS.md) then the root [AGENTS.md](../AGENTS.md). Rule definitions live in [code-patterns.md](code-patterns.md) and [conventions.md](conventions.md); this list is what to flag. Flag any of:
 
-- **New components added under `packages/ai-chat/src/chat/components-legacy/`** — that directory is closed to new components; new UI belongs in `components/` or lifted to `@carbon/ai-chat-components`.
-- **SCSS violations**: missing `#{$prefix}--` prefix, descendant nesting, physical properties (`padding-left`, `right`, etc.) instead of logical properties (`padding-inline-start`, `inset-inline-end`) that are required for RTL.
-- **Conventional-commit format** on the PR title / squash commit (`build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test`, header ≤ 72 chars, imperative lowercase subject, no trailing period).
-- **Examples**: each example's README still satisfies the Indexer contract described in [examples/AGENTS.md](examples/AGENTS.md).
+- **Over-engineering** — code the [laziness ladder](code-patterns.md#writing-the-least-code-laziness-ladder) would have avoided: dead code or unused flexibility (delete it), hand-rolled logic the stdlib ships, a dependency or code reinventing a native platform feature, an abstraction with a single caller (YAGNI), or logic expressible in fewer lines. Correctness and security stay in the sections above — this check is only about removable complexity.
+- **New components added under `packages/ai-chat/src/chat/components-legacy/`** — that directory is closed to new components ([component placement](code-patterns.md#component-placement)).
+- **Prefix / SCSS violations** — hardcoded `cds--`, missing `#{$prefix}--`, descendant nesting, or physical properties instead of logical ones for RTL ([naming & prefix discipline](code-patterns.md#naming--prefix-discipline-build-breaking), [SCSS authoring](code-patterns.md#scss-authoring)).
+- **Conventional-commit format** on the PR title / squash commit ([commits](conventions.md#commits)).
+- **Examples**: each example's README still satisfies the Indexer contract described in [examples/AGENTS.md](../examples/AGENTS.md).
 - **Accessibility** on UI changes: keyboard navigation, focus management, ARIA roles/labels, color contrast, and RTL behavior. Carbon is a design system — a11y regressions are blockers.
 - **Dependencies**: new or upgraded packages should be justified; flag peer-dep conflicts, duplicate functionality already available via existing deps, or license incompatibilities.
 
@@ -68,8 +63,10 @@ For each changed file, read every `AGENTS.md` on the path from its directory up 
 
 For context on conventions being enforced:
 
-- **General conventions**: [AGENTS.md](AGENTS.md) - Monorepo-wide rules
+- **Code-level patterns**: [code-patterns.md](code-patterns.md) - the laziness ladder & simplicity principles, prefix discipline, SCSS, RTL, component placement, comments
+- **Process conventions**: [conventions.md](conventions.md) - commits, branches, license headers, hooks
+- **General overview**: [AGENTS.md](../AGENTS.md) - Monorepo pointer index
 - **Package-specific rules**: See AGENTS.md in each package directory
-- **PR workflow**: [AGENTS_PR.md](AGENTS_PR.md) - How to draft PR descriptions
+- **PR workflow**: [pr.md](pr.md) - How to draft PR descriptions
 
 When reviewing, cross-reference these docs to understand the "why" behind conventions.

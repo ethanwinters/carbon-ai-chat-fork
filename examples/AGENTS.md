@@ -8,20 +8,20 @@ Guidance that applies to both [react/](react/) and [web-components/](web-compone
 
 1. **Pick a base and copy it.** Each flavor lists its canonical scaffolds in its own `AGENTS.md`. Both include webpack config, `tsconfig.json`, HTML entry, and `package.json`. Rename the folder to `<slug>` and update the workspace name to the flavor's naming pattern.
 2. **Modify only what your example needs to demonstrate.** Keep the bundler, scripts, and file layout unless the example is specifically about a different toolchain (e.g. `frameworks-vite/`, `frameworks-next/`, `frameworks-react-17/`, `tests-jest-*/`). For a different toolchain, copy from the closest matching existing example.
-3. **Write a `README.md`** from [README_TEMPLATE.md](README_TEMPLATE.md) — required. It must follow the [Indexer Contract](AGENTS_INDEXER_CONTRACT.md).
+3. **Write a `README.md`** from [README_TEMPLATE.md](README_TEMPLATE.md) — required. It must follow the [Indexer Contract](references/indexer-contract.md).
 4. **Regenerate the aggregator** by running `npm run repair:example-readmes` — this rewrites the section list in [react/README.md](react/README.md) / [web-components/README.md](web-components/README.md) from the per-example READMEs.
 
 ## Smoke tests
 
 - Examples should have Playwright tests testing the functionality of the example.
 
-See [Examples smoke tests](AGENTS_PLAYWRIGHT.md) for instructions on creating those tests.
+See [Examples smoke tests](references/playwright.md) for instructions on creating those tests.
 
 ## Definition of done
 
 - `npm run build --workspace=<example>` exits 0.
 - `npm run test --workspace=<example>` passes (if the example has tests).
-- README follows the [Indexer Contract](AGENTS_INDEXER_CONTRACT.md).
+- README follows the [Indexer Contract](references/indexer-contract.md).
 
 ## Authoring rules
 
@@ -48,6 +48,6 @@ Capitalize a slug-family prefix the first time you introduce a new family, even 
 ## Related guidance
 
 - [Root AGENTS.md](../AGENTS.md) — monorepo conventions
-- [AGENTS_INDEXER_CONTRACT.md](AGENTS_INDEXER_CONTRACT.md) — README format for the docs-site indexer
+- [indexer-contract.md](references/indexer-contract.md) — README format for the docs-site indexer
 - [react/AGENTS.md](react/AGENTS.md) — React flavor deltas
 - [web-components/AGENTS.md](web-components/AGENTS.md) — Web Components flavor deltas

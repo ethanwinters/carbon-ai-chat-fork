@@ -16,12 +16,13 @@ All entries compile via [tasks/rollup.aichat.js](tasks/rollup.aichat.js) to `dis
 
 Load only what you need:
 
-- Working across the React/Lit boundary, shadow DOM, or slots → [AGENTS_ARCHITECTURE.md](AGENTS_ARCHITECTURE.md)
-- Adding, editing, or wiring a service → [AGENTS_SERVICES.md](AGENTS_SERVICES.md)
-- Writing or fixing a Jest test → [AGENTS_TESTS.md](AGENTS_TESTS.md)
-- Shipping any UI change (WCAG 2.1 AA checklist, live-region patterns) → [Root AGENTS_ACCESSIBILITY.md](../../AGENTS_ACCESSIBILITY.md). For announcements use [`useAriaAnnouncer`](src/chat/hooks/useAriaAnnouncer.tsx) / [`AnnounceOnMountComponent`](src/chat/components/util/AnnounceOnMountComponent.tsx).
+- Working across the React/Lit boundary, shadow DOM, or slots → [architecture.md](references/architecture.md)
+- Adding, editing, or wiring a service → [services.md](references/services.md)
+- Writing or fixing a Jest test → [tests.md](references/tests.md)
+- Shipping any UI change (WCAG 2.1 AA checklist, live-region patterns) → [Root accessibility.md](../../references/accessibility.md). For announcements use [`useAriaAnnouncer`](src/chat/hooks/useAriaAnnouncer.tsx) / [`AnnounceOnMountComponent`](src/chat/components/util/AnnounceOnMountComponent.tsx).
 - Touching the store → [src/chat/store/AGENTS.md](src/chat/store/AGENTS.md)
 - Touching public types or JSDoc → [src/types/AGENTS.md](src/types/AGENTS.md)
+- Writing a code example (JSDoc `@example`, docs snippet) → [code-examples.md](references/code-examples.md)
 - Editing public docs in [docs/](docs/) → [docs/AGENTS.md](docs/AGENTS.md)
 
 ## Where things live
@@ -29,7 +30,7 @@ Load only what you need:
 - [src/chat/](src/chat/) — the chat application. Do most feature work here.
   - `AppShell.tsx`, `ChatAppEntry.tsx`, `AppShellPanels.tsx`, `AppShellWriteableElements.tsx` — top-level composition.
   - `store/` — Redux-style store. Hard rules in [src/chat/store/AGENTS.md](src/chat/store/AGENTS.md).
-  - `services/` — long-lived singletons wired in `ServiceManager.ts` and `loadServices.ts`. See [AGENTS_SERVICES.md](AGENTS_SERVICES.md). `ChatActionsImpl.ts` is the instance-facing API — public methods added here must also be reflected on `ChatInstance` in `instance/`.
+  - `services/` — long-lived singletons wired in `ServiceManager.ts` and `loadServices.ts`. See [services.md](references/services.md). `ChatActionsImpl.ts` is the instance-facing API — public methods added here must also be reflected on `ChatInstance` in `instance/`.
   - `instance/` — public `ChatInstance` object. Breaking changes here break every consumer; prefer additive API.
   - `events/` — typed pub/sub for the public event API. Event names and payloads are part of the public contract.
   - `schema/` — runtime message/config schema. Keep in sync with types in [src/types/](src/types/).
@@ -40,7 +41,7 @@ Load only what you need:
 - [src/react/](src/react/) — public React wrapper components re-exported from the package root.
 - [src/web-components/](src/web-components/) — Lit hosts. Kept thin: bridge props/events/slots to the React core.
 - [src/types/](src/types/) — public type surface. Anything exported through `aiChatEntry.tsx` is public API; treat edits with semver discipline. **Read [src/types/AGENTS.md](src/types/AGENTS.md) before editing** — TypeDoc output ships as the public docs site.
-- [tests/](tests/) — Jest specs in `spec/` folders under `tests/<area>/`. Setup in `setup.ts`; shared fixtures in `test_helpers.ts`. See [AGENTS_TESTS.md](AGENTS_TESTS.md).
+- [tests/](tests/) — Jest specs in `spec/` folders under `tests/<area>/`. Setup in `setup.ts`; shared fixtures in `test_helpers.ts`. See [tests.md](references/tests.md).
 - [docs/](docs/) — consumer-facing docs published via TypeDoc. See [docs/AGENTS.md](docs/AGENTS.md) before editing.
 
 ## Build, test, lint
@@ -60,7 +61,7 @@ npx jest -t "pattern"
 - **Custom store hooks**: `useSelector` and `useDispatch` come from `src/chat/store/hooks/` — **not** `react-redux`. Import from the local store.
 - **ESM `.js` extensions in imports**: TS source uses explicit `.js` extensions on relative imports even when the file is `.ts`/`.tsx` (e.g. `import { foo } from "./bar.js"`). Jest's `moduleNameMapper` rewrites these at test time. Omitting the extension breaks the build.
 - **Relaxed TS strictness**: `tsconfig` sets `strictNullChecks: false` and `strictFunctionTypes: false`. Don't assume null safety; check explicitly or add guards.
-- **React runs inside shadow DOM**: the `cds-aichat-*` custom elements mount React into a shadow root. User-defined responses and writeable elements use slotted content; follow existing patterns. Background in [AGENTS_ARCHITECTURE.md](AGENTS_ARCHITECTURE.md).
+- **React runs inside shadow DOM**: the `cds-aichat-*` custom elements mount React into a shadow root. User-defined responses and writeable elements use slotted content; follow existing patterns. Background in [architecture.md](references/architecture.md).
 
 ## Definition of done
 
@@ -70,19 +71,19 @@ See root [AGENTS.md](../../AGENTS.md#definition-of-done) for the gate. Additiona
 
 - **Public API changes**: anything exported from `aiChatEntry.tsx`, `serverEntry.ts`, or `types/` is semver-visible. Coordinate with a `feat`/`fix!`/`BREAKING CHANGE` footer. JSDoc/TypeDoc rules: [src/types/AGENTS.md](src/types/AGENTS.md).
 - **Store**: see [src/chat/store/AGENTS.md](src/chat/store/AGENTS.md). Reducers stay pure; side effects go through services or `store/actions.ts` / `store/subscriptions.ts`. `humanAgentReducers.ts` is a separate slice on purpose.
-- **Services**: see [AGENTS_SERVICES.md](AGENTS_SERVICES.md). Wire through `ServiceManager` and `loadServices`; dispose in `ChatInstanceImpl.destroy()` and the matching `unloadServices()`.
+- **Services**: see [services.md](references/services.md). Wire through `ServiceManager` and `loadServices`; dispose in `ChatInstanceImpl.destroy()` and the matching `unloadServices()`.
 - **i18n**: no user-visible strings in code. Route through `languages/`.
-- **Tests**: see [AGENTS_TESTS.md](AGENTS_TESTS.md). Colocate helpers in `tests/test_helpers.ts`. Store tests exercise reducers directly; service tests use the mocks in `tests/services/`.
-- **SCSS / RTL / prefix discipline**: see root [AGENTS.md Conventions](../../AGENTS.md#conventions). Prefix discipline is build-breaking — never hardcode `cds--`; use `#{$prefix}--` in SCSS and the prefix helpers in TS.
+- **Tests**: see [tests.md](references/tests.md). Colocate helpers in `tests/test_helpers.ts`. Store tests exercise reducers directly; service tests use the mocks in `tests/services/`.
+- **SCSS / RTL / prefix discipline**: see [code-patterns.md](../../references/code-patterns.md). Prefix discipline is build-breaking — never hardcode `cds--`; use `#{$prefix}--` in SCSS and the prefix helpers in TS.
 
 ## Troubleshooting
 
 - **Build fails**: ensure `@carbon/ai-chat-components` is built first — `npm run build --workspace=@carbon/ai-chat-components`.
 - **TypeDoc errors**: verify all `@param` tags in JSDoc match actual function parameters.
-- **React portal not rendering**: check the browser console for shadow DOM errors; verify `window.chatInstance` exists. Background in [AGENTS_ARCHITECTURE.md](AGENTS_ARCHITECTURE.md).
+- **React portal not rendering**: check the browser console for shadow DOM errors; verify `window.chatInstance` exists. Background in [architecture.md](references/architecture.md).
 
 ## Related guidance
 
 - [Root AGENTS.md](../../AGENTS.md) — monorepo conventions
 - [../ai-chat-components/AGENTS.md](../ai-chat-components/AGENTS.md) — Lit component authoring
-- [../../AGENTS_CODE_REVIEW.md](../../AGENTS_CODE_REVIEW.md) — review rubric
+- [../../references/code-review.md](../../references/code-review.md) — review rubric

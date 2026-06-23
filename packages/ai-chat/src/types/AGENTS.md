@@ -55,7 +55,7 @@ Symbols scheduled for removal. Include the replacement and target major: `@depre
 - **State purpose, not shape.** The signature shows the shape; JSDoc explains what it _means_ and when to use it.
 - **Document units and semantics of primitives.** `timeout: number` is useless without "milliseconds". `id: string` is useless without "must be unique across X".
 - **Complete sentences, ending in periods.** No note-form, no internal jargon, no ticket refs, no TODOs.
-- **Match the tone of existing types** ([messaging/Messages.ts](messaging/Messages.ts), [instance/ChatInstance.ts](instance/ChatInstance.ts)). JSDoc is product copy — follow [../../../../AGENTS_TONE.md](../../../../AGENTS_TONE.md) for voice and word economy.
+- **Match the tone of existing types** ([messaging/Messages.ts](messaging/Messages.ts), [instance/ChatInstance.ts](instance/ChatInstance.ts)). JSDoc is product copy — follow [../../../../references/tone.md](../../../../references/tone.md) for voice and word economy.
 
 ## Cross-linking
 
@@ -145,7 +145,15 @@ import type { TriggerSuggestionConfig } from "../../types/config/InputConfig"; /
 
 Every public property and enum member needs its own JSDoc — `?` in the signature is not an explanation.
 
-## Examples
+## `@example` on public methods
+
+Every public **instance method** ships at least one titled `@example`. Scope: [`ChatInstance`](instance/ChatInstance.ts) (and the `ChatActions` it extends), [`ChatInstanceInput`](instance/ChatInstanceInput.ts), [`EventHandlers`](instance/EventHandlers.ts) (`on` / `off` / `once`), and [`ChatInstanceServiceDeskActions`](instance/ChatInstanceServiceDeskActions.ts).
+
+This is a **review gate**, not a build gate — TypeDoc validates `invalidLink` / `notExported`, not a missing `@example`, so a method with no example still compiles. Catch it in review and against the Definition of done below.
+
+Write the block to the shared criteria in [code-examples.md](../../references/code-examples.md): self-contained, minimal, realistically-typed values, one titled `@example` per distinct case, show what comes back, model the production-safe pattern. `{@link}` targets inside an example _are_ build-validated, so they must resolve.
+
+## Worked examples
 
 ### Good — top-level type
 
@@ -225,11 +233,12 @@ When you change anything under [.](.) (or a type in `@carbon/ai-chat-components`
 
 1. `npm run build --workspace=@carbon/ai-chat` — rollup + TypeDoc. The build fails on `validation.invalidLink` errors.
 2. If you added a new public export, confirm it appears in both [../aiChatEntry.tsx](../aiChatEntry.tsx) and [../serverEntry.ts](../serverEntry.ts).
-3. Semver: any change to a public type is a `feat` (additive) or a `fix!` / `BREAKING CHANGE` (non-additive). See [../../AGENTS.md](../../AGENTS.md) → _Authoring rules_ → _Public API changes_.
+3. If you added or changed a public instance method, confirm it carries at least one titled `@example` that meets [code-examples.md](../../references/code-examples.md) (review gate — not build-enforced).
+4. Semver: any change to a public type is a `feat` (additive) or a `fix!` / `BREAKING CHANGE` (non-additive). See [../../AGENTS.md](../../AGENTS.md) → _Authoring rules_ → _Public API changes_.
 
 ## Related Guidance
 
 - **Parent guidance**: [packages/ai-chat/AGENTS.md](../../AGENTS.md)
-- **Voice and tone**: [AGENTS_TONE.md](../../../../AGENTS_TONE.md) - Voice and word economy for all public copy
+- **Voice and tone**: [tone.md](../../../../references/tone.md) - Voice and word economy for all public copy
 - **Store patterns**: [../chat/store/AGENTS.md](../chat/store/AGENTS.md) - For action/state types
-- **Documentation**: [../docs/AGENTS.md](../docs/AGENTS.md) - For public API docs
+- **Documentation**: [../../docs/AGENTS.md](../../docs/AGENTS.md) - For public API docs

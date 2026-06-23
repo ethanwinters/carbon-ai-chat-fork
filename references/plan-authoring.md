@@ -1,6 +1,6 @@
 # Plan-authoring rubric
 
-This file tells agents how to write an implementation plan that another agent (or human) can execute. It is the authoring-phase counterpart to [AGENTS_PLAN_REVIEW.md](AGENTS_PLAN_REVIEW.md).
+This file tells agents how to write an implementation plan that another agent (or human) can execute. It is the authoring-phase counterpart to [plan-review.md](plan-review.md).
 
 Use this rubric when the user asks you to "draft a plan", "lay out the PRs for X", "design how we'd build Y", "write up an approach", or anything where the deliverable is a written plan rather than code.
 
@@ -14,7 +14,7 @@ If the work is one PR with one obvious approach, skip the plan and just do it. P
 
 ## File layout
 
-Plans live at the **repo root** and are git-ignored (see [.gitignore](./.gitignore)). Treat them as working notes, not documentation.
+Plans live at the **repo root** and are git-ignored (see [.gitignore](../.gitignore)). Treat them as working notes, not documentation.
 
 - **`PLAN.md`** — the overarching design and decision document. One per active plan.
 - **`PLAN-{N}-{kebab-case-title}.md`** — one file per discrete execution step (typically one PR per file). `N` is the step number starting at 1; the title is a short kebab-case slug.
@@ -50,12 +50,12 @@ The execution detail for one step. Written so an agent loading cold can implemen
 - **Scope** — one paragraph: what this step does and what it explicitly does not. Resist the urge to repeat `PLAN.md` context here.
 - **Files touched** — concrete paths the executor will create / edit / delete. Vague plans produce drift; specific paths force you to verify the codebase as you draft.
 - **Implementation steps** — ordered list. Each step short enough that a reasonable executor can complete it without further design questions. Cite file paths and line numbers for any claim about existing code.
-- **Validation** — how to know the step is correct: which tests to add, which existing tests must still pass, which manual checks (browser smoke, type-check, build) are required. Refer to the relevant gate in [AGENTS.md](AGENTS.md#definition-of-done).
+- **Validation** — how to know the step is correct: which tests to add, which existing tests must still pass, which manual checks (browser smoke, type-check, build) are required. Refer to the relevant gate in [AGENTS.md](../AGENTS.md#definition-of-done).
 - **Risk / open questions** — anything you're not sure about. Better to flag uncertainty than bury it.
 
 ## Style
 
-- **Cite file paths and line numbers** for every claim about the current codebase. Plan reviewers verify load-bearing claims (see [AGENTS_PLAN_REVIEW.md](AGENTS_PLAN_REVIEW.md)) — citations make their job possible.
+- **Cite file paths and line numbers** for every claim about the current codebase. Plan reviewers verify load-bearing claims (see [plan-review.md](plan-review.md)) — citations make their job possible.
 - **Mark unverified assumptions.** "I believe X (not yet read)" is more useful than asserting X without checking. Flagging your own uncertainty saves the reviewer time and keeps the executor from inheriting a wrong premise.
 - **Terse.** Plans are read in the middle of work; long prose buries the action items. Bullets, short paragraphs, code snippets only when pinning a decision.
 - **Don't defer load-bearing decisions.** "We'll figure that out later" is acceptable for trivia but not for choices that block the executor (API shape, naming, deprecation behavior, error policy). Lock them now or list them as explicit open questions.
