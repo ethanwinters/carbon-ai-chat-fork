@@ -13,6 +13,11 @@
  * - Outdated file references
  * - Missing required sections
  * - Inconsistent formatting
+ *
+ * Discovery crawls from the root AGENTS.md, following links to other bare
+ * AGENTS.md entry points and to per-directory topic docs, which live as
+ * kebab-case files under a `references/` subfolder (e.g.
+ * `references/code-review.md`).
  */
 
 const fs = require("fs");
@@ -232,6 +237,18 @@ function shouldSkipDocReference(referencePath) {
   );
 }
 
+// A link target is an "agents doc" if it points at an AGENTS.md entry point, a
+// legacy AGENTS_* sibling, or a topic doc under a references/ folder.
+function isAgentsDocTarget(target) {
+  const base = path.basename(target);
+  const parent = path.basename(path.dirname(target));
+  return (
+    base === "AGENTS.md" ||
+    (base.startsWith("AGENTS_") && base.endsWith(".md")) ||
+    (parent === "references" && base.endsWith(".md"))
+  );
+}
+
 // Validate internal links
 function validateInternalLinks(file, content) {
   const links = extractLinks(content);
@@ -248,7 +265,29 @@ function validateInternalLinks(file, content) {
     }
 
     const normalizedTarget = normalizeLinkTarget(link.url);
-    if (!normalizedTarget || shouldSkipDocReference(normalizedTarget)) {
+    if (!normalizedTarget) {
+      continue;
+    }
+
+    // Links between AGENTS docs must resolve STRICTLY relative to the linking
+    // file — exactly how GitHub renders them. resolveDocPath's repo-root and
+    // recursive-search fallbacks would otherwise mask a wrong relative path
+    // (e.g. `[x](AGENTS.md)` from a references/ subfolder silently "resolving"
+    // to the repo-root AGENTS.md). This is what keeps relocated topic docs and
+    // their cross-links honest.
+    if (isAgentsDocTarget(normalizedTarget)) {
+      const fileDir = path.dirname(path.join(REPO_ROOT, file));
+      const strictPath = path.resolve(fileDir, normalizedTarget);
+      if (!fs.existsSync(strictPath)) {
+        error(
+          file,
+          `Broken link: [${link.text}](${link.url}) -> ${normalizedTarget} does not resolve relative to ${path.dirname(file) || "."}`,
+        );
+      }
+      continue;
+    }
+
+    if (shouldSkipDocReference(normalizedTarget)) {
       continue;
     }
 
@@ -355,10 +394,14 @@ function discoverAgentsFiles() {
       const relativePath = path.relative(REPO_ROOT, targetPath);
       const basename = path.basename(relativePath);
 
+      const parentDir = path.basename(path.dirname(targetPath));
       if (
         fs.existsSync(targetPath) &&
         (basename === "AGENTS.md" ||
-          (basename.startsWith("AGENTS_") && basename.endsWith(".md")))
+          // Legacy topic siblings (kept for resilience; superseded by references/).
+          (basename.startsWith("AGENTS_") && basename.endsWith(".md")) ||
+          // Topic docs now live as kebab-case files under a references/ subfolder.
+          (parentDir === "references" && basename.endsWith(".md")))
       ) {
         queue.push(relativePath);
       }

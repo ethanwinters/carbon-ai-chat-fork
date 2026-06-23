@@ -1,4 +1,4 @@
-# AGENTS_ACCESSIBILITY.md — Carbon AI Chat accessibility
+# accessibility.md — Carbon AI Chat accessibility
 
 Load this when shipping any UI change in any package. All UI must meet WCAG 2.1 AA.
 
@@ -19,17 +19,17 @@ Load this when shipping any UI change in any package. All UI must meet WCAG 2.1 
 
 Don't write raw `aria-live` attributes for app-level announcements. Use the centralized announcer:
 
-| Package                            | How to announce                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@carbon/ai-chat` (React)          | [`useAriaAnnouncer()`](packages/ai-chat/src/chat/hooks/useAriaAnnouncer.tsx) for ad-hoc announcements. [`AnnounceOnMountComponent`](packages/ai-chat/src/chat/components/util/AnnounceOnMountComponent.tsx) for content that should be announced on mount. The provider that backs both lives in [`AriaAnnouncerComponent`](packages/ai-chat/src/chat/components/aria/AriaAnnouncerComponent.tsx). |
-| `@carbon/ai-chat-components` (Lit) | [`AriaAnnouncerManager`](packages/ai-chat-components/src/globals/utils/aria-announcer-manager.ts) from the package's public API. Render visually-hidden regions in `render()`, `connect(regions)` in `firstUpdated`, `disconnect()` in `disconnectedCallback`, call `announce(text)` to speak.                                                                                                     |
+| Package                            | How to announce                                                                                                                                                                                                                                                                                                                                                                                             |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@carbon/ai-chat` (React)          | [`useAriaAnnouncer()`](../packages/ai-chat/src/chat/hooks/useAriaAnnouncer.tsx) for ad-hoc announcements. [`AnnounceOnMountComponent`](../packages/ai-chat/src/chat/components/util/AnnounceOnMountComponent.tsx) for content that should be announced on mount. The provider that backs both lives in [`AriaAnnouncerComponent`](../packages/ai-chat/src/chat/components/aria/AriaAnnouncerComponent.tsx). |
+| `@carbon/ai-chat-components` (Lit) | [`AriaAnnouncerManager`](../packages/ai-chat-components/src/globals/utils/aria-announcer-manager.ts) from the package's public API. Render visually-hidden regions in `render()`, `connect(regions)` in `firstUpdated`, `disconnect()` in `disconnectedCallback`, call `announce(text)` to speak.                                                                                                           |
 
 Both back ends share the same manager class — fixes propagate to both consumers.
 
 ### Politeness levels
 
 - `polite` — status changes, content updates, anything the user benefits from hearing but shouldn't have interrupted. Default choice.
-- `assertive` — errors that block user progress (see [`audio-player`](packages/ai-chat-components/src/components/audio-player/src/audio-player.ts), [`video-player`](packages/ai-chat-components/src/components/video-player/src/video-player.ts) error states). Interrupts whatever the screen reader was reading, so use sparingly.
+- `assertive` — errors that block user progress (see [`audio-player`](../packages/ai-chat-components/src/components/audio-player/src/audio-player.ts), [`video-player`](../packages/ai-chat-components/src/components/video-player/src/video-player.ts) error states). Interrupts whatever the screen reader was reading, so use sparingly.
 
 ### ARIA pitfalls to avoid
 
@@ -43,7 +43,7 @@ Only when the centralized announcer doesn't fit the use case (e.g. a dedicated s
 
 ## Visual & layout
 
-- Support RTL via CSS logical properties (`padding-inline-start`, `inset-inline-end`, etc.). See [root AGENTS.md Conventions](AGENTS.md#conventions).
+- Support RTL via CSS logical properties (`padding-inline-start`, `inset-inline-end`, etc.). See [code-patterns.md → SCSS authoring](code-patterns.md#scss-authoring).
 
 ## Verifying changes
 
@@ -61,6 +61,6 @@ Listen for: announcements firing on the expected events; no double-reads; focus 
 
 ## Related guidance
 
-- [Root AGENTS.md](AGENTS.md) — repo-wide conventions
-- [packages/ai-chat/AGENTS.md](packages/ai-chat/AGENTS.md) — `@carbon/ai-chat` package
-- [packages/ai-chat-components/AGENTS.md](packages/ai-chat-components/AGENTS.md) — `@carbon/ai-chat-components` package
+- [Root AGENTS.md](../AGENTS.md) — repo-wide conventions
+- [packages/ai-chat/AGENTS.md](../packages/ai-chat/AGENTS.md) — `@carbon/ai-chat` package
+- [packages/ai-chat-components/AGENTS.md](../packages/ai-chat-components/AGENTS.md) — `@carbon/ai-chat-components` package

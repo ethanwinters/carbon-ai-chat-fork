@@ -41,7 +41,7 @@ Shared pieces: [src/components/shared/](src/components/shared/); design tokens /
 - **One element per file** under `src/`, re-exported from `index.ts`. Sub-parts (footer, step, etc.) get their own file and `import` line.
 - **Styles**: co-locate `.scss` next to the `.ts`. Use Carbon tokens from `@carbon/styles`; don't hardcode colors, spacing, or type. SCSS/RTL conventions (BEM, logical properties) live in root [AGENTS.md Conventions](../../AGENTS.md#conventions).
 - **Custom elements manifest**: after changing JSDoc, props, slots, events, or CSS parts, run `npm run custom-elements`. Storybook docs and the generated React wrappers read from it — stale manifests produce confusing Storybook output.
-- **Stories**: every new element needs a Lit `.stories.js` + `.mdx`, and its React wrapper needs `-react.stories.jsx` + `-react.mdx`. Co-locate shared fixtures in `<component>/__stories__/story-data.js` (see `card/__stories__/story-data.js` for the pattern). Storybook MDX is developer-facing copy — follow [AGENTS_TONE.md](../../AGENTS_TONE.md) for voice and word economy.
+- **Stories**: every new element needs a Lit `.stories.js` + `.mdx`, and its React wrapper needs `-react.stories.jsx` + `-react.mdx`. Co-locate shared fixtures in `<component>/__stories__/story-data.js` (see `card/__stories__/story-data.js` for the pattern). Storybook MDX is developer-facing copy — follow [tone.md](../../references/tone.md) for voice and word economy.
 - **Props / events / slots**: use kebab-case attribute names on Lit elements (`has-footer`, not `hasFooter`); the CEM analyzer + React wrapper generator handle camelCase conversion. Custom events follow `cds-<thing>-<verb>` (e.g. `cds-card-expand`). Slots use plain names; reserve `default` for primary content.
 - **Deprecating or deleting a component**: mark `@deprecated` in JSDoc first, ship a major version, then delete. Deleting an exported element without a deprecation window breaks external consumers.
 - **Tests**: every element gets a `__tests__/<name>.test.ts` WTR test. React wrappers get Jest tests under [src/react/**tests**/](src/react/__tests__/). WTR snapshots live in `__snapshots__/` — regenerate with `test:updateSnapshot` and review diffs.
@@ -52,7 +52,7 @@ Shared pieces: [src/components/shared/](src/components/shared/); design tokens /
 
 ## Accessibility
 
-Every Lit element shipped here must hold WCAG 2.1 AA — see [root AGENTS_ACCESSIBILITY.md](../../AGENTS_ACCESSIBILITY.md) for the full checklist, politeness rules, and pitfalls (don't combine `role="status"` with `aria-live="polite"`; default `aria-atomic` off).
+Every Lit element shipped here must hold WCAG 2.1 AA — see [root accessibility.md](../../references/accessibility.md) for the full checklist, politeness rules, and pitfalls (don't combine `role="status"` with `aria-live="polite"`; default `aria-atomic` off).
 
 Package-specific points:
 
@@ -94,9 +94,9 @@ npm run test:react -- src/react/__tests__/<file>.test.ts
 ## Related Guidance
 
 - **Parent guidance**: [Root AGENTS.md](../../AGENTS.md)
-- **Voice and tone**: [AGENTS_TONE.md](../../AGENTS_TONE.md) - Voice and word economy for Storybook MDX and JSDoc
+- **Voice and tone**: [tone.md](../../references/tone.md) - Voice and word economy for Storybook MDX and JSDoc
 - **Consumer package**: [../ai-chat/AGENTS.md](../ai-chat/AGENTS.md) - How React app uses these components
-- **Code reviews**: [../../AGENTS_CODE_REVIEW.md](../../AGENTS_CODE_REVIEW.md)
+- **Code reviews**: [../../references/code-review.md](../../references/code-review.md)
 
 ## Definition of done
 

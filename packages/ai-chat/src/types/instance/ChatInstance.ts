@@ -28,6 +28,12 @@ import type { WriteableElements } from "./WriteableElements";
 export interface ChatInstance extends EventHandlers, ChatActions {
   /**
    * Returns state information of the Carbon AI Chat that could be useful.
+   *
+   * @example Read the current state snapshot
+   * ```ts
+   * const state = instance.getState();
+   * console.log(state); // => the current PublicChatState
+   * ```
    */
   getState: () => PublicChatState;
 
@@ -60,6 +66,12 @@ interface ChatActions {
    * This function can be called when another component wishes this component to gain focus. It is up to the
    * component to decide where focus belongs. This may return true or false to indicate if a suitable focus location
    * was found.
+   *
+   * @example Move focus into the chat
+   * ```ts
+   * const focused = instance.requestFocus();
+   * // => true when a suitable focus target was found
+   * ```
    */
   requestFocus: () => boolean | void;
 
@@ -71,6 +83,16 @@ interface ChatActions {
    *
    * @param message The message to send.
    * @param options Options for the message sent.
+   *
+   * @example Send a plain-text message and await the response
+   * ```ts
+   * await instance.send("What is the weather today?");
+   * ```
+   *
+   * @example Send a message to the assistant without showing it in the UI
+   * ```ts
+   * await instance.send("Resync context", { silent: true });
+   * ```
    */
   send: (
     message: MessageRequest | string,
@@ -82,6 +104,18 @@ interface ChatActions {
    * provided then that view will become visible and the rest will be hidden. If a {@link ViewState} is provided that
    * includes all of the views then all of the views will be changed accordingly. If a partial {@link ViewState} is
    * provided then only the views provided will be changed.
+   *
+   * @example Open the main window
+   * ```ts
+   * import { ViewType } from "@carbon/ai-chat";
+   *
+   * await instance.changeView(ViewType.MAIN_WINDOW);
+   * ```
+   *
+   * @example Set both views explicitly with a ViewState
+   * ```ts
+   * await instance.changeView({ launcher: false, mainWindow: true });
+   * ```
    */
   changeView: (newView: ViewType | ViewState) => Promise<void>;
 
@@ -112,6 +146,11 @@ interface ChatActions {
    *
    * @param messageID The (original) message ID to scroll to.
    * @param animate Whether or not the scroll should be animated. Defaults to true.
+   *
+   * @example Scroll a known message to the top of the viewport
+   * ```ts
+   * instance.scrollToMessage("a3f1c9e0-2b7d-4e51-9c8a-1d2f3b4c5d6e");
+   * ```
    */
   scrollToMessage: (messageID: string, animate?: boolean) => void;
 
@@ -120,6 +159,20 @@ interface ChatActions {
    * custom title and body text (markdown supported) to be displayed in the Catastrophic Error Panel.
    *
    * @param panelState The new state of the Catastrophic Error Panel, optionally including a custom title and body text.
+   *
+   * @example Open the panel with a custom message
+   * ```ts
+   * instance.updateCatastrophicErrorPanel({
+   *   isOpen: true,
+   *   title: "Something went wrong",
+   *   bodyText: "Please try again in a moment.",
+   * });
+   * ```
+   *
+   * @example Close the panel
+   * ```ts
+   * instance.updateCatastrophicErrorPanel({ isOpen: false });
+   * ```
    */
   updateCatastrophicErrorPanel: (
     panelState: CatastrophicErrorPanelState,
@@ -148,6 +201,16 @@ interface ChatActions {
    * geometry remains accurate for subsequent updates.
    *
    * @param options Optional overrides for scroll behavior. See {@link AutoScrollOptions}.
+   *
+   * @example Re-pin scroll after a custom response changes height
+   * ```ts
+   * instance.doAutoScroll();
+   * ```
+   *
+   * @example Scroll to the very bottom of the message list
+   * ```ts
+   * instance.doAutoScroll({ scrollToBottom: 0 });
+   * ```
    */
   doAutoScroll: (options?: AutoScrollOptions) => void;
 
@@ -163,6 +226,13 @@ interface ChatActions {
    * you to give meaningful feedback while the message is loading (or simple strings like "Thinking...", etc). The most
    * recent value will be used. So if you call it with a string value and then again with no value, the value will be
    * replaced with undefined and stop showing in the UI.
+   *
+   * @example Show, then clear, the message-loading indicator
+   * ```ts
+   * instance.updateIsMessageLoadingCounter("increase", "Thinking...");
+   * // ... once your work finishes ...
+   * instance.updateIsMessageLoadingCounter("decrease");
+   * ```
    */
   updateIsMessageLoadingCounter: (
     direction: IncreaseOrDecrease,
@@ -175,6 +245,13 @@ interface ChatActions {
    * increase or decrease the value. "reset" will set the value back to 0.
    *
    * You can access the current value via {@link ChatInstance.getState}.
+   *
+   * @example Show, then clear, the fullscreen hydration loading state
+   * ```ts
+   * instance.updateIsChatLoadingCounter("increase");
+   * // ... once hydration finishes ...
+   * instance.updateIsChatLoadingCounter("decrease");
+   * ```
    */
   updateIsChatLoadingCounter: (direction: IncreaseOrDecrease) => void;
 
@@ -193,6 +270,11 @@ interface ChatActions {
    *
    * @param keepOpenState If we are destroying the session to restart the chat this can be used to preserve if the web
    * chat is open.
+   *
+   * @example Clear the persisted session
+   * ```ts
+   * await instance.destroySession();
+   * ```
    */
   destroySession: (keepOpenState?: boolean) => Promise<void>;
 }

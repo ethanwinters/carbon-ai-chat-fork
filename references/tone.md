@@ -1,6 +1,6 @@
-# AGENTS_TONE.md — voice and tone for Carbon AI Chat docs
+# tone.md — voice and tone for Carbon AI Chat docs
 
-Read this before writing any developer-facing copy: README files, JSDoc on public types, Storybook MDX, and the docs in [packages/ai-chat/docs/](packages/ai-chat/docs/). It governs how the words sound. It does not cover markdown structure (see [packages/ai-chat/docs/AGENTS_DOC_STYLE.md](packages/ai-chat/docs/AGENTS_DOC_STYLE.md)) or JSDoc mechanics (see [packages/ai-chat/src/types/AGENTS.md](packages/ai-chat/src/types/AGENTS.md)).
+Read this before writing any developer-facing copy: README files, JSDoc on public types, Storybook MDX, and the docs in [packages/ai-chat/docs/](../packages/ai-chat/docs). It governs how the words sound. It does not cover markdown structure (see [../packages/ai-chat/docs/references/doc-style.md](../packages/ai-chat/docs/references/doc-style.md)) or JSDoc mechanics (see [packages/ai-chat/src/types/AGENTS.md](../packages/ai-chat/src/types/AGENTS.md)).
 
 We mirror the voice of [carbondesignsystem.com](https://carbondesignsystem.com/guidelines/content/overview/).
 
@@ -78,6 +78,6 @@ Voice stays constant; tone shifts to fit the moment.
 
 ## Related guidance
 
-- [packages/ai-chat/docs/AGENTS_DOC_STYLE.md](packages/ai-chat/docs/AGENTS_DOC_STYLE.md) — markdown structure for the docs site.
-- [packages/ai-chat/src/types/AGENTS.md](packages/ai-chat/src/types/AGENTS.md) — JSDoc mechanics for public types.
-- [AGENTS.md](AGENTS.md) — repository-wide guidance.
+- [../packages/ai-chat/docs/references/doc-style.md](../packages/ai-chat/docs/references/doc-style.md) — markdown structure for the docs site.
+- [packages/ai-chat/src/types/AGENTS.md](../packages/ai-chat/src/types/AGENTS.md) — JSDoc mechanics for public types.
+- [AGENTS.md](../AGENTS.md) — repository-wide guidance.

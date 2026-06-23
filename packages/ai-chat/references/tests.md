@@ -1,4 +1,4 @@
-# AGENTS_TESTS.md — `@carbon/ai-chat` testing
+# tests.md — `@carbon/ai-chat` testing
 
 Load this when writing or fixing Jest tests in this package.
 
@@ -11,7 +11,7 @@ Tests are organized by what they validate. Naming is `_spec.ts(x)` (not `.test.t
 | Store & hooks | `tests/store/spec/`        | Redux-like store + custom hooks          | Local test store, wrap in `StoreProvider`, assert state         |
 | Services      | `tests/services/spec/`     | Service orchestration & side effects     | Stub `ServiceManager`, instantiate directly, assert calls/state |
 | Components    | `tests/components/spec/`   | React component rendering & interactions | Testing Library, simulate user, assert DOM                      |
-| Integration   | `demo/tests/` (Playwright) | End-to-end flows across the full stack   | See [demo/AGENTS.md](../../demo/AGENTS.md)                      |
+| Integration   | `demo/tests/` (Playwright) | End-to-end flows across the full stack   | See [demo/AGENTS.md](../../../demo/AGENTS.md)                   |
 
 ### Store & hook example
 
@@ -54,7 +54,7 @@ Add when: new React components, prop changes, user interaction flows.
 
 ### Integration tests
 
-Add when: new user-facing features, cross-component workflows, config-dependent behavior. Patterns live in [demo/AGENTS.md](../../demo/AGENTS.md).
+Add when: new user-facing features, cross-component workflows, config-dependent behavior. Patterns live in [demo/AGENTS.md](../../../demo/AGENTS.md).
 
 ## Coverage
 
@@ -94,7 +94,7 @@ Test setup: `tests/setup.ts` installs DOM + testing-library setup; `tests/test_h
 
 ## Related guidance
 
-- [packages/ai-chat/AGENTS.md](AGENTS.md) — package overview
-- [AGENTS_SERVICES.md](AGENTS_SERVICES.md) — service archetypes (test pattern background)
-- [src/chat/store/AGENTS.md](src/chat/store/AGENTS.md) — store rules
-- [demo/AGENTS.md](../../demo/AGENTS.md) — Playwright integration tests
+- [packages/ai-chat/AGENTS.md](../AGENTS.md) — package overview
+- [services.md](services.md) — service archetypes (test pattern background)
+- [src/chat/store/AGENTS.md](../src/chat/store/AGENTS.md) — store rules
+- [demo/AGENTS.md](../../../demo/AGENTS.md) — Playwright integration tests
