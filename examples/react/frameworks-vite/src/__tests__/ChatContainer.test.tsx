@@ -18,7 +18,7 @@
  */
 
 import React from "react";
-import { render, act, waitFor } from "@testing-library/react";
+import { render, act, waitFor, cleanup } from "@testing-library/react";
 import {
   ChatContainer,
   PageObjectId,
@@ -29,6 +29,15 @@ import { WAIT_FOR_TIMEOUT } from "./constants";
 import { closeChat, openChat, waitForChatElement } from "./helpers";
 
 describe("ChatContainer", () => {
+  // Unmount every rendered widget after each test so a leftover open chat (e.g.
+  // from a test whose teardown was skipped by a mid-body assertion failure) can
+  // never leak into the next test. `cleanup()` is idempotent, so this is safe
+  // even when vitest's `globals: true` already auto-registers Testing Library
+  // cleanup — it removes any dependence on that being configured.
+  afterEach(() => {
+    cleanup();
+  });
+
   it("should render the chat component", async () => {
     // Render ChatContainer with an inline customSendMessage so we can inject a deterministic
     // AI response without hitting a backend or wiring up WebSocket plumbing.
@@ -93,30 +102,36 @@ describe("ChatContainer", () => {
     // `openChat` clicks the Carbon launcher (if present) and returns the widget's shadow root.
     const shadowRoot = await openChat(customElement);
 
-    // Everything inside the widget uses PageObjectId-based data-testids, so look for those
-    // markers to make sure the critical interactive pieces are present.
-    const mainPanel = await waitFor(
-      () =>
-        shadowRoot.querySelector(`[data-testid="${PageObjectId.MAIN_PANEL}"]`),
-      { timeout: WAIT_FOR_TIMEOUT },
-    );
-    expect(mainPanel).toBeTruthy();
+    // `closeChat` runs in `finally` so that a failing assertion (e.g. a stale
+    // snapshot) can't skip teardown and leak an open widget into later tests.
+    try {
+      // Everything inside the widget uses PageObjectId-based data-testids, so look for those
+      // markers to make sure the critical interactive pieces are present.
+      const mainPanel = await waitFor(
+        () =>
+          shadowRoot.querySelector(
+            `[data-testid="${PageObjectId.MAIN_PANEL}"]`,
+          ),
+        { timeout: WAIT_FOR_TIMEOUT },
+      );
+      expect(mainPanel).toBeTruthy();
 
-    const inputField = deepQuerySelector(
-      shadowRoot,
-      `[data-testid="${PageObjectId.INPUT}"]`,
-    );
-    expect(inputField).toBeTruthy();
+      const inputField = deepQuerySelector(
+        shadowRoot,
+        `[data-testid="${PageObjectId.INPUT}"]`,
+      );
+      expect(inputField).toBeTruthy();
 
-    const sendButton = deepQuerySelector(
-      shadowRoot,
-      `[data-testid="${PageObjectId.INPUT_SEND}"]`,
-    );
-    expect(sendButton).toBeTruthy();
+      const sendButton = deepQuerySelector(
+        shadowRoot,
+        `[data-testid="${PageObjectId.INPUT_SEND}"]`,
+      );
+      expect(sendButton).toBeTruthy();
 
-    expect(container.firstChild).toMatchSnapshot();
-
-    await closeChat(customElement);
+      expect(container.firstChild).toMatchSnapshot();
+    } finally {
+      await closeChat(customElement);
+    }
   });
 
   it("should render slotted content", async () => {
@@ -187,10 +202,21 @@ describe("ChatContainer", () => {
 
     const shadowRoot = (customElement as HTMLElement).shadowRoot!;
 
-    // The LAUNCHER should be present (in minimized state)
-    const launcher = deepQuerySelector(
-      shadowRoot,
-      `[data-testid="${PageObjectId.LAUNCHER}"]`,
+    // The LAUNCHER should be present (in minimized state). Mirror `openChat`'s
+    // `waitFor` so the lookup tolerates an async render tick instead of relying
+    // on the launcher being in the shadow tree the instant `updateComplete` resolves.
+    const launcher = await waitFor(
+      () => {
+        const el = deepQuerySelector(
+          shadowRoot,
+          `[data-testid="${PageObjectId.LAUNCHER}"]`,
+        );
+        if (!el) {
+          throw new Error("Launcher not rendered yet");
+        }
+        return el;
+      },
+      { timeout: WAIT_FOR_TIMEOUT },
     );
     expect(launcher).toBeTruthy();
 

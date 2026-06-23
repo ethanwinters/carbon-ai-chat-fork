@@ -207,6 +207,18 @@ function DemoApp({ config, settings, onChatInstanceReady }: AppProps) {
           parentStateText={stateText}
         />
       ),
+      promptLineActionsEnd: (
+        <WriteableElementExample
+          location="promptLineActionsEnd"
+          parentStateText={stateText}
+        />
+      ),
+      promptLineSendButtonStart: (
+        <WriteableElementExample
+          location="promptLineSendButtonStart"
+          parentStateText={stateText}
+        />
+      ),
       footerElement: (
         <WriteableElementExample
           location="footerElement"

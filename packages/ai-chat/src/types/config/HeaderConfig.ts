@@ -10,8 +10,12 @@
 import type { ToolbarAction as _ToolbarAction } from "@carbon/ai-chat-components/es/react/toolbar.js";
 
 /**
- * A single action to render in the chat header toolbar. Used by
- * {@link HeaderConfig.actions} to add custom buttons to the header.
+ * A single custom action button, used by both the chat header toolbar
+ * ({@link HeaderConfig.actions}) and the chat input actions row
+ * ({@link InputConfig.actions}). Carries the icon, accessible `text` (also the
+ * tooltip), an `onClick` handler or `href` link, and optional `disabled` /
+ * `danger` / `divider` flags. Set `fixed: true` to keep the action visible
+ * rather than collapsing into the overflow menu when space is tight.
  *
  * @category Config
  */

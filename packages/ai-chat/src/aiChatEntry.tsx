@@ -148,7 +148,6 @@ export {
 export { HistoryConfig } from "./types/config/HistoryConfig";
 export type {
   InputConfig,
-  InputMenuOption,
   BaseSuggestionConfig,
   TriggerSuggestionConfig,
   AutocompleteConfig,

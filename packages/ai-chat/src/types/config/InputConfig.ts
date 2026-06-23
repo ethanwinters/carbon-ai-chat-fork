@@ -12,9 +12,7 @@
 // the upstream symbols directly) so TypeDoc resolution stays pointed at our
 // JSDoc + `@category` placement; see [../AGENTS.md](../AGENTS.md) for the
 // cross-package re-export rule.
-import type { ComponentType } from "react";
 import type { Extension } from "@tiptap/core";
-import type { CarbonIcon } from "@carbon/web-components/es/globals/internal/icon-loader-utils.js";
 import type {
   BaseSuggestionConfig as _BaseSuggestionConfig,
   TriggerSuggestionConfig as _TriggerSuggestionConfig,
@@ -22,7 +20,7 @@ import type {
   SuggestionItem as _SuggestionItem,
   CustomListProps as _CustomListProps,
 } from "@carbon/ai-chat-components/es/components/input/index.js";
-import type { CustomMenuOption } from "./HeaderConfig";
+import type { ToolbarAction } from "./HeaderConfig";
 
 /**
  * Fields shared by every Carbon suggestion config (mention, command,
@@ -74,23 +72,6 @@ export type SuggestionItem = _SuggestionItem;
  * @experimental
  */
 export type CustomListProps = _CustomListProps;
-
-/**
- * A menu option rendered inside the chat input's message-actions popover.
- * Extends {@link CustomMenuOption} with a required icon, which may be either
- * a `CarbonIcon` descriptor (from `@carbon/icons` or `@carbon/web-components`)
- * or a React icon component (from `@carbon/icons-react`). Normalized at
- * render time via the shared `iconTransform` utility.
- *
- * @category Config
- */
-export interface InputMenuOption extends CustomMenuOption {
-  /**
-   * Icon to render alongside the option's text. Accepts a `CarbonIcon`
-   * descriptor or a React component icon.
-   */
-  icon: CarbonIcon | ComponentType<unknown>;
-}
 
 /**
  * Configuration for the input field in the main chat and homescreen.
@@ -180,11 +161,32 @@ export interface InputConfig {
   };
 
   /**
-   * Custom actions surfaced in the chat input's message-actions popover.
-   * When provided, an Add ("+") button appears in the input that opens a
-   * Carbon popover containing these options. If file uploads are also
-   * enabled, an "Add files" entry is automatically prepended; the
-   * standalone upload button is not rendered.
+   * Custom action buttons for the chat input, sharing the header's
+   * {@link ToolbarAction} shape. How they render depends on the layout:
+   * in the default (compact) layout an Add ("+") button opens a Carbon
+   * popover containing these actions; in the expanded layout
+   * ({@link InputConfig.expanded}) they render inline as icon buttons that
+   * collapse into a "more" overflow menu when the row runs out of room
+   * (set `fixed: true` to keep an action out of the overflow). If file
+   * uploads are also enabled, an "Add files" action is automatically
+   * prepended and the standalone upload button is not rendered. The button
+   * size is controlled by the input, so a per-action `size` is ignored.
+   *
+   * @experimental
    */
-  menuOptions?: InputMenuOption[];
+  actions?: ToolbarAction[];
+
+  /**
+   * Renders the input in an expanded layout: the editor fills its own
+   * full-width row, with the message actions and send control on a second
+   * row beneath it (actions to the start, send to the end). When set, any
+   * {@link InputConfig.actions} render inline as icon buttons in that actions
+   * row — overflowing into a "more" menu when space is tight — instead of
+   * inside the Add ("+") popover, and the
+   * {@link WriteableElementName.PROMPT_LINE_ACTIONS_END} slot becomes
+   * available. Defaults to false.
+   *
+   * @experimental
+   */
+  expanded?: boolean;
 }

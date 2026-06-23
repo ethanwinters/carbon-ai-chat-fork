@@ -7,7 +7,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { css, html, LitElement, unsafeCSS } from "lit";
+import { css, html, LitElement, type PropertyValues, unsafeCSS } from "lit";
 import { property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
@@ -44,14 +44,39 @@ class InputShellElement extends LitElement {
   @property({ type: Boolean, reflect: true })
   rounded = false;
 
+  /**
+   * Expanded layout: the editor fills its own full-width row, with the
+   * message actions and send control on a second row beneath it (actions to
+   * the start, send to the end). Reflects so consumer CSS can target the
+   * variant. The reflow is driven purely by a container class — the rendered
+   * DOM is identical in both modes.
+   */
+  @property({ type: Boolean, reflect: true })
+  expanded = false;
+
   @state()
   private _hasMessageActions = false;
+
+  override willUpdate(changedProperties: PropertyValues): void {
+    super.willUpdate(changedProperties);
+    // Derive `--has-message-actions` from the settled slot assignment on every
+    // update. A bare `slotchange` snapshot can latch on a transient state: a
+    // consumer projecting content asynchronously (web-component slotting) or
+    // toggling writeable content at runtime can momentarily present the
+    // prompt-line passthrough as real action content, and the settled assignment
+    // may not emit a follow-up `slotchange`. Left stale, that keeps the reduced
+    // start inset and strands the prompt line once the content is removed.
+    // Deriving here (rather than snapshotting in the handler) re-reads the
+    // settled assignment each render, so the occupancy can't latch.
+    this._updateHasMessageActions();
+  }
 
   override render() {
     const containerClasses = {
       [`${prefix}--input-container`]: true,
       [`${prefix}--input-container--has-message-actions`]:
         this._hasMessageActions,
+      [`${prefix}--input-container--expanded`]: this.expanded,
     };
 
     return html`
@@ -62,15 +87,13 @@ class InputShellElement extends LitElement {
             <slot name="autocomplete-content"></slot>
             <slot name="field-messaging"></slot>
           </div>
-          <div class="${prefix}--input-field-container">
-            <div class="${prefix}--input-text-and-actions">
-              <slot
-                name="message-actions"
-                @slotchange=${this._handleMessageActionsSlotChange}
-              ></slot>
-              <div class="${prefix}--input-text-area">
-                <slot name="editor"></slot>
-              </div>
+          <div class="${prefix}--input-text-and-actions">
+            <slot
+              name="message-actions"
+              @slotchange=${this._handleMessageActionsSlotChange}
+            ></slot>
+            <div class="${prefix}--input-text-area">
+              <slot name="editor"></slot>
             </div>
           </div>
           <div class="${prefix}--input-send-control-container">
@@ -81,10 +104,30 @@ class InputShellElement extends LitElement {
     `;
   }
 
-  private _handleMessageActionsSlotChange = (event: Event): void => {
-    const slot = event.target as HTMLSlotElement;
-    this._hasMessageActions = slot.assignedElements().length > 0;
+  private _handleMessageActionsSlotChange = (): void => {
+    // Request an update so `willUpdate()` re-derives occupancy from the settled
+    // assignment. Deriving there (not here) avoids latching on a transient
+    // assignment this event can fire on (see `willUpdate`).
+    this.requestUpdate();
   };
+
+  /**
+   * Derives `_hasMessageActions` from the `message-actions` slot's current
+   * occupancy. Consumers may project a writeable passthrough
+   * (`data-prompt-line-slot`) into `message-actions`; it is always present even
+   * when empty, so only real action content drives the `--has-message-actions`
+   * padding treatment.
+   */
+  private _updateHasMessageActions(): void {
+    const slot = this.renderRoot?.querySelector(
+      `slot[name="message-actions"]`,
+    ) as HTMLSlotElement | null;
+    this._hasMessageActions = slot
+      ? slot
+          .assignedElements()
+          .some((element) => !element.hasAttribute("data-prompt-line-slot"))
+      : false;
+  }
 }
 
 declare global {

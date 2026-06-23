@@ -13,8 +13,8 @@ import type {
   TriggerSuggestionConfig,
   SuggestionItem,
   AutocompleteConfig,
-  InputMenuOption,
 } from "../../types/config/InputConfig";
+import type { ToolbarAction } from "../../types/config/HeaderConfig";
 import { useServiceManager } from "./useServiceManager";
 
 interface InputConfigSlice {
@@ -24,7 +24,8 @@ interface InputConfigSlice {
   starters: SuggestionItem[] | undefined;
   hostExtensions: Extension[] | undefined;
   isSendDisabledFromConfig: boolean;
-  menuOptions: InputMenuOption[] | undefined;
+  actions: ToolbarAction[] | undefined;
+  expanded: boolean;
 }
 
 /**
@@ -48,9 +49,10 @@ function useInputConfig(): InputConfigSlice {
   const [isSendDisabledFromConfig, setIsSendDisabledFromConfig] = useState(() =>
     Boolean(initial?.isSendDisabled),
   );
-  const [menuOptions, setMenuOptions] = useState<InputMenuOption[] | undefined>(
-    () => initial?.menuOptions,
+  const [actions, setActions] = useState<ToolbarAction[] | undefined>(
+    () => initial?.actions,
   );
+  const [expanded, setExpanded] = useState(() => Boolean(initial?.expanded));
 
   useEffect(() => {
     const unsubscribe = store.subscribe(() => {
@@ -68,9 +70,11 @@ function useInputConfig(): InputConfigSlice {
         const flag = Boolean(next?.isSendDisabled);
         return prev !== flag ? flag : prev;
       });
-      setMenuOptions((prev) =>
-        prev !== next?.menuOptions ? next?.menuOptions : prev,
-      );
+      setActions((prev) => (prev !== next?.actions ? next?.actions : prev));
+      setExpanded((prev) => {
+        const flag = Boolean(next?.expanded);
+        return prev !== flag ? flag : prev;
+      });
     });
     return unsubscribe;
   }, [store]);
@@ -82,7 +86,8 @@ function useInputConfig(): InputConfigSlice {
     starters,
     hostExtensions,
     isSendDisabledFromConfig,
-    menuOptions,
+    actions,
+    expanded,
   };
 }
 

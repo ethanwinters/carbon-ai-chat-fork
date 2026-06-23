@@ -6,7 +6,7 @@ We mirror the voice of [carbondesignsystem.com](https://carbondesignsystem.com/g
 
 ## The mandate
 
-Write the fewest words that convey the idea. Every word a reader skips is a word you should have cut.
+Write the fewest words that convey the idea. Every word a reader skips is a word you should have cut. Your primary audience is mid-level front-end developers. If you can explain a concept with code instead of prose, prefer code.
 
 ## Voice — constant
 

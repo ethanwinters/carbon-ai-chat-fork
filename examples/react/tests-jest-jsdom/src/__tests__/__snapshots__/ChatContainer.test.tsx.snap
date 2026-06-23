@@ -35,6 +35,12 @@ exports[`ChatContainer should match snapshot 1`] = `
     slot="afterInputElement"
   />
   <div
+    slot="promptLineActionsEnd"
+  />
+  <div
+    slot="promptLineSendButtonStart"
+  />
+  <div
     slot="footerElement"
   />
   <div
