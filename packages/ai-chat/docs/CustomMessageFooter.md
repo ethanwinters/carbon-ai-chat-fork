@@ -2,11 +2,11 @@
 title: Custom message footer
 ---
 
-### Overview
+## Overview
 
 Render your own content beneath an assistant message — copy and share actions, ratings, or links — through a custom footer slot.
 
-### How it works
+## How it works
 
 A message renders a custom footer when your backend includes `custom_footer_slot` on it. When the chat receives such a message, it fires a {@link BusEventType.CUSTOM_FOOTER_SLOT} event carrying an `additional_data` object, which you populate on the backend with whatever the footer needs to render (for example, a flag to allow copy or a share URL).
 
@@ -19,7 +19,7 @@ Your renderer receives the accumulated {@link RenderCustomMessageFooterState} fo
 - The {@link ChatInstance}, for calling instance methods from the footer.
 - The `additionalData` object your backend attached to the event.
 
-### Rendering a footer
+## Rendering a footer
 
 Each framework exposes a managed renderer that subscribes to the event, tracks each slot, and manages element lifecycle for you:
 
@@ -28,7 +28,7 @@ Each framework exposes a managed renderer that subscribes to the event, tracks e
 
 For fine-grained control, you can instead subscribe to {@link BusEventType.CUSTOM_FOOTER_SLOT} directly and manage slots yourself — see the legacy approach on each framework page.
 
-### Related
+## Related
 
 - [Customizing responses](./Responses.md) — render your own `user_defined` response content.
 - [Message format](./MessageFormat.md) — the shape of messages, including `custom_footer_slot`.

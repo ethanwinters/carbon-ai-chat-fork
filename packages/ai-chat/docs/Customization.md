@@ -12,7 +12,7 @@ children:
   - ./CustomMessageFooter.md
 ---
 
-### Overview
+## Overview
 
 Customize the chat UI at three levels, from quickest to deepest:
 
@@ -34,6 +34,6 @@ Pick the area you want to customize:
 - [Customizing responses](./Responses.md) — style rich text responses and render your own {@link MessageResponseTypes.USER_DEFINED} content.
 - [Custom message footer](./CustomMessageFooter.md) — render your own content beneath an assistant message.
 
-### Config reference
+## Config reference
 
 To configure other options like the assistant name or feedback persistence, see {@link PublicConfig}.

@@ -64,6 +64,17 @@ const config = {
         include: ["@storybook/web-components-vite"],
         exclude: ["lit", "lit-html"],
       },
+      resolve: {
+        alias: {
+          // `@vscode/markdown-it-katex` does `require("katex")`, which resolves
+          // KaTeX's CommonJS build. Vite 8's rolldown bundler mangles the
+          // lone-surrogate escapes (`\uD800-\uDFFF`) in KaTeX's lexer regex
+          // into U+FFFD when it transforms that CJS build, breaking tokenizing
+          // of every `\command`. Forcing the ESM build (which rolldown leaves
+          // intact) fixes the KaTeX markdown-it plugin story.
+          katex: require.resolve("katex/dist/katex.mjs"),
+        },
+      },
       define: {
         "process.env": process.env,
       },
