@@ -1,0 +1,17 @@
+# AudioItem
+
+- Kind: TypeAlias
+- Category: Messaging
+- Reference: https://chat.carbondesignsystem.com/tag/latest/docs/types/Type_reference.AudioItem.html
+
+The audio response type definition for future reuse. This is currently the same as MediaItem.
+
+## Signature
+
+```ts
+type AudioItem = MediaItem<TUserDefinedType>
+```
+
+## Related
+
+- [MediaItem](./MediaItem.md)

@@ -1,0 +1,41 @@
+# PublicCustomPanelsState
+
+- Kind: Interface
+- Category: Instance
+- Reference: https://chat.carbondesignsystem.com/tag/latest/docs/interfaces/Type_reference.PublicCustomPanelsState.html
+
+Represents public state for each supported custom panel variant.
+
+## Signature
+
+```ts
+interface PublicCustomPanelsState
+```
+
+## Members
+
+### default
+
+`default: PublicDefaultCustomPanelState`
+
+State for the default overlay-style custom panel.
+
+[Reference](https://chat.carbondesignsystem.com/tag/latest/docs/interfaces/Type_reference.PublicCustomPanelsState.html#default)
+
+### history
+
+`history: PublicHistoryPanelState`
+
+State for the history panel.
+
+[Reference](https://chat.carbondesignsystem.com/tag/latest/docs/interfaces/Type_reference.PublicCustomPanelsState.html#history)
+
+### workspace
+
+`workspace: PublicWorkspaceCustomPanelState`
+
+**Experimental.**
+
+State for the workspace custom panel.
+
+[Reference](https://chat.carbondesignsystem.com/tag/latest/docs/interfaces/Type_reference.PublicCustomPanelsState.html#workspace)
