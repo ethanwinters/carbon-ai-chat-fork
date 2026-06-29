@@ -36,6 +36,7 @@ import {
   adoptOnRoot,
   setVarsForSelector,
 } from "../../shared/dynamic-css-var-sheet.js";
+import { PROMPT_LINE_MAX_BLOCK_SIZE } from "./prompt-line-constants.js";
 import { getRawText, textToDoc } from "./tiptap/json-utils.js";
 
 /** Updater shape accepted by `setContent` for reduce-style edits. */
@@ -130,9 +131,13 @@ function ensureTextareaStyleRules(): void {
   // Auto-grow wrapper: textarea and mirror occupy the same grid cell; the
   // (content-bearing) mirror dictates the height, the textarea stretches to
   // fill it. No per-keystroke inline `style.height` (CSP-safe auto-grow).
+  // Cap the box at the shared max and clip the (unbounded) mirror past it; the
+  // field below scrolls within that cap.
   setVarsForSelector(`.${TA_GROW_CLASS}`, {
     display: "grid",
     "inline-size": "100%",
+    "max-block-size": PROMPT_LINE_MAX_BLOCK_SIZE,
+    overflow: "hidden",
   });
   setVarsForSelector(`.${TA_GROW_CLASS} > *`, {
     "grid-area": "1 / 1 / 2 / 2",
@@ -158,9 +163,13 @@ function ensureTextareaStyleRules(): void {
     color: "var(--cds-text-primary, #161616)",
     outline: "none",
     resize: "none",
-    overflow: "hidden",
+    // The field is its own scroll container past the cap so the browser keeps
+    // the caret in view natively (an ancestor scroller would not track it).
+    "overflow-x": "hidden",
+    "overflow-y": "auto",
     "inline-size": "100%",
     "min-block-size": "0",
+    "max-block-size": PROMPT_LINE_MAX_BLOCK_SIZE,
   });
   setVarsForSelector(`.${TA_FIELD_CLASS}::placeholder`, {
     color: "var(--cds-text-secondary, #525252)",
@@ -184,8 +193,10 @@ const TYPING_TIMEOUT_MS = 5000;
 
 /**
  * `<textarea>`-backed controller. Tiptap-free; emits the same prompt events as
- * the rich editor. Auto-grows via a hidden mirror so the host's `max-height`
- * scroll cap (from input-shell) behaves the same as the contenteditable.
+ * the rich editor. Auto-grows via a hidden mirror, capped at
+ * `PROMPT_LINE_MAX_BLOCK_SIZE` with the field scrolling past it — the same cap
+ * the rich contenteditable applies (see ./tiptap/editor-styles.ts), so the
+ * textarea→rich swap is imperceptible.
  */
 export class TextareaController implements PromptLineController {
   private _wrap: HTMLDivElement | null = null;

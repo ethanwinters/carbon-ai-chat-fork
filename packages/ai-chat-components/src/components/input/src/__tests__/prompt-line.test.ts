@@ -11,6 +11,7 @@ import { expect, fixture, html, oneEvent } from "@open-wc/testing";
 import { Extension } from "@tiptap/core";
 
 import "../prompt-line.js";
+import { PROMPT_LINE_MAX_BLOCK_SIZE } from "../prompt-line-constants.js";
 import type PromptLineElement from "../prompt-line.js";
 
 async function makePromptLine(
@@ -70,6 +71,14 @@ describe("<cds-aichat-prompt-line> (textarea mode)", function () {
     const el = await makePromptLine();
     expect(getTextarea(el)).to.not.equal(null);
     expect(el.getEditor()).to.equal(null);
+  });
+
+  it("caps the textarea height and scrolls past the cap", async () => {
+    const el = await makePromptLine();
+    const ta = getTextarea(el);
+    const style = getComputedStyle(ta);
+    expect(style.maxHeight).to.equal(PROMPT_LINE_MAX_BLOCK_SIZE);
+    expect(style.overflowY).to.equal("auto");
   });
 
   it("projects the editor host into light DOM with slot=editor", async () => {
@@ -182,6 +191,16 @@ describe("<cds-aichat-prompt-line> (rich upgrade)", function () {
     const host = el.querySelector('[slot="editor"]') as HTMLElement;
     expect(host.querySelector(".ProseMirror")).to.not.equal(null);
     expect(host.querySelector("textarea")).to.equal(null);
+  });
+
+  it("caps the rich content height at the same value as the textarea", async () => {
+    const el = await makePromptLine();
+    el.rich = true;
+    await waitForRich(el);
+    const pm = el.querySelector('[slot="editor"] .ProseMirror') as HTMLElement;
+    const style = getComputedStyle(pm);
+    expect(style.maxHeight).to.equal(PROMPT_LINE_MAX_BLOCK_SIZE);
+    expect(style.overflowY).to.equal("auto");
   });
 
   it("preserves the typed value across the upgrade", async () => {
