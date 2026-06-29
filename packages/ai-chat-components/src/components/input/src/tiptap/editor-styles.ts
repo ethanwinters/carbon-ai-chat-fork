@@ -8,6 +8,7 @@
  */
 
 import { setVarsForSelector } from "../../../shared/dynamic-css-var-sheet.js";
+import { PROMPT_LINE_MAX_BLOCK_SIZE } from "../prompt-line-constants.js";
 
 const PM_CONTENT_CLASS = "cds-aichat--input-pm-content";
 const PM_PHONE_CLASS = "cds-aichat--input-pm-content--phone";
@@ -29,7 +30,7 @@ function ensurePmContentStyleRules(): void {
     "font-weight": "var(--cds-body-01-font-weight, 400)",
     "letter-spacing": "var(--cds-body-01-letter-spacing, 0.16px)",
     "line-height": "var(--cds-body-01-line-height, 1.42857)",
-    "max-height": "157px",
+    "max-block-size": PROMPT_LINE_MAX_BLOCK_SIZE,
     "overflow-y": "auto",
   });
   // Tiptap renders block content into real <p> tags inside the light-DOM
