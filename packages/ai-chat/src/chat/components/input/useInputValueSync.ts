@@ -51,6 +51,11 @@ interface UseInputValueSyncArgs {
    * when the user sends a message.
    */
   onSendInput: (text: string, displayContent?: JSONContent) => void;
+
+  /**
+   * Whether an error has been passed to the Input.
+   */
+  hasErrorProp: boolean;
 }
 
 /**
@@ -67,6 +72,7 @@ function useInputValueSync({
   disableSend,
   isSendDisabledFromConfig,
   onSendInput,
+  hasErrorProp,
 }: UseInputValueSyncArgs) {
   const store = serviceManager.store;
 
@@ -118,7 +124,7 @@ function useInputValueSync({
   const overMaxLength = rawInputValue.length > maxInputChars;
 
   const effectiveDisableSend =
-    disableSend || isSendDisabledFromConfig || overMaxLength;
+    disableSend || isSendDisabledFromConfig || overMaxLength || hasErrorProp;
 
   /**
    * Handle input value changes from the prompt-line. Dispatches to Redux if

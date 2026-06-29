@@ -415,6 +415,28 @@ function AppShell({
     uploadConfig?.maxFiles !== undefined &&
     inputState.pendingUploads.length >= uploadConfig.maxFiles;
 
+  // Derive InputConfig.error
+  const inputError = useMemo(() => {
+    // check file and pending uploads first
+    const fileWithError = inputState.files.find((f) => f.isError);
+    const pendingUploadWithError = inputState.pendingUploads.find(
+      (u) => u.status === "error",
+    );
+
+    const uploadError = fileWithError || pendingUploadWithError;
+    if (uploadError) {
+      return {
+        title: "File upload error",
+        description:
+          "errorMessage" in uploadError ? uploadError.errorMessage : undefined,
+        collapsible: false,
+      };
+    }
+
+    // Fall back to config-provided error if no file upload errors
+    return publicConfig.input?.error;
+  }, [inputState.files, inputState.pendingUploads, publicConfig.input?.error]);
+
   // Panel callbacks
   const {
     onPanelOpenStart,
@@ -919,6 +941,7 @@ function AppShell({
                     (!IS_PHONE_IN_PORTRAIT_MODE ||
                       !!publicConfig.disableCustomElementMobileEnhancements)
                   }
+                  error={inputError}
                 />
               </div>
 

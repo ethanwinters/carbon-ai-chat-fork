@@ -54,6 +54,10 @@ class InputShellElement extends LitElement {
   @property({ type: Boolean, reflect: true })
   expanded = false;
 
+  /** Whether the prompt line is in an error state */
+  @property({ type: Boolean, reflect: true, attribute: "has-error" })
+  hasError = false;
+
   @state()
   private _hasMessageActions = false;
 
@@ -85,6 +89,8 @@ class InputShellElement extends LitElement {
           <div class="${prefix}--input-uploads-and-autocomplete">
             <slot name="file-uploads"></slot>
             <slot name="autocomplete-content"></slot>
+          </div>
+          <div class="${prefix}--field-messaging-container">
             <slot name="field-messaging"></slot>
           </div>
           <div class="${prefix}--input-text-and-actions">

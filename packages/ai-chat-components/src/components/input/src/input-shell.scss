@@ -52,7 +52,7 @@
   min-block-size: 0;
   outline: button.$button-border-width solid transparent;
   outline-offset: -2px;
-  padding-block: layout.$spacing-04;
+  padding-block-end: layout.$spacing-04;
   padding-inline: layout.$spacing-05 layout.$spacing-03;
 }
 
@@ -67,6 +67,11 @@
 :host([rounded]) .#{$prefix}--input-container {
   border: button.$button-outline-width solid theme.$border-subtle-00;
   border-radius: layout.$spacing-03;
+}
+
+// Error state
+:host([has-error]) .#{$prefix}--input-container {
+  border: 1px solid theme.$support-error;
 }
 
 // Message actions visible — reduce start padding
@@ -98,6 +103,7 @@
   flex: 1 0;
   align-items: center;
   gap: layout.$spacing-03;
+  margin-block-start: layout.$spacing-04;
 }
 
 ::slotted([slot="message-actions"]) {
@@ -115,7 +121,8 @@
   gap: layout.$spacing-03;
 }
 
-.#{$prefix}--input-container > *:not(:last-child) {
+.#{$prefix}--input-container
+  > *:not(:last-child):not(.#{$prefix}--field-messaging-container) {
   margin-inline-end: layout.$spacing-03;
 }
 
@@ -161,14 +168,12 @@
 }
 
 // -----------------------------------------------------------
-// Field messaging slot (inline error / status content beneath
-// the autocomplete row — char-count exceeded, etc.)
+// Field messaging row (used for error message)
 // -----------------------------------------------------------
-::slotted([slot="field-messaging"]) {
-  display: block;
-  color: theme.$support-error;
-  padding-block-start: layout.$spacing-03;
-  @include type.type-style("label-01");
+.#{$prefix}--field-messaging-container {
+  flex-basis: 100%;
+  inline-size: 100%;
+  margin-inline: 0;
 }
 
 // -----------------------------------------------------------
@@ -193,6 +198,7 @@
   flex: 0 1;
   align-self: flex-start;
   gap: layout.$spacing-03;
+  margin-block-start: layout.$spacing-04;
 }
 
 // -----------------------------------------------------------
@@ -271,6 +277,7 @@
   // end on its own.
   flex: 0 0 auto;
   order: 3;
+  margin-block-start: layout.$spacing-04;
   margin-inline-start: auto;
 }
 
