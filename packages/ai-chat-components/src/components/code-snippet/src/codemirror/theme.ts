@@ -84,9 +84,11 @@ export function createCarbonTheme() {
       borderLeftColor: "var(--cds-text-primary, #161616)",
     },
 
-    // Gutters
+    // Gutters. Match the snippet surface (chat-shell-background) so the gutter
+    // and code area read as one surface. The disabled state overrides both to
+    // $layer in code-snippet.scss (:host([disabled])), keeping them matched.
     ".cm-gutters": {
-      backgroundColor: "var(--cds-background, #ffffff)",
+      backgroundColor: "var(--cds-chat-shell-background, #ffffff)",
       color: "var(--cds-text-helper, #6f6f6f)",
       border: "none",
     },

@@ -128,8 +128,6 @@ export interface PublicCustomPanelsState {
 
   /**
    * State for the workspace custom panel.
-   *
-   * @experimental
    */
   workspace: PublicWorkspaceCustomPanelState;
 
@@ -187,8 +185,6 @@ export type PublicChatState = Readonly<
 
     /**
      * State for the workspace panel.
-     *
-     * @experimental
      */
     workspace: PublicWorkspaceCustomPanelState;
   }

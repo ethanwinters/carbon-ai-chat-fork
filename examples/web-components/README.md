@@ -556,9 +556,9 @@ Connects the chat to IBM watsonx.ai via a local Express proxy that streams token
 
 </details>
 
-### [Markdown override (code snippet, hide detected language label)](./markdown-override/README.md)
+### [Markdown override (code snippet + table)](./markdown-override/README.md)
 
-`<cds-aichat-custom-element>` mounted directly in page light DOM and configured with `markdown.customRenderers.codeBlock` so every fenced code block renders through a `cds-aichat-code-snippet` whose `detectLanguage` property is explicitly set to `false` — overriding the markdown component's default of `true`. Bare fences no longer show the detected language label in the snippet header; explicit fence languages still display their label.
+`<cds-aichat-custom-element>` mounted directly in page light DOM and configured with `markdown.customRenderers` to replace two element renderers: `codeBlock` (every fenced code block renders through a `cds-aichat-code-snippet` with `detectLanguage` set to `false`) and `table` (every markdown table renders through a Carbon `cds-table` from `@carbon/web-components`).
 
 **Start command:** `npm run start --workspace=@carbon/ai-chat-examples-web-components-markdown-override`
 
@@ -572,11 +572,13 @@ Connects the chat to IBM watsonx.ai via a local Express proxy that streams token
 | `WCMarkdown`                         | `@carbon/ai-chat` type        | Shape of the value bound to `.markdown`.                                   |
 | `WCCustomMarkdownRenderers`          | `@carbon/ai-chat` type        | Shape of `markdown.customRenderers`.                                       |
 | `markdown.customRenderers.codeBlock` | config field                  | Replaces the default fenced-code renderer.                                 |
+| `markdown.customRenderers.table`     | config field                  | Replaces the default table renderer with a Carbon `cds-table`.             |
 | `MarkdownRendererCodeBlockArgs`      | `@carbon/ai-chat` type        | Argument shape passed to the callback (`language`, `code`, `slotName`, …). |
+| `MarkdownRendererTableArgs`          | `@carbon/ai-chat` type        | Argument shape for the table callback (`headers`, `rows`, `slotName`, …).  |
 | `<cds-aichat-card>` (`is-flush`)     | custom element                | Wraps the snippet to match the default Carbon shell.                       |
 | `<cds-aichat-code-snippet>`          | custom element                | Renders the code; receives `detectLanguage`, `language`, `highlight`.      |
-| `.detectLanguage`                    | property                      | Set to `false` here to hide the auto-detected language label.              |
-| `messaging.customSendMessage`        | property                      | Mock backend that emits two contrasting fences in every reply.             |
+| `<cds-table>` and friends            | `@carbon/web-components`      | The data table the `table` override renders with Lit.                      |
+| `messaging.customSendMessage`        | property                      | Mock backend that emits two contrasting fences and a table in every reply. |
 
 </details>
 
