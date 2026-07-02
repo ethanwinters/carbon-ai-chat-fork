@@ -36,6 +36,10 @@ import {
 import { WriteableElementsPortalsContainer } from "./components/WriteableElementsPortalsContainer";
 
 import { useOnMount } from "./hooks/useOnMount";
+import {
+  DEFAULT_REUSE_GRACE_MS,
+  releaseServiceManager,
+} from "./services/reuseInstanceRegistry";
 import appActions from "./store/actions";
 import { consoleError, consoleWarn } from "./utils/miscUtils";
 import { isBrowser } from "./utils/browserUtils";
@@ -69,6 +73,7 @@ interface AppProps {
   config: PublicConfig;
   onBeforeRender?: (instance: ChatInstance) => Promise<void> | void;
   onAfterRender?: (instance: ChatInstance) => Promise<void> | void;
+  onAttach?: (instance: ChatInstance, details: { remount: boolean }) => void;
   renderUserDefinedResponse?: RenderUserDefinedResponse;
   renderCustomMessageFooter?: RenderCustomMessageFooter;
   renderWriteableElements?: RenderWriteableElementResponse;
@@ -99,6 +104,7 @@ export function ChatAppEntry({
   config,
   onBeforeRender,
   onAfterRender,
+  onAttach,
   renderUserDefinedResponse,
   renderCustomMessageFooter,
   renderWriteableElements,
@@ -130,6 +136,10 @@ export function ChatAppEntry({
   >({});
 
   const previousConfigRef = useRef<PublicConfig | null>(null);
+
+  // Mirrors the async-set `serviceManager` state so the mount-only unmount cleanup (whose closure
+  // captured the initial null) can reach the live manager to release or dispose it.
+  const serviceManagerRef = useRef<ServiceManager | null>(null);
 
   // Tracks which props we've already warned about so a host that re-creates an
   // object prop every render gets the diagnostic once, not on every commit.
@@ -177,46 +187,64 @@ export function ChatAppEntry({
         // Seed the previous config immediately to avoid dynamic updates during boot.
         previousConfigRef.current = publicConfig;
 
-        const { serviceManager, instance } =
+        const { serviceManager, instance, adopted } =
           await initServiceManagerAndInstance({
             publicConfig,
             container,
             customHostElement: element,
           });
+        serviceManagerRef.current = serviceManager;
 
         // Set the host markdown config before first paint so the initial
         // markdown render already has its custom renderers / plugins. `markdown`
         // lives in its own `markdownConfig` slice (not read from the config
         // tree), so lift it off `config` here. Read from the original `config`
         // prop, not `publicConfig`, to keep the consumer's plugin/renderer
-        // references stable for the slice's `isEqual` guard.
-        if (config.markdown) {
+        // references stable for the slice's `isEqual` guard. A reused manager
+        // already has this seeded (a later config change applies via the effect).
+        if (!adopted && config.markdown) {
           serviceManager.store.dispatch(
             appActions.setAppStateValue("markdownConfig", config.markdown),
           );
         }
 
+        // Register (or, on reuse, repoint) the portal-slot handlers. Registration is
+        // idempotent: a reused instance keeps its handlers and only has its
+        // current-mount setters repointed.
         attachUserDefinedResponseHandlers(
-          instance,
+          serviceManager,
           setUserDefinedResponseEventsBySlot,
         );
 
-        attachCustomFooterHandler(instance, setCustomFooterSlotsByName);
+        attachCustomFooterHandler(serviceManager, setCustomFooterSlotsByName);
 
         setInstances(instance);
 
-        if (onBeforeRender) {
+        // Hand the (same) instance to the host on every mount, flagging whether this is a
+        // reuse re-attach so consumers can run one-time setup only on the first attach.
+        onAttach?.(instance, { remount: adopted });
+
+        // `onBeforeRender` is a boot-once first-render gate; it does not re-fire on a
+        // reuse re-attach.
+        if (onBeforeRender && !adopted) {
           await onBeforeRender(instance);
         }
 
         setServiceManager(serviceManager);
         setBeforeRenderComplete(true);
-        await performInitialViewChange(serviceManager);
-        serviceManager.store.dispatch(
-          appActions.setInitialViewChangeComplete(true),
-        );
 
-        if (onAfterRender) {
+        // On a reuse re-attach the view state is already established in the preserved
+        // store, so the fresh tree renders it without re-running the initial view
+        // transition (which would re-fire the load view-change).
+        if (!adopted) {
+          await performInitialViewChange(serviceManager);
+          serviceManager.store.dispatch(
+            appActions.setInitialViewChangeComplete(true),
+          );
+        }
+
+        // `onAfterRender` is boot-once, mirroring `onBeforeRender`.
+        if (onAfterRender && !adopted) {
           setAfterRenderCallback(() => () => onAfterRender(instance));
         }
       } catch (error) {
@@ -350,7 +378,26 @@ export function ChatAppEntry({
     return () => {
       window.removeEventListener("resize", windowListener);
       document.removeEventListener("visibilitychange", visibilityListener);
-      serviceManager?.themeWatcherService?.stopWatching();
+      // Use the ref, not the closed-over state (which was null when this mount-only
+      // effect ran). With `reuseInstance`, release to the registry so a remount within
+      // the grace window reuses the live manager; otherwise dispose immediately so the
+      // store subscriptions, event bus, theme watcher, message service, and any
+      // human-agent connection are torn down instead of leaked.
+      const activeServiceManager = serviceManagerRef.current;
+      if (!activeServiceManager) {
+        return;
+      }
+      const { featureFlags, namespace } =
+        activeServiceManager.store.getState().config.public;
+      if (featureFlags?.reuseInstance) {
+        releaseServiceManager(
+          namespace,
+          featureFlags.reuseInstanceGraceMs ?? DEFAULT_REUSE_GRACE_MS,
+          (manager) => manager.actions.unloadServices(),
+        );
+      } else {
+        activeServiceManager.actions.unloadServices();
+      }
     };
   });
 

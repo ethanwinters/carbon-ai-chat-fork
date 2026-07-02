@@ -69,6 +69,7 @@ const REACTIVE_BACKBONE_FIELDS = new Set<string>([
   "upload",
   "keyboardShortcuts",
   "markdown",
+  "featureFlags", // boot/lifecycle flags read imperatively at boot + release; no dynamic side effect
 ]);
 
 const ALL_FIELDS = FLATTENED_PUBLIC_CONFIG_FIELDS.map((field) => field.name);

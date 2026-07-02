@@ -144,6 +144,7 @@ export {
   OnErrorData,
   OnErrorType,
   PublicConfig,
+  PublicConfigFeatureFlags,
   PublicConfigMessaging,
   UploadConfig,
 } from "./types/config/PublicConfig";
@@ -286,6 +287,7 @@ export {
   MarkdownRendererCodeBlockData,
   MarkdownRendererTableArgs,
   MarkdownRendererTableData,
+  OnAttachDetails,
   RenderCustomMessageFooter,
   RenderCustomMessageFooterState,
   RenderUserDefinedResponse,

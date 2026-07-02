@@ -21,7 +21,10 @@ import { createPortal } from "react-dom";
 
 import ChatAppEntry from "../chat/ChatAppEntry";
 import { carbonElement } from "@carbon/ai-chat-components/es/globals/decorators/index.js";
-import { ChatContainerProps } from "../types/component/ChatContainer";
+import {
+  ChatContainerProps,
+  OnAttachDetails,
+} from "../types/component/ChatContainer";
 import { ChatInstance } from "../types/instance/ChatInstance";
 import { BusEventType } from "../types/events/eventBusTypes";
 import {
@@ -83,6 +86,7 @@ function ChatContainer(
   const {
     onBeforeRender,
     onAfterRender,
+    onAttach,
     onViewChange,
     onViewPreChange,
     renderUserDefinedResponse,
@@ -321,25 +325,30 @@ function ChatContainer(
     };
   }, [wrapper]);
 
+  // Fires on every attach (first boot and each reuse re-attach). Re-projects the instance's
+  // writeable-element slots into this mount's shadow tree — so slotted content follows the
+  // instance across remounts — then hands the instance to the consumer's `onAttach`.
+  const onAttachOverride = useCallback(
+    (instance: ChatInstance, details: OnAttachDetails) => {
+      const slots: HTMLElement[] = Object.entries(
+        instance.writeableElements,
+      ).map((writeableElement) => {
+        const [key, element] = writeableElement;
+        element.setAttribute("slot", key); // Assign slot attributes dynamically
+        return element;
+      });
+      setWriteableElementSlots(slots);
+      onAttach?.(instance, details);
+    },
+    [onAttach],
+  );
+
   const onBeforeRenderOverride = useCallback(
     (instance: ChatInstance) => {
       if (instance) {
-        const addWriteableElementSlots = () => {
-          const slots: HTMLElement[] = Object.entries(
-            instance.writeableElements,
-          ).map((writeableElement) => {
-            const [key, element] = writeableElement;
-            element.setAttribute("slot", key); // Assign slot attributes dynamically
-            return element;
-          });
-          setWriteableElementSlots(slots);
-        };
-
-        addWriteableElementSlots();
-
-        // Opt-in view-change observation hooks. The float container manages
-        // its own visibility, so there is no default handler — a prop is only
-        // subscribed when the consumer provides it.
+        // Opt-in view-change observation hooks, subscribed boot-once (they persist on a
+        // reused instance). The float container manages its own visibility, so there is no
+        // default handler — a prop is only subscribed when the consumer provides it.
         if (onViewPreChange) {
           instance.on({
             type: BusEventType.VIEW_PRE_CHANGE,
@@ -381,6 +390,7 @@ function ChatContainer(
             renderWriteableElements={renderWriteableElements}
             onBeforeRender={onBeforeRenderOverride}
             onAfterRender={onAfterRender}
+            onAttach={onAttachOverride}
             container={container}
             setParentInstance={setCurrentInstance}
             element={element}

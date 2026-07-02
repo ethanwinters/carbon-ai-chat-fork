@@ -15,6 +15,7 @@
  */
 
 import { ServiceManager } from "../services/ServiceManager";
+import { evictServiceManager } from "../services/reuseInstanceRegistry";
 import actions from "../store/actions";
 import { selectInputIsReadonly } from "../store/selectors";
 import {
@@ -357,6 +358,20 @@ function createChatInstance({
     destroySession: async (keepOpenState: boolean) => {
       debugLog("Called instance.destroySession", keepOpenState);
       return serviceManager.actions.destroySession(keepOpenState);
+    },
+
+    destroy: () => {
+      debugLog("Called instance.destroy");
+      const { featureFlags, namespace } =
+        serviceManager.store.getState().config.public;
+      if (featureFlags?.reuseInstance) {
+        // A reused instance lives in the registry; evict + dispose now, skipping the grace window.
+        evictServiceManager(namespace, (manager) =>
+          manager.actions.unloadServices(),
+        );
+      } else {
+        serviceManager.actions.unloadServices();
+      }
     },
   };
 

@@ -29,6 +29,7 @@ import {
   BusEventViewPreChange,
 } from "../../types/events/eventBusTypes";
 import type {
+  OnAttachDetails,
   RenderCustomMessageFooterState,
   RenderUserDefinedState,
   WCMarkdown,
@@ -69,10 +70,10 @@ class ChatContainer extends FlattenedConfigElement {
   onBeforeRender: (instance: ChatInstance) => Promise<void> | void;
 
   /**
-   * This function is called after the render function of Carbon AI Chat is called.
-   *
-   * Like `onBeforeRender`, it receives the {@link ChatInstance}; use it when you need the instance only after the
-   * first render has completed.
+   * This function is called once, after the first render of Carbon AI Chat has committed. Like
+   * `onBeforeRender`, it receives the {@link ChatInstance}; use it when you need the instance only after the
+   * initial render has completed. Unlike `onBeforeRender`, this does not gate rendering — its return value is
+   * not awaited.
    */
   @property({ attribute: false })
   onAfterRender: (instance: ChatInstance) => Promise<void> | void;
@@ -97,6 +98,14 @@ class ChatContainer extends FlattenedConfigElement {
    */
   @property()
   onViewChange?: (event: BusEventViewChange, instance: ChatInstance) => void;
+
+  /**
+   * Called on every mount/attach of Carbon AI Chat — the first boot and each reuse re-attach (see
+   * `featureFlags.reuseInstance`). Receives the same {@link ChatInstance}; capture it here (it
+   * survives remounts) and use `details.remount` to run one-time setup only on the first attach.
+   */
+  @property()
+  onAttach?: (instance: ChatInstance, details: OnAttachDetails) => void;
 
   /**
    * Optional callback to render user defined responses. When provided, the library manages all event listening,
@@ -639,6 +648,7 @@ class ChatContainer extends FlattenedConfigElement {
       .config=${this.resolvedConfig}
       .onAfterRender=${this.onAfterRender}
       .onBeforeRender=${this.onBeforeRenderOverride}
+      .onAttach=${this.onAttach}
       .element=${this.element}
     >
       ${this._writeableElementSlots.map(
@@ -690,9 +700,19 @@ interface CdsAiChatContainerAttributes extends Omit<PublicConfig, "markdown"> {
   onBeforeRender?: (instance: ChatInstance) => Promise<void> | void;
 
   /**
-   * This function is called after the render function of Carbon AI Chat is called.
+   * This function is called once, after the first render of Carbon AI Chat has committed. It receives the
+   * {@link ChatInstance}; use it when you need the instance only after the initial render has completed. Its
+   * return value is not awaited (it does not gate rendering).
    */
   onAfterRender?: (instance: ChatInstance) => Promise<void> | void;
+
+  /**
+   * Called on every mount/attach of Carbon AI Chat — the first boot and each reuse re-attach (see
+   * {@link PublicConfigFeatureFlags.reuseInstance}). Receives the same {@link ChatInstance}; capture it
+   * here (it survives remounts) and use {@link OnAttachDetails.remount} to run one-time setup only on the
+   * first attach.
+   */
+  onAttach?: (instance: ChatInstance, details: OnAttachDetails) => void;
 
   /**
    * Called before a view change (the chat opening or closing). Async — return a Promise to defer the view

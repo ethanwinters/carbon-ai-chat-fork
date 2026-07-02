@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -16,7 +16,6 @@ import {
 } from "../../../src/chat/utils/chatBoot";
 
 import { createBaseTestProps } from "../../test_helpers";
-import type { ChatInstance } from "../../../src/types/instance/ChatInstance";
 import {
   BusEventType,
   BusEvent,
@@ -202,7 +201,7 @@ describe("chatBoot utils", () => {
       };
 
       attachUserDefinedResponseHandlers(
-        fakeInstance as unknown as ChatInstance,
+        { instance: fakeInstance } as any,
         setBySlot as any,
       );
 
@@ -254,7 +253,7 @@ describe("chatBoot utils", () => {
       };
 
       attachCustomFooterHandler(
-        fakeInstance as unknown as ChatInstance,
+        { instance: fakeInstance } as any,
         setBySlot as any,
       );
 

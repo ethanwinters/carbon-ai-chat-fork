@@ -7,6 +7,8 @@
  *  @license
  */
 
+import type React from "react";
+
 import type { AppStore } from "../store/appStore";
 import { IntlShape } from "../utils/i18n";
 import { AriaAnnouncerFunctionType } from "../contexts/AriaAnnouncerContext";
@@ -152,6 +154,38 @@ class ServiceManager {
    * determine if a restart occurred during the operation and if the results should be ignored.
    */
   restartCount = 0;
+
+  /**
+   * Unsubscribe handles for the store subscriptions registered in `loadServices`. Captured so that
+   * `ChatActionsImpl.unloadServices` can tear them down on disposal; a disposed instance leaves zero
+   * live store listeners.
+   */
+  storeUnsubscribers: Array<() => void> = [];
+
+  /**
+   * Set once this service manager has been disposed via `unloadServices`. Guards against
+   * double-teardown so disposal is idempotent.
+   */
+  disposed = false;
+
+  /**
+   * The current mount's React setter for user-defined-response portal slots. Repointed on every
+   * mount (including a reuse re-attach) so the handlers registered once on the instance's event
+   * bus always drive the live mount rather than a stale one.
+   */
+  userDefinedResponseSetter?: React.Dispatch<React.SetStateAction<any>>;
+
+  /** Whether the user-defined-response handlers are attached to the instance's event bus. */
+  userDefinedResponseHandlersAttached = false;
+
+  /**
+   * The current mount's React setter for custom-footer portal slots. Repointed on every mount so
+   * the handlers registered once on the instance's event bus always drive the live mount.
+   */
+  customFooterSetter?: React.Dispatch<React.SetStateAction<any>>;
+
+  /** Whether the custom-footer handlers are attached to the instance's event bus. */
+  customFooterHandlersAttached = false;
 
   /**
    * An instance of the custom I18n formatter that can be used for formatting messages. This instance is available

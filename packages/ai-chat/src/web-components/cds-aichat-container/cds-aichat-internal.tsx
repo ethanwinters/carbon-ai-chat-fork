@@ -67,11 +67,18 @@ class ChatContainerInternal extends LitElement {
   onBeforeRender: (instance: ChatInstance) => Promise<void> | void;
 
   /**
-   * This function is called after the render function of Carbon AI Chat is called. This function can return a Promise
-   * which will cause Carbon AI Chat to wait for it before rendering.
+   * This function is called once, after the first render of Carbon AI Chat has committed. It does not gate
+   * rendering — its return value is not awaited.
    */
   @property()
   onAfterRender: (instance: ChatInstance) => Promise<void> | void;
+
+  /**
+   * Called on every mount/attach of Carbon AI Chat (see the public `onAttach` prop). `remount` is
+   * `false` on the first boot and `true` on each reuse re-attach.
+   */
+  @property()
+  onAttach?: (instance: ChatInstance, details: { remount: boolean }) => void;
 
   firstUpdated() {
     if (this.config) {
@@ -108,6 +115,7 @@ class ChatContainerInternal extends LitElement {
         config={this.config}
         onBeforeRender={this.onBeforeRender}
         onAfterRender={this.onAfterRender}
+        onAttach={this.onAttach}
         container={container}
         element={this.element}
       />,
@@ -131,8 +139,21 @@ class ChatContainerInternal extends LitElement {
   }
 
   disconnectedCallback(): void {
-    this.root?.unmount();
     super.disconnectedCallback();
+    // A disconnect can be transient — the browser fires disconnectedCallback then
+    // connectedCallback synchronously when an element is merely moved in the DOM. Defer teardown
+    // to a microtask and only run it if the element is still disconnected, so a move/reconnect
+    // keeps the live React root instead of tearing it down and re-booting.
+    queueMicrotask(() => {
+      if (this.isConnected) {
+        return;
+      }
+      this.root?.unmount();
+      // Null both so a later reconnect rebuilds cleanly via `ensureReactRoot`; leaving `root`
+      // set would make a subsequent render() throw on an unmounted root.
+      this.root = undefined;
+      this.reactContainer = undefined;
+    });
   }
 }
 
