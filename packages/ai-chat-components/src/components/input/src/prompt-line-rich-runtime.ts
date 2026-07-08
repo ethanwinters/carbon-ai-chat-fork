@@ -86,6 +86,7 @@ class RichController implements PromptLineController {
     host.setAttribute("role", "textbox");
     host.setAttribute("aria-multiline", "true");
     host.setAttribute("spellcheck", "true");
+    host.setAttribute("tabindex", "0");
     if (init.ariaLabel) {
       host.setAttribute("aria-label", init.ariaLabel);
     }
@@ -286,7 +287,7 @@ class RichController implements PromptLineController {
       if (!wasMouseFocus) {
         editor.view.dom.classList.add(PM_KEYBOARD_FOCUS_CLASS);
       }
-      this._dispatch("cds-aichat-prompt-focus");
+      this._dispatch("cds-aichat-prompt-focus", { keyboard: !wasMouseFocus });
     });
     editor.on("blur", () => {
       editor.view.dom.classList.remove(PM_KEYBOARD_FOCUS_CLASS);
