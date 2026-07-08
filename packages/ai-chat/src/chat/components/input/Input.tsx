@@ -20,12 +20,14 @@ import type { PromptLineElement } from "@carbon/ai-chat-components/es/components
 import { useChatAutocomplete } from "@carbon/ai-chat-components/es/react/hooks/useChatAutocomplete.js";
 import type { Editor, JSONContent } from "@tiptap/core";
 import actions from "../../store/actions";
-import { selectIsInputToHumanAgent } from "../../store/selectors";
+import {
+  selectIsInputToHumanAgent,
+  selectLanguagePack,
+} from "../../store/selectors";
 import { ChatWidthBreakpoint, AppState } from "../../../types/state/AppState";
 import { useSelector } from "../../hooks/useSelector";
 import { BusEventType } from "../../../types/events/eventBusTypes";
 import { useServiceManager } from "../../hooks/useServiceManager";
-import { useLanguagePack } from "../../hooks/useLanguagePack";
 import { useIntl } from "../../hooks/useIntl";
 import { useInputConfig } from "../../hooks/useInputConfig";
 import { useRichSurface } from "./useRichSurface";
@@ -241,7 +243,7 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
   } = props;
 
   const serviceManager = useServiceManager();
-  const languagePack = useLanguagePack();
+  const languagePack = useSelector(selectLanguagePack);
   const intl = useIntl();
   const store = serviceManager.store;
   const hasErrorProp = error !== undefined;
