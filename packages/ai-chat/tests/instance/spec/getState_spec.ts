@@ -1,11 +1,14 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
  *
  *  @license
  */
+
+import * as fs from "fs";
+import * as path from "path";
 
 import {
   createBaseConfig,
@@ -15,6 +18,27 @@ import {
 } from "../../test_helpers";
 import { BusEventType } from "../../../src/types/events/eventBusTypes";
 import { ViewType } from "../../../src/types/instance/apiTypes";
+
+function extractInterfaceBody(source: string, interfaceName: string): string {
+  const match = source.match(
+    new RegExp(`interface ${interfaceName} \\{([\\s\\S]*?)\\n\\}`),
+  );
+  if (!match) {
+    throw new Error(`Could not find interface ${interfaceName} in AppState.ts`);
+  }
+  return match[1];
+}
+
+function extractTopLevelFieldNames(interfaceBody: string): string[] {
+  const fieldPattern = /^\s*(\w+)\??:\s/gm;
+  const names: string[] = [];
+  let match: RegExpExecArray | null = fieldPattern.exec(interfaceBody);
+  while (match !== null) {
+    names.push(match[1]);
+    match = fieldPattern.exec(interfaceBody);
+  }
+  return names;
+}
 
 describe("ChatInstance.getState", () => {
   beforeEach(setupBeforeEach);
@@ -144,5 +168,39 @@ describe("ChatInstance.getState", () => {
     // Both previous and new states should be frozen
     expect(Object.isFrozen(stateChangeEvent.previousState)).toBe(true);
     expect(Object.isFrozen(stateChangeEvent.newState)).toBe(true);
+  });
+
+  describe("field allowlist", () => {
+    it("spreads exactly the known-safe PersistedState fields into PublicChatState", () => {
+      // getPublicChatState() destructures `humanAgentState` out separately and spreads everything
+      // else from `persistedToBrowserStorage` via `...rest` — an implicit allowlist-by-omission.
+      // This test makes that allowlist explicit: if PersistedState grows a new field, this list
+      // must be consciously updated (and the new field audited for whether it's safe to expose)
+      // instead of silently riding through the spread into the public surface.
+      const appStateSource = fs.readFileSync(
+        path.resolve(__dirname, "../../../src/types/state/AppState.ts"),
+        "utf8",
+      );
+      const persistedStateBody = extractInterfaceBody(
+        appStateSource,
+        "PersistedState",
+      );
+      const fieldNames = extractTopLevelFieldNames(persistedStateBody);
+
+      const knownSafeFields = [
+        "wasLoadedFromBrowser",
+        "version",
+        "viewState",
+        "showUnreadIndicator",
+        "launcherIsExpanded",
+        "launcherShouldStartCallToActionCounterIfEnabled",
+        "hasSentNonWelcomeMessage",
+        "disclaimersAccepted",
+        "homeScreenState",
+        "humanAgentState",
+      ];
+
+      expect(new Set(fieldNames)).toEqual(new Set(knownSafeFields));
+    });
   });
 });

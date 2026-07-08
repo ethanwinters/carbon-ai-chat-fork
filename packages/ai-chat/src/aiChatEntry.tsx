@@ -89,6 +89,7 @@ export {
   BusEventHistoryBegin,
   BusEventHistoryEnd,
   BusEventMessageItemCustom,
+  BusEventMessagesStateChange,
   BusEventPreReceive,
   BusEventPreReset,
   BusEventPreSend,
@@ -131,6 +132,20 @@ export {
 } from "./types/config/MessagingConfig";
 
 export {
+  ConversationStatus,
+  PublicChatError,
+  PublicMessagesState,
+} from "./types/messaging/ConversationState";
+
+export {
+  PublicMessage,
+  PublicMessageRequest,
+  PublicMessageRequestHistory,
+  PublicMessageResponse,
+  PublicMessageResponseHistory,
+} from "./types/messaging/PublicMessage";
+
+export {
   CarbonTheme,
   CustomMenuOption,
   DisclaimerPublicConfig,
@@ -144,6 +159,7 @@ export {
   OnErrorData,
   OnErrorType,
   PublicConfig,
+  PublicConfigFeatureFlags,
   PublicConfigMessaging,
   UploadConfig,
 } from "./types/config/PublicConfig";
@@ -286,6 +302,7 @@ export {
   MarkdownRendererCodeBlockData,
   MarkdownRendererTableArgs,
   MarkdownRendererTableData,
+  OnAttachDetails,
   RenderCustomMessageFooter,
   RenderCustomMessageFooterState,
   RenderUserDefinedResponse,

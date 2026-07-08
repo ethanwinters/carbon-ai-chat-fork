@@ -10,6 +10,8 @@
 import { HistoryItem } from "../messaging/History";
 import type { MessageResponse, StreamChunk } from "../messaging/Messages";
 import { BusEventSend } from "../events/eventBusTypes";
+import { PublicMessage } from "../messaging/PublicMessage";
+import { PublicMessagesState } from "../messaging/ConversationState";
 
 /**
  * Lifecycle state passed to {@link ChatInstanceMessaging.upsertMessage} to describe the
@@ -168,6 +170,23 @@ export interface ChatInstanceMessaging {
    * {@link PublicConfigMessaging.messageLoadingIndicatorTimeoutSecs} to 0.
    */
   restartConversation: () => Promise<void>;
+
+  /**
+   * Returns a snapshot of the current conversation's messages, status, and error. Seed with this in
+   * `onBeforeRender`, then subscribe to {@link BusEventType.MESSAGES_STATE_CHANGE} for updates — the
+   * same convention as {@link ChatInstance.getState} / {@link BusEventType.STATE_CHANGE}. Internal
+   * fields Carbon AI Chat keeps for its own bookkeeping are stripped from every message.
+   */
+  getMessagesState: () => PublicMessagesState;
+
+  /**
+   * Returns the message with the given id from the current conversation, or `undefined` if no message
+   * with that id exists. Equivalent to `getMessagesState().messages.find((message) => message.id ===
+   * messageId)`, provided as a convenience for the common case of looking up a single message.
+   *
+   * @param messageId The id of the message to retrieve.
+   */
+  getMessage: (messageId: string) => PublicMessage | undefined;
 }
 
 /**

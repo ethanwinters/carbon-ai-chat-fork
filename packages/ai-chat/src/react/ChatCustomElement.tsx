@@ -148,6 +148,7 @@ function ChatCustomElement(
   const {
     onBeforeRender,
     onAfterRender,
+    onAttach,
     onViewChange,
     onViewPreChange,
     renderUserDefinedResponse,
@@ -232,6 +233,7 @@ function ChatCustomElement(
           // ChatContainer-specific props (not part of PublicConfig).
           onBeforeRender={onBeforeRenderOverride}
           onAfterRender={onAfterRender}
+          onAttach={onAttach}
           renderUserDefinedResponse={renderUserDefinedResponse}
           renderCustomMessageFooter={renderCustomMessageFooter}
           renderWriteableElements={renderWriteableElements}

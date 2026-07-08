@@ -29,12 +29,14 @@ import {
   BusEventViewPreChange,
 } from "../../types/events/eventBusTypes";
 import type {
+  OnAttachDetails,
   RenderCustomMessageFooterState,
   RenderUserDefinedState,
   WCMarkdown,
   WCRenderCustomMessageFooter,
   WCRenderUserDefinedResponse,
 } from "../../types/component/ChatContainer";
+import type { ChatSlotStates } from "../../chat/sdk/slotStates.js";
 
 /**
  * The cds-aichat-container managing creating slotted elements for user_defined responses, custom message footers, and writable elements.
@@ -69,10 +71,10 @@ class ChatContainer extends FlattenedConfigElement {
   onBeforeRender: (instance: ChatInstance) => Promise<void> | void;
 
   /**
-   * This function is called after the render function of Carbon AI Chat is called.
-   *
-   * Like `onBeforeRender`, it receives the {@link ChatInstance}; use it when you need the instance only after the
-   * first render has completed.
+   * This function is called once, after the first render of Carbon AI Chat has committed. Like
+   * `onBeforeRender`, it receives the {@link ChatInstance}; use it when you need the instance only after the
+   * initial render has completed. Unlike `onBeforeRender`, this does not gate rendering — its return value is
+   * not awaited.
    */
   @property({ attribute: false })
   onAfterRender: (instance: ChatInstance) => Promise<void> | void;
@@ -97,6 +99,14 @@ class ChatContainer extends FlattenedConfigElement {
    */
   @property()
   onViewChange?: (event: BusEventViewChange, instance: ChatInstance) => void;
+
+  /**
+   * Called on every mount/attach of Carbon AI Chat — the first boot and each reuse re-attach (see
+   * `featureFlags.reuseInstance`). Receives the same {@link ChatInstance}; capture it here (it
+   * survives remounts) and use `details.remount` to run one-time setup only on the first attach.
+   */
+  @property()
+  onAttach?: (instance: ChatInstance, details: OnAttachDetails) => void;
 
   /**
    * Optional callback to render user defined responses. When provided, the library manages all event listening,
@@ -184,6 +194,19 @@ class ChatContainer extends FlattenedConfigElement {
   private _callbackFooterElements = new Map<string, HTMLElement>();
 
   /**
+   * The framework-agnostic slot-state stores (`src/chat/sdk/slotStates.ts`), handed down from
+   * `ChatAppEntry` via the internal `onSlotStatesReady` handshake (see `cds-aichat-internal.tsx`).
+   * Subscribing to these — rather than re-accumulating the same bus events locally — is the proof
+   * that the mechanism is framework-agnostic: this is a Lit host consuming it with zero React
+   * involved.
+   */
+  private _slotStates?: ChatSlotStates;
+
+  private _unsubscribeUserDefined?: () => void;
+
+  private _unsubscribeCustomFooter?: () => void;
+
+  /**
    * Adds the slot attribute to the element for the user_defined response type and then injects it into the component by
    * updating this._userDefinedSlotNames;
    */
@@ -210,97 +233,54 @@ class ChatContainer extends FlattenedConfigElement {
   };
 
   /**
-   * Enhanced handler for CUSTOM_FOOTER_SLOT when the renderCustomMessageFooter callback is provided.
-   * Tracks both slot names and the full per-slot state used by the callback rendering path.
+   * Called once the slot-state stores are available (every acquire, cold boot and reuse
+   * re-attach alike — see `onSlotStatesReady`'s doc). (Re-)subscribes the callback-rendering
+   * paths to the core-owned stores instead of the element's own bus-event accumulation.
    */
-  private enhancedCustomFooterHandler = (event: BusEventCustomFooterSlot) => {
-    const { slotName, message, messageItem, additionalData } = event.data;
-    if (!this._customFooterSlotNames.includes(slotName)) {
-      this._customFooterSlotNames = [...this._customFooterSlotNames, slotName];
-    }
-    this._customFooterStateBySlot = {
-      ...this._customFooterStateBySlot,
-      [slotName]: {
-        slotName,
-        message,
-        messageItem,
-        additionalData: additionalData as Record<string, unknown> | undefined,
-      },
-    };
+  private handleSlotStatesReady = (slotStates: ChatSlotStates) => {
+    this._slotStates = slotStates;
+    this.subscribeToSlotStates();
   };
 
   /**
-   * Enhanced handler for USER_DEFINED_RESPONSE when renderUserDefinedResponse callback is provided.
-   * Tracks both slot names and full message state per slot.
+   * Subscribes the user-defined-response and custom-footer callback-rendering paths to the
+   * shared core stores. Replaces the previous enhanced bus-event handlers: the projection logic
+   * (`syncCallbackRenderedElements`/`syncCallbackRenderedFooterElements`) is unchanged, only the
+   * feed into `_userDefinedStateBySlot`/`_customFooterStateBySlot` changes. Seeds state
+   * immediately from `.get()` so a reuse re-attach shows already-accumulated slot content without
+   * waiting for a new bus event. `RESTART_CONVERSATION` needs no dedicated handler here — the core
+   * store resets to `{}`, which flows through this same subscription and (via the sync methods'
+   * existing "slot no longer in state" cleanup loop) removes any stale rendered elements.
    */
-  private enhancedUserDefinedHandler = (event: BusEventUserDefinedResponse) => {
-    const { slot } = event.data;
-    if (!this._userDefinedSlotNames.includes(slot)) {
-      this._userDefinedSlotNames = [...this._userDefinedSlotNames, slot];
+  private subscribeToSlotStates() {
+    if (!this._slotStates) {
+      return;
     }
-    this._userDefinedStateBySlot = {
-      ...this._userDefinedStateBySlot,
-      [slot]: {
-        fullMessage: event.data.fullMessage,
-        messageItem: event.data.message,
-        state: event.data.state,
-      },
-    };
-  };
+    this._unsubscribeUserDefined?.();
+    this._unsubscribeCustomFooter?.();
 
-  /**
-   * Enhanced handler for CHUNK_USER_DEFINED_RESPONSE when renderUserDefinedResponse callback is provided.
-   * Handles both complete_item and partial_item chunks, accumulating state per slot.
-   */
-  private enhancedUserDefinedChunkHandler = (
-    event: BusEventChunkUserDefinedResponse,
-  ) => {
-    const { slot, chunk } = event.data;
-    if (!this._userDefinedSlotNames.includes(slot)) {
-      this._userDefinedSlotNames = [...this._userDefinedSlotNames, slot];
-    }
-
-    if ("complete_item" in chunk) {
-      this._userDefinedStateBySlot = {
-        ...this._userDefinedStateBySlot,
-        [slot]: { messageItem: chunk.complete_item },
+    if (this.renderUserDefinedResponse) {
+      const store = this._slotStates.userDefinedBySlot;
+      const apply = () => {
+        this._userDefinedStateBySlot = store.get();
+        this._userDefinedSlotNames = Object.keys(this._userDefinedStateBySlot);
       };
-    } else if ("partial_item" in chunk) {
-      const existing = this._userDefinedStateBySlot[slot];
-      this._userDefinedStateBySlot = {
-        ...this._userDefinedStateBySlot,
-        [slot]: {
-          ...existing,
-          partialItems: [...(existing?.partialItems ?? []), chunk.partial_item],
-        },
-      };
+      apply();
+      this._unsubscribeUserDefined = store.subscribe(apply);
     }
-  };
-
-  /**
-   * Handles RESTART_CONVERSATION when the renderUserDefinedResponse and/or renderCustomMessageFooter
-   * callback is provided. Clears all accumulated state and removes callback-rendered elements from the DOM.
-   *
-   * The custom-footer cleanup is guarded by renderCustomMessageFooter so the legacy footer passthrough
-   * path (which the host clears itself) is left untouched.
-   */
-  private restartHandler = () => {
-    this._userDefinedStateBySlot = {};
-    this._userDefinedSlotNames = [];
-    for (const el of this._callbackElements.values()) {
-      el.remove();
-    }
-    this._callbackElements.clear();
 
     if (this.renderCustomMessageFooter) {
-      this._customFooterStateBySlot = {};
-      this._customFooterSlotNames = [];
-      for (const el of this._callbackFooterElements.values()) {
-        el.remove();
-      }
-      this._callbackFooterElements.clear();
+      const store = this._slotStates.customFooterBySlot;
+      const apply = () => {
+        this._customFooterStateBySlot = store.get();
+        this._customFooterSlotNames = Object.keys(
+          this._customFooterStateBySlot,
+        );
+      };
+      apply();
+      this._unsubscribeCustomFooter = store.subscribe(apply);
     }
-  };
+  }
 
   /**
    * Synchronizes callback-rendered elements in the light DOM based on current state.
@@ -527,6 +507,8 @@ class ChatContainer extends FlattenedConfigElement {
       host.remove();
     }
     this._pluginHosts.clear();
+    this._unsubscribeUserDefined?.();
+    this._unsubscribeCustomFooter?.();
     super.disconnectedCallback();
   }
 
@@ -549,18 +531,11 @@ class ChatContainer extends FlattenedConfigElement {
       });
     }
 
-    if (this.renderUserDefinedResponse) {
-      // Enhanced path: library manages full state for callback rendering
-      this._instance.on({
-        type: BusEventType.USER_DEFINED_RESPONSE,
-        handler: this.enhancedUserDefinedHandler,
-      });
-      this._instance.on({
-        type: BusEventType.CHUNK_USER_DEFINED_RESPONSE,
-        handler: this.enhancedUserDefinedChunkHandler,
-      });
-    } else {
-      // Legacy path: container only tracks slot names
+    // Enhanced (callback-rendering) state comes from the core-owned slot-state stores via
+    // `subscribeToSlotStates` (wired through `handleSlotStatesReady`), not bus-event handlers
+    // registered here. The legacy path (no render callback) still only needs slot names, so it
+    // keeps its own lightweight bus subscription.
+    if (!this.renderUserDefinedResponse) {
       this._instance.on({
         type: BusEventType.USER_DEFINED_RESPONSE,
         handler: this.userDefinedHandler,
@@ -571,22 +546,10 @@ class ChatContainer extends FlattenedConfigElement {
       });
     }
 
-    // Enhanced path manages full per-slot state for callback rendering; the
-    // legacy path only tracks slot names for manual slotting.
-    this._instance.on({
-      type: BusEventType.CUSTOM_FOOTER_SLOT,
-      handler: this.renderCustomMessageFooter
-        ? this.enhancedCustomFooterHandler
-        : this.customFooterHandler,
-    });
-
-    // A single RESTART_CONVERSATION subscription clears whichever callback
-    // paths are active. Registered once so the handler does not fire twice
-    // when both callbacks are provided.
-    if (this.renderUserDefinedResponse || this.renderCustomMessageFooter) {
+    if (!this.renderCustomMessageFooter) {
       this._instance.on({
-        type: BusEventType.RESTART_CONVERSATION,
-        handler: this.restartHandler,
+        type: BusEventType.CUSTOM_FOOTER_SLOT,
+        handler: this.customFooterHandler,
       });
     }
 
@@ -639,6 +602,8 @@ class ChatContainer extends FlattenedConfigElement {
       .config=${this.resolvedConfig}
       .onAfterRender=${this.onAfterRender}
       .onBeforeRender=${this.onBeforeRenderOverride}
+      .onAttach=${this.onAttach}
+      .onSlotStatesReady=${this.handleSlotStatesReady}
       .element=${this.element}
     >
       ${this._writeableElementSlots.map(
@@ -690,9 +655,19 @@ interface CdsAiChatContainerAttributes extends Omit<PublicConfig, "markdown"> {
   onBeforeRender?: (instance: ChatInstance) => Promise<void> | void;
 
   /**
-   * This function is called after the render function of Carbon AI Chat is called.
+   * This function is called once, after the first render of Carbon AI Chat has committed. It receives the
+   * {@link ChatInstance}; use it when you need the instance only after the initial render has completed. Its
+   * return value is not awaited (it does not gate rendering).
    */
   onAfterRender?: (instance: ChatInstance) => Promise<void> | void;
+
+  /**
+   * Called on every mount/attach of Carbon AI Chat — the first boot and each reuse re-attach (see
+   * {@link PublicConfigFeatureFlags.reuseInstance}). Receives the same {@link ChatInstance}; capture it
+   * here (it survives remounts) and use {@link OnAttachDetails.remount} to run one-time setup only on the
+   * first attach.
+   */
+  onAttach?: (instance: ChatInstance, details: OnAttachDetails) => void;
 
   /**
    * Called before a view change (the chat opening or closing). Async — return a Promise to defer the view

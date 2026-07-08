@@ -2073,6 +2073,66 @@ class ChatActionsImpl {
   }
 
   /**
+   * Tears down the services and subscriptions created for this instance and marks the service
+   * manager disposed. This is the disposal half of the lifecycle: it silently ends any active
+   * human-agent chat, unsubscribes the store listeners registered in `loadServices`, clears the
+   * event bus, stops the theme watcher, disposes the message service, and clears the upsert
+   * coordinator. Distinct from `destroySession`, which only clears the conversation/session.
+   *
+   * Safe to call more than once, and must not throw even if the instance was only partially
+   * initialized.
+   */
+  unloadServices() {
+    const { serviceManager } = this;
+    if (!serviceManager || serviceManager.disposed) {
+      return;
+    }
+    serviceManager.disposed = true;
+
+    const safe = (fn: () => void) => {
+      try {
+        fn();
+      } catch {
+        // Disposal must never throw; ignore teardown errors.
+      }
+    };
+
+    // Silently end any active human-agent chat (no user-facing "agent ended" message),
+    // mirroring the restart teardown. Fire-and-forget so disposal stays synchronous.
+    safe(() => {
+      const state = serviceManager.store?.getState();
+      const isConnecting = state?.humanAgentState?.isConnecting;
+      const isConnected =
+        state?.persistedToBrowserStorage?.humanAgentState?.isConnected;
+      if (isConnecting || isConnected) {
+        serviceManager.humanAgentService
+          ?.endChat(true, false, false)
+          ?.catch(() => {});
+      }
+    });
+
+    // Unsubscribe the store listeners registered in loadServices.
+    serviceManager.storeUnsubscribers?.forEach((unsubscribe) =>
+      safe(() => unsubscribe?.()),
+    );
+    serviceManager.storeUnsubscribers = [];
+
+    // Tear down the remaining services.
+    safe(() => serviceManager.eventBus?.clear());
+    safe(() => serviceManager.themeWatcherService?.stopWatching());
+    safe(() => serviceManager.messageService?.dispose());
+    safe(() => serviceManager.messageUpsertCoordinator?.clearAll());
+
+    // Drop cross-references so nothing keeps the disposed graph alive.
+    serviceManager.instance = undefined;
+    serviceManager.mainWindow = undefined;
+    serviceManager.appWindow = undefined;
+    serviceManager.inputComponent = undefined;
+    serviceManager.container = undefined;
+    serviceManager.customHostElement = undefined;
+  }
+
+  /**
    * Ends the conversation with a human agent. This does not request confirmation from the user first. If the user
    * is not connected or connecting to a human agent, this function has no effect. You can determine if the user is
    * connected or connecting by calling {@link ChatInstance.getState}. Note that this function

@@ -27,8 +27,18 @@ All entries compile via [tasks/rollup.aichat.js](tasks/rollup.aichat.js) to `dis
   - `languages/` — `intl-messageformat` string bundles. When adding a key, add it to every locale file in the same PR; English is the source of truth.
   - `components/` vs `components-legacy/` — **always author new UI in `components/`**. `components-legacy/` is closed to new components; bug fixes and refactoring transitions out are welcome. Lift a component to `@carbon/ai-chat-components` when it has no chat-specific state and could plausibly be consumed outside the chat app.
   - `ai-chat-components/` — React bindings (`@lit/react`) around the sibling package's Lit components.
+  - `sdk/` — the internal `ChatSDK` lifecycle facade (`acquireChatSDK`, `ChatSDK`), the slot-state value stores (`attachSlotStateTracking`, `valueStore.ts`), and the `sdk/index.ts` barrel. Framework-agnostic by construction — becomes `@carbon/ai-chat/sdk` in 2.0. See the [SDK boundary](#sdk-boundary) note below.
 - [src/react/](src/react/) — public React wrapper components re-exported from the package root.
 - [src/web-components/](src/web-components/) — Lit hosts. Kept thin: bridge props/events/slots to the React core.
+
+## SDK boundary
+
+`src/chat/{services,store,events,instance,schema,shared,sdk}/` must stay framework-agnostic (no React, no Lit, no view-layer imports) so it can become the headless `@carbon/ai-chat/sdk` export in 2.0 without a rewrite. Two mechanical guards enforce this (see `.plans/1.x/sdk-foundations-5-sdk-boundary-enforcement.md`):
+
+- **ESLint fence** — root `package.json`'s `eslintConfig.overrides` bans direct `react`/`react-dom`/`lit`/`@lit/react`/`@carbon/ai-chat-components/es/react/*` imports and any import of a view directory (`components/`, `components-legacy/`, `hooks/`, `providers/`, `contexts/`, `hocs/`, `AppShell*`, `utils-react/`) from those directories. This check is per-file and non-transitive.
+- **Import-graph spec** (`tests/sdk/spec/sdkBoundary_spec.ts`) — walks every module transitively reachable from the `sdk/index.ts` barrel and fails on any runtime react/lit import (no exceptions), any import (even type-only) of a view-layer module, or a type-only react-ish import outside an exact, intentionally-shrinking allowlist of public-types files that unavoidably carry a `ReactNode`-shaped callback type today. This catches leaks the per-file lint fence can't, since it also follows type-only imports several files deep.
+
+`src/chat/utils/` is deliberately **not** fenced — it legitimately mixes core and view utilities; the graph spec's transitive walk covers whatever of it the sdk barrel actually reaches.
 
 ## React/Lit Architecture Boundary
 

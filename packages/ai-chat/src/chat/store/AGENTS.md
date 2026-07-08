@@ -117,7 +117,7 @@ const isOpen = useSelector((state) => state.isOpen);
 **Object selections** need an equality function to avoid rerenders on every state change:
 
 ```typescript
-import { shallowEqual } from "../store/appStore";
+import { shallowEqual } from "../utils/equality";
 
 const inputState = useSelector(
   (state) => state.inputState,

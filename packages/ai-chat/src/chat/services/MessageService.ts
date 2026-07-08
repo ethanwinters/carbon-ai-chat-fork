@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -658,6 +658,26 @@ class MessageService {
         false,
         reason,
       );
+      this.clearCurrentQueueItem();
+    }
+  }
+
+  /**
+   * Aborts any in-flight or queued message requests and drops their AbortControllers. Called from
+   * the service teardown (`ChatActionsImpl.unloadServices`) so a disposed chat leaves no dangling
+   * network requests. Safe to call more than once.
+   */
+  public dispose(): void {
+    this.messageAbortControllers.forEach((controller) => {
+      try {
+        controller.abort();
+      } catch {
+        // The controller may already be aborted.
+      }
+    });
+    this.messageAbortControllers.clear();
+    this.queue.waiting.length = 0;
+    if (this.queue.current) {
       this.clearCurrentQueueItem();
     }
   }

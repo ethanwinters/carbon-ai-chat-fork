@@ -335,6 +335,16 @@ function createChatInstance({
         debugLog("Called instance.messaging.restartConversation");
         return serviceManager.actions.restartConversation();
       },
+
+      getMessagesState: () => {
+        debugLog("Called instance.messaging.getMessagesState");
+        return serviceManager.messagesState.getMessagesState();
+      },
+
+      getMessage: (messageId: string) => {
+        debugLog("Called instance.messaging.getMessage", messageId);
+        return serviceManager.messagesState.getMessage(messageId);
+      },
     },
 
     requestFocus: () => {
@@ -357,6 +367,11 @@ function createChatInstance({
     destroySession: async (keepOpenState: boolean) => {
       debugLog("Called instance.destroySession", keepOpenState);
       return serviceManager.actions.destroySession(keepOpenState);
+    },
+
+    destroy: () => {
+      debugLog("Called instance.destroy");
+      serviceManager.sdk?.destroy();
     },
   };
 
