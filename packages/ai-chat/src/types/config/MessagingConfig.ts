@@ -10,6 +10,8 @@
 import { HistoryItem } from "../messaging/History";
 import type { MessageResponse, StreamChunk } from "../messaging/Messages";
 import { BusEventSend } from "../events/eventBusTypes";
+import { PublicMessage } from "../messaging/PublicMessage";
+import { PublicMessagesState } from "../messaging/ConversationState";
 
 /**
  * Lifecycle state passed to {@link ChatInstanceMessaging.upsertMessage} to describe the
@@ -168,6 +170,77 @@ export interface ChatInstanceMessaging {
    * {@link PublicConfigMessaging.messageLoadingIndicatorTimeoutSecs} to 0.
    */
   restartConversation: () => Promise<void>;
+
+  /**
+   * Returns a snapshot of the current conversation's messages, status, and error. Seed with this in
+   * `onBeforeRender`, then subscribe to {@link BusEventType.MESSAGES_STATE_CHANGE} for updates — the
+   * same convention as {@link ChatInstance.getState} / {@link BusEventType.STATE_CHANGE}. Internal
+   * fields Carbon AI Chat keeps for its own bookkeeping are stripped from every message.
+   */
+  getMessagesState: () => PublicMessagesState;
+
+  /**
+   * Returns the message with the given id from the current conversation, or `undefined` if no message
+   * with that id exists. Equivalent to `getMessagesState().messages.find((message) => message.id ===
+   * messageId)`, provided as a convenience for the common case of looking up a single message.
+   *
+   * @param messageId The id of the message to retrieve.
+   */
+  getMessage: (messageId: string) => PublicMessage | undefined;
+
+  /**
+   * Stops the active turn — the same behavior as the built-in stop button. The abort signal handed
+   * to {@link PublicConfigMessaging.customSendMessage} fires; a streaming response keeps its
+   * partial content; pending {@link ChatInstance.send} promises resolve (they do not reject); the
+   * conversation returns to {@link ConversationStatus.READY} and
+   * {@link BusEventType.MESSAGES_STATE_CHANGE} fires. Queued messages behind the active turn still
+   * send. The returned promise resolves once cancellation has been processed, or immediately when
+   * no turn is active.
+   *
+   * @internal Not implemented yet — calling it logs a console message and does nothing.
+   */
+  stop: () => Promise<void>;
+
+  /**
+   * Re-runs the last assistant turn: removes the most recent response from the conversation and
+   * re-sends its originating request — the same request id, so no duplicate user turn appears —
+   * through the normal send pipeline, firing {@link BusEventType.PRE_SEND} and
+   * {@link BusEventType.SEND} and walking the conversation through
+   * {@link ConversationStatus.SUBMITTED} again. The returned promise rejects when there is no turn
+   * to regenerate, or when {@link RegenerateOptions.messageId} names a message outside the last
+   * turn.
+   *
+   * @param options Options controlling which turn is regenerated.
+   * @internal Not implemented yet — calling it logs a console message and does nothing.
+   */
+  regenerate: (options?: RegenerateOptions) => Promise<void>;
+
+  /**
+   * Clears the current message error and returns the conversation to
+   * {@link ConversationStatus.READY} without restarting it. The failed turn stays in the
+   * conversation with its error state reset, so it can be re-sent or regenerated. A catastrophic
+   * error is not cleared by this method — recover from those via
+   * {@link ChatInstance.updateCatastrophicErrorPanel} or
+   * {@link ChatInstanceMessaging.restartConversation}. Does nothing when there is no error.
+   *
+   * @internal Not implemented yet — calling it logs a console message and does nothing.
+   */
+  clearError: () => void;
+}
+
+/**
+ * Options for {@link ChatInstanceMessaging.regenerate}.
+ *
+ * @category Messaging
+ * @internal Not implemented yet — calling `ChatInstanceMessaging.regenerate` logs a console message and does nothing.
+ */
+export interface RegenerateOptions {
+  /**
+   * The id of a message in the last turn — either the request or the response. When omitted, the
+   * most recent turn is regenerated. Regenerating an earlier turn is not supported; passing the id
+   * of a message from an earlier turn rejects the returned promise.
+   */
+  messageId?: string;
 }
 
 /**

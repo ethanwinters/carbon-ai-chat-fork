@@ -27,6 +27,7 @@ import { FileUpload } from "../config/ServiceDeskConfig";
 import { HumanAgentsOnlineStatus } from "../config/ServiceDeskConfig";
 import { PublicChatState } from "../instance/ChatInstance";
 import { MessageState } from "../config/MessagingConfig";
+import { PublicMessagesState } from "../messaging/ConversationState";
 
 /** @category Events */
 export enum BusEventType {
@@ -226,6 +227,12 @@ export enum BusEventType {
    * This includes changes to viewState, showUnreadIndicator, and other persisted state.
    */
   STATE_CHANGE = "state:change",
+
+  /**
+   * Fired whenever the snapshot returned by ChatInstanceMessaging.getMessagesState() changes —
+   * the conversation's messages, status, or error. Fires independently of STATE_CHANGE.
+   */
+  MESSAGES_STATE_CHANGE = "messagesState:change",
 
   /**
    * Fired if the disclaimer is accepted.
@@ -1036,6 +1043,34 @@ export interface BusEventStateChange extends BusEvent {
    * The new state after the change.
    */
   newState: PublicChatState;
+}
+
+/**
+ * This event is fired whenever the snapshot returned by
+ * {@link ChatInstanceMessaging.getMessagesState} changes — the conversation's messages, status, or
+ * error. Fires independently of {@link BusEventStateChange}: the conversation's messages, status,
+ * and error live only in this snapshot and are never part of {@link PublicChatState}, so a consumer
+ * that only cares about the conversation can listen here alone and skip unrelated `STATE_CHANGE`
+ * traffic. (A message can still cause its own `PublicChatState` change — for example flipping the
+ * unread-message indicator — which fires a separate `STATE_CHANGE` as usual.)
+ *
+ * @category Events
+ */
+export interface BusEventMessagesStateChange extends BusEvent {
+  /**
+   * The type of the event.
+   */
+  type: BusEventType.MESSAGES_STATE_CHANGE;
+
+  /**
+   * The previous messages/status/error snapshot before the change.
+   */
+  previousState: PublicMessagesState;
+
+  /**
+   * The new messages/status/error snapshot after the change.
+   */
+  newState: PublicMessagesState;
 }
 
 /**

@@ -9,7 +9,14 @@
 
 import type { AppStore } from "../store/appStore";
 import { IntlShape } from "../utils/i18n";
-import { AriaAnnouncerFunctionType } from "../contexts/AriaAnnouncerContext";
+import {
+  AriaAnnouncerFunctionType,
+  InputFunctions,
+  MainWindowFunctions,
+} from "../utils/viewHandles.js";
+import { ChatSlotStates } from "../sdk/slotStates.js";
+import type { MessagesStateStores } from "../sdk/messagesState.js";
+import type { ChatSDK } from "../sdk/ChatSDK.js";
 
 import { EventBus } from "../events/EventBus";
 import { AppState } from "../../types/state/AppState";
@@ -26,10 +33,8 @@ import {
   WriteableElements,
 } from "../../types/instance/ChatInstance";
 import { BusEvent } from "../../types/events/eventBusTypes";
-import { MainWindowFunctions } from "../AppShell";
 import { ChatActionsImpl } from "./ChatActionsImpl";
 import { HasRequestFocus } from "../../types/utilities/HasRequestFocus";
-import type { InputFunctions } from "../components-legacy/input/Input";
 
 export interface UserDefinedElementRegistryItem {
   slotName: string;
@@ -152,6 +157,41 @@ class ServiceManager {
    * determine if a restart occurred during the operation and if the results should be ignored.
    */
   restartCount = 0;
+
+  /**
+   * Unsubscribe handles for the store subscriptions registered in `loadServices`. Captured so that
+   * `ChatActionsImpl.unloadServices` can tear them down on disposal; a disposed instance leaves zero
+   * live store listeners.
+   */
+  storeUnsubscribers: Array<() => void> = [];
+
+  /**
+   * Set once this service manager has been disposed via `unloadServices`. Guards against
+   * double-teardown so disposal is idempotent.
+   */
+  disposed = false;
+
+  /**
+   * Framework-agnostic slot-projection state for the user-defined-response and custom-footer portal
+   * surfaces. Created once via `attachSlotStateTracking` during boot; the value stores hang off the
+   * manager so the accumulated slot state survives a host remount — a remounting subscriber reads
+   * the current value on first `get()`.
+   */
+  slotStates?: ChatSlotStates;
+
+  /**
+   * Framework-agnostic messages/status/error state backing `instance.messaging.getMessagesState`/
+   * `getMessage` and `BusEventType.MESSAGES_STATE_CHANGE`. Created once via
+   * `attachMessagesStateTracking` during boot, before the chat instance exists.
+   */
+  messagesState?: MessagesStateStores;
+
+  /**
+   * The internal `ChatSDK` lifecycle facade wrapping this manager. Cached here (constructed once,
+   * during cold boot) so a reuse re-attach returns the same facade instance rather than a fresh
+   * wrapper per mount.
+   */
+  sdk?: ChatSDK;
 
   /**
    * An instance of the custom I18n formatter that can be used for formatting messages. This instance is available

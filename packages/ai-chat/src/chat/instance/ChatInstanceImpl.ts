@@ -37,7 +37,10 @@ import {
   SendOptions,
   TypeAndHandler,
 } from "../../types/instance/ChatInstance";
-import { AddMessageOptions } from "../../types/config/MessagingConfig";
+import {
+  AddMessageOptions,
+  RegenerateOptions,
+} from "../../types/config/MessagingConfig";
 import {
   MessageSendSource,
   ViewChangeReason,
@@ -335,6 +338,33 @@ function createChatInstance({
         debugLog("Called instance.messaging.restartConversation");
         return serviceManager.actions.restartConversation();
       },
+
+      getMessagesState: () => {
+        debugLog("Called instance.messaging.getMessagesState");
+        return serviceManager.messagesState.getMessagesState();
+      },
+
+      getMessage: (messageId: string) => {
+        debugLog("Called instance.messaging.getMessage", messageId);
+        return serviceManager.messagesState.getMessage(messageId);
+      },
+
+      stop: () => {
+        debugLog("Called instance.messaging.stop");
+        console.log("Not implemented, yet");
+        return Promise.resolve();
+      },
+
+      regenerate: (options?: RegenerateOptions) => {
+        debugLog("Called instance.messaging.regenerate", options);
+        console.log("Not implemented, yet");
+        return Promise.resolve();
+      },
+
+      clearError: () => {
+        debugLog("Called instance.messaging.clearError");
+        console.log("Not implemented, yet");
+      },
     },
 
     requestFocus: () => {
@@ -357,6 +387,11 @@ function createChatInstance({
     destroySession: async (keepOpenState: boolean) => {
       debugLog("Called instance.destroySession", keepOpenState);
       return serviceManager.actions.destroySession(keepOpenState);
+    },
+
+    destroy: () => {
+      debugLog("Called instance.destroy");
+      serviceManager.sdk?.destroy();
     },
   };
 
