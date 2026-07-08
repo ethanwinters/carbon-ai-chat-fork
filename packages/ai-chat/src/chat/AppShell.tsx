@@ -467,7 +467,11 @@ function AppShell({
 
     // Fall back to config-provided error if no file upload errors
     return publicConfig.input?.error;
-  }, [inputFields.files, inputFields.pendingUploads, publicConfig.input?.error]);
+  }, [
+    inputFields.files,
+    inputFields.pendingUploads,
+    publicConfig.input?.error,
+  ]);
 
   // Panel callbacks
   const {
