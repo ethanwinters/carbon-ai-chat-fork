@@ -473,6 +473,13 @@ function AppShell({
     publicConfig.input?.error,
   ]);
 
+  // Disable the human-agent upload button once its (optional) max number of files
+  // is reached, on top of the existing connection/streaming gating.
+  const humanAgentUploadButtonDisabled =
+    showUploadButtonDisabled ||
+    (inputFields.maxFiles !== undefined &&
+      inputFields.files.length >= inputFields.maxFiles);
+
   // Panel callbacks
   const {
     onPanelOpenStart,
@@ -924,7 +931,7 @@ function AppShell({
                   }
                   disableUploadButton={
                     inputFields.allowFileUploads
-                      ? showUploadButtonDisabled
+                      ? humanAgentUploadButtonDisabled
                       : assistantUploadButtonDisabled
                   }
                   allowedFileUploadTypes={
@@ -937,6 +944,16 @@ function AppShell({
                       ? inputFields.allowMultipleFileUploads
                       : uploadConfig?.maxFiles === undefined ||
                         uploadConfig.maxFiles > 1
+                  }
+                  maxFileSizeBytes={
+                    inputFields.allowFileUploads
+                      ? inputFields.maxFileSizeBytes
+                      : uploadConfig?.maxFileSizeBytes
+                  }
+                  maxFiles={
+                    inputFields.allowFileUploads
+                      ? inputFields.maxFiles
+                      : uploadConfig?.maxFiles
                   }
                   pendingUploads={
                     inputFields.allowFileUploads

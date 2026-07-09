@@ -188,6 +188,8 @@ const DEFAULT_INPUT_STATE: InputState = {
   allowFileUploads: false,
   allowMultipleFileUploads: false,
   allowedFileUploadTypes: null,
+  maxFileSizeBytes: undefined,
+  maxFiles: undefined,
   stopStreamingButtonState: {
     currentStreamID: null,
     isVisible: false,
