@@ -14,6 +14,7 @@ import { carbonElement } from "../../../globals/decorators/carbon-element.js";
 import prefix from "../../../globals/settings.js";
 
 import "../../autocomplete/src/autocomplete.js";
+import { resolveShowTriggerInChip } from "./tiptap/carbon-mention.js";
 import { projectRawValue } from "./tiptap/json-utils.js";
 import type PromptLineElement from "./prompt-line.js";
 import type {
@@ -288,6 +289,13 @@ export class AutocompleteController {
               id: item.id,
               label: item.label,
               value: item.value ?? item.label,
+              trigger: resolveShowTriggerInChip(
+                item,
+                config ?? {},
+                trigger.type === "command",
+              )
+                ? config?.trigger
+                : null,
             },
           },
           { type: "text", text: " " },
