@@ -31,6 +31,7 @@ import {
 } from "@carbon/react";
 
 import Markdown from "../../../react/markdown";
+import MarkdownWCMeta from "./markdown.stories";
 
 const comprehensiveMarkdown = `# Markdown Rendering Demo
 
@@ -282,75 +283,8 @@ const StreamingMarkdownDemo = ({
 
 export default {
   title: "Components/Markdown",
-  argTypes: {
-    markdown: {
-      control: "text",
-      description: "Markdown content to render",
-    },
-    streaming: {
-      control: "boolean",
-      description: "Enable streaming mode for progressive rendering",
-    },
-    sanitizeHTML: {
-      control: "boolean",
-      description: "Sanitize HTML content using DOMPurify",
-    },
-    removeHTML: {
-      control: "boolean",
-      description: "Remove all HTML tags",
-    },
-    codeSnippetHighlight: {
-      control: "boolean",
-      description: "Enable syntax highlighting for code blocks",
-    },
-    codeSnippetCopyButtonTooltipContent: {
-      control: "text",
-      description: "Tooltip text for copy button",
-    },
-    codeSnippetShowMoreText: {
-      control: "text",
-      description: "Text for expand button",
-    },
-    codeSnippetShowLessText: {
-      control: "text",
-      description: "Text for collapse button",
-    },
-    tableFilterPlaceholderText: {
-      control: "text",
-      description: "Placeholder for table filter",
-    },
-    tablePreviousPageText: {
-      control: "text",
-      description: "Previous page button text",
-    },
-    tableNextPageText: {
-      control: "text",
-      description: "Next page button text",
-    },
-    tableItemsPerPageText: {
-      control: "text",
-      description: "Items per page label",
-    },
-    tableLocale: {
-      control: "text",
-      description: "Locale for number formatting",
-    },
-  },
-  args: {
-    markdown: comprehensiveMarkdown,
-    streaming: false,
-    sanitizeHTML: false,
-    removeHTML: false,
-    codeSnippetHighlight: false,
-    codeSnippetCopyButtonTooltipContent: "Copy code",
-    codeSnippetShowMoreText: "Show more",
-    codeSnippetShowLessText: "Show less",
-    tableFilterPlaceholderText: "Filter table...",
-    tablePreviousPageText: "Previous page",
-    tableNextPageText: "Next page",
-    tableItemsPerPageText: "Items per page:",
-    tableLocale: "en",
-  },
+  argTypes: { ...MarkdownWCMeta.argTypes },
+  args: { ...MarkdownWCMeta.args, markdown: comprehensiveMarkdown },
 };
 
 export const Default = {

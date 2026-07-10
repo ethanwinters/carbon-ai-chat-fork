@@ -1,27 +1,22 @@
-import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as ChainOfThoughtReactStories from "./chain-of-thought-react.stories.jsx";
+import * as ChainOfThoughtStepReactStories from "./chain-of-thought-step-react.stories.jsx";
+import * as ToolCallDataReactStories from "./tool-call-data-react.stories.jsx";
+import * as ChainOfThoughtToggleReactStories from "./chain-of-thought-toggle-react.stories.jsx";
 
-<Meta of={ChainOfThoughtReactStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={ChainOfThoughtReactStories} />
 
 # Chain of thought
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/chain-of-thought) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Component API](#component-api)
-- [Feedback](#feedback)
-
-
 ## Overview
 
-The `<ChainOfThought>` component wraps the `cds-aichat-chain-of-thought` web component and exposes a React API for displaying tool calls and intermediate outputs that an AI agent used to arrive at its final answer. Pair it with `<ChainOfThoughtToggle>`, `<ChainOfThoughtStep>`, and `<ToolCallData>` for a fully slotted flow. Prefer `<ReasoningSteps>` for most non-debugging use cases.
+Use `<ChainOfThought>` to show the tool calls and intermediate outputs an AI agent used to reach an answer. Pair it with `<ChainOfThoughtToggle>`, `<ChainOfThoughtStep>`, and `<ToolCallData>`; prefer `<ReasoningSteps>` for non-debugging use cases.
 
-### Getting started
+<Canvas of={ChainOfThoughtReactStories.Default} />
 
-Here's a quick example to get you started.
+## Getting started
 
 ```jsx
 import React from "react";
@@ -147,13 +142,27 @@ function ChainOfThoughtExample() {
 
 ## Component API
 
+### Chain of thought
+
 <ArgTypes of={ChainOfThoughtReactStories.Default} />
 
-### Child components
+### Step
 
-- `<ChainOfThoughtStep>`: Collapsible step row; emits `onBeforeToggle` and `onToggle` events.
-- `<ToolCallData>`: Renders tool description, name, and request/response payloads with markdown helpers via slots.
-- `<ChainOfThoughtToggle>`: Standalone control for opening or closing a chain-of-thought wrapper via `panelId`.
+<ArgTypes of={ChainOfThoughtStepReactStories.Default} />
+
+### Tool call data
+
+<ArgTypes of={ToolCallDataReactStories.Default} />
+
+### Toggle
+
+<ArgTypes of={ChainOfThoughtToggleReactStories.Default} />
+
+## JS (via import)
+
+```jsx
+import ChainOfThought from "@carbon/ai-chat-components/es/react/chain-of-thought.js";
+```
 
 ## Feedback
 

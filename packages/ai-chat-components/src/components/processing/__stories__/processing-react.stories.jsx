@@ -11,41 +11,23 @@
 import React from "react";
 
 import Processing from "../../../react/processing";
+import { Default as DefaultWC } from "./processing.stories";
 
 export default {
   title: "Components/Processing",
 };
 
-const argTypes = {
-  loop: { control: "boolean" },
-  quickLoad: { control: "boolean" },
-};
-
-const renderProcessing = (args) => (
-  <Processing loop={args.loop} quickLoad={args.quickLoad} />
-);
-
-export const QuickLoad = {
-  args: {
-    quickLoad: true,
-    loop: true,
+export const Default = {
+  argTypes: {
+    loop: DefaultWC.argTypes.loop,
+    quickLoad: DefaultWC.argTypes.quickLoad,
   },
-  argTypes,
-  render: renderProcessing,
-};
-
-export const LinearLoop = {
-  args: {
-    loop: true,
-  },
-  argTypes,
-  render: renderProcessing,
+  args: { loop: DefaultWC.args.loop, quickLoad: DefaultWC.args.quickLoad },
+  render: (args) => <Processing loop={args.loop} quickLoad={args.quickLoad} />,
 };
 
 export const LinearNoLoop = {
-  args: {
-    loop: false,
-  },
-  argTypes,
-  render: renderProcessing,
+  args: { ...Default.args, loop: false },
+  argTypes: Default.argTypes,
+  render: Default.render,
 };

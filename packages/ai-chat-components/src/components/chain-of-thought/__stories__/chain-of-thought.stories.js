@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -151,40 +151,6 @@ const stepsWithDifferentStatuses = [
   },
 ];
 
-const stepsWithComplexResponses = [
-  {
-    title: "Analyze Data",
-    description:
-      "Running statistical analysis on the provided dataset to identify trends and patterns.",
-    tool_name: "data_analyzer",
-    request: {
-      args: `\`\`\`
-{
-  "dataset_id": "sales_2024_q1",
-  "metrics": ["revenue", "units_sold", "customer_count"],
-  "groupBy": "month"
-}
-\`\`\``,
-    },
-    response: {
-      content: `\`\`\`
-{
-  "summary": "Q1 2024 sales show strong performance across revenue, units, and customer acquisition.",
-  "revenue_growth_yoy": 0.23,
-  "unit_sales": 15432,
-  "new_customers": 2847,
-  "monthly_breakdown": [
-    { "month": "Jan", "revenue": "$127K", "units": 4832, "new_customers": 892 },
-    { "month": "Feb", "revenue": "$143K", "units": 5123, "new_customers": 967 },
-    { "month": "Mar", "revenue": "$156K", "units": 5477, "new_customers": 988 }
-  ]
-}
-\`\`\``,
-    },
-    status: "success",
-  },
-];
-
 const renderStep = (step) => {
   const requestMarkdown = step.request?.args;
   const responseMarkdown = step.response?.content;
@@ -262,14 +228,17 @@ export default {
     open: {
       control: "boolean",
       description: "Whether the chain of thought panel is open",
+      table: { defaultValue: { summary: "false" } },
     },
     openLabelText: {
       control: "text",
       description: "Text when the panel is expanded",
+      table: { defaultValue: { summary: "Hide chain of thought" } },
     },
     closedLabelText: {
       control: "text",
       description: "Text when the panel is collapsed",
+      table: { defaultValue: { summary: "Show chain of thought" } },
     },
   },
 };
@@ -303,13 +272,4 @@ export const WithDifferentStatuses = {
     closedLabelText: "Show chain of thought",
   },
   render: (args) => renderChainOfThought(args, stepsWithDifferentStatuses),
-};
-
-export const WithComplexResponses = {
-  args: {
-    open: true,
-    openLabelText: "Hide chain of thought",
-    closedLabelText: "Show chain of thought",
-  },
-  render: (args) => renderChainOfThought(args, stepsWithComplexResponses),
 };

@@ -1,7 +1,7 @@
 /**
  * @license
  *
- * Copyright IBM Corp. 2025
+ * Copyright IBM Corp. 2025, 2026
  *
  * This source code is licensed under the Apache-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,6 +12,7 @@ import "../src/panel.js";
 import "../../card/src/card-footer.js";
 import "@carbon/web-components/es/components/toggle/index.js";
 import { html, nothing } from "lit";
+import { action } from "storybook/actions";
 import styles from "./story-styles.scss?lit";
 import { cardFooterPresets } from "../../card/__stories__/story-data.js";
 
@@ -164,19 +165,35 @@ export const Default = {
     animationOnOpen: "slide-in-from-bottom",
     animationOnClose: "slide-out-to-bottom",
     panelAriaLabel: "Configurable panel",
+    headerText: "Panel Header",
+    bodyText:
+      "This is a configurable panel embedded in the chat shell. Use the controls to adjust panel properties and see how they affect the display.",
   },
   argTypes: {
     // Hide shell-level controls
     roundedCorners: { table: { disable: true } },
     // Panel-specific argTypes only
-    open: { control: "boolean" },
+    open: { control: "boolean", description: "Panel open state" },
     priority: {
       control: { type: "number", min: 0, max: 2, step: 1 },
+      description: "Panel priority (higher priority panels display over lower)",
     },
-    fullWidth: { control: "boolean" },
-    showChatHeader: { control: "boolean" },
-    showFrame: { control: "boolean" },
-    aiEnabled: { control: "boolean" },
+    fullWidth: {
+      control: "boolean",
+      description: "Panel spans full width of chat interface",
+    },
+    showChatHeader: {
+      control: "boolean",
+      description: "Show chat header within panel",
+    },
+    showFrame: {
+      control: "boolean",
+      description: "Show visual frame around panel content",
+    },
+    aiEnabled: {
+      control: "boolean",
+      description: "Enable AI theme for panel content",
+    },
     animationOnOpen: {
       control: { type: "select" },
       options: [
@@ -186,6 +203,7 @@ export const Default = {
         "slide-in-from-start",
         "fade-in",
       ],
+      description: "Animation when panel opens",
     },
     animationOnClose: {
       control: { type: "select" },
@@ -196,8 +214,43 @@ export const Default = {
         "slide-out-to-start",
         "fade-out",
       ],
+      description: "Animation when panel closes",
     },
-    panelAriaLabel: { control: "text" },
+    panelAriaLabel: {
+      control: "text",
+      description: "ARIA label for the panel",
+    },
+    "@openstart": {
+      action: "openstart",
+      table: { category: "events" },
+    },
+    "@closestart": {
+      action: "closestart",
+      table: { category: "events" },
+    },
+    "@openend": {
+      action: "openend",
+      table: { category: "events" },
+    },
+    "@closeend": {
+      action: "closeend",
+      table: { category: "events" },
+    },
+    headerText: {
+      control: "text",
+      description: "Text shown in the panel's header slot.",
+      table: { defaultValue: { summary: "Panel Header" } },
+    },
+    bodyText: {
+      control: "text",
+      description: "Text shown in the panel's body slot.",
+      table: {
+        defaultValue: {
+          summary:
+            "This is a configurable panel embedded in the chat shell. Use the controls to adjust panel properties and see how they affect the display.",
+        },
+      },
+    },
   },
   render: (args) => {
     const {
@@ -210,6 +263,8 @@ export const Default = {
       animationOnOpen,
       animationOnClose,
       panelAriaLabel,
+      headerText,
+      bodyText,
     } = args;
 
     return html`
@@ -226,14 +281,14 @@ export const Default = {
             animation-on-open=${animationOnOpen || nothing}
             animation-on-close=${animationOnClose || nothing}
             panel-aria-label=${panelAriaLabel || nothing}
+            @openstart=${() => action("openstart")()}
+            @closestart=${() => action("closestart")()}
+            @openend=${() => action("openend")()}
+            @closeend=${() => action("closeend")()}
           >
-            <div slot="header"><h4>Panel Header</h4></div>
+            <div slot="header"><h4>${headerText}</h4></div>
             <div slot="body" class="panel-sample">
-              <p>
-                This is a configurable panel embedded in the chat shell. Use the
-                controls to adjust panel properties and see how they affect the
-                display.
-              </p>
+              <p>${bodyText}</p>
               <p>
                 Toggle the "open" control to see the panel's animation behavior.
               </p>
@@ -249,7 +304,7 @@ export const Default = {
   },
 };
 
-export const Embedded = {
+export const MultiplePanels = {
   parameters: {
     controls: { disable: true },
   },

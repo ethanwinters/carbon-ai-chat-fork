@@ -1,6 +1,4 @@
-import { ArgTypes, Canvas, Markdown, Meta } from '@storybook/addon-docs/blocks';
-
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as ChatHeaderStories from "./chat-header.stories";
 
 <Meta of={ChatHeaderStories} />
@@ -9,19 +7,14 @@ import * as ChatHeaderStories from "./chat-header.stories";
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/chat-shell) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
 ## Overview
 
 Use `cds-aichat-chat-header` to create a consistent header interface for chat applications, built on top of the Toolbar component. It includes support for navigation, title display, actions, and custom content through slots.
 
+<Canvas of={ChatHeaderStories.Default} />
+
 The chat header includes support for:
+
 - **Navigation** - Back button or overflow menu for navigation actions
 - **Title Display** - Shows header title and optional subtitle/name
 - **Actions** - Configurable action buttons with overflow support
@@ -36,8 +29,12 @@ Here's a quick example to get you started.
 <cds-aichat-chat-header
   header-title="title"
   header-name="name"
-  .actions=${actions}
-  .fixedActions=${fixedActions}>
+  .actions="${actions}"
+>
+  <!-- Always-visible actions go in the fixed-actions slot -->
+  <cds-icon-button slot="fixed-actions" kind="ghost">
+    <span slot="tooltip-content">Close</span>
+  </cds-icon-button>
 </cds-aichat-chat-header>
 ```
 
@@ -50,20 +47,32 @@ The header supports different navigation types:
 <cds-aichat-chat-header
   navigation-type="back"
   navigation-back-label="Back"
-  .navigationBackOnClick=${() => console.log('Back clicked')}>
+  .navigationBackOnClick="${handleBack}"
+>
 </cds-aichat-chat-header>
 
 <!-- Overflow menu navigation -->
 <cds-aichat-chat-header
   navigation-type="overflow"
   navigation-overflow-label="Menu"
-  .navigationOverflowItems=${menuItems}>
+  .navigationOverflowItems="${menuItems}"
+>
 </cds-aichat-chat-header>
 ```
 
-## Component API
+## With overflow navigation
 
-### cds-aichat-chat-header
+`WithOverflowNavigation` swaps the back button for an overflow menu.
+
+<Canvas of={ChatHeaderStories.WithOverflowNavigation} />
+
+## With focus management
+
+`WithFocusManagement` exposes `requestFocus()` through a ref.
+
+<Canvas of={ChatHeaderStories.WithFocusManagement} />
+
+## Component API
 
 <ArgTypes of="cds-aichat-chat-header" />
 
@@ -72,10 +81,6 @@ The header supports different navigation types:
 ```javascript
 import "@carbon/ai-chat-components/es/components/chat-shell/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(["chat-shell"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
 
 ## Feedback
 

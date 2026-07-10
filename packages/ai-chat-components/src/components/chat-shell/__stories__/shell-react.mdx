@@ -7,20 +7,14 @@ import * as ChatShellReactStories from "./shell-react.stories";
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/chat-shell) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Customization](#customization)
-- [Component API](#component-api)
-- [Feedback](#feedback)
-
-
 ## Overview
 
 The `<ChatShell>` component wraps the `cds-aichat-shell` web component to provide a flexible chat interface layout with support for headers, messages, input areas, workspaces, history panels, and overlay panels inside React applications.
 
+<Canvas of={ChatShellReactStories.Default} />
+
 The shell includes support for:
+
 - **Header and footer slots** for custom branding and actions
 - **Messages and input areas** with before/after extension points
 - **Workspace and history sidebars** with configurable positioning
@@ -37,7 +31,7 @@ import ChatShell from "@carbon/ai-chat-components/es/react/chat-shell.js";
 
 function MyChatInterface() {
   return (
-    <ChatShell contentMaxWidth showFrame roundedCorners>
+    <ChatShell contentMaxWidth showFrame cornerAll="round">
       <div slot="header">Chat Header</div>
       <div slot="messages">Messages Area</div>
       <div slot="input">Input Area</div>
@@ -62,14 +56,15 @@ function ChatWithPanel() {
       <div slot="header">Chat Header</div>
       <div slot="messages">Messages Area</div>
       <div slot="input">Input Area</div>
-      
+
       <div slot="panels">
-        <ChatPanel 
+        <ChatPanel
           open={isPanelOpen}
-          showChatHeader 
+          showChatHeader
           showFrame
           animationOnOpen="slide-in-from-bottom"
-          animationOnClose="slide-out-to-bottom">
+          animationOnClose="slide-out-to-bottom"
+        >
           <div slot="header">Panel Header</div>
           <div slot="body">Panel Content</div>
         </ChatPanel>
@@ -79,11 +74,23 @@ function ChatWithPanel() {
 }
 ```
 
+## Slots
+
+`Slots` demonstrates every slot the shell exposes, with checkboxes to toggle each one's visibility and controls for the layout tokens below.
+
+<Canvas of={ChatShellReactStories.Slots} />
+
+## Sidebar workspace
+
+`SidebarWorkspace` shows the workspace sidebar sliding open alongside the messages area, toggled from a button inside the messages slot.
+
+<Canvas of={ChatShellReactStories.SidebarWorkspace} />
+
 ## Customization
 
 > ** For information about styling slotted content with modifiers (`data-rounded`, `data-stacked`) and CSS custom properties, see [Styling & Modifiers](/docs/introduction-styling-modifiers--overview).**
 
-### Layout Tokens
+### Layout tokens
 
 Use CSS custom properties to adjust layout sizing. Apply them to a wrapper around `<ChatShell>` or to a parent selector.
 
@@ -97,7 +104,7 @@ Use CSS custom properties to adjust layout sizing. Apply them to a wrapper aroun
     "--cds-aichat-card-max-width": "460px",
   }}
 >
-  <ChatShell contentMaxWidth showFrame roundedCorners>
+  <ChatShell contentMaxWidth showFrame cornerAll="round">
     <div slot="header">Chat Header</div>
     <div slot="messages">Messages Area</div>
     <div slot="input">Input Area</div>
@@ -105,32 +112,29 @@ Use CSS custom properties to adjust layout sizing. Apply them to a wrapper aroun
 </div>
 ```
 
-| Token | Default | Description |
-| --- | --- | --- |
-| `--cds-aichat-messages-max-width` | `672px` | Maximum width for message content area |
-| `--cds-aichat-messages-min-width` | `320px` | Minimum width for message content area |
-| `--cds-aichat-workspace-min-width` | `480px` | Minimum width for workspace panel |
-| `--cds-aichat-history-width` | `320px` | Width of the history / conversation list panel |
-| `--cds-aichat-card-max-width` | `424px` | Maximum width for card components |
+| Token                              | Default | Description                                    |
+| ---------------------------------- | ------- | ---------------------------------------------- |
+| `--cds-aichat-messages-max-width`  | `672px` | Maximum width for message content area         |
+| `--cds-aichat-messages-min-width`  | `320px` | Minimum width for message content area         |
+| `--cds-aichat-workspace-min-width` | `480px` | Minimum width for workspace panel              |
+| `--cds-aichat-history-width`       | `320px` | Width of the history / conversation list panel |
+| `--cds-aichat-card-max-width`      | `424px` | Maximum width for card components              |
 
-## Component API
+## Usage patterns
 
-<ArgTypes of={ChatShellReactStories.Default} />
-
-### Usage Patterns
-
-#### With Workspace Sidebar
+### With workspace sidebar
 
 ```jsx
 function ChatWithWorkspace() {
   const [showWorkspace, setShowWorkspace] = React.useState(false);
 
   return (
-    <ChatShell 
+    <ChatShell
       showFrame
-      contentMaxWidth 
+      contentMaxWidth
       showWorkspace={showWorkspace}
-      workspaceLocation="end">
+      workspaceLocation="end"
+    >
       <div slot="header">Chat Header</div>
       <div slot="messages">
         <button onClick={() => setShowWorkspace(!showWorkspace)}>
@@ -144,18 +148,19 @@ function ChatWithWorkspace() {
 }
 ```
 
-#### With History Sidebar
+### With history sidebar
 
 ```jsx
 function ChatWithHistory() {
   const [showHistory, setShowHistory] = React.useState(false);
 
   return (
-    <ChatShell 
-      showFrame 
+    <ChatShell
+      showFrame
       contentMaxWidth
       showHistory={showHistory}
-      historyLocation="start">
+      historyLocation="start"
+    >
       <div slot="header">Chat Header</div>
       <div slot="history">History Content</div>
       <div slot="messages">Messages Area</div>
@@ -164,6 +169,10 @@ function ChatWithHistory() {
   );
 }
 ```
+
+## Component API
+
+<ArgTypes of={ChatShellReactStories.Default} />
 
 ## Feedback
 

@@ -60,7 +60,7 @@ export interface Action extends BaseOverflowMenuItem {
  * @slot navigation - Defines the navigation area of the toolbar.
  * @slot title - Defines the title section of the toolbar.
  * @slot fixed-actions - Defines the area for displaying actions that are always visible (not overflowed) in the toolbar.
- * @slot toolbar-ai-label - Defines the area for displaying the AI label in the toolbar.
+ * @slot decorator - Defines the area for displaying the AI label in the toolbar.
  *
  */
 @carbonElement(blockClass)
@@ -78,9 +78,11 @@ class CDSAIChatToolbar extends LitElement {
   @property({ type: Boolean, attribute: "overflow", reflect: true })
   overflow = false;
 
+  /** Title text rendered as the toolbar's fallback title when no `title` slot content is provided. */
   @property({ type: String })
   titleText?: string;
 
+  /** Name text rendered alongside `titleText` in the toolbar's fallback title when no `title` slot content is provided. */
   @property({ type: String })
   nameText?: string;
 

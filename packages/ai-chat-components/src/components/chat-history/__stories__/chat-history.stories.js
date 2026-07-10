@@ -52,6 +52,11 @@ const getIndexByTimestamp = (items, timestamp) => {
 class ChatHistoryDemo extends LitElement {
   static properties = {
     headerTitle: { type: String, attribute: "header-title" },
+    resultsLabel: { type: String, attribute: "results-label" },
+    panelAriaLabel: { type: String, attribute: "panel-aria-label" },
+    searchResultsTitle: { type: String, attribute: "search-results-title" },
+    noResultsText: { type: String, attribute: "no-results-text" },
+    pinnedSectionTitle: { type: String, attribute: "pinned-section-title" },
     searchResults: { type: Array },
     searchTotalCount: { type: Number },
     searchValue: { type: String },
@@ -77,6 +82,11 @@ class ChatHistoryDemo extends LitElement {
   constructor() {
     super();
     this.headerTitle = "Chats";
+    this.resultsLabel = "Results";
+    this.panelAriaLabel = "Chat history";
+    this.searchResultsTitle = "Search results";
+    this.noResultsText = "No available chats";
+    this.pinnedSectionTitle = "Pinned";
     this.searchOff = false;
     this.searchAttributes = {
       "label-text": "Search",
@@ -351,27 +361,27 @@ class ChatHistoryDemo extends LitElement {
         >
         </cds-aichat-history-toolbar>
         <cds-aichat-history-content
-          results-label="Results"
+          results-label="${this.resultsLabel}"
           results-count="${showSearchResults || noSearchResults
             ? this.searchTotalCount
             : ""}"
         >
           <cds-aichat-history-panel
             ?show-actions=${this.showActions}
-            aria-label="Chat history"
+            aria-label="${this.panelAriaLabel}"
           >
             <cds-aichat-history-panel-items>
               ${noSearchResults
                 ? html`
                     <cds-aichat-history-panel-menu
                       expanded
-                      title="Search results"
+                      title="${this.searchResultsTitle}"
                     >
                       ${iconLoader(Search16, {
                         slot: "title-icon",
                       })}
                       <cds-aichat-history-search-item disabled>
-                        No available chats
+                        ${this.noResultsText}
                       </cds-aichat-history-search-item>
                     </cds-aichat-history-panel-menu>
                   `
@@ -380,7 +390,7 @@ class ChatHistoryDemo extends LitElement {
                 ? html`
                     <cds-aichat-history-panel-menu
                       expanded
-                      title="Search results"
+                      title="${this.searchResultsTitle}"
                     >
                       ${iconLoader(Search16, {
                         slot: "title-icon",
@@ -403,7 +413,7 @@ class ChatHistoryDemo extends LitElement {
                       ? html`
                           <cds-aichat-history-panel-menu
                             expanded
-                            title="Pinned"
+                            title="${this.pinnedSectionTitle}"
                           >
                             ${iconLoader(PinFilled16, {
                               slot: "title-icon",
@@ -471,7 +481,7 @@ if (!customElements.get("cds-aichat-history-demo")) {
 }
 
 export default {
-  title: "Preview/Chat History",
+  title: "Components/Chat History",
   component: "cds-aichat-history-shell",
   decorators: [
     (story) => html`
@@ -485,9 +495,36 @@ export default {
 
 export const Default = {
   argTypes: {
-    HeaderTitle: {
+    headerTitle: {
       control: "text",
-      description: "Header title text of the chat history shell",
+      description: "Header title text of the chat history shell.",
+      table: { defaultValue: { summary: "Chats" } },
+    },
+    resultsLabel: {
+      control: "text",
+      description:
+        "Label displayed before the results count in the history content header.",
+      table: { defaultValue: { summary: "Results" } },
+    },
+    panelAriaLabel: {
+      control: "text",
+      description: "Accessible label for the chat history panel.",
+      table: { defaultValue: { summary: "Chat history" } },
+    },
+    searchResultsTitle: {
+      control: "text",
+      description: "Title text of the search results panel menu.",
+      table: { defaultValue: { summary: "Search results" } },
+    },
+    noResultsText: {
+      control: "text",
+      description: "Message shown when a search returns no matching chats.",
+      table: { defaultValue: { summary: "No available chats" } },
+    },
+    pinnedSectionTitle: {
+      control: "text",
+      description: "Title text of the pinned items section.",
+      table: { defaultValue: { summary: "Pinned" } },
     },
     searchOff: {
       control: "boolean",
@@ -513,7 +550,12 @@ export const Default = {
     },
   },
   args: {
-    HeaderTitle: "Chats",
+    headerTitle: "Chats",
+    resultsLabel: "Results",
+    panelAriaLabel: "Chat history",
+    searchResultsTitle: "Search results",
+    noResultsText: "No available chats",
+    pinnedSectionTitle: "Pinned",
     searchOff: false,
     searchAttributes: {
       "label-text": "Search",
@@ -526,7 +568,12 @@ export const Default = {
   },
   render: (args) => html`
     <cds-aichat-history-demo
-      header-title="${args.HeaderTitle}"
+      header-title="${args.headerTitle}"
+      results-label="${args.resultsLabel}"
+      panel-aria-label="${args.panelAriaLabel}"
+      search-results-title="${args.searchResultsTitle}"
+      no-results-text="${args.noResultsText}"
+      pinned-section-title="${args.pinnedSectionTitle}"
       ?search-off=${args.searchOff}
       .searchAttributes=${args.searchAttributes}
       overflow-menu-label="${args.overflowMenuLabel}"
@@ -537,17 +584,35 @@ export const Default = {
 };
 
 export const SearchResults = {
-  render: () => {
+  argTypes: {
+    headerTitle: Default.argTypes.headerTitle,
+    resultsLabel: Default.argTypes.resultsLabel,
+    panelAriaLabel: Default.argTypes.panelAriaLabel,
+    searchResultsTitle: Default.argTypes.searchResultsTitle,
+  },
+  args: {
+    headerTitle: Default.args.headerTitle,
+    resultsLabel: Default.args.resultsLabel,
+    panelAriaLabel: "Search results",
+    searchResultsTitle: Default.args.searchResultsTitle,
+  },
+  render: (args) => {
     return html`
       <cds-aichat-history-shell>
         <cds-aichat-history-header
-          header-title="Chats"
+          header-title="${args.headerTitle}"
         ></cds-aichat-history-header>
         <cds-aichat-history-toolbar></cds-aichat-history-toolbar>
-        <cds-aichat-history-content results-label="Results" results-count="4">
-          <cds-aichat-history-panel aria-label="Search results">
+        <cds-aichat-history-content
+          results-label="${args.resultsLabel}"
+          results-count="4"
+        >
+          <cds-aichat-history-panel aria-label="${args.panelAriaLabel}">
             <cds-aichat-history-panel-items>
-              <cds-aichat-history-panel-menu expanded title="Search results">
+              <cds-aichat-history-panel-menu
+                expanded
+                title="${args.searchResultsTitle}"
+              >
                 ${iconLoader(Search16, {
                   slot: "title-icon",
                 })}
@@ -574,14 +639,17 @@ export const SearchResults = {
 };
 
 export const Loading = {
+  argTypes: {
+    headerTitle: Default.argTypes.headerTitle,
+  },
   args: {
-    HeaderTitle: "Chats",
+    headerTitle: Default.args.headerTitle,
   },
   render: (args) => {
     return html`
       <cds-aichat-history-shell>
         <cds-aichat-history-header
-          header-title="${args.HeaderTitle}"
+          header-title="${args.headerTitle}"
         ></cds-aichat-history-header>
         <cds-aichat-history-toolbar></cds-aichat-history-toolbar>
         <cds-aichat-history-loading></cds-aichat-history-loading>
@@ -591,14 +659,17 @@ export const Loading = {
 };
 
 export const EmptyState = {
+  argTypes: {
+    headerTitle: Default.argTypes.headerTitle,
+  },
   args: {
-    HeaderTitle: "Chats",
+    headerTitle: Default.args.headerTitle,
   },
   render: (args) => {
     return html`
       <cds-aichat-history-shell>
         <cds-aichat-history-header
-          header-title="${args.HeaderTitle}"
+          header-title="${args.headerTitle}"
         ></cds-aichat-history-header>
         <cds-aichat-history-toolbar></cds-aichat-history-toolbar>
         <cds-aichat-history-content> </cds-aichat-history-content>
@@ -608,20 +679,28 @@ export const EmptyState = {
 };
 
 export const DeleteFlow = {
+  argTypes: {
+    headerTitle: Default.argTypes.headerTitle,
+    pinnedSectionTitle: Default.argTypes.pinnedSectionTitle,
+  },
   args: {
-    HeaderTitle: "Chats",
+    headerTitle: Default.args.headerTitle,
+    pinnedSectionTitle: Default.args.pinnedSectionTitle,
   },
   render: (args) => {
     return html`
       <cds-aichat-history-shell>
         <cds-aichat-history-header
-          header-title="${args.HeaderTitle}"
+          header-title="${args.headerTitle}"
         ></cds-aichat-history-header>
         <cds-aichat-history-toolbar></cds-aichat-history-toolbar>
         <cds-aichat-history-content>
           <cds-aichat-history-panel>
             <cds-aichat-history-panel-items>
-              <cds-aichat-history-panel-menu expanded title="Pinned">
+              <cds-aichat-history-panel-menu
+                expanded
+                title="${args.pinnedSectionTitle}"
+              >
                 ${iconLoader(PinFilled16, {
                   slot: "title-icon",
                 })}

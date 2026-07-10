@@ -1,7 +1,7 @@
 /**
  * @license
  *
- * Copyright IBM Corp. 2025
+ * Copyright IBM Corp. 2025, 2026
  *
  * This source code is licensed under the Apache-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,7 +16,7 @@ import { carbonElement } from "../../../globals/decorators/index.js";
 import prefix from "../../../globals/settings.js";
 
 /**
- * Component extending the @carbon/web-components' button
+ * Component extending the @carbon/web-components' tile
  * @element cds-aichat-card
  */
 @carbonElement(`${prefix}-card`)

@@ -7,99 +7,132 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/* eslint-disable */
 import React from "react";
 import { Transcript } from "../../../react/transcript";
 import { AudioPlayer } from "../../../react/audio-player";
 import { Card } from "../../../react/card";
-import isChromatic from "chromatic/isChromatic";
+import { action } from "storybook/actions";
+import TranscriptMeta, {
+  Default as DefaultWC,
+  LongTranscript as LongTranscriptWC,
+  WithAudioPlayer as WithAudioPlayerWC,
+} from "./transcript.stories";
 import "./transcript-react.stories.css";
 
-const WITH_TRANSCRIPT_SOURCE_CHROMATIC_DATA_URI =
-  "data:audio/wav;base64,UklGRiUAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQEAAACA";
+/**
+ * `expanded` is a controlled prop on `<Transcript>` — the component only
+ * fires `onTranscriptToggle` and leaves the parent responsible for flipping
+ * it back. This wraps that state so the `Controlled` story's toggle button
+ * actually opens and closes the transcript content region.
+ */
+function TranscriptStateful({ showLabel, hideLabel, ...rest }) {
+  const [expanded, setExpanded] = React.useState(false);
+
+  return (
+    <Transcript
+      {...rest}
+      showLabel={showLabel}
+      hideLabel={hideLabel}
+      expanded={expanded}
+      onTranscriptToggle={(e) => {
+        action("toggle")(e.detail);
+        setExpanded(e.detail.expanded);
+      }}
+    />
+  );
+}
 
 export default {
-  title: "Preview/Audio player/Transcript",
+  title: "Components/Audio player/Transcript",
   component: Transcript,
-  args: {
-    text: "My text input is, you know, I am a teapot and then my image input is a picture of David Hasselhoff.",
-    label: "English Transcript",
-    language: "en",
-  },
-  argTypes: {
-    text: {
-      control: "text",
-      description: "The transcript text content (supports markdown)",
-    },
-    label: {
-      control: "text",
-      description: "Label for the transcript toggle button",
-    },
-    language: {
-      control: "text",
-      description: "Language code for the transcript (e.g., 'en', 'es')",
-    },
+};
+
+const eventArgTypes = {
+  onTranscriptToggle: {
+    action: "toggle",
+    description:
+      TranscriptMeta.argTypes["@cds-aichat-transcript-toggle"].description,
+    control: "none",
+    table: { category: "events" },
   },
 };
 
-export const Default = {
-  render: (args) => {
-    const { text, label, language } = args;
+const withoutWcEventArgTypes = (argTypes) => {
+  const { "@cds-aichat-transcript-toggle": _toggle, ...rest } = argTypes;
+  return rest;
+};
 
-    return <Transcript text={text} label={label} language={language} />;
+export const Default = {
+  argTypes: {
+    ...withoutWcEventArgTypes(TranscriptMeta.argTypes),
+    ...eventArgTypes,
+  },
+  args: { ...DefaultWC.args },
+  render: (args) => {
+    const { text, label, language, showLabel, hideLabel } = args;
+
+    return (
+      <Transcript
+        text={text}
+        label={label}
+        language={language}
+        showLabel={showLabel}
+        hideLabel={hideLabel}
+        onTranscriptToggle={(e) => action("toggle")(e.detail)}
+      />
+    );
   },
 };
 
 export const LongTranscript = {
-  args: {
-    text: `This is a much longer transcript that demonstrates how the component handles extensive content. 
-
-The transcript component is designed to be collapsible, allowing users to expand and view the full content when needed, while keeping the interface clean and uncluttered by default.
-
-**Key Features:**
-- Expandable/collapsible interface
-- Markdown support for formatting
-- Accessibility-focused design
-- Clean visual presentation
-
-This makes it ideal for providing detailed transcripts of audio content without overwhelming the user interface. Users can choose to read the transcript when they need it, making the content more accessible to those who prefer or require text-based alternatives to audio.`,
-    label: "Full Transcript",
-    language: "en",
-  },
+  args: { ...LongTranscriptWC.args },
   render: (args) => {
-    const { text, label, language } = args;
+    const { text, label, language, showLabel, hideLabel } = args;
 
-    return <Transcript text={text} label={label} language={language} />;
+    return (
+      <Transcript
+        text={text}
+        label={label}
+        language={language}
+        showLabel={showLabel}
+        hideLabel={hideLabel}
+        onTranscriptToggle={(e) => action("toggle")(e.detail)}
+      />
+    );
+  },
+};
+
+export const Controlled = {
+  render: (args) => {
+    const { text, label, language, showLabel, hideLabel } = args;
+
+    return (
+      <TranscriptStateful
+        text={text}
+        label={label}
+        language={language}
+        showLabel={showLabel}
+        hideLabel={hideLabel}
+      />
+    );
   },
 };
 
 export const WithAudioPlayer = {
-  args: {
-    audioSource: isChromatic()
-      ? WITH_TRANSCRIPT_SOURCE_CHROMATIC_DATA_URI
-      : "https://web-chat.assistant.test.watson.cloud.ibm.com/assets/Teapot_Hasselhoff.mp3",
-    audioTitle: "Your own mp3 file with transcript",
-    audioDescription: "This example includes a transcript for accessibility.",
-    text: "My text input is, you know, I am a teapot and then my image input is a picture of David Hasselhoff.",
-    label: "English Transcript",
-    language: "en",
-  },
-  argTypes: {
-    audioSource: {
-      control: "text",
-      description: "Audio source URL",
-    },
-    audioTitle: {
-      control: "text",
-      description: "Audio title",
-    },
-    audioDescription: {
-      control: "text",
-      description: "Audio description",
-    },
-  },
+  argTypes: { ...WithAudioPlayerWC.argTypes },
+  args: { ...WithAudioPlayerWC.args },
   render: (args) => {
-    const { audioSource, audioTitle, audioDescription, text, label, language } =
-      args;
+    const {
+      audioSource,
+      audioTitle,
+      audioDescription,
+      text,
+      label,
+      language,
+      showLabel,
+      hideLabel,
+    } = args;
 
     return (
       <Card>
@@ -113,59 +146,16 @@ export const WithAudioPlayer = {
         <div slot="body" className="audio-player-card-body">
           <h4 className="audio-player-card-title">{audioTitle}</h4>
           <p className="audio-player-card-description">{audioDescription}</p>
-          <Transcript text={text} label={label} language={language} />
+          <Transcript
+            text={text}
+            label={label}
+            language={language}
+            showLabel={showLabel}
+            hideLabel={hideLabel}
+            onTranscriptToggle={(e) => action("toggle")(e.detail)}
+          />
         </div>
       </Card>
-    );
-  },
-};
-
-export const MultipleLanguages = {
-  render: () => {
-    return (
-      <div className="transcript-examples-container">
-        <Transcript
-          text="This is an English transcript."
-          label="English Transcript"
-          language="en"
-        />
-
-        <Transcript
-          text="Esta es una transcripción en español."
-          label="Transcripción en español"
-          language="es"
-        />
-
-        <Transcript
-          text="これは日本語の文字起こしです。"
-          label="日本語の文字起こし"
-          language="ja"
-        />
-      </div>
-    );
-  },
-};
-
-export const WithEventHandling = {
-  render: function EventHandlingExample(args) {
-    const { text, label, language } = args;
-    const [isExpanded, setIsExpanded] = React.useState(false);
-
-    return (
-      <>
-        <p>
-          Transcript is currently:{" "}
-          <strong>{isExpanded ? "Expanded" : "Collapsed"}</strong>
-        </p>
-        <Transcript
-          text={text}
-          label={label}
-          language={language}
-          onCdsAichatTranscriptToggle={(e) => {
-            setIsExpanded(e.detail.expanded);
-          }}
-        />
-      </>
     );
   },
 };

@@ -1,81 +1,32 @@
-import { ArgTypes, Markdown, Meta } from '@storybook/addon-docs/blocks';
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
 import * as WorkspaceShellStories from "./workspace-shell-react.stories";
+import * as WorkspaceShellBodyStories from "./workspace-shell-body-react.stories";
+import * as WorkspaceShellHeaderStories from "./workspace-shell-header-react.stories";
+import * as WorkspaceShellFooterStories from "./workspace-shell-footer-react.stories";
 
 <Meta of={WorkspaceShellStories} />
 
 # Workspace shell
 
+[Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/workspace-shell) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-## Getting started
+## Overview
 
-Here's a quick example to get you started.
+Use `WorkspaceShell` to lay out a workspace panel's toolbar, notification, header, body, and footer into a single consistent structure.
 
-### JS (via import)
+<Canvas of={WorkspaceShellStories.Default} />
+
+`WorkspaceShell` defines five dedicated slots that structure the overall workspace layout: `toolbar`, `header`, `notification`, `body`, and `footer`. Each slot accepts any element or component, or you can use the provided subcomponents (`WorkspaceShellHeader`, `WorkspaceShellBody`, `WorkspaceShellFooter`) for consistent styling and default behaviors that align with the AI Chat Workspace design patterns.
+
+## JS (via import)
 
 ```javascript
-import "@carbon/ai-chat-components/es/react/workspace-shell.js";
-import "@carbon/ai-chat-components/es/react/workspace-shell-header.js";
-import "@carbon/ai-chat-components/es/react/workspace-shell-body.js";
-import "@carbon/ai-chat-components/es/react/workspace-shell-footer.js";
-```
-
-### HTML
-
-```html
-   <WorkspaceShell>
-    <Toolbar
-    slot="toolbar"
-    actions={toolbarAction}
-    overflow={toolbarOverflow}
-  >
-    <div slot="title">
-      {toolbarTitle}
-    </div>
-      <AILabel
-        size="2xs"
-        autoalign
-        alignment="bottom"
-        slot="toolbar-ai-label"
-      >
-        <div slot="body-text">
-          <h4 className="margin-bottom-05">Powered by IBM watsonx</h4>
-          <div>
-            IBM watsonx is powered by the latest AI models to intelligently
-            process conversations and provide help whenever and wherever you
-            may need it.
-          </div>
-        </div>
-      </AILabel>
-  </Toolbar>
-  <InlineNotification
-  slot="notification"
-  title={notificationTitle}
-  kind="warning"
-  hideCloseButton
-  >
-  </InlineNotification>
-  <WorkspaceShellHeader
-  titleText={headerTitle}
-  subTitleText={headerSubTitle}>
-    {getHeaderDescription(headerDescription)}
-    {
-      showHeaderAction && 
-       <Button kind="tertiary" slot="header-action">
-          Edit Plan <Icon icon={Edit16} slot="icon" />
-      </Button>
-    }
-  </WorkspaceShellHeader>
-  <WorkspaceShellBody>
-    {getBodyContent(bodyContent)}
-  </WorkspaceShellBody>
-    {footerAction !== "noAction" &&
-      <WorkspaceShellFooter>
-        {getFooterAction(footerAction)}
-      </WorkspaceShellFooter>
-    }
-  </WorkspaceShell>
-
+import WorkspaceShell, {
+  WorkspaceShellHeader,
+  WorkspaceShellBody,
+  WorkspaceShellFooter,
+} from "@carbon/ai-chat-components/es/react/workspace-shell.js";
 ```
 
 ## Customization
@@ -102,9 +53,49 @@ If you are using this component with `@carbon/ai-chat` (most common) you can app
 </div>
 ```
 
-| Token | Default | Description |
-| --- | --- | --- |
+| Token                              | Default | Description                                                                                                                     |
+| ---------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `--cds-aichat-workspace-min-width` | `480px` | Minimum width for workspace panel. Will switch from inline to an overlay panel if it can't render to at least this size inline. |
+
+## Examples
+
+### Body
+
+#### Empty state
+
+<Canvas of={WorkspaceShellBodyStories.EmptyState} />
+
+### Header
+
+#### With description
+
+<Canvas of={WorkspaceShellHeaderStories.WithDescription} />
+
+#### With tags
+
+<Canvas of={WorkspaceShellHeaderStories.WithTags} />
+
+#### Collapsible
+
+<Canvas of={WorkspaceShellHeaderStories.Collapsible} />
+
+## Component API
+
+### Workspace shell
+
+<ArgTypes of={WorkspaceShellStories.Default} />
+
+### Header
+
+<ArgTypes of={WorkspaceShellHeaderStories.Default} />
+
+### Body
+
+<ArgTypes of={WorkspaceShellBodyStories.Default} />
+
+### Footer
+
+<ArgTypes of={WorkspaceShellFooterStories.Default} />
 
 ## Feedback
 

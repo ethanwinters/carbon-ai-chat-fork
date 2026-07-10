@@ -11,12 +11,13 @@ import "../index";
 import "../../card/index.js";
 import { html } from "lit";
 import isChromatic from "chromatic/isChromatic";
+import { action } from "storybook/actions";
 
 const WITH_TRANSCRIPT_SOURCE_CHROMATIC_DATA_URI =
   "data:audio/wav;base64,UklGRiUAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQEAAACA";
 
 export default {
-  title: "Preview/Audio player",
+  title: "Components/Audio player",
   args: {
     source:
       "https://soundcloud.com/ibmthinkleaders/leveraging-ai-to-tackle-large-problems-being-an-optimistic-futurist-feat-kate-oneill",
@@ -24,9 +25,13 @@ export default {
     description:
       "A conversation about being an optimistic futurist featuring Kate O'Neill from IBM Think Leaders.",
     playing: false,
-    aspectRatioPercentage: 56.25,
     ariaLabel: "Audio player",
     useCard: true,
+    loadingStatusMessage: "Audio player loading",
+    readyStatusMessage: "Audio player ready",
+    loadingLabel: "Loading",
+    readyLabel: "Ready",
+    errorLabel: "Error",
   },
   argTypes: {
     source: {
@@ -46,11 +51,6 @@ export default {
       control: "boolean",
       description: "Whether the audio should be playing",
     },
-    aspectRatioPercentage: {
-      control: { type: "number", min: 0, max: 100, step: 0.01 },
-      description:
-        "Aspect ratio as padding-top percentage (default: 56.25 for visual consistency)",
-    },
     ariaLabel: {
       control: "text",
       description: "ARIA label for accessibility",
@@ -58,6 +58,47 @@ export default {
     useCard: {
       control: "boolean",
       description: "Wrap audio player in a card component with metadata",
+    },
+    loadingStatusMessage: {
+      control: "text",
+      description: "Status message announced when audio starts loading",
+      table: { defaultValue: { summary: "Audio player loading" } },
+    },
+    readyStatusMessage: {
+      control: "text",
+      description: "Status message announced when audio is ready",
+      table: { defaultValue: { summary: "Audio player ready" } },
+    },
+    loadingLabel: {
+      control: "text",
+      description: "Label suffix for the loading state.",
+      table: { defaultValue: { summary: "Loading" } },
+    },
+    readyLabel: {
+      control: "text",
+      description: "Label suffix for the ready state.",
+      table: { defaultValue: { summary: "Ready" } },
+    },
+    errorLabel: {
+      control: "text",
+      description: "Label suffix for the error state.",
+      table: { defaultValue: { summary: "Error" } },
+    },
+    "@cds-aichat-audio-player-ready": {
+      action: "ready",
+      table: { category: "events" },
+    },
+    "@cds-aichat-audio-player-error": {
+      action: "error",
+      table: { category: "events" },
+    },
+    "@cds-aichat-audio-player-play": {
+      action: "play",
+      table: { category: "events" },
+    },
+    "@cds-aichat-audio-player-pause": {
+      action: "pause",
+      table: { category: "events" },
     },
   },
 };
@@ -69,9 +110,13 @@ export const Default = {
       title,
       description,
       playing,
-      aspectRatioPercentage,
       ariaLabel,
       useCard,
+      loadingStatusMessage,
+      readyStatusMessage,
+      loadingLabel,
+      readyLabel,
+      errorLabel,
     } = args;
 
     const audioPlayer = useCard
@@ -79,9 +124,17 @@ export const Default = {
           <cds-aichat-audio-player
             source=${source}
             ?playing=${playing}
-            aspect-ratio-percentage=${aspectRatioPercentage}
             aria-label=${ariaLabel}
+            loading-status-message=${loadingStatusMessage}
+            ready-status-message=${readyStatusMessage}
+            loading-label=${loadingLabel}
+            ready-label=${readyLabel}
+            error-label=${errorLabel}
             data-rounded="top"
+            @cds-aichat-audio-player-ready=${(e) => action("ready")(e.detail)}
+            @cds-aichat-audio-player-error=${(e) => action("error")(e.detail)}
+            @cds-aichat-audio-player-play=${(e) => action("play")(e.detail)}
+            @cds-aichat-audio-player-pause=${(e) => action("pause")(e.detail)}
           >
           </cds-aichat-audio-player>
         `
@@ -89,8 +142,16 @@ export const Default = {
           <cds-aichat-audio-player
             source=${source}
             ?playing=${playing}
-            aspect-ratio-percentage=${aspectRatioPercentage}
             aria-label=${ariaLabel}
+            loading-status-message=${loadingStatusMessage}
+            ready-status-message=${readyStatusMessage}
+            loading-label=${loadingLabel}
+            ready-label=${readyLabel}
+            error-label=${errorLabel}
+            @cds-aichat-audio-player-ready=${(e) => action("ready")(e.detail)}
+            @cds-aichat-audio-player-error=${(e) => action("error")(e.detail)}
+            @cds-aichat-audio-player-play=${(e) => action("play")(e.detail)}
+            @cds-aichat-audio-player-pause=${(e) => action("pause")(e.detail)}
           >
           </cds-aichat-audio-player>
         `;
@@ -102,67 +163,6 @@ export const Default = {
     return html`
       <cds-aichat-card is-flush>
         <div slot="media">${audioPlayer}</div>
-        <div slot="body" style="padding: 1rem;">
-          <h4 style="margin: 0 0 0.5rem 0;">${title}</h4>
-          <p style="margin: 0; color: var(--cds-text-secondary);">
-            ${description}
-          </p>
-        </div>
-      </cds-aichat-card>
-    `;
-  },
-};
-
-export const Standalone = {
-  args: {
-    useCard: false,
-  },
-  render: (args) => {
-    const { source, playing, aspectRatioPercentage, ariaLabel } = args;
-
-    return html`
-      <cds-aichat-audio-player
-        source=${source}
-        ?playing=${playing}
-        aspect-ratio-percentage=${aspectRatioPercentage}
-        aria-label=${ariaLabel}
-      >
-      </cds-aichat-audio-player>
-    `;
-  },
-};
-
-export const WithMetadata = {
-  args: {
-    source:
-      "https://soundcloud.com/ibmthinkleaders/leveraging-ai-to-tackle-large-problems-being-an-optimistic-futurist-feat-kate-oneill",
-    title: "Leveraging AI to Tackle Large Problems",
-    description:
-      "Join us for an insightful conversation about being an optimistic futurist featuring Kate O'Neill from IBM Think Leaders. Explore how AI can be leveraged to solve complex challenges facing our world today.",
-    useCard: true,
-  },
-  render: (args) => {
-    const {
-      source,
-      title,
-      description,
-      playing,
-      aspectRatioPercentage,
-      ariaLabel,
-    } = args;
-
-    return html`
-      <cds-aichat-card is-flush>
-        <div slot="media">
-          <cds-aichat-audio-player
-            source=${source}
-            ?playing=${playing}
-            aspect-ratio-percentage=${aspectRatioPercentage}
-            aria-label=${ariaLabel}
-            data-rounded="top"
-          >
-          </cds-aichat-audio-player>
-        </div>
         <div slot="body" style="padding: 1rem;">
           <h4 style="margin: 0 0 0.5rem 0;">${title}</h4>
           <p style="margin: 0; color: var(--cds-text-secondary);">
@@ -210,7 +210,6 @@ export const WithTranscript = {
       transcriptLabel,
       transcriptLanguage,
       playing,
-      aspectRatioPercentage,
       ariaLabel,
     } = args;
 
@@ -220,9 +219,12 @@ export const WithTranscript = {
           <cds-aichat-audio-player
             source=${source}
             ?playing=${playing}
-            aspect-ratio-percentage=${aspectRatioPercentage}
             aria-label=${ariaLabel}
             data-rounded="top"
+            @cds-aichat-audio-player-ready=${(e) => action("ready")(e.detail)}
+            @cds-aichat-audio-player-error=${(e) => action("error")(e.detail)}
+            @cds-aichat-audio-player-play=${(e) => action("play")(e.detail)}
+            @cds-aichat-audio-player-pause=${(e) => action("pause")(e.detail)}
           >
           </cds-aichat-audio-player>
         </div>
@@ -250,16 +252,18 @@ export const ErrorState = {
     description:
       "This demonstrates the error state when an audio file fails to load.",
     useCard: true,
+    errorMessage: "Failed to load audio",
+  },
+  argTypes: {
+    errorMessage: {
+      control: "text",
+      description: "Generic error message to display when audio fails to load",
+      table: { defaultValue: { summary: "Failed to load audio" } },
+    },
   },
   render: (args) => {
-    const {
-      source,
-      title,
-      description,
-      playing,
-      aspectRatioPercentage,
-      ariaLabel,
-    } = args;
+    const { source, title, description, playing, ariaLabel, errorMessage } =
+      args;
 
     return html`
       <cds-aichat-card is-flush>
@@ -267,9 +271,13 @@ export const ErrorState = {
           <cds-aichat-audio-player
             source=${source}
             ?playing=${playing}
-            aspect-ratio-percentage=${aspectRatioPercentage}
             aria-label=${ariaLabel}
+            error-message=${errorMessage}
             data-rounded="top"
+            @cds-aichat-audio-player-ready=${(e) => action("ready")(e.detail)}
+            @cds-aichat-audio-player-error=${(e) => action("error")(e.detail)}
+            @cds-aichat-audio-player-play=${(e) => action("play")(e.detail)}
+            @cds-aichat-audio-player-pause=${(e) => action("pause")(e.detail)}
           >
           </cds-aichat-audio-player>
         </div>

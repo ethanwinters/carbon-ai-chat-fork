@@ -1,7 +1,7 @@
 /**
  * @license
  *
- * Copyright IBM Corp. 2025
+ * Copyright IBM Corp. 2025, 2026
  *
  * This source code is licensed under the Apache-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,14 +17,10 @@ import styles from "./story-styles.scss?lit";
 import { action } from "storybook/actions";
 import { cardFooterPresets, previewCardFooterPresets } from "./story-data";
 
-const cardContent = html`
+const cardContent = (args) => html`
   <div slot="body" class="standard-card">
-    <h4>AI Chat Card</h4>
-    <p>
-      The Carbon Design System provides a comprehensive library of components,
-      tokens, and guidelines. We need to implement the new AI Chat component
-      following Carbon's design principles and accessibility standards.
-    </p>
+    <h4>${args.bodyTitle}</h4>
+    <p>${args.bodyText}</p>
   </div>
 `;
 
@@ -54,7 +50,7 @@ export const Default = {
         "If not set, the card uses `--cds-chat-shell-background`. If set, the card will use `--cds-layer` as its background.",
     },
     isFlush: {
-      control: { type: "boolean", disable: true },
+      control: "boolean",
       description:
         "Setting this removes the padding of the card. This is useful when the elements inside the card are already padded.",
     },
@@ -65,8 +61,23 @@ export const Default = {
       description:
         "Sets the max width of the story container. This only affects the story wrapper and does not affect the component itself.",
     },
+    bodyTitle: {
+      control: "text",
+      description: "Title text rendered in the card's body slot.",
+    },
+    bodyText: {
+      control: "text",
+      description: "Body text rendered in the card's body slot.",
+    },
   },
-  args: { isLayered: false, maxWidth: "sm", isFlush: true },
+  args: {
+    isLayered: false,
+    maxWidth: "sm",
+    isFlush: true,
+    bodyTitle: "AI Chat Card",
+    bodyText:
+      "The Carbon Design System provides a comprehensive library of components, tokens, and guidelines. We need to implement the new AI Chat component following Carbon's design principles and accessibility standards.",
+  },
   render: (args) =>
     maxWidthWrapper(
       args.maxWidth,
@@ -75,7 +86,7 @@ export const Default = {
           ?is-layered=${args.isLayered}
           ?is-flush=${args.isFlush}
         >
-          ${cardContent}
+          ${cardContent(args)}
         </cds-aichat-card>
       `,
     ),
@@ -109,7 +120,7 @@ export const WithActions = {
           ?is-layered=${args.isLayered}
           ?is-flush=${args.isFlush}
         >
-          ${cardContent}
+          ${cardContent(args)}
           <cds-aichat-card-footer
             .actions=${cardFooterPresets[args.footerActions]}
             size=${ifDefined(args.footerSize)}
@@ -127,10 +138,15 @@ export const WithImage = {
       control: "text",
       description: "URL of the image tag passed in the card media slot.",
     },
+    imageAlt: {
+      control: "text",
+      description: "Alt text for the card's image.",
+    },
   },
   args: {
     ...WithActions.args,
     image: "https://live.staticflickr.com/540/18795217173_39e0b63304_c.jpg",
+    imageAlt: "Card image",
   },
   render: (args) =>
     maxWidthWrapper(
@@ -141,9 +157,9 @@ export const WithImage = {
           ?is-flush=${args.isFlush}
         >
           <div slot="media" data-rounded="top">
-            <img src=${args.image} alt="Card image" />
+            <img src=${args.image} alt=${args.imageAlt} />
           </div>
-          ${cardContent}
+          ${cardContent(args)}
           <cds-aichat-card-footer
             .actions=${cardFooterPresets[args.footerActions]}
             size=${ifDefined(args.footerSize)}
@@ -161,10 +177,15 @@ export const OnlyImage = {
       control: "text",
       description: WithImage?.argTypes?.image?.description,
     },
+    imageAlt: {
+      control: "text",
+      description: "Alt text for the card's image.",
+    },
   },
   args: {
     ...Default.args,
     image: "https://live.staticflickr.com/540/18795217173_39e0b63304_c.jpg",
+    imageAlt: "Card image",
   },
   render: (args) =>
     maxWidthWrapper(
@@ -175,7 +196,7 @@ export const OnlyImage = {
           ?is-flush=${args.isFlush}
         >
           <div slot="media" data-rounded>
-            <img src=${args.image} alt="Card image" />
+            <img src=${args.image} alt=${args.imageAlt} />
           </div>
         </cds-aichat-card>
       `,
@@ -189,11 +210,27 @@ export const WithAudio = {
       control: "text",
       description: "URL of the audio iframe to embed in the card media slot.",
     },
+    audioHeading: {
+      control: "text",
+      description: "Heading text shown below the audio embed.",
+    },
+    audioDescription: {
+      control: "text",
+      description: "Description text shown below the audio heading.",
+    },
+    iframeTitle: {
+      control: "text",
+      description: "Accessible title for the audio iframe embed.",
+    },
   },
   args: {
     ...Default.args,
+    maxWidth: "md",
     audio:
       "https://w.soundcloud.com/player/?url=https://soundcloud.com/kelab-gklm/baby-shark-do-do-do&visual=true&buying=false&liking=false&download=false&sharing=false&show_comments=false&show_playcount=false&callback=true",
+    audioHeading: "An audio clip from SoundCloud",
+    audioDescription: "This description and the title above are optional.",
+    iframeTitle: "audio example",
   },
   render: (args) =>
     maxWidthWrapper(
@@ -206,15 +243,15 @@ export const WithAudio = {
           <div slot="media" data-rounded="top">
             <iframe
               scrolling="no"
-              title="audio example"
+              title=${args.iframeTitle}
               frameborder="no"
               allow="autoplay"
               src=${args.audio}
             ></iframe>
           </div>
           <div slot="body" class="iframe-body">
-            <h4>An audio clip from SoundCloud</h4>
-            <p>This description and the title above are optional.</p>
+            <h4>${args.audioHeading}</h4>
+            <p>${args.audioDescription}</p>
           </div>
         </cds-aichat-card>
       `,
@@ -228,11 +265,16 @@ export const OnlyVideo = {
       control: "text",
       description: "URL of the video iframe to embed in the card media slot.",
     },
+    videoTitle: {
+      control: "text",
+      description: "Accessible title for the video iframe embed.",
+    },
   },
   args: {
     ...Default.args,
     maxWidth: "md",
     video: "https://www.youtube.com/embed/QuW4_bRHbUk?si=oSsaxYKCvO_gEuzN",
+    videoTitle: "YouTube video player",
   },
   render: (args) =>
     maxWidthWrapper(
@@ -245,7 +287,7 @@ export const OnlyVideo = {
           <div slot="media" data-rounded>
             <iframe
               src=${args.video}
-              title="YouTube video player"
+              title=${args.videoTitle}
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerpolicy="strict-origin-when-cross-origin"

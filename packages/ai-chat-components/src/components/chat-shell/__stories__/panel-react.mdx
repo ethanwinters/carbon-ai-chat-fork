@@ -7,19 +7,14 @@ import * as PanelReactStories from "./panel-react.stories";
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/chat-shell) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Component API](#component-api)
-- [Feedback](#feedback)
-
-
 ## Overview
 
-The `<ChatPanel>` component wraps the `cds-aichat-panel` web component to create overlay panels that display on top of the chat interface inside React applications. Panels support priority management, animations, and flexible content layouts with header, body, and footer slots. Multiple panels can be defined, with the highest priority panel being displayed when multiple are open simultaneously.
+The `<ChatPanel>` component wraps the `cds-aichat-panel` web component to create overlay panels that display on top of the chat interface inside React applications. Panels support priority management, animations, and flexible content layouts with header, body, and footer slots.
+
+<Canvas of={PanelReactStories.Default} />
 
 Panels provide:
+
 - **Priority-based display** - Control which panel shows when multiple are open
 - **Configurable animations** - Slide-in/slide-out effects on open and close
 - **Full-width mode** - Panels can span the entire chat interface width
@@ -43,7 +38,7 @@ function ChatWithPanel() {
       <div slot="header">Chat Header</div>
       <div slot="messages">Messages</div>
       <div slot="input">Input</div>
-      
+
       <div slot="panels">
         <ChatPanel
           open={isPanelOpen}
@@ -51,7 +46,8 @@ function ChatWithPanel() {
           showFrame
           animationOnOpen="slide-in-from-bottom"
           animationOnClose="slide-out-to-bottom"
-          panelAriaLabel="Example panel">
+          panelAriaLabel="Example panel"
+        >
           <div slot="header">Panel Header</div>
           <div slot="body">Panel Content</div>
         </ChatPanel>
@@ -61,13 +57,9 @@ function ChatWithPanel() {
 }
 ```
 
-## Component API
+### Usage patterns
 
-<ArgTypes of={PanelReactStories.Default} />
-
-### Usage Patterns
-
-#### Basic Panel Toggle
+#### Basic panel toggle
 
 ```jsx
 function BasicPanelExample() {
@@ -78,11 +70,11 @@ function BasicPanelExample() {
       <div slot="header">Chat Header</div>
       <div slot="messages">
         <button onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? 'Close Panel' : 'Open Panel'}
+          {isOpen ? "Close Panel" : "Open Panel"}
         </button>
       </div>
       <div slot="input">Input Area</div>
-      
+
       <div slot="panels">
         <ChatPanel
           open={isOpen}
@@ -90,7 +82,8 @@ function BasicPanelExample() {
           showFrame
           animationOnOpen="slide-in-from-bottom"
           animationOnClose="slide-out-to-bottom"
-          panelAriaLabel="Basic panel">
+          panelAriaLabel="Basic panel"
+        >
           <div slot="header">
             <h4>Panel Header</h4>
           </div>
@@ -104,7 +97,7 @@ function BasicPanelExample() {
 }
 ```
 
-#### Full-Width Panel
+#### Full-width panel
 
 ```jsx
 function FullWidthPanelExample() {
@@ -115,7 +108,7 @@ function FullWidthPanelExample() {
       <div slot="header">Chat Header</div>
       <div slot="messages">Messages</div>
       <div slot="input">Input</div>
-      
+
       <div slot="panels">
         <ChatPanel
           open={isOpen}
@@ -124,7 +117,8 @@ function FullWidthPanelExample() {
           showFrame
           animationOnOpen="slide-in-from-bottom"
           animationOnClose="slide-out-to-bottom"
-          panelAriaLabel="Full width panel">
+          panelAriaLabel="Full width panel"
+        >
           <div slot="header">Full Width Panel</div>
           <div slot="body">
             This panel spans the entire width of the chat interface.
@@ -136,7 +130,11 @@ function FullWidthPanelExample() {
 }
 ```
 
-#### Multiple Panels with Priority
+### Multiple panels with priority
+
+`MultiplePanels` shows several preset panels toggled independently. Only one panel is visible at a time; when more than one is open, the panel with the highest `priority` wins, and ties fall back to open order.
+
+<Canvas of={PanelReactStories.MultiplePanels} />
 
 ```jsx
 function MultiPanelExample() {
@@ -155,24 +153,26 @@ function MultiPanelExample() {
         </button>
       </div>
       <div slot="input">Input</div>
-      
+
       <div slot="panels">
         <ChatPanel
           open={panel1Open}
           priority={0}
           showChatHeader
           showFrame
-          panelAriaLabel="Low priority panel">
+          panelAriaLabel="Low priority panel"
+        >
           <div slot="header">Low Priority Panel</div>
           <div slot="body">This panel has priority 0</div>
         </ChatPanel>
-        
+
         <ChatPanel
           open={panel2Open}
           priority={2}
           showChatHeader
           showFrame
-          panelAriaLabel="High priority panel">
+          panelAriaLabel="High priority panel"
+        >
           <div slot="header">High Priority Panel</div>
           <div slot="body">
             This panel has priority 2 and will display over the other panel
@@ -183,6 +183,10 @@ function MultiPanelExample() {
   );
 }
 ```
+
+## Component API
+
+<ArgTypes of={PanelReactStories.Default} />
 
 ## Feedback
 

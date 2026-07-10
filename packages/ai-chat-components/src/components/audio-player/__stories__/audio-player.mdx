@@ -1,18 +1,22 @@
-import { ArgTypes, Markdown, Meta } from "@storybook/addon-docs/blocks";
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
-import * as AudioPlayerStories from "./audio-player.stories";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./audio-player.stories";
 
-<Meta of={AudioPlayerStories} />
+<Meta of={Stories} />
 
 # Audio Player
 
-`<cds-aichat-audio-player>` provides a unified interface for playing audio from multiple sources including SoundCloud, native audio files, and more.
+[Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/audio-player) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
+
+## Overview
+
+Use `cds-aichat-audio-player` to play audio from SoundCloud or native audio files behind a single, accessible interface.
+
+<Canvas of={Stories.Default} />
 
 ## Key Features
 
 - **Multi-source support**: Automatically detects and handles SoundCloud and native audio files
-- **Accessibility**: Built-in keyboard navigation, ARIA labels, and transcript support
-- **Responsive**: Configurable aspect ratio for visual consistency
+- **Accessibility**: Built-in keyboard navigation and ARIA labels
 - **Event handling**: Custom events for play, pause, ready, and error states
 
 ## Supported Audio Sources
@@ -20,47 +24,34 @@ import * as AudioPlayerStories from "./audio-player.stories";
 The component automatically detects and handles:
 
 - **SoundCloud**: `https://soundcloud.com/...`
-- **Native files**: Direct links to `.mp3`, `.wav`, `.ogg`, `.m4a` files
-
-## Getting started
-
-Here's a quick example to get you started.
-
-```html
-<cds-aichat-audio-player
-  source="https://soundcloud.com/ibmthinkleaders/leveraging-ai-to-tackle-large-problems-being-an-optimistic-futurist-feat-kate-oneill"
-  title="Audio Title"
-  description="Audio description"
-  aria-label="Podcast episode"
->
-</cds-aichat-audio-player>
-```
-
-### JS (via import)
-
-```javascript
-import "@carbon/ai-chat-components/es/components/audio-player/index.js";
-```
-
-<Markdown>{`${cdnJs(["audio-player"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
+- **Native files**: Direct links to `.mp3`, `.wav`, `.oga`, `.m4a` files
 
 ## Events
 
 The component fires the following custom events:
 
 ```javascript
-const player = document.querySelector('cds-aichat-audio-player');
+const player = document.querySelector("cds-aichat-audio-player");
 
-player.addEventListener('cds-aichat-audio-player-ready', (event) => {
-  console.log('Audio is ready to play');
+player.addEventListener("cds-aichat-audio-player-ready", (event) => {
+  console.log("Audio is ready to play");
 });
 
-player.addEventListener('cds-aichat-audio-player-error', (event) => {
-  console.error('Audio error:', event.detail);
+player.addEventListener("cds-aichat-audio-player-error", (event) => {
+  console.error("Audio error:", event.detail);
 });
 ```
 
 ## Component API
 
-<ArgTypes of={AudioPlayerStories} />
+<ArgTypes of="cds-aichat-audio-player" />
+
+## JS (via import)
+
+```javascript
+import "@carbon/ai-chat-components/es/components/audio-player/index.js";
+```
+
+## Feedback
+
+Open an issue at https://github.com/carbon-design-system/carbon-ai-chat/issues to provide feedback or request changes.

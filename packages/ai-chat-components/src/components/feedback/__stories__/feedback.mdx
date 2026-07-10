@@ -1,57 +1,33 @@
-import { ArgTypes, Canvas, Markdown, Meta } from '@storybook/addon-docs/blocks';
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./feedback.stories";
 
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
-import * as FeedbackStories from "./feedback.stories";
-
-<Meta of={FeedbackStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={Stories} />
 
 # Feedback
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/feedback) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
 ## Overview
 
-Use `cds-aichat-feedback` to collect structured feedback on AI responses. It supports category chips, optional freeform text, prompt copy, and read-only display for previously submitted feedback.
+Use `cds-aichat-feedback` to collect structured feedback on AI responses, with category chips, optional freeform text, and read-only display for feedback already submitted.
 
-**Note:** The `show-text-area` and `show-body` attributes default to `false`. You must explicitly set them to enable the text area and body text display.
+<Canvas of={Stories.Default} />
 
-### Getting started
+### With categories
 
-Here's a quick example to get you started.
+<Canvas of={Stories.WithCategories} />
 
-```html
-<script type="module">
-  const panel = document.querySelector("cds-aichat-feedback");
-  panel.categories = ["Accurate", "Helpful", "Too verbose", "Inappropriate"];
-  panel.showTextArea = true;  // Enable text area
-  panel.addEventListener("feedback-submit", (event) => {
-    console.log("Submitted feedback:", event.detail);
-  });
-  panel.addEventListener("feedback-close", () => {
-    console.log("Closed without submitting");
-  });
-</script>
+### With disclaimer
 
-<cds-aichat-feedback
-  id="feedback-panel"
-  is-open
-  title="Tell us what you think"
-  body="Help us improve this response"
-  text-area-placeholder="What worked well? What missed the mark?"
-  secondary-label="Cancel"
-  primary-label="Submit"
-  show-text-area
-  show-body
-></cds-aichat-feedback>
-```
+<Canvas of={Stories.WithDisclaimer} />
+
+### Read-only
+
+<Canvas of={Stories.ReadOnly} />
+
+## Usage notes
+
+`show-text-area` and `show-body` default to `false`. Set them to enable the text area and body text. `disclaimer` accepts markdown, so you can link out to a privacy policy or terms.
 
 ## Component API
 
@@ -62,10 +38,6 @@ Here's a quick example to get you started.
 ```javascript
 import "@carbon/ai-chat-components/es/components/feedback/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(["feedback"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
 
 ## Feedback
 

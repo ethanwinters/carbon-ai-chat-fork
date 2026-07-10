@@ -11,9 +11,15 @@
 import React, { useState } from "react";
 import "@carbon/web-components/es/components/toggle/index.js";
 
+import { action } from "storybook/actions";
+
 import ChatShell from "../../../react/chat-shell.js";
 import ChatPanel from "../../../react/panel.js";
 import { CardFooter } from "../../../react/card.js";
+import {
+  default as PanelStoriesMeta,
+  Default as DefaultWC,
+} from "./panel.stories.js";
 import { cardFooterPresets } from "../../card/__stories__/story-data.js";
 import "./story-styles.scss";
 
@@ -40,21 +46,30 @@ const CoreSlotContent = () => (
 
 export default {
   title: "Preview/Chat shell/Panels",
-  argTypes: {
-    aiEnabled: {
-      control: "boolean",
-      description: "Enable AI-specific theming for shell",
-    },
-    showFrame: {
-      control: "boolean",
-      description: "Show visual frame around shell content",
-    },
-    roundedCorners: {
-      control: "boolean",
-      description: "Apply rounded corners to shell frame",
-    },
-  },
+  argTypes: { ...PanelStoriesMeta.argTypes },
 };
+
+// The Lit `Default` story's `showFrame`/`aiEnabled` describe the panel, but those
+// names collide with this file's shell-level `showFrame`/`aiEnabled` args, so pull
+// them out and re-add them below as `showPanelFrame`/`panelAiEnabled`.
+const {
+  showFrame: panelShowFrameArgType,
+  aiEnabled: panelAiEnabledArgType,
+  roundedCorners: _roundedCorners,
+  ...restPanelArgTypes
+} = PanelStoriesMeta.argTypes;
+
+const {
+  "@openstart": openStartArgType,
+  "@closestart": closeStartArgType,
+  "@openend": openEndArgType,
+  "@closeend": closeEndArgType,
+} = DefaultWC.argTypes;
+const {
+  showFrame: panelShowFrameDefault,
+  aiEnabled: panelAiEnabledDefault,
+  ...restPanelArgs
+} = DefaultWC.args;
 
 export const Default = {
   args: {
@@ -63,67 +78,40 @@ export const Default = {
     showFrame: true,
     roundedCorners: true,
     // Panel-specific args
-    open: true,
-    priority: 0,
-    fullWidth: false,
-    showChatHeader: true,
-    showPanelFrame: true,
-    panelAiEnabled: false,
-    animationOnOpen: "slide-in-from-bottom",
-    animationOnClose: "slide-out-to-bottom",
-    panelAriaLabel: "Configurable panel",
+    ...restPanelArgs,
+    showPanelFrame: panelShowFrameDefault,
+    panelAiEnabled: panelAiEnabledDefault,
   },
   argTypes: {
     // Panel-specific argTypes
-    open: {
-      control: "boolean",
-      description: "Panel open state",
-    },
-    priority: {
-      control: { type: "number", min: 0, max: 2, step: 1 },
-      description: "Panel priority (higher priority panels display over lower)",
-    },
-    fullWidth: {
-      control: "boolean",
-      description: "Panel spans full width of chat interface",
-    },
-    showChatHeader: {
-      control: "boolean",
-      description: "Show chat header within panel",
-    },
+    ...restPanelArgTypes,
     showPanelFrame: {
-      control: "boolean",
+      ...panelShowFrameArgType,
       description: "Show visual frame around panel content",
     },
     panelAiEnabled: {
-      control: "boolean",
+      ...panelAiEnabledArgType,
       description: "Enable AI theme for panel content",
     },
-    animationOnOpen: {
-      control: { type: "select" },
-      options: [
-        "",
-        "slide-in-from-bottom",
-        "slide-in-from-end",
-        "slide-in-from-start",
-        "fade-in",
-      ],
-      description: "Animation when panel opens",
+    onOpenStart: {
+      action: openStartArgType.action,
+      control: "none",
+      table: { category: "events" },
     },
-    animationOnClose: {
-      control: { type: "select" },
-      options: [
-        "",
-        "slide-out-to-bottom",
-        "slide-out-to-end",
-        "slide-out-to-start",
-        "fade-out",
-      ],
-      description: "Animation when panel closes",
+    onCloseStart: {
+      action: closeStartArgType.action,
+      control: "none",
+      table: { category: "events" },
     },
-    panelAriaLabel: {
-      control: "text",
-      description: "ARIA label for the panel",
+    onOpenEnd: {
+      action: openEndArgType.action,
+      control: "none",
+      table: { category: "events" },
+    },
+    onCloseEnd: {
+      action: closeEndArgType.action,
+      control: "none",
+      table: { category: "events" },
     },
   },
   render: (args) => {
@@ -140,6 +128,8 @@ export const Default = {
       animationOnOpen,
       animationOnClose,
       panelAriaLabel,
+      headerText,
+      bodyText,
     } = args;
 
     return (
@@ -160,16 +150,16 @@ export const Default = {
             animationOnOpen={animationOnOpen || undefined}
             animationOnClose={animationOnClose || undefined}
             panelAriaLabel={panelAriaLabel}
+            onOpenStart={() => action("openstart")()}
+            onCloseStart={() => action("closestart")()}
+            onOpenEnd={() => action("openend")()}
+            onCloseEnd={() => action("closeend")()}
           >
             <div slot="header">
-              <h4>Panel Header</h4>
+              <h4>{headerText}</h4>
             </div>
             <div slot="body" className="panel-sample">
-              <p>
-                This is a configurable panel embedded in the chat shell. Use the
-                controls to adjust panel properties and see how they affect the
-                display.
-              </p>
+              <p>{bodyText}</p>
               <p>
                 Toggle the "open" control to see the panel's animation behavior.
               </p>
@@ -185,7 +175,7 @@ export const Default = {
   },
 };
 
-// Panel configurations for the Embedded story
+// Panel configurations for the MultiplePanels story
 const panelConfigs = [
   {
     id: "panel-primary-full",
@@ -229,7 +219,7 @@ const panelConfigs = [
   },
 ];
 
-export const Embedded = {
+export const MultiplePanels = {
   parameters: {
     controls: { disable: true },
   },

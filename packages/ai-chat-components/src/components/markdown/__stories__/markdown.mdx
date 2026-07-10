@@ -1,27 +1,49 @@
-import { ArgTypes, Canvas, Markdown, Meta } from '@storybook/addon-docs/blocks';
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./markdown.stories";
 
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
-import * as MarkdownStories from "./markdown.stories";
-
-<Meta of={MarkdownStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={Stories} />
 
 # Markdown
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/markdown) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
 ## Overview
 
-Use `cds-aichat-markdown` to render AI responses with a predictable set of Markdown features plus optional HTML sanitization. It supports headings, lists, code blocks with language detection, tables, callouts, and custom link attributes.
+Use `cds-aichat-markdown` to render AI responses with a predictable set of Markdown features plus optional HTML sanitization. It supports headings, lists, code blocks with language detection, tables, blockquotes, and custom link attributes.
 
-### Getting started
+<Canvas of={Stories.Default} />
+
+### Streaming
+
+Renders progressively as chunks of Markdown arrive, so headings, lists, and code blocks resolve incrementally instead of waiting for the full response.
+
+<Canvas of={Stories.Streaming} />
+
+### With HTML sanitization
+
+With `sanitize-html` enabled, dangerous HTML like `<script>` tags and `onclick` attributes is removed while safe HTML is preserved.
+
+<Canvas of={Stories.WithHTMLSanitization} />
+
+### With HTML removal
+
+With `remove-html` enabled, all HTML tags are stripped, leaving only plain text and Markdown.
+
+<Canvas of={Stories.WithHTMLRemoval} />
+
+### With a markdown-it plugin
+
+Passing a `markdownItPlugins` array extends rendering with custom rules — here, `@vscode/markdown-it-katex` renders LaTeX math into a light-DOM slot.
+
+<Canvas of={Stories.WithMarkdownItPlugin} />
+
+### With a table override
+
+Registering a custom `table` renderer replaces the default `cds-aichat-table` output with a Carbon `cds-table`, and keeps it mounted while content streams in.
+
+<Canvas of={Stories.WithTableOverride} />
+
+## Usage
 
 Here's a quick example to get you started using the `markdown` attribute (recommended):
 
@@ -29,7 +51,7 @@ Here's a quick example to get you started using the `markdown` attribute (recomm
 <script>
   const markdownContent = `## Response
 
-Here is a **formatted** answer with a link to the [docs](https://carbondesignsystem.com){target=_blank rel=noopener}.
+Here is a **formatted** answer with a link to the [docs](https://carbondesignsystem.com){{target=_blank rel=noopener}}.
 
 > Remember to set your API key before calling the service.
 
@@ -40,24 +62,115 @@ Here is a **formatted** answer with a link to the [docs](https://carbondesignsys
 <cds-aichat-markdown markdown="${markdownContent}"></cds-aichat-markdown>
 ```
 
-### Using slotted content (alternative)
-
-You can also provide markdown via slotted content, though the attribute-based approach is recommended for better performance, especially when streaming content:
+You can also provide Markdown via slotted content, though the attribute-based approach is recommended for better performance, especially when streaming content:
 
 ```html
 <cds-aichat-markdown>
-## Response
-
-Here is a **formatted** answer with a link to the [docs](https://carbondesignsystem.com){target=_blank rel=noopener}.
-
-> Remember to set your API key before calling the service.
-
-* Item one
-* Item two
+  ## Response Here is a **formatted** answer with a link to the
+  [docs](https://carbondesignsystem.com){{target=_blank rel=noopener}}. >
+  Remember to set your API key before calling the service. * Item one * Item two
 </cds-aichat-markdown>
 ```
 
-**Performance Note:** The `markdown` attribute is more efficient than slotted content because it bypasses the slot change detection mechanism. This is particularly beneficial when streaming markdown content, as it reduces unnecessary DOM operations and improves rendering performance.
+The `markdown` attribute is more efficient than slotted content because it bypasses the slot change detection mechanism. This matters most when streaming Markdown content, since it reduces unnecessary DOM operations and improves rendering performance.
+
+## Markdown support
+
+The component implements [GitHub Flavored Markdown (GFM)](https://github.github.com/gfm/) with additional custom extensions. It uses [markdown-it](https://github.com/markdown-it/markdown-it) with the CommonMark preset and includes:
+
+**GFM features:**
+
+- Tables with column alignment
+- Strikethrough text (`~~text~~`)
+- Automatic URL linking
+- Line breaks
+
+**Custom extensions:**
+
+- Highlight syntax (`==text==`) with nested formatting support
+- Attribute syntax (`{{attribute=value}}`) for HTML attributes
+
+### Text formatting
+
+- **Bold** text with `**bold**` or `__bold__`
+- _Italic_ text with `*italic*` or `_italic_`
+- `Inline code` with backticks
+- ~~Strikethrough~~ with `~~text~~`
+- ==Highlighted text== with `==text==` (renders as a `<mark>` element)
+- Nesting, such as `==**bold highlight**==`, renders bold text with highlighting
+
+### Headers
+
+All six levels of headers are supported (`#` through `######`).
+
+### Lists
+
+Both ordered and unordered lists support nested items.
+
+### Links and images
+
+Standard Markdown links `[text](url)` and images `![alt](src)`.
+
+### Blockquotes
+
+> Blockquotes with `>` prefix
+
+### Code blocks
+
+Fenced code blocks with language specification:
+
+```javascript
+console.log("Hello, world!");
+```
+
+### Tables
+
+Markdown tables with alignment support:
+
+```markdown
+| Column 1 | Column 2 |
+| -------- | -------- |
+| Value 1  | Value 2  |
+```
+
+### Attribute syntax
+
+Add HTML attributes to Markdown elements using `{{attribute=value}}` syntax. Delimiters are `{{` and `}}`; allowed attributes are `target`, `rel`, `class`, and `id`.
+
+```markdown
+[External link](https://example.com){{target=_blank rel=noopener}}
+
+# Heading with ID {{id=custom-heading}}
+
+Paragraph with custom class {{class=custom-style}}
+```
+
+Only the specified attributes (`target`, `rel`, `class`, `id`) are allowed.
+
+## HTML content
+
+Set `sanitize-html` to remove potentially dangerous elements and attributes while preserving safe HTML formatting. Set `remove-html` to strip all HTML tags from the content, leaving only plain text and Markdown.
+
+## Customizing UI text
+
+All text strings used in embedded components can be customized:
+
+**Code snippet strings:**
+
+- `code-snippet-copy-button-tooltip-content`: tooltip for the copy button (default: "Copy code")
+- `code-snippet-show-more-text`: text for the expand button (default: "Show more")
+- `code-snippet-show-less-text`: text for the collapse button (default: "Show less")
+- `code-snippet-aria-label-readonly`: aria-label for read-only code snippets (default: "Code snippet")
+- `code-snippet-aria-label-editable`: aria-label for editable code snippets (default: "Code editor")
+
+**Table strings:**
+
+- `table-filter-placeholder-text`: placeholder for the table filter (default: "Filter table...")
+- `table-previous-page-text`: previous page button text (default: "Previous page")
+- `table-next-page-text`: next page button text (default: "Next page")
+- `table-items-per-page-text`: items per page label (default: "Items per page:")
+- `table-download-label-text`: label for downloading table data as CSV (default: "Download table data")
+- `table-locale`: locale for number formatting (default: "en")
 
 ## Component API
 
@@ -68,10 +181,6 @@ Here is a **formatted** answer with a link to the [docs](https://carbondesignsys
 ```javascript
 import "@carbon/ai-chat-components/es/components/markdown/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(["markdown"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
 
 ## Feedback
 

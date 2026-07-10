@@ -1,87 +1,37 @@
-import { ArgTypes, Canvas, Markdown, Meta } from '@storybook/addon-docs/blocks';
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./feedback-buttons.stories";
 
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
-import * as FeedbackButtonsStories from "./feedback-buttons.stories";
-
-<Meta of={FeedbackButtonsStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={Stories} />
 
 # Feedback buttons
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/feedback) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
 ## Overview
 
-Use `cds-aichat-feedback-buttons` when you need quick thumbs up/down capture with optional detail panels. Pair it with `cds-aichat-feedback` to collect richer follow-up when users choose a sentiment.
+Use `cds-aichat-feedback-buttons` for quick thumbs up/down capture. Pair it with `cds-aichat-feedback` to collect richer follow-up when a user picks a sentiment.
 
-### Getting started
+<Canvas of={Stories.Default} />
 
-Here's a quick example to get you started.
+### With details panel
 
-```html
-<script type="module">
-  const buttons = document.querySelector("cds-aichat-feedback-buttons");
-  const panel = document.querySelector("cds-aichat-feedback");
-
-  panel.categories = ["Inaccurate", "Unhelpful", "Inappropriate"];
-
-  buttons.addEventListener("feedback-buttons-click", (event) => {
-    const { isPositive } = event.detail;
-    if (isPositive) {
-      console.log("Positive feedback recorded");
-    } else {
-      panel.isOpen = true;
-    }
-  });
-
-  panel.addEventListener("feedback-submit", (event) => {
-    console.log("Detailed feedback:", event.detail);
-    panel.isOpen = false;
-  });
-  panel.addEventListener("feedback-close", () => {
-    panel.isOpen = false;
-  });
-</script>
-
-<cds-aichat-feedback-buttons
-  panel-id="feedback-panel-example"
-  negative-label="Thumbs down"
-  positive-label="Thumbs up"
-  has-negative-details
-></cds-aichat-feedback-buttons>
-
-<cds-aichat-feedback
-  id="feedback-panel-example"
-  title="What could be better?"
-  prompt="Share details so we can improve this response"
-  text-area-placeholder="What missed the mark?"
-  cancel-label="Close"
-  submit-label="Submit"
-  show-text-area
-  show-prompt
-></cds-aichat-feedback>
-```
+<Canvas of={Stories.WithDetailsPanel} />
 
 ## Component API
 
+## `cds-aichat-feedback-buttons`
+
 <ArgTypes of="cds-aichat-feedback-buttons" />
+
+## `cds-aichat-feedback`
+
+<ArgTypes of="cds-aichat-feedback" />
 
 ## JS (via import)
 
 ```javascript
 import "@carbon/ai-chat-components/es/components/feedback/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(["feedback"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
 
 ## Feedback
 

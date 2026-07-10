@@ -1,57 +1,37 @@
-import { ArgTypes, Canvas, Markdown, Meta } from '@storybook/addon-docs/blocks';
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
 import * as ReasoningStepsStories from "./reasoning-steps.stories";
 
-<Meta of={ReasoningStepsStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={ReasoningStepsStories} />
 
 # Reasoning steps
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/reasoning-steps) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
 ## Overview
 
-Use `cds-aichat-reasoning-steps` to present a concise chain-of-thought timeline. Each child `cds-aichat-reasoning-step` can collapse or expand, and you can let the component auto-manage state or fully control it via events when determinism is required.
+Use `cds-aichat-reasoning-steps` to present a concise chain-of-thought timeline of collapsible `cds-aichat-reasoning-step` entries, auto-managed or fully controlled via events.
 
-Pair it with `cds-aichat-reasoning-steps-toggle` if you want a ready-made control for opening and closing the wrapper.
+<Canvas of={ReasoningStepsStories.Default} />
 
-### Getting started
+### External toggle
 
-Here's a quick example to get you started.
+Pair it with `cds-aichat-reasoning-steps-toggle` for a ready-made external toggle control.
 
-```html
-<script type="module">
-  const steps = document.querySelector("cds-aichat-reasoning-steps");
-  steps.addEventListener("cds-aichat-reasoning-step-toggled", (event) => {
-    const title = event.target?.getAttribute("title") || "Reasoning step";
-    console.log(`${title} is now ${event.detail.open ? "open" : "closed"}`);
-  });
-</script>
+### With static steps
 
-<cds-aichat-reasoning-steps open>
-  <cds-aichat-reasoning-step title="Understand the request" open>
-    Parsed the prompt, captured constraints, and defined the objective.
-  </cds-aichat-reasoning-step>
-  <cds-aichat-reasoning-step title="Review retrieved context">
-    Checked docs and history for facts that support the objective.
-  </cds-aichat-reasoning-step>
-  <cds-aichat-reasoning-step title="Draft an answer">
-    Combined the prompt with trusted context and drafted a response.
-  </cds-aichat-reasoning-step>
-</cds-aichat-reasoning-steps>
-```
+Steps without body content render as a static line, useful for work that is still pending or awaiting input.
+
+<Canvas of={ReasoningStepsStories.WithStaticSteps} />
+
+### Controlled
+
+When `controlled` is set, the host application owns each step's open state and responds to `reasoning-step-beingtoggled` events.
+
+<Canvas of={ReasoningStepsStories.Controlled} />
 
 ## Component API
 
-### Reasoning steps
 <ArgTypes of="cds-aichat-reasoning-steps" />
 
 ## JS (via import)
@@ -59,10 +39,6 @@ Here's a quick example to get you started.
 ```javascript
 import "@carbon/ai-chat-components/es/components/reasoning-steps/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(["reasoning-steps", "reasoning-step"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
 
 ## Feedback
 

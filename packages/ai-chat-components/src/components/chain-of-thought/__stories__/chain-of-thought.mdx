@@ -1,44 +1,35 @@
-import { ArgTypes, Canvas, Markdown, Meta } from '@storybook/addon-docs/blocks';
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
 import * as ChainOfThoughtStories from "./chain-of-thought.stories";
 
-<Meta of={ChainOfThoughtStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={ChainOfThoughtStories} />
 
 # Chain of thought
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/chain-of-thought) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
 ## Overview
 
-Use `cds-aichat-chain-of-thought` to show the tool calls and intermediate outputs an AI agent used to reach an answer. The wrapper simply hosts slotted steps. Pair it with `cds-aichat-chain-of-thought-toggle` for the open/close control, `cds-aichat-chain-of-thought-step` for collapsible steps, and `cds-aichat-tool-call-data` to render tool input/output via slotted markdown content. Prefer `cds-aichat-reasoning-steps` for non-debugging use cases.
-
-### Getting started
-
-Here's a quick example to get you started.
+Use `cds-aichat-chain-of-thought` to show the tool calls and intermediate outputs an AI agent used to reach an answer. Pair it with `cds-aichat-chain-of-thought-toggle`, `cds-aichat-chain-of-thought-step`, and `cds-aichat-tool-call-data`; prefer `cds-aichat-reasoning-steps` for non-debugging use cases.
 
 <Canvas of={ChainOfThoughtStories.Default} />
 
 ## Component API
 
 ### Chain of thought
+
 <ArgTypes of="cds-aichat-chain-of-thought" />
 
 ### Step
+
 <ArgTypes of="cds-aichat-chain-of-thought-step" />
 
 ### Tool call data
+
 <ArgTypes of="cds-aichat-tool-call-data" />
 
 ### Toggle
+
 <ArgTypes of="cds-aichat-chain-of-thought-toggle" />
 
 ## JS (via import)
@@ -46,10 +37,6 @@ Here's a quick example to get you started.
 ```javascript
 import "@carbon/ai-chat-components/es/components/chain-of-thought/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(["chain-of-thought", "chain-of-thought-step", "tool-call-data", "chain-of-thought-toggle", "markdown"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
 
 ## Feedback
 

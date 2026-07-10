@@ -1,7 +1,16 @@
+/**
+ * @license
+ *
+ * Copyright IBM Corp. 2025, 2026
+ *
+ * This source code is licensed under the Apache-2.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 /* eslint-disable */
 import React from "react";
 import { Card, CardFooter } from "../../../react/card";
-import {
+import CardMeta, {
   Default as DefaultWC,
   WithActions as WithActionsWC,
   WithImage as WithImageWC,
@@ -14,14 +23,10 @@ import "./story-styles.scss";
 import { action } from "storybook/actions";
 import { cardFooterPresets, previewCardFooterPresets } from "./story-data";
 
-const cardContent = (
+const cardContent = (args) => (
   <div slot="body" className="standard-card">
-    <h4>AI Chat Card</h4>
-    <p>
-      The Carbon Design System provides a comprehensive library of components,
-      tokens, and guidelines. We need to implement the new AI Chat component
-      following Carbon's design principles and accessibility standards.
-    </p>
+    <h4>{args.bodyTitle}</h4>
+    <p>{args.bodyText}</p>
   </div>
 );
 
@@ -46,14 +51,14 @@ export default {
 
 export const Default = {
   argTypes: {
-    ...DefaultWC.argTypes,
+    ...CardMeta.argTypes,
   },
   args: {
     ...DefaultWC.args,
   },
   render: (args) => (
     <Card isLayered={args.isLayered} isFlush={args.isFlush}>
-      {cardContent}
+      {cardContent(args)}
     </Card>
   ),
 };
@@ -66,7 +71,7 @@ export const WithActions = {
   },
   render: (args) => (
     <Card isLayered={args.isLayered} isFlush={args.isFlush}>
-      {cardContent}
+      {cardContent(args)}
       <CardFooter
         size={args.footerSize}
         actions={cardFooterPresets[args.footerActions]}
@@ -86,9 +91,9 @@ export const WithImage = {
   render: (args) => (
     <Card isLayered={args.isLayered} isFlush={args.isFlush}>
       <div slot="media" data-rounded="top">
-        <img src={args.image} alt="Card media" />
+        <img src={args.image} alt={args.imageAlt} />
       </div>
-      {cardContent}
+      {cardContent(args)}
       <CardFooter
         size={args.footerSize}
         actions={cardFooterPresets[args.footerActions]}
@@ -108,7 +113,7 @@ export const OnlyImage = {
   render: (args) => (
     <Card isLayered={args.isLayered} isFlush={args.isFlush}>
       <div slot="media" data-rounded="">
-        <img src={args.image} alt="Card image" />
+        <img src={args.image} alt={args.imageAlt} />
       </div>
     </Card>
   ),
@@ -125,7 +130,7 @@ export const WithAudio = {
     <Card isLayered={args.isLayered} isFlush={args.isFlush}>
       <div slot="media" data-rounded="top">
         <iframe
-          title="audio example"
+          title={args.iframeTitle}
           scrolling="no"
           frameBorder="no"
           allow="autoplay"
@@ -133,8 +138,8 @@ export const WithAudio = {
         />
       </div>
       <div slot="body" className="iframe-body">
-        <h4>An audio clip from SoundCloud</h4>
-        <p>This description and the title above are optional.</p>
+        <h4>{args.audioHeading}</h4>
+        <p>{args.audioDescription}</p>
       </div>
     </Card>
   ),
@@ -151,10 +156,11 @@ export const OnlyVideo = {
     <Card isLayered={args.isLayered} isFlush={args.isFlush}>
       <div slot="media" data-rounded="">
         <iframe
-          title="video example"
+          title={args.videoTitle}
           src={args.video}
           frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerPolicy="strict-origin-when-cross-origin"
           allowFullScreen
         />
       </div>

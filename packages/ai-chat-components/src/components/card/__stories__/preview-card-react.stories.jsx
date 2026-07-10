@@ -10,7 +10,7 @@
 /* eslint-disable */
 import React, { useState, useEffect } from "react";
 import { ICON_INDICATOR_KIND } from "@carbon/web-components/es/components/icon-indicator/defs.js";
-import {
+import PreviewCardMeta, {
   Small as SmallWC,
   Default as DefaultWC,
   WithToolbar as WithToolbarWC,
@@ -68,8 +68,8 @@ export const Small = {
   render: (args) => (
     <Card isLayered={args.isLayered} isFlush={args.isFlush}>
       <div slot="body" class="preview-card preview-card-small">
-        <h4>Document title</h4>
-        <p>Subtitle</p>
+        <h4>{args.cardTitle}</h4>
+        <p>{args.cardSubtitle}</p>
       </div>
       <div slot="footer">
         <CardFooter
@@ -91,7 +91,7 @@ export const Small = {
 
 export const Default = {
   argTypes: {
-    ...DefaultWC.argTypes,
+    ...PreviewCardMeta.argTypes,
   },
   args: {
     ...DefaultWC.args,
@@ -100,9 +100,9 @@ export const Default = {
   render: (args) => (
     <Card isLayered={args.isLayered} isFlush={args.isFlush}>
       <div slot="header" className="preview-card preview-card-default">
-        <h4>Document title</h4>
-        <p>Subtitle</p>
-        <p>Subtitle</p>
+        <h4>{args.cardTitle}</h4>
+        <p>{args.cardSubtitle}</p>
+        <p>{args.cardSubtitle}</p>
       </div>
 
       <div slot="body">
@@ -152,7 +152,7 @@ export const WithToolbar = {
         >
           <div slot="title">
             <h4>
-              <span className="truncated-text">Resource consumption</span>
+              <span className="truncated-text">{args.toolbarTitle}</span>
             </h4>
           </div>
 
@@ -270,7 +270,7 @@ export const WithSteps = {
           <Toolbar className="preview-card-toolbar">
             <div slot="title">
               <div className="title-container">
-                <h4>Optimizing excess inventory</h4>
+                <h4>{args.toolbarTitle}</h4>
                 <p>{status}</p>
               </div>
             </div>

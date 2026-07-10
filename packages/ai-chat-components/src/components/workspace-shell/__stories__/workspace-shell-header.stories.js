@@ -27,10 +27,29 @@ export default {
       },
     },
     controls: {
-      exclude: /^(?!descriptionType|showAction$).*/,
+      // Only show the args a reader of this story family should touch;
+      // hides any controls Storybook infers automatically from the
+      // component's full prop surface that aren't wired up as story args.
+      include: [
+        "titleText",
+        "subTitleText",
+        "collapsible",
+        "descriptionType",
+        "showAction",
+      ],
     },
   },
   argTypes: {
+    titleText: {
+      control: "text",
+      description: "Title text for the header.",
+      table: { defaultValue: { summary: "Workspace Title" } },
+    },
+    subTitleText: {
+      control: "text",
+      description: "Subtitle text for the header.",
+      table: { defaultValue: { summary: "Workspace subtitle" } },
+    },
     collapsible: {
       control: "boolean",
       description:
@@ -64,6 +83,28 @@ export default {
   ],
 };
 
+const renderHeader = (args) => html`
+  <cds-aichat-workspace-shell-header
+    title-text="${args.titleText}"
+    subtitle-text="${args.subTitleText}"
+    ?collapsible=${args.collapsible}
+  >
+    ${args.descriptionType !== "none"
+      ? getHeaderDescription(args.descriptionType)
+      : ""}
+    ${args.showAction
+      ? html`
+          <cds-button kind="tertiary" slot="header-action">
+            Edit Plan ${iconLoader(Edit16, { slot: "icon" })}
+          </cds-button>
+        `
+      : ""}
+  </cds-aichat-workspace-shell-header>
+  <cds-aichat-workspace-shell-body>
+    ${getBodyContent("short")}
+  </cds-aichat-workspace-shell-body>
+`;
+
 export const Default = {
   args: {
     titleText: "Workspace Title",
@@ -72,180 +113,37 @@ export const Default = {
     descriptionType: "none",
     showAction: false,
   },
-  render: (args) => html`
-    <cds-aichat-workspace-shell-header
-      title-text="${args.titleText}"
-      subtitle-text="${args.subTitleText}"
-      ?collapsible=${args.collapsible}
-    >
-      ${args.descriptionType !== "none"
-        ? getHeaderDescription(args.descriptionType)
-        : ""}
-      ${args.showAction
-        ? html`
-            <cds-button kind="tertiary" slot="header-action">
-              Edit Plan ${iconLoader(Edit16, { slot: "icon" })}
-            </cds-button>
-          `
-        : ""}
-    </cds-aichat-workspace-shell-header>
-    <cds-aichat-workspace-shell-body>
-      ${getBodyContent("short")}
-    </cds-aichat-workspace-shell-body>
-  `,
+  render: renderHeader,
 };
 
 export const WithDescription = {
   args: {
+    ...Default.args,
     titleText: "Project Analysis",
     subTitleText: "Q4 2024 Performance Review",
-    collapsible: false,
     descriptionType: "basic",
-    showAction: false,
   },
-  render: (args) => html`
-    <cds-aichat-workspace-shell-header
-      title-text="${args.titleText}"
-      subtitle-text="${args.subTitleText}"
-      ?collapsible=${args.collapsible}
-    >
-      ${args.descriptionType !== "none"
-        ? getHeaderDescription(args.descriptionType)
-        : ""}
-      ${args.showAction
-        ? html`
-            <cds-button kind="tertiary" slot="header-action">
-              Edit Plan ${iconLoader(Edit16, { slot: "icon" })}
-            </cds-button>
-          `
-        : ""}
-    </cds-aichat-workspace-shell-header>
-    <cds-aichat-workspace-shell-body>
-      ${getBodyContent("short")}
-    </cds-aichat-workspace-shell-body>
-  `,
+  render: renderHeader,
 };
 
 export const WithTags = {
   args: {
+    ...Default.args,
     titleText: "Development Plan",
     subTitleText: "Sprint 23 - Feature Implementation",
-    collapsible: false,
     descriptionType: "withTags",
-    showAction: false,
   },
-  render: (args) => html`
-    <cds-aichat-workspace-shell-header
-      title-text="${args.titleText}"
-      subtitle-text="${args.subTitleText}"
-      ?collapsible=${args.collapsible}
-    >
-      ${args.descriptionType !== "none"
-        ? getHeaderDescription(args.descriptionType)
-        : ""}
-      ${args.showAction
-        ? html`
-            <cds-button kind="tertiary" slot="header-action">
-              Edit Plan ${iconLoader(Edit16, { slot: "icon" })}
-            </cds-button>
-          `
-        : ""}
-    </cds-aichat-workspace-shell-header>
-    <cds-aichat-workspace-shell-body>
-      ${getBodyContent("short")}
-    </cds-aichat-workspace-shell-body>
-  `,
-};
-
-export const WithAction = {
-  args: {
-    titleText: "Deployment Strategy",
-    subTitleText: "Production Release v2.5.0",
-    collapsible: false,
-    descriptionType: "basic",
-    showAction: true,
-  },
-  render: (args) => html`
-    <cds-aichat-workspace-shell-header
-      title-text="${args.titleText}"
-      subtitle-text="${args.subTitleText}"
-      ?collapsible=${args.collapsible}
-    >
-      ${args.descriptionType !== "none"
-        ? getHeaderDescription(args.descriptionType)
-        : ""}
-      ${args.showAction
-        ? html`
-            <cds-button kind="tertiary" slot="header-action">
-              Edit Plan ${iconLoader(Edit16, { slot: "icon" })}
-            </cds-button>
-          `
-        : ""}
-    </cds-aichat-workspace-shell-header>
-    <cds-aichat-workspace-shell-body>
-      ${getBodyContent("short")}
-    </cds-aichat-workspace-shell-body>
-  `,
-};
-
-export const Complete = {
-  args: {
-    titleText: "Complete Header Example",
-    subTitleText: "All features demonstrated",
-    collapsible: false,
-    descriptionType: "withTags",
-    showAction: true,
-  },
-  render: (args) => html`
-    <cds-aichat-workspace-shell-header
-      title-text="${args.titleText}"
-      subtitle-text="${args.subTitleText}"
-      ?collapsible=${args.collapsible}
-    >
-      ${args.descriptionType !== "none"
-        ? getHeaderDescription(args.descriptionType)
-        : ""}
-      ${args.showAction
-        ? html`
-            <cds-button kind="tertiary" slot="header-action">
-              Edit Plan ${iconLoader(Edit16, { slot: "icon" })}
-            </cds-button>
-          `
-        : ""}
-    </cds-aichat-workspace-shell-header>
-    <cds-aichat-workspace-shell-body>
-      ${getBodyContent("short")}
-    </cds-aichat-workspace-shell-body>
-  `,
+  render: renderHeader,
 };
 
 export const Collapsible = {
   args: {
+    ...Default.args,
     titleText: "Collapsible Header",
     subTitleText: "Click title to expand/collapse",
     collapsible: true,
     descriptionType: "basic",
     showAction: true,
   },
-  render: (args) => html`
-    <cds-aichat-workspace-shell-header
-      title-text="${args.titleText}"
-      subtitle-text="${args.subTitleText}"
-      ?collapsible=${args.collapsible}
-    >
-      ${args.descriptionType !== "none"
-        ? getHeaderDescription(args.descriptionType)
-        : ""}
-      ${args.showAction
-        ? html`
-            <cds-button kind="tertiary" slot="header-action">
-              Edit Plan ${iconLoader(Edit16, { slot: "icon" })}
-            </cds-button>
-          `
-        : ""}
-    </cds-aichat-workspace-shell-header>
-    <cds-aichat-workspace-shell-body>
-      ${getBodyContent("short")}
-    </cds-aichat-workspace-shell-body>
-  `,
+  render: renderHeader,
 };

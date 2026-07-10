@@ -1,11 +1,17 @@
-import { ArgTypes, Meta } from "@storybook/addon-docs/blocks";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as VideoPlayerReactStories from "./video-player-react.stories.jsx";
 
 <Meta of={VideoPlayerReactStories} />
 
 # Video Player
 
-The `<VideoPlayer>` component wraps the `cds-aichat-video-player` web component and exposes a React API for use in React applications.
+[Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/video-player) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
+
+## Overview
+
+The `<VideoPlayer>` component wraps the `cds-aichat-video-player` web component and exposes a React API for playing videos from YouTube, Vimeo, native video files, and Kaltura.
+
+<Canvas of={VideoPlayerReactStories.Default} />
 
 ## Key Features
 
@@ -23,24 +29,9 @@ The component automatically detects and handles:
 - **Native files**: Direct links to `.mp4`, `.webm`, `.ogg` files
 - **Kaltura**: Kaltura video URLs
 
-## Getting started
+## Error state
 
-Here's a quick example to get you started.
-
-```jsx
-import VideoPlayer from "@carbon/ai-chat-components/es/react/video-player.js";
-
-function VideoExample() {
-  return (
-    <VideoPlayer
-      source="https://www.youtube.com/watch?v=eZ1NizUx9U4"
-      title="Video Title"
-      description="Video description"
-      ariaLabel="Educational video"
-    />
-  );
-}
-```
+<Canvas of={VideoPlayerReactStories.ErrorState} />
 
 ## Events
 
@@ -51,11 +42,11 @@ import VideoPlayer from "@carbon/ai-chat-components/es/react/video-player.js";
 
 function VideoExample() {
   const handleReady = (event) => {
-    console.log('Video is ready to play');
+    console.log("Video is ready to play");
   };
 
   const handleError = (event) => {
-    console.error('Video error:', event.detail);
+    console.error("Video error:", event.detail);
   };
 
   return (
@@ -70,4 +61,14 @@ function VideoExample() {
 
 ## Component API
 
-<ArgTypes of={VideoPlayerReactStories} />
+<ArgTypes of={VideoPlayerReactStories.Default} />
+
+## JS (via import)
+
+```jsx
+import VideoPlayer from "@carbon/ai-chat-components/es/react/video-player.js";
+```
+
+## Feedback
+
+Open an issue at https://github.com/carbon-design-system/carbon-ai-chat/issues to provide feedback or request changes.

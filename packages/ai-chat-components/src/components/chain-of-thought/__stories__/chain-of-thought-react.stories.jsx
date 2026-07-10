@@ -1,3 +1,12 @@
+/*
+ *  Copyright IBM Corp. 2025, 2026
+ *
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ *
+ *  @license
+ */
+
 /* eslint-disable */
 import React from "react";
 import ChainOfThought from "../../../react/chain-of-thought";
@@ -5,6 +14,9 @@ import ChainOfThoughtStep from "../../../react/chain-of-thought-step";
 import ChainOfThoughtToggle from "../../../react/chain-of-thought-toggle";
 import ToolCallData from "../../../react/tool-call-data";
 import Markdown from "../../../react/markdown";
+import ChainOfThoughtWCMeta, {
+  Default as DefaultWC,
+} from "./chain-of-thought.stories";
 
 const sampleSteps = [
   {
@@ -143,40 +155,6 @@ const stepsWithDifferentStatuses = [
   },
 ];
 
-const stepsWithComplexResponses = [
-  {
-    title: "Analyze Data",
-    description:
-      "Running statistical analysis on the provided dataset to identify trends and patterns.",
-    tool_name: "data_analyzer",
-    request: {
-      args: `\`\`\`
-{
-  "dataset_id": "sales_2024_q1",
-  "metrics": ["revenue", "units_sold", "customer_count"],
-  "groupBy": "month"
-}
-\`\`\``,
-    },
-    response: {
-      content: `\`\`\`
-{
-  "summary": "Q1 2024 sales show strong performance across revenue, units, and customer acquisition.",
-  "revenue_growth_yoy": 0.23,
-  "unit_sales": 15432,
-  "new_customers": 2847,
-  "monthly_breakdown": [
-    { "month": "Jan", "revenue": "$127K", "units": 4832, "new_customers": 892 },
-    { "month": "Feb", "revenue": "$143K", "units": 5123, "new_customers": 967 },
-    { "month": "Mar", "revenue": "$156K", "units": 5477, "new_customers": 988 }
-  ]
-}
-\`\`\``,
-    },
-    status: "success",
-  },
-];
-
 const renderSteps = (steps) =>
   steps.map((step, index) => {
     const requestMarkdown = step.request?.args;
@@ -238,28 +216,11 @@ const renderChainOfThought = (args, steps) => {
 
 export default {
   title: "Components/Chain of thought",
-  argTypes: {
-    open: {
-      control: "boolean",
-      description: "Whether the chain of thought panel is open",
-    },
-    openLabelText: {
-      control: "text",
-      description: "Text when the panel is expanded",
-    },
-    closedLabelText: {
-      control: "text",
-      description: "Text for when the panel is collapsed",
-    },
-  },
+  argTypes: { ...ChainOfThoughtWCMeta.argTypes },
 };
 
 export const Default = {
-  args: {
-    open: false,
-    openLabelText: "Hide chain of thought",
-    closedLabelText: "Show chain of thought",
-  },
+  args: { ...DefaultWC.args },
   render: (args) => renderChainOfThought(args, sampleSteps),
 };
 
@@ -270,7 +231,10 @@ export const WithStepsOpen = {
     closedLabelText: "Show chain of thought",
   },
   render: (args) =>
-    renderChainOfThought(args, [{ ...sampleSteps[0], open: true }]),
+    renderChainOfThought(args, [
+      { ...sampleSteps[0], open: true },
+      ...sampleSteps.slice(1),
+    ]),
 };
 
 export const WithDifferentStatuses = {
@@ -280,13 +244,4 @@ export const WithDifferentStatuses = {
     closedLabelText: "Show chain of thought",
   },
   render: (args) => renderChainOfThought(args, stepsWithDifferentStatuses),
-};
-
-export const WithComplexResponses = {
-  args: {
-    open: true,
-    openLabelText: "Hide chain of thought",
-    closedLabelText: "Show chain of thought",
-  },
-  render: (args) => renderChainOfThought(args, stepsWithComplexResponses),
 };

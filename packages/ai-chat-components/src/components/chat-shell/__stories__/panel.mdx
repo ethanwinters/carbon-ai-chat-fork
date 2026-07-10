@@ -1,6 +1,4 @@
-import { ArgTypes, Canvas, Markdown, Meta } from '@storybook/addon-docs/blocks';
-
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as PanelStories from "./panel.stories";
 
 <Meta of={PanelStories} />
@@ -9,19 +7,14 @@ import * as PanelStories from "./panel.stories";
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/chat-shell) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
 ## Overview
 
-Use `cds-aichat-panel` to create overlay panels that display on top of the chat interface. Panels support priority management, animations, and flexible content layouts with header, body, and footer slots. Multiple panels can be defined, with the highest priority panel being displayed when multiple are open simultaneously.
+Use `cds-aichat-panel` to create overlay panels that display on top of the chat interface. Panels support priority management, animations, and flexible content layouts with header, body, and footer slots.
+
+<Canvas of={PanelStories.Default} />
 
 Panels provide:
+
 - **Priority-based display** - Control which panel shows when multiple are open
 - **Configurable animations** - Slide-in/slide-out effects on open and close
 - **Full-width mode** - Panels can span the entire chat interface width
@@ -38,20 +31,27 @@ Here's a quick example to get you started.
   <div slot="header">Chat Header</div>
   <div slot="messages">Messages</div>
   <div slot="input">Input</div>
-  
+
   <div slot="panels">
-    <cds-aichat-panel 
-      open 
-      show-chat-header 
+    <cds-aichat-panel
+      open
+      show-chat-header
       show-frame
       animation-on-open="slide-in-from-bottom"
-      animation-on-close="slide-out-to-bottom">
+      animation-on-close="slide-out-to-bottom"
+    >
       <div slot="header">Panel Header</div>
       <div slot="body">Panel Content</div>
     </cds-aichat-panel>
   </div>
 </cds-aichat-shell>
 ```
+
+### Multiple panels with priority
+
+`MultiplePanels` shows several preset panels toggled independently. Only one panel is visible at a time; when more than one is open, the panel with the highest `priority` wins, and ties fall back to open order.
+
+<Canvas of={PanelStories.MultiplePanels} />
 
 ## Component API
 
@@ -62,10 +62,6 @@ Here's a quick example to get you started.
 ```javascript
 import "@carbon/ai-chat-components/es/components/chat-shell/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(["chat-shell"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
 
 ## Feedback
 

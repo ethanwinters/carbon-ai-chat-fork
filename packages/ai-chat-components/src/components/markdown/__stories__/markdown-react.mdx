@@ -1,25 +1,49 @@
-import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
-import * as MarkdownReactStories from "./markdown-react.stories.jsx";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./markdown-react.stories.jsx";
 
-<Meta of={MarkdownReactStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={Stories} />
 
 # Markdown
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/markdown) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Component API](#component-api)
-- [Feedback](#feedback)
-
-
 ## Overview
 
-The `<Markdown>` component wraps `cds-aichat-markdown` to render rich markdown content in React applications, including syntax highlighting, interactive tables, and streaming updates.
+Use `<Markdown>` to render AI responses with a predictable set of Markdown features plus optional HTML sanitization, including syntax highlighting, interactive tables, and streaming updates.
 
-### Getting started
+<Canvas of={Stories.Default} />
+
+### Streaming
+
+Renders progressively as chunks of Markdown arrive, so headings, lists, and code blocks resolve incrementally instead of waiting for the full response.
+
+<Canvas of={Stories.Streaming} />
+
+### With HTML sanitization
+
+With `sanitizeHTML` enabled, dangerous HTML like `<script>` tags and `onclick` attributes is removed while safe HTML is preserved.
+
+<Canvas of={Stories.WithHTMLSanitization} />
+
+### With HTML removal
+
+With `removeHTML` enabled, all HTML tags are stripped, leaving only plain text and Markdown.
+
+<Canvas of={Stories.WithHTMLRemoval} />
+
+### With a markdown-it plugin
+
+Passing a `markdownItPlugins` array extends rendering with custom rules — here, `@vscode/markdown-it-katex` renders LaTeX math into a light-DOM slot.
+
+<Canvas of={Stories.WithMarkdownItPlugin} />
+
+### With a table override
+
+Registering a custom `table` renderer replaces the default `cds-aichat-table` output with a Carbon `Table`, and keeps it mounted while content streams in.
+
+<Canvas of={Stories.WithTableOverride} />
+
+## Usage
 
 Here's a quick example to get you started using the `markdown` prop (recommended):
 
@@ -27,118 +51,23 @@ Here's a quick example to get you started using the `markdown` prop (recommended
 import Markdown from "@carbon/ai-chat-components/es/react/markdown.js";
 
 function MarkdownExample({ content }) {
-  return <Markdown highlight markdown={content} />;
+  return <Markdown codeSnippetHighlight markdown={content} />;
 }
 ```
 
-### Using children (alternative)
-
-You can also provide markdown via children, though the `markdown` prop is recommended for better performance, especially when streaming content:
+You can also provide Markdown via children, though the `markdown` prop is recommended for better performance, especially when streaming content:
 
 ```jsx
 import Markdown from "@carbon/ai-chat-components/es/react/markdown.js";
 
 function MarkdownExample({ content }) {
-  return <Markdown highlight>{content}</Markdown>;
+  return <Markdown codeSnippetHighlight>{content}</Markdown>;
 }
 ```
 
-**Performance Note:** The `markdown` prop is more efficient than children because it bypasses the slot change detection mechanism. This is particularly beneficial when streaming markdown content, as it reduces unnecessary DOM operations and improves rendering performance.
+The `markdown` prop is more efficient than children because it bypasses the slot change detection mechanism. This matters most when streaming Markdown content, since it reduces unnecessary DOM operations and improves rendering performance.
 
-## Component API
-
-<ArgTypes of={MarkdownReactStories.Default} />
-
-### Markdown Support
-
-The component implements [GitHub Flavored Markdown (GFM)](https://github.github.com/gfm/) with additional custom extensions. It uses [markdown-it](https://github.com/markdown-it/markdown-it) with the CommonMark preset and includes:
-
-**GFM Features:**
-- Tables with column alignment
-- Strikethrough text (`~~text~~`)
-- Automatic URL linking
-- Line breaks
-- etc...
-
-**Custom Extensions:**
-- Highlight syntax (`==text==`) with nested formatting support
-- Attribute syntax (`{{attribute=value}}`) for HTML attributes
-
-#### Text Formatting
-
-- **Bold** text with `**bold**` or `__bold__`
-- *Italic* text with `*italic*` or `_italic_`
-- `Inline code` with backticks
-- ~~Strikethrough~~ with `~~text~~`
-- ==Highlighted text== with `==text==` (renders as `<mark>` element)
-- Supports nesting: `==**bold highlight**==` renders as bold text with highlighting
-
-#### Headers
-
-All six levels of headers are supported (`#` through `######`).
-
-#### Lists
-
-Both ordered and unordered lists with nested items.
-
-#### Links and Images
-
-Standard markdown links `[text](url)` and images `![alt](src)`.
-
-#### Blockquotes
-
-> Blockquotes with `>` prefix
-
-#### Code Blocks
-
-Fenced code blocks with language specification:
-
-\`\`\`javascript
-console.log("Hello, world!");
-\`\`\`
-
-#### Tables
-
-Markdown tables with alignment support:
-
-```markdown
-| Column 1 | Column 2 |
-|----------|----------|
-| Value 1  | Value 2  |
-```
-
-#### Attribute Syntax
-
-Add HTML attributes to markdown elements using `{{attribute=value}}` syntax:
-
-- **Delimiters**: `{{` and `}}`
-- **Allowed attributes**: `target`, `rel`, `class`, `id`
-
-Examples:
-
-```markdown
-[External link](https://example.com){{target=_blank rel=noopener}}
-
-# Heading with ID {{id=custom-heading}}
-
-Paragraph with custom class {{class=custom-style}}
-```
-
-**Security Note**: Only the specified attributes (`target`, `rel`, `class`, `id`) are allowed.
-
-### HTML Content
-
-#### Sanitization
-
-Set `sanitizeHTML` to remove potentially dangerous elements and attributes while preserving safe HTML formatting.
-
-#### Removal
-
-Set `removeHTML` to strip all HTML tags from the content, leaving only plain text and markdown.
-
-### Streaming Mode (Recommended)
-
-Use streaming mode to gradually reveal markdown content. The `markdown` prop is recommended for optimal performance:
+For streaming AI responses, append chunks to the `markdown` prop:
 
 ```jsx
 function StreamingMarkdown({ generator }) {
@@ -163,24 +92,107 @@ function StreamingMarkdown({ generator }) {
 }
 ```
 
-### Customizing UI Text
+## Markdown support
+
+The component implements [GitHub Flavored Markdown (GFM)](https://github.github.com/gfm/) with additional custom extensions. It uses [markdown-it](https://github.com/markdown-it/markdown-it) with the CommonMark preset and includes:
+
+**GFM features:**
+
+- Tables with column alignment
+- Strikethrough text (`~~text~~`)
+- Automatic URL linking
+- Line breaks
+
+**Custom extensions:**
+
+- Highlight syntax (`==text==`) with nested formatting support
+- Attribute syntax (`{{attribute=value}}`) for HTML attributes
+
+### Text formatting
+
+- **Bold** text with `**bold**` or `__bold__`
+- _Italic_ text with `*italic*` or `_italic_`
+- `Inline code` with backticks
+- ~~Strikethrough~~ with `~~text~~`
+- ==Highlighted text== with `==text==` (renders as a `<mark>` element)
+- Nesting, such as `==**bold highlight**==`, renders bold text with highlighting
+
+### Headers
+
+All six levels of headers are supported (`#` through `######`).
+
+### Lists
+
+Both ordered and unordered lists support nested items.
+
+### Links and images
+
+Standard Markdown links `[text](url)` and images `![alt](src)`.
+
+### Blockquotes
+
+> Blockquotes with `>` prefix
+
+### Code blocks
+
+Fenced code blocks with language specification:
+
+```javascript
+console.log("Hello, world!");
+```
+
+### Tables
+
+Markdown tables with alignment support:
+
+```markdown
+| Column 1 | Column 2 |
+| -------- | -------- |
+| Value 1  | Value 2  |
+```
+
+### Attribute syntax
+
+Add HTML attributes to Markdown elements using `{{attribute=value}}` syntax. Delimiters are `{{` and `}}`; allowed attributes are `target`, `rel`, `class`, and `id`.
+
+```markdown
+[External link](https://example.com){{target=_blank rel=noopener}}
+
+# Heading with ID {{id=custom-heading}}
+
+Paragraph with custom class {{class=custom-style}}
+```
+
+Only the specified attributes (`target`, `rel`, `class`, `id`) are allowed.
+
+## HTML content
+
+Set `sanitizeHTML` to remove potentially dangerous elements and attributes while preserving safe HTML formatting. Set `removeHTML` to strip all HTML tags from the content, leaving only plain text and Markdown.
+
+## Customizing UI text
 
 All text strings used in embedded components can be customized:
 
-#### Code Snippet Strings
+**Code snippet strings:**
 
-- `feedback`: Text shown after copying code (default: "Copied!")
-- `tooltipContent`: Tooltip for copy button (default: "Copy code")
-- `showMoreText`: Text for expand button (default: "Show more")
-- `showLessText`: Text for collapse button (default: "Show less")
+- `codeSnippetCopyButtonTooltipContent`: tooltip for the copy button (default: "Copy code")
+- `codeSnippetShowMoreText`: text for the expand button (default: "Show more")
+- `codeSnippetShowLessText`: text for the collapse button (default: "Show less")
+- `codeSnippetAriaLabelReadOnly`: aria-label for read-only code snippets (default: "Code snippet")
+- `codeSnippetAriaLabelEditable`: aria-label for editable code snippets (default: "Code editor")
 
-#### Table Strings
+**Table strings:**
 
-- `filterPlaceholderText`: Placeholder for table filter (default: "Filter table...")
-- `previousPageText`: Previous page button text (default: "Previous page")
-- `nextPageText`: Next page button text (default: "Next page")
-- `itemsPerPageText`: Items per page label (default: "Items per page:")
-- `locale`: Locale for number formatting (default: "en")
+- `tableFilterPlaceholderText`: placeholder for the table filter (default: "Filter table...")
+- `tablePreviousPageText`: previous page button text (default: "Previous page")
+- `tableNextPageText`: next page button text (default: "Next page")
+- `tableItemsPerPageText`: items per page label (default: "Items per page:")
+- `tableDownloadLabelText`: label for downloading table data as CSV (default: "Download table data")
+- `tableLocale`: locale for number formatting (default: "en")
+
+## Component API
+
+<ArgTypes of={Stories.Default} />
 
 ## Feedback
 

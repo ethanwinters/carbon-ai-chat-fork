@@ -1,68 +1,39 @@
 import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as CodeSnippetReactStories from "./code-snippet-react.stories";
 
-<Meta of={CodeSnippetReactStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={CodeSnippetReactStories} />
 
 # Code snippet
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/code-snippet) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Component API](#component-api)
-- [Feedback](#feedback)
-
-
 ## Overview
 
-The `<CodeSnippet>` and `<CodeSnippetCard>` components wrap the `cds-aichat-code-snippet` web component to provide syntax highlighting, streaming updates, and editable code blocks inside React applications.
+The `<CodeSnippet>` component wraps the `cds-aichat-code-snippet` web component to provide syntax highlighting, streaming updates, and editable code blocks inside React applications.
 
-### Getting started
+<Canvas of={CodeSnippetReactStories.Default} />
 
-Here's a quick example to get you started using the `code` prop (recommended):
+## Usage
 
-```jsx
-import CodeSnippet from "@carbon/ai-chat-components/es/react/code-snippet.js";
-
-function ReadOnlySnippet({ code }) {
-  return (
-    <CodeSnippet highlight code={code} />
-  );
-}
-```
-
-### Using children (alternative)
-
-You can also provide code via children, though the `code` prop is recommended for better performance, especially when streaming content:
+Pass the code through the `code` prop (recommended — it bypasses slot change detection, which matters most when streaming):
 
 ```jsx
 import CodeSnippet from "@carbon/ai-chat-components/es/react/code-snippet.js";
 
 function ReadOnlySnippet({ code }) {
-  return (
-    <CodeSnippet highlight>
-      {code}
-    </CodeSnippet>
-  );
+  return <CodeSnippet highlight code={code} />;
 }
 ```
 
-**Performance Note:** The `code` prop is more efficient than children because it bypasses the slot change detection mechanism. This is particularly beneficial when streaming code content, as it reduces unnecessary DOM operations and improves rendering performance.
+You can also pass code as children, but the `code` prop is more efficient — it bypasses slot change detection, which matters most when streaming.
 
-## Component API
+```jsx
+function ReadOnlySnippetChildren({ code }) {
+  return <CodeSnippet highlight>{code}</CodeSnippet>;
+}
+```
 
-<ArgTypes of={CodeSnippetReactStories.Default} />
-
-
-### Streaming Content
-
-Use the streaming stories to see how the component responds to real-time content updates.
-
-### Usage Patterns
-
-#### Streaming With AI Responses (Recommended)
+For streaming AI responses, append chunks to the `code` prop:
 
 ```jsx
 function StreamingSnippet({ stream }) {
@@ -75,13 +46,11 @@ function StreamingSnippet({ stream }) {
     return () => subscription.unsubscribe();
   }, [stream]);
 
-  return (
-    <CodeSnippet highlight code={content} />
-  );
+  return <CodeSnippet highlight code={content} />;
 }
 ```
 
-#### Editable Playground
+For an editable playground, add `editable` and read `onChange`:
 
 ```jsx
 function EditableSnippet() {
@@ -92,13 +61,15 @@ function EditableSnippet() {
       editable
       highlight
       code={content}
-      onChange={(event) => {
-        setContent(event.detail.value);
-      }}
+      onChange={(event) => setContent(event.detail.content)}
     />
   );
 }
 ```
+
+## Component API
+
+<ArgTypes of={CodeSnippetReactStories.Default} />
 
 ## Feedback
 

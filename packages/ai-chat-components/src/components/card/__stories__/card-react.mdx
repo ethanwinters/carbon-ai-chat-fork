@@ -1,5 +1,4 @@
-import { ArgTypes, Markdown, Meta } from "@storybook/addon-docs/blocks";
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as CardReactStories from "./card-react.stories";
 import * as PreviewCardReactStories from "./preview-card-react.stories";
 
@@ -7,7 +6,13 @@ import * as PreviewCardReactStories from "./preview-card-react.stories";
 
 # Card
 
-The `<Card>` component wraps the `cds-aichat-card` web component and exposes a React API for use in React applications.
+[Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/card) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
+
+## Overview
+
+Use `<Card>` to wrap the `cds-aichat-card` web component with a React API for slots, footer actions, and step tracking built for AI Chat surfaces.
+
+<Canvas of={CardReactStories.Default} />
 
 ## Key Features
 
@@ -24,11 +29,15 @@ The `<Card>` component wraps the `cds-aichat-card` web component and exposes a R
 By default, the card preserves the tile's default padding. Use `isFlush={true}` to remove it:
 
 ```jsx
-{/* Default: tile padding preserved */}
-<Card />
+{
+  /* Default: tile padding preserved */
+}
+<Card />;
 
-{/* Remove tile padding */}
-<Card isFlush={true} />
+{
+  /* Remove tile padding */
+}
+<Card isFlush={true} />;
 ```
 
 **For mixed content**, keep the default padding (or explicitly set `isFlush={false}`), then use `data-flush` on individual slots that should extend to the card edges:
@@ -42,10 +51,10 @@ By default, the card preserves the tile's default padding. Use `isFlush={true}` 
 
 > **Note:** When `isFlush={true}`, tile padding is removed for all slots. Adding `data-flush` to slotted content in that case would apply a redundant negative margin and push content outside the card's bounds.
 
-| Value | Description |
-| --- | --- |
-| `data-flush=""` | Removes padding on all sides |
-| `data-flush="top"` | Removes top and horizontal padding |
+| Value                 | Description                           |
+| --------------------- | ------------------------------------- |
+| `data-flush=""`       | Removes padding on all sides          |
+| `data-flush="top"`    | Removes top and horizontal padding    |
 | `data-flush="bottom"` | Removes bottom and horizontal padding |
 
 ### Slotted Content Rounding
@@ -74,7 +83,7 @@ import Card from "@carbon/ai-chat-components/es/react/card.js";
 function CardExample() {
   return (
     <Card>
-      <div class="standard-card" slot="card-body">
+      <div slot="body" className="standard-card">
         <h4>AI Chat Card</h4>
         <p>
           The Carbon Design System provides a comprehensive library of
@@ -239,7 +248,11 @@ function CardWithMultipleActions() {
 Use `CardSteps` to display multi-step processes with status indicators.
 
 ```jsx
-import { Card, CardSteps, CardFooter } from "@carbon/ai-chat-components/es/react/card.js";
+import {
+  Card,
+  CardSteps,
+  CardFooter,
+} from "@carbon/ai-chat-components/es/react/card.js";
 import { ICON_INDICATOR_KIND } from "@carbon/web-components/es/components/icon-indicator/defs.js";
 
 function CardWithSteps() {
@@ -289,6 +302,7 @@ function CardWithSteps() {
 ```
 
 **Available step kinds:**
+
 - `ICON_INDICATOR_KIND.SUCCEEDED` - Completed step
 - `ICON_INDICATOR_KIND["IN-PROGRESS"]` - Currently active step
 - `ICON_INDICATOR_KIND["NOT-STARTED"]` - Pending step
@@ -327,3 +341,7 @@ function ImageOnlyCard() {
 ## `<CardSteps>`
 
 <ArgTypes of={PreviewCardReactStories.CardStepsStory} />
+
+## Feedback
+
+Open an issue at https://github.com/carbon-design-system/carbon-ai-chat/issues to provide feedback or request changes.

@@ -98,6 +98,21 @@ export default {
       options: Object.keys(FooterActionList),
       description: "Defines the actions slot in Footer component ",
     },
+    aiLabelBodyText: {
+      control: "text",
+      description: "Body text for the AI Label callout in the toolbar.",
+      table: {
+        defaultValue: {
+          summary:
+            "IBM watsonx is powered by the latest AI models to intelligently process conversations and provide help whenever and wherever you may need it.",
+        },
+      },
+    },
+    headerActionLabel: {
+      control: "text",
+      description: "Label text for the header action button.",
+      table: { defaultValue: { summary: "Edit Plan" } },
+    },
   },
   parameters: {
     controls: {
@@ -114,6 +129,8 @@ export default {
         "autoCollapsibleHeader",
         "bodyContent",
         "footerAction",
+        "aiLabelBodyText",
+        "headerActionLabel",
       ],
     },
   },
@@ -140,6 +157,9 @@ export const Default = {
     autoCollapsibleHeader: false,
     bodyContent: "short",
     footerAction: "Three buttons with one ghost",
+    aiLabelBodyText:
+      "IBM watsonx is powered by the latest AI models to intelligently process conversations and provide help whenever and wherever you may need it.",
+    headerActionLabel: "Edit Plan",
   },
   render: (args) => {
     return html` <cds-aichat-workspace-shell
@@ -153,11 +173,7 @@ export const Default = {
       >
         <cds-ai-label autoalign="" slot="toolbar-ai-label" size="2xs">
           <div slot="body-text">
-            <p class="secondary">
-              Lorem ipsum dolor sit amet, di os consectetur adipiscing elit, sed
-              do eiusmod tempor incididunt ut fsil labore et dolore magna
-              aliqua.
-            </p>
+            <p class="secondary">${args.aiLabelBodyText}</p>
           </div>
         </cds-ai-label>
       </cds-aichat-toolbar>
@@ -177,7 +193,7 @@ export const Default = {
         ${args.showHeaderAction &&
         html`
           <cds-button kind="tertiary" slot="header-action">
-            Edit Plan ${iconLoader(Edit16, { slot: "icon" })}
+            ${args.headerActionLabel} ${iconLoader(Edit16, { slot: "icon" })}
           </cds-button>
         `}
       </cds-aichat-workspace-shell-header>

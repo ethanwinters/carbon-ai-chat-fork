@@ -1,15 +1,25 @@
+/*
+ *  Copyright IBM Corp. 2025, 2026
+ *
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ *
+ *  @license
+ */
+
 /* eslint-disable */
 import React from "react";
 import ReasoningSteps from "../../../react/reasoning-steps";
 import ReasoningStep from "../../../react/reasoning-step";
 import Markdown from "../../../react/markdown";
+import ReasoningStepWCMeta from "./reasoning-step.stories";
+import { action } from "storybook/actions";
 
-const defaultBody = (
-  <Markdown
-    markdown={`Confirmed the retrieved snippets map to the user's request and captured any
-open questions before drafting a response.`}
-  />
-);
+const {
+  "@reasoning-step-beingtoggled": _beforeToggle,
+  "@reasoning-step-toggled": _toggle,
+  ...restArgTypes
+} = ReasoningStepWCMeta.argTypes;
 
 export default {
   title: "Components/Reasoning steps/Step",
@@ -23,42 +33,26 @@ export default {
     },
   },
   argTypes: {
-    title: {
-      control: "text",
-      description: "Label displayed in the step header.",
-    },
-    open: {
-      control: "boolean",
-      description: "Whether the step is expanded.",
-    },
-    controlled: {
-      control: "boolean",
-      description:
-        "When true, the host application must update the open state in response to toggle events.",
-    },
+    ...restArgTypes,
     onBeforeToggle: {
       action: "onBeforeToggle",
+      control: "none",
       table: { category: "events" },
       description:
         "Fires before a toggle; return false to prevent the open state from changing.",
     },
     onToggle: {
       action: "onToggle",
+      control: "none",
       table: { category: "events" },
       description:
         "Emitted after a toggle request. Useful for syncing controlled state.",
     },
   },
   args: {
-    title: "Review retrieved context",
-    open: true,
-    controlled: false,
-    onBeforeToggle: (event) => {
-      console.log("onBeforeToggle", event?.detail);
-    },
-    onToggle: (event) => {
-      console.log("onToggle", event?.detail);
-    },
+    ...ReasoningStepWCMeta.args,
+    onBeforeToggle: (e) => action("onBeforeToggle")(e.detail),
+    onToggle: (e) => action("onToggle")(e.detail),
   },
 };
 
@@ -73,23 +67,13 @@ export const Default = {
           onBeforeToggle={args.onBeforeToggle}
           onToggle={args.onToggle}
         >
-          {defaultBody}
+          <Markdown markdown={args.body} />
         </ReasoningStep>
         <ReasoningStep
-          title="Awaiting attachments"
+          title={args.secondStepTitle}
           onBeforeToggle={args.onBeforeToggle}
           onToggle={args.onToggle}
         />
-      </ReasoningSteps>
-    </div>
-  ),
-};
-
-export const Static = {
-  render: () => (
-    <div style={{ maxWidth: "32rem" }}>
-      <ReasoningSteps open>
-        <ReasoningStep title="Context missing" />
       </ReasoningSteps>
     </div>
   ),

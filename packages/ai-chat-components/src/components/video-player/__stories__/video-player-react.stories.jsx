@@ -7,71 +7,70 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/* eslint-disable */
 import React from "react";
 import VideoPlayer from "../../../react/video-player";
 import Card from "../../../react/card";
+import { action } from "storybook/actions";
+import VideoPlayerMeta, {
+  Default as DefaultWC,
+  ErrorState as ErrorStateWC,
+} from "./video-player.stories";
 import "./video-player-react.stories.css";
 
-export default {
-  title: "Preview/Video player",
-  component: VideoPlayer,
-  args: {
-    source: "https://www.youtube.com/watch?v=eZ1NizUx9U4",
-    title: "Sample Video Title",
+const eventArgTypes = {
+  onPlay: {
+    action: "play",
     description:
-      "This is a sample video description that provides context about the video content.",
-    playing: false,
-    aspectRatioPercentage: 56.25,
-    ariaLabel: "Video player",
-    useCard: true,
+      VideoPlayerMeta.argTypes["@cds-aichat-video-player-play"].description,
+    control: "none",
+    table: { category: "events" },
   },
-  argTypes: {
-    source: {
-      control: "select",
-      options: [
-        "https://www.youtube.com/watch?v=eZ1NizUx9U4",
-        "https://vimeo.com/671038464",
-        "Custom URL",
-      ],
-      mapping: {
-        "https://www.youtube.com/watch?v=eZ1NizUx9U4":
-          "https://www.youtube.com/watch?v=eZ1NizUx9U4",
-        "https://vimeo.com/671038464": "https://vimeo.com/671038464",
-        "Custom URL": "",
-      },
-      description:
-        "Video source URL (YouTube, Vimeo, native video files, etc.). Select from dropdown or choose 'Custom URL' to enter your own.",
-    },
-    title: {
-      control: "text",
-      description: "Video title displayed in card body (when useCard is true)",
-    },
-    description: {
-      control: "text",
-      description:
-        "Video description displayed in card body (when useCard is true)",
-    },
-    playing: {
-      control: "boolean",
-      description: "Whether the video should be playing",
-    },
-    aspectRatioPercentage: {
-      control: { type: "number", min: 0, max: 100, step: 0.01 },
-      description:
-        "Aspect ratio as padding-top percentage (default: 56.25 for 16:9)",
-    },
-    ariaLabel: {
-      control: "text",
-      description: "ARIA label for accessibility",
-    },
-    useCard: {
-      control: "boolean",
-      description: "Wrap video player in a card component with metadata",
-    },
+  onPause: {
+    action: "pause",
+    description:
+      VideoPlayerMeta.argTypes["@cds-aichat-video-player-pause"].description,
+    control: "none",
+    table: { category: "events" },
+  },
+  onReady: {
+    action: "ready",
+    description:
+      VideoPlayerMeta.argTypes["@cds-aichat-video-player-ready"].description,
+    control: "none",
+    table: { category: "events" },
+  },
+  onError: {
+    action: "error",
+    description:
+      VideoPlayerMeta.argTypes["@cds-aichat-video-player-error"].description,
+    control: "none",
+    table: { category: "events" },
   },
 };
 
+const withoutWcEventArgTypes = (argTypes) => {
+  const {
+    "@cds-aichat-video-player-play": _play,
+    "@cds-aichat-video-player-pause": _pause,
+    "@cds-aichat-video-player-ready": _ready,
+    "@cds-aichat-video-player-error": _error,
+    ...rest
+  } = argTypes;
+  return rest;
+};
+
+export default {
+  title: "Components/Video player",
+  component: VideoPlayer,
+};
+
 export const Default = {
+  argTypes: {
+    ...withoutWcEventArgTypes(VideoPlayerMeta.argTypes),
+    ...eventArgTypes,
+  },
+  args: { ...DefaultWC.args },
   render: (args) => {
     const {
       source,
@@ -90,6 +89,10 @@ export const Default = {
         aspectRatioPercentage={aspectRatioPercentage}
         ariaLabel={ariaLabel}
         data-rounded="top"
+        onPlay={(e) => action("play")(e.detail)}
+        onPause={(e) => action("pause")(e.detail)}
+        onReady={(e) => action("ready")(e.detail)}
+        onError={(e) => action("error")(e.detail)}
       />
     ) : (
       <VideoPlayer
@@ -97,6 +100,10 @@ export const Default = {
         playing={playing}
         aspectRatioPercentage={aspectRatioPercentage}
         ariaLabel={ariaLabel}
+        onPlay={(e) => action("play")(e.detail)}
+        onPause={(e) => action("pause")(e.detail)}
+        onReady={(e) => action("ready")(e.detail)}
+        onError={(e) => action("error")(e.detail)}
       />
     );
 
@@ -116,70 +123,8 @@ export const Default = {
   },
 };
 
-export const Standalone = {
-  args: {
-    useCard: false,
-  },
-  render: (args) => {
-    const { source, playing, aspectRatioPercentage, ariaLabel } = args;
-
-    return (
-      <VideoPlayer
-        source={source}
-        playing={playing}
-        aspectRatioPercentage={aspectRatioPercentage}
-        ariaLabel={ariaLabel}
-      />
-    );
-  },
-};
-
-export const WithMetadata = {
-  args: {
-    source: "https://www.youtube.com/watch?v=eZ1NizUx9U4",
-    title: "Understanding AI and Machine Learning",
-    description:
-      "An in-depth exploration of artificial intelligence and machine learning concepts, covering neural networks, deep learning, and practical applications in modern technology.",
-    useCard: true,
-  },
-  render: (args) => {
-    const {
-      source,
-      title,
-      description,
-      playing,
-      aspectRatioPercentage,
-      ariaLabel,
-    } = args;
-
-    return (
-      <Card isFlush>
-        <div slot="media">
-          <VideoPlayer
-            source={source}
-            playing={playing}
-            aspectRatioPercentage={aspectRatioPercentage}
-            ariaLabel={ariaLabel}
-            data-rounded="top"
-          />
-        </div>
-        <div slot="body" className="video-player-card-body">
-          <h4 className="video-player-card-title">{title}</h4>
-          <p className="video-player-card-description">{description}</p>
-        </div>
-      </Card>
-    );
-  },
-};
-
 export const ErrorState = {
-  args: {
-    source: "https://invalid-url-that-will-cause-error.com/video.mp4",
-    title: "Error State Example",
-    description:
-      "This demonstrates the error state when a video fails to load.",
-    useCard: true,
-  },
+  args: { ...ErrorStateWC.args },
   render: (args) => {
     const {
       source,
@@ -199,6 +144,10 @@ export const ErrorState = {
             aspectRatioPercentage={aspectRatioPercentage}
             ariaLabel={ariaLabel}
             data-rounded="top"
+            onPlay={(e) => action("play")(e.detail)}
+            onPause={(e) => action("pause")(e.detail)}
+            onReady={(e) => action("ready")(e.detail)}
+            onError={(e) => action("error")(e.detail)}
           />
         </div>
         <div slot="body" className="video-player-card-body">

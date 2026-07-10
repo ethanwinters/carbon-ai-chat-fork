@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -10,6 +10,7 @@
 import "../src/feedback-buttons";
 import "../src/feedback";
 import { LitElement, css, html, nothing } from "lit";
+import { action } from "storybook/actions";
 
 const positiveCategories = [
   "Accurate",
@@ -47,6 +48,38 @@ class FeedbackButtonsDetailsDemo extends LitElement {
       type: String,
       attribute: "negative-label",
     },
+    positivePanelTitle: {
+      type: String,
+      attribute: "positive-panel-title",
+    },
+    negativePanelTitle: {
+      type: String,
+      attribute: "negative-panel-title",
+    },
+    positivePanelPrompt: {
+      type: String,
+      attribute: "positive-panel-prompt",
+    },
+    negativePanelPrompt: {
+      type: String,
+      attribute: "negative-panel-prompt",
+    },
+    positiveTextAreaPlaceholder: {
+      type: String,
+      attribute: "positive-text-area-placeholder",
+    },
+    negativeTextAreaPlaceholder: {
+      type: String,
+      attribute: "negative-text-area-placeholder",
+    },
+    cancelLabel: {
+      type: String,
+      attribute: "cancel-label",
+    },
+    submitLabel: {
+      type: String,
+      attribute: "submit-label",
+    },
   };
 
   static styles = css`
@@ -73,6 +106,14 @@ class FeedbackButtonsDetailsDemo extends LitElement {
     this.panelId = "feedback-panel-demo";
     this.positiveLabel = "Thumbs up";
     this.negativeLabel = "Thumbs down";
+    this.positivePanelTitle = "Tell us what worked";
+    this.negativePanelTitle = "Tell us what went wrong";
+    this.positivePanelPrompt = "Share what made this response helpful.";
+    this.negativePanelPrompt = "Share what missed the mark so we can improve.";
+    this.positiveTextAreaPlaceholder = "What worked well?";
+    this.negativeTextAreaPlaceholder = "How could this be improved?";
+    this.cancelLabel = "Cancel";
+    this.submitLabel = "Submit";
 
     this._isFeedbackSubmitted = false;
     this._isPositiveSelected = false;
@@ -125,9 +166,15 @@ class FeedbackButtonsDetailsDemo extends LitElement {
     const label = isPositive ? "positive" : "negative";
     const isOpen = isPositive ? this._isPositiveOpen : this._isNegativeOpen;
     const categories = isPositive ? positiveCategories : negativeCategories;
+    const title = isPositive
+      ? this.positivePanelTitle
+      : this.negativePanelTitle;
+    const prompt = isPositive
+      ? this.positivePanelPrompt
+      : this.negativePanelPrompt;
     const placeholder = isPositive
-      ? "What worked well?"
-      : "How could this be improved?";
+      ? this.positiveTextAreaPlaceholder
+      : this.negativeTextAreaPlaceholder;
 
     return html`
       <cds-aichat-feedback
@@ -137,15 +184,13 @@ class FeedbackButtonsDetailsDemo extends LitElement {
         ?is-readonly=${this._isFeedbackSubmitted}
         .categories=${categories}
         .initialValues=${this._feedbackInitialValues(isPositive)}
-        title=${isPositive ? "Tell us what worked" : "Tell us what went wrong"}
-        prompt=${isPositive
-          ? "Share what made this response helpful."
-          : "Share what missed the mark so we can improve."}
+        title=${title}
+        body=${prompt}
         text-area-placeholder=${placeholder}
-        cancel-label="Close"
-        submit-label="Submit"
+        cancel-label=${this.cancelLabel}
+        primary-label=${this.submitLabel}
         show-text-area
-        show-prompt
+        show-body
         @feedback-close=${() => this._handlePanelClose(isPositive)}
         @feedback-submit=${(event) =>
           this._handlePanelSubmit(isPositive, event.detail)}
@@ -252,7 +297,7 @@ if (
 }
 
 export default {
-  title: "Preview/Feedback/Buttons",
+  title: "Components/Feedback/Buttons",
   component: "cds-aichat-feedback-buttons",
   argTypes: {
     isPositiveSelected: {
@@ -305,6 +350,54 @@ export default {
       description: "ID of the associated feedback panel",
       table: { disable: true },
     },
+    positivePanelTitle: {
+      control: "text",
+      description: "Title of the positive feedback details panel",
+      table: { disable: true },
+    },
+    negativePanelTitle: {
+      control: "text",
+      description: "Title of the negative feedback details panel",
+      table: { disable: true },
+    },
+    positivePanelPrompt: {
+      control: "text",
+      description: "Prompt text shown in the positive feedback details panel",
+      table: { disable: true },
+    },
+    negativePanelPrompt: {
+      control: "text",
+      description: "Prompt text shown in the negative feedback details panel",
+      table: { disable: true },
+    },
+    positiveTextAreaPlaceholder: {
+      control: "text",
+      description:
+        "Text area placeholder in the positive feedback details panel",
+      table: { disable: true },
+    },
+    negativeTextAreaPlaceholder: {
+      control: "text",
+      description:
+        "Text area placeholder in the negative feedback details panel",
+      table: { disable: true },
+    },
+    cancelLabel: {
+      control: "text",
+      description: "Label for the close button in the details panel",
+      table: { disable: true },
+    },
+    submitLabel: {
+      control: "text",
+      description: "Label for the submit button in the details panel",
+      table: { disable: true },
+    },
+    "@feedback-buttons-click": {
+      action: "feedback-buttons-click",
+      table: { category: "events" },
+      description:
+        "Fires when a button is clicked. `event.detail.isPositive` indicates which button.",
+    },
   },
 };
 
@@ -329,11 +422,8 @@ export const Default = {
         ?is-negative-disabled=${args.isNegativeDisabled}
         positive-label=${args.positiveLabel}
         negative-label=${args.negativeLabel}
-        @feedback-buttons-click=${(event) => {
-          const { isPositive } = event.detail;
-          console.log(`${isPositive ? "Positive" : "Negative"} button clicked`);
-          alert(`${isPositive ? "Positive" : "Negative"} feedback recorded!`);
-        }}
+        @feedback-buttons-click=${(e) =>
+          action("feedback-buttons-click")(e.detail)}
       >
       </cds-aichat-feedback-buttons>
     </div>
@@ -347,6 +437,14 @@ export const WithDetailsPanel = {
     panelID: "feedback-panel-example",
     hasPositiveDetails: true,
     hasNegativeDetails: true,
+    positivePanelTitle: "Tell us what worked",
+    negativePanelTitle: "Tell us what went wrong",
+    positivePanelPrompt: "Share what made this response helpful.",
+    negativePanelPrompt: "Share what missed the mark so we can improve.",
+    positiveTextAreaPlaceholder: "What worked well?",
+    negativeTextAreaPlaceholder: "How could this be improved?",
+    cancelLabel: "Cancel",
+    submitLabel: "Submit",
   },
   argTypes: {
     // Show panel-related properties in the table but make them read-only
@@ -365,6 +463,48 @@ export const WithDetailsPanel = {
       description: "ID of the associated feedback panel",
       table: { disable: false },
     },
+    positivePanelTitle: {
+      control: "text",
+      description: "Title of the positive feedback details panel",
+      table: { disable: false },
+    },
+    negativePanelTitle: {
+      control: "text",
+      description: "Title of the negative feedback details panel",
+      table: { disable: false },
+    },
+    positivePanelPrompt: {
+      control: "text",
+      description: "Prompt text shown in the positive feedback details panel",
+      table: { disable: false },
+    },
+    negativePanelPrompt: {
+      control: "text",
+      description: "Prompt text shown in the negative feedback details panel",
+      table: { disable: false },
+    },
+    positiveTextAreaPlaceholder: {
+      control: "text",
+      description:
+        "Text area placeholder in the positive feedback details panel",
+      table: { disable: false },
+    },
+    negativeTextAreaPlaceholder: {
+      control: "text",
+      description:
+        "Text area placeholder in the negative feedback details panel",
+      table: { disable: false },
+    },
+    cancelLabel: {
+      control: "text",
+      description: "Label for the close button in the details panel",
+      table: { disable: false },
+    },
+    submitLabel: {
+      control: "text",
+      description: "Label for the submit button in the details panel",
+      table: { disable: false },
+    },
   },
   render: (args) => html`
     <div style="padding: 2rem;">
@@ -378,6 +518,14 @@ export const WithDetailsPanel = {
         negative-label=${args.negativeLabel}
         ?has-positive-details=${args.hasPositiveDetails}
         ?has-negative-details=${args.hasNegativeDetails}
+        positive-panel-title=${args.positivePanelTitle}
+        negative-panel-title=${args.negativePanelTitle}
+        positive-panel-prompt=${args.positivePanelPrompt}
+        negative-panel-prompt=${args.negativePanelPrompt}
+        positive-text-area-placeholder=${args.positiveTextAreaPlaceholder}
+        negative-text-area-placeholder=${args.negativeTextAreaPlaceholder}
+        cancel-label=${args.cancelLabel}
+        submit-label=${args.submitLabel}
       ></cds-aichat-feedback-buttons-demo>
     </div>
   `,

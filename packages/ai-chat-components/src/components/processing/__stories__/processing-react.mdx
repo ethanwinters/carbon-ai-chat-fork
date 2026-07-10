@@ -1,30 +1,27 @@
-import { ArgTypes, Markdown, Meta } from "@storybook/addon-docs/blocks";
-import * as ProcessingReactStories from "./processing-react.stories.jsx";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./processing-react.stories.jsx";
 
-<Meta
-  of={ProcessingReactStories}
-  parameters={{
-    previewTabs: { "storybook/docs/panel": { title: "Overview" } },
-  }}
-/>
+<Meta of={Stories} />
 
 # Processing
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/processing) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Component API](#component-api)
-- [Feedback](#feedback)
-
 ## Overview
 
-Use `<Processing>` to show a compact AI loading indicator in React while work completes. By default the dots wait ~1s before animating in, so quick operations don't flash an indicator; pass `quickLoad` to skip that delay and show them immediately. Use `loop` for ongoing work, or let it play once when you don't need it to loop.
+Use `<Processing>` to show a compact AI loading indicator in React while work completes.
 
-### Getting started
+<Canvas of={Stories.Default} />
 
-Here's a quick example to get you started.
+## Usage
+
+By default the dots wait ~1s before animating in, so quick operations don't flash an indicator; pass `quickLoad` to skip that delay and show them immediately. Use `loop` for ongoing work, or let it play once when you don't need it to loop.
+
+## Component API
+
+<ArgTypes of={Stories.Default} />
+
+## JS (via import)
 
 ```jsx
 import Processing from "@carbon/ai-chat-components/es/react/processing.js";
@@ -37,15 +34,6 @@ function InstantProgress() {
   return <Processing loop quickLoad />;
 }
 ```
-
-## Component API
-
-<ArgTypes of={ProcessingReactStories.QuickLoad} />
-
-#### Props
-
-- `loop`: Enables the continuous linear animation. When omitted, the animation plays once.
-- `quickLoad`: Removes the ~1s entry delay so the dots appear immediately. Composes with `loop`.
 
 ## Feedback
 

@@ -63,12 +63,22 @@ export const Small = {
       description:
         "Toggles display of the AI label decorator, which shows AI-powered content.",
     },
+    cardTitle: {
+      control: "text",
+      description: "Title text rendered in the card's body slot.",
+    },
+    cardSubtitle: {
+      control: "text",
+      description: "Subtitle text rendered in the card's body slot.",
+    },
   },
   args: {
     ...CardDefault.args,
     isFlush: true,
     footerActions: "2 ghost icon buttons",
     aiLabel: true,
+    cardTitle: "Document title",
+    cardSubtitle: "Subtitle",
   },
   render: (args) =>
     maxWidthWrapper(
@@ -79,8 +89,8 @@ export const Small = {
           ?is-flush=${args.isFlush}
         >
           <div slot="body" class="preview-card preview-card-small">
-            <h4>Document title</h4>
-            <p>Subtitle</p>
+            <h4>${args.cardTitle}</h4>
+            <p>${args.cardSubtitle}</p>
           </div>
           ${args.footerActions
             ? html`
@@ -127,9 +137,9 @@ export const Default = {
           ?is-flush=${args.isFlush}
         >
           <div slot="header" class="preview-card preview-card-default">
-            <h4>Document title</h4>
-            <p>Subtitle</p>
-            <p>Subtitle</p>
+            <h4>${args.cardTitle}</h4>
+            <p>${args.cardSubtitle}</p>
+            <p>${args.cardSubtitle}</p>
           </div>
           <div slot="body">
             <br />
@@ -173,6 +183,10 @@ export const WithToolbar = {
       control: "boolean",
       description: "Toggles display of the AI label in the toolbar area.",
     },
+    toolbarTitle: {
+      control: "text",
+      description: "Title text rendered in the card's toolbar area.",
+    },
   },
   args: {
     isLayered: false,
@@ -180,6 +194,7 @@ export const WithToolbar = {
     maxWidth: "lg",
     footerActions: "none",
     aiLabel: true,
+    toolbarTitle: "Resource consumption",
   },
   render: (args) =>
     maxWidthWrapper(
@@ -197,7 +212,7 @@ export const WithToolbar = {
             >
               <div slot="title">
                 <h4>
-                  <span class="truncated-text"> Resource consumption </span>
+                  <span class="truncated-text"> ${args.toolbarTitle} </span>
                 </h4>
               </div>
               <!-- AI Label slot -->
@@ -246,6 +261,7 @@ export const WithSteps = {
     ...WithToolbar.args,
     isFlush: true,
     footerActions: "1 ghost button with icon",
+    toolbarTitle: "Optimizing excess inventory",
   },
   render: (args) => {
     const steps = [
@@ -329,7 +345,7 @@ export const WithSteps = {
             <cds-aichat-toolbar class="preview-card-toolbar">
               <div slot="title">
                 <div class="title-container">
-                  <h4>Optimising excess inventory</h4>
+                  <h4>${args.toolbarTitle}</h4>
                   <p id="status-label">Status: running</p>
                 </div>
               </div>

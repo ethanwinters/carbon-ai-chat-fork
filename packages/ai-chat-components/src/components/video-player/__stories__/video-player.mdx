@@ -1,12 +1,17 @@
-import { ArgTypes, Markdown, Meta } from "@storybook/addon-docs/blocks";
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as VideoPlayerStories from "./video-player.stories";
 
 <Meta of={VideoPlayerStories} />
 
 # Video Player
 
-`<cds-aichat-video-player>` provides a unified interface for playing videos from multiple sources including YouTube, Vimeo, native video files, and more.
+[Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/video-player) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
+
+## Overview
+
+Use `cds-aichat-video-player` to play videos from YouTube, Vimeo, native video files, and Kaltura behind a single, accessible interface.
+
+<Canvas of={VideoPlayerStories.Default} />
 
 ## Key Features
 
@@ -24,45 +29,36 @@ The component automatically detects and handles:
 - **Native files**: Direct links to `.mp4`, `.webm`, `.ogg` files
 - **Kaltura**: Kaltura video URLs
 
-## Getting started
+## Error state
 
-Here's a quick example to get you started.
-
-```html
-<cds-aichat-video-player
-  source="https://www.youtube.com/watch?v=eZ1NizUx9U4"
-  title="Video Title"
-  description="Video description"
-  aria-label="Educational video"
->
-</cds-aichat-video-player>
-```
-
-### JS (via import)
-
-```javascript
-import "@carbon/ai-chat-components/es/components/video-player/index.js";
-```
-
-<Markdown>{`${cdnJs(["video-player"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
+<Canvas of={VideoPlayerStories.ErrorState} />
 
 ## Events
 
 The component fires the following custom events:
 
 ```javascript
-const player = document.querySelector('cds-aichat-video-player');
+const player = document.querySelector("cds-aichat-video-player");
 
-player.addEventListener('cds-aichat-video-player-ready', (event) => {
-  console.log('Video is ready to play');
+player.addEventListener("cds-aichat-video-player-ready", (event) => {
+  console.log("Video is ready to play");
 });
 
-player.addEventListener('cds-aichat-video-player-error', (event) => {
-  console.error('Video error:', event.detail);
+player.addEventListener("cds-aichat-video-player-error", (event) => {
+  console.error("Video error:", event.detail);
 });
 ```
 
 ## Component API
 
-<ArgTypes of={VideoPlayerStories} />
+<ArgTypes of="cds-aichat-video-player" />
+
+## JS (via import)
+
+```javascript
+import "@carbon/ai-chat-components/es/components/video-player/index.js";
+```
+
+## Feedback
+
+Open an issue at https://github.com/carbon-design-system/carbon-ai-chat/issues to provide feedback or request changes.

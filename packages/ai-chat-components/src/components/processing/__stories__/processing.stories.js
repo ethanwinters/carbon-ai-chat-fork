@@ -14,54 +14,35 @@ export default {
   title: "Components/Processing",
   component: "cds-aichat-processing",
 };
-const argTypes = {
-  loop: Boolean,
-  quickLoad: Boolean,
-  carbonTheme: {
-    control: { type: "select" },
-    options: ["g100", "g90", "g10", "white"],
-  },
-};
-export const QuickLoad = {
-  args: {
-    quickLoad: true,
-    loop: true,
-    carbonTheme: "g10",
-  },
-  argTypes: argTypes,
-  render: (args) =>
-    html`<cds-aichat-processing
-      ?quick-load=${args.quickLoad}
-      ?loop=${args.loop}
-      carbonTheme=${args.carbonTheme}
-    />`,
-};
 
-export const LinearLoop = {
+export const Default = {
+  argTypes: {
+    loop: {
+      control: "boolean",
+      description:
+        "Enables the continuous linear animation. When disabled, the animation plays once.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    quickLoad: {
+      control: "boolean",
+      description:
+        "Removes the ~1s entry delay so the dots appear immediately. Composes with loop.",
+      table: { defaultValue: { summary: "false" } },
+    },
+  },
   args: {
     loop: true,
-    carbonTheme: "g10",
+    quickLoad: false,
   },
-  argTypes: argTypes,
   render: (args) =>
     html`<cds-aichat-processing
       ?quick-load=${args.quickLoad}
       ?loop=${args.loop}
-      carbonTheme=${args.carbonTheme}
     />`,
 };
 
 export const LinearNoLoop = {
-  args: {
-    loop: false,
-    carbonTheme: "g10",
-  },
-  argTypes: argTypes,
-  render: (args) => {
-    return html` <cds-aichat-processing
-      ?quick-load=${args.quickLoad}
-      ?loop=${args.loop}
-      carbonTheme=${args.carbonTheme}
-    />`;
-  },
+  args: { ...Default.args, loop: false },
+  argTypes: Default.argTypes,
+  render: Default.render,
 };

@@ -7,15 +7,10 @@
  *
  *  @license
  */
-import React, { useMemo } from "react";
+import React from "react";
 import { action } from "storybook/actions";
 import CDSAIChatAutocomplete from "../../../react/autocomplete";
-import {
-  Default as DefaultWC,
-  WithHeader as WithHeaderWC,
-  WithCategories as WithCategoriesWC,
-  Detached as DetachedWC,
-} from "./autocomplete.stories";
+import AutocompleteMeta, { Default as DefaultWC } from "./autocomplete.stories";
 import {
   BookAvatarIcon,
   ChartLineAvatarIcon,
@@ -144,55 +139,30 @@ const filterSuggestionGroups = (groups, query) => {
 
 export default {
   title: "Preview/Autocomplete",
-  argTypes: {
-    inputText: {
-      control: "text",
-      description:
-        "The current input text. Suggestion items will apply styling to indicate what user has already typed.",
-    },
-    enableSendButton: {
-      control: "boolean",
-      description: "Whether to enable the send button",
-    },
-    attached: {
-      control: "boolean",
-      description:
-        "Whether the autocomplete is attached to another element (e.g., an input field). When true, the bottom corners will not be rounded.",
-    },
-  },
-  args: {
-    inputText: "",
-    enableSendButton: true,
-    attached: true,
-  },
+  component: CDSAIChatAutocomplete,
 };
 
 export const Default = {
-  render: (args) => {
-    const query = args.inputText || "";
-    const filteredItems = React.useMemo(
-      () => filterSuggestions(flatSuggestions, query),
-      [query],
-    );
-
-    return (
-      <Wrapper width="320px">
-        <CDSAIChatAutocomplete
-          items={filteredItems}
-          inputText={query}
-          attached={args.attached ?? true}
-          enableSendButton={args.enableSendButton ?? true}
-          style={{ "--cds-aichat-autocomplete-max-height": "328px" }}
-          onSelect={(e) => action("cds-aichat-autocomplete-select")(e.detail)}
-          onSend={(e) => action("cds-aichat-autocomplete-send")(e.detail)}
-          onDismiss={() => action("cds-aichat-autocomplete-dismiss")()}
-        />
-      </Wrapper>
-    );
+  argTypes: {
+    ...AutocompleteMeta.argTypes,
+    onSelect: {
+      action: "onSelect",
+      table: { category: "events" },
+      description: "Fired when a suggestion item is selected.",
+    },
+    onSend: {
+      action: "onSend",
+      table: { category: "events" },
+      description:
+        "Fired when the send button is clicked for a suggestion item.",
+    },
+    onDismiss: {
+      action: "onDismiss",
+      table: { category: "events" },
+      description: "Fired when the autocomplete panel is dismissed.",
+    },
   },
-};
-
-export const WithHeader = {
+  args: { ...DefaultWC.args },
   render: (args) => {
     const query = args.inputText || "";
     const filteredItems = React.useMemo(
@@ -205,8 +175,8 @@ export const WithHeader = {
         <CDSAIChatAutocomplete
           items={filteredItems}
           headerConfig={{
-            showHeader: true,
-            title: "Prompt suggestions",
+            showHeader: args.showHeader,
+            title: args.headerTitle,
           }}
           inputText={query}
           attached={args.attached ?? true}
@@ -222,6 +192,8 @@ export const WithHeader = {
 };
 
 export const WithCategories = {
+  argTypes: { ...Default.argTypes },
+  args: { ...Default.args },
   render: (args) => {
     const query = args.inputText || "";
     const filteredGroups = React.useMemo(
@@ -233,6 +205,10 @@ export const WithCategories = {
       <Wrapper width="320px">
         <CDSAIChatAutocomplete
           groups={filteredGroups}
+          headerConfig={{
+            showHeader: args.showHeader,
+            title: args.headerTitle,
+          }}
           inputText={query}
           attached={args.attached ?? true}
           enableSendButton={args.enableSendButton ?? true}
@@ -247,9 +223,8 @@ export const WithCategories = {
 };
 
 export const Detached = {
-  args: {
-    attached: false,
-  },
+  argTypes: { ...Default.argTypes },
+  args: { ...Default.args, attached: false },
   render: (args) => {
     const query = args.inputText || "";
     const filteredItems = React.useMemo(
@@ -261,6 +236,10 @@ export const Detached = {
       <Wrapper width="671px">
         <CDSAIChatAutocomplete
           items={filteredItems}
+          headerConfig={{
+            showHeader: args.showHeader,
+            title: args.headerTitle,
+          }}
           inputText={query}
           attached={args.attached ?? false}
           enableSendButton={args.enableSendButton ?? true}

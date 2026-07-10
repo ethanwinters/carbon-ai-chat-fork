@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -41,32 +41,60 @@ export default {
     title: {
       control: "text",
       description: "Label displayed in the step header.",
+      table: { defaultValue: { summary: "Check recent incidents" } },
     },
     status: {
       control: "select",
       options: ["success", "failure", "processing"],
       description: "Status indicator for the step.",
+      table: { defaultValue: { summary: "success" } },
     },
     open: {
       control: "boolean",
       description: "Whether the step is expanded.",
+      table: { defaultValue: { summary: "true" } },
     },
     controlled: {
       control: "boolean",
       description:
         "When true, the host application must update the open state in response to toggle events.",
+      table: { defaultValue: { summary: "false" } },
     },
     statusSucceededLabelText: {
       control: "text",
       description: "Assistive text when a step has succeeded.",
+      table: { defaultValue: { summary: "Succeeded" } },
     },
     statusFailedLabelText: {
       control: "text",
       description: "Assistive text when a step failed.",
+      table: { defaultValue: { summary: "Failed" } },
     },
     statusProcessingLabelText: {
       control: "text",
       description: "Assistive text when a step is processing.",
+      table: { defaultValue: { summary: "Processing" } },
+    },
+    secondStepTitle: {
+      control: "text",
+      description: "Label displayed in the second step's header.",
+      table: { defaultValue: { summary: "Awaiting confirmation" } },
+    },
+    toolName: {
+      control: "text",
+      description: "Plain text name of the tool invoked by the first step.",
+      table: { defaultValue: { summary: "incident_lookup" } },
+    },
+    toolDescription: {
+      control: "text",
+      description:
+        "Description text rendered in the first step's tool call data.",
+      table: {
+        defaultValue: {
+          summary:
+            "Look up recent outages affecting the EU region before escalating.",
+        },
+      },
     },
   },
   args: {
@@ -77,6 +105,10 @@ export default {
     statusSucceededLabelText: "Succeeded",
     statusFailedLabelText: "Failed",
     statusProcessingLabelText: "Processing",
+    secondStepTitle: "Awaiting confirmation",
+    toolName: "incident_lookup",
+    toolDescription:
+      "Look up recent outages affecting the EU region before escalating.",
   },
 };
 
@@ -93,10 +125,10 @@ export const Default = {
         status-processing-label-text=${args.statusProcessingLabelText}
         step-number="1"
       >
-        <cds-aichat-tool-call-data tool-name="incident_lookup">
+        <cds-aichat-tool-call-data tool-name=${args.toolName}>
           <cds-aichat-markdown
             slot="description"
-            .markdown=${"Look up recent outages affecting the EU region before escalating."}
+            .markdown=${args.toolDescription}
           ></cds-aichat-markdown>
           <cds-aichat-markdown
             slot="input"
@@ -109,7 +141,7 @@ export const Default = {
         </cds-aichat-tool-call-data>
       </cds-aichat-chain-of-thought-step>
       <cds-aichat-chain-of-thought-step
-        title="Awaiting confirmation"
+        title=${args.secondStepTitle}
         status="processing"
         step-number="2"
       >

@@ -1,5 +1,4 @@
-import { ArgTypes, Markdown, Meta, Canvas } from "@storybook/addon-docs/blocks";
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
+import { ArgTypes, Meta, Canvas } from "@storybook/addon-docs/blocks";
 import * as CardStories from "./card.stories";
 import * as PreviewCardStories from "./preview-card.stories";
 
@@ -7,7 +6,13 @@ import * as PreviewCardStories from "./preview-card.stories";
 
 # Card
 
-`<cds-aichat-card>` is an extension of the Carbon Design System’s `<cds-tile>` component, designed specifically for AI Chat applications.
+[Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/card) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
+
+## Overview
+
+Use `cds-aichat-card` to extend Carbon Design System's `<cds-tile>` with slots, footer actions, and step tracking built for AI Chat surfaces.
+
+<Canvas of={CardStories.Default} />
 
 ## Key Features
 
@@ -19,7 +24,7 @@ import * as PreviewCardStories from "./preview-card.stories";
 
 > ** For detailed information about the modifier system (`data-rounded`, `data-stacked`) and CSS custom properties, see [Styling & Modifiers](/docs/introduction-styling-modifiers--overview).**
 
-### Padding Control
+### Padding control
 
 By default, the card preserves the tile's default padding. Use `is-flush="true"` to remove it:
 
@@ -42,13 +47,13 @@ By default, the card preserves the tile's default padding. Use `is-flush="true"`
 
 > **Note:** When `is-flush="true"`, tile padding is removed for all slots. Adding `data-flush` to slotted content in that case would apply a redundant negative margin and push content outside the card's bounds.
 
-| Value | Description |
-| --- | --- |
-| `data-flush=""` | Removes padding on all sides |
-| `data-flush="top"` | Removes top and horizontal padding |
+| Value                 | Description                           |
+| --------------------- | ------------------------------------- |
+| `data-flush=""`       | Removes padding on all sides          |
+| `data-flush="top"`    | Removes top and horizontal padding    |
 | `data-flush="bottom"` | Removes bottom and horizontal padding |
 
-### Slotted Content Rounding
+### Slotted content rounding
 
 Use `data-rounded` with slotted content for automatic first/last child rounding:
 
@@ -64,24 +69,9 @@ Use `data-rounded` with slotted content for automatic first/last child rounding:
 
 See [Styling & Modifiers](/docs/introduction-styling-modifiers--overview) for complete documentation.
 
-## Getting started
-
-Here's a quick example to get you started.
-
-<Canvas of={CardStories.Default} />
-
-### JS (via import)
-
-```javascript
-import "@carbon/ai-chat-components/es/components/card/index.js";
-```
-
-<Markdown>{`${cdnJs(["card"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
-
 ## Examples
 
-### Card with Footer Actions
+### Card with footer actions
 
 Add interactive buttons to your card using the `<cds-aichat-card-footer>` component. The footer supports various button kinds and emits events when actions are clicked.
 
@@ -119,7 +109,7 @@ footer.addEventListener("cds-aichat-card-footer-action", (event) => {
 });
 ```
 
-### Card with Image
+### Card with image
 
 Display media content with proper corner rounding using the `media` slot and `data-rounded` attribute.
 
@@ -162,7 +152,7 @@ footer.addEventListener("cds-aichat-card-footer-action", (event) => {
 });
 ```
 
-### Card with Flush Padding
+### Card with flush padding
 
 Remove the default tile padding using `is-flush="true"` for full-width content like images or custom layouts.
 
@@ -182,7 +172,7 @@ Remove the default tile padding using `is-flush="true"` for full-width content l
 import "@carbon/ai-chat-components/es/components/card/index.js";
 ```
 
-### Card with Multiple Actions
+### Card with multiple actions
 
 Display multiple action buttons in the footer. Buttons are arranged horizontally and support different kinds (primary, secondary, ghost, danger).
 
@@ -190,9 +180,7 @@ Display multiple action buttons in the footer. Buttons are arranged horizontally
 <cds-aichat-card>
   <div slot="body" class="standard-card">
     <h4>Confirm Your Action</h4>
-    <p>
-      This operation will update your settings. Would you like to proceed?
-    </p>
+    <p>This operation will update your settings. Would you like to proceed?</p>
   </div>
   <cds-aichat-card-footer id="footer-3"></cds-aichat-card-footer>
 </cds-aichat-card>
@@ -221,7 +209,7 @@ footer.addEventListener("cds-aichat-card-footer-action", (event) => {
 });
 ```
 
-### Card with Steps (Progress Tracking)
+### Card with steps (progress tracking)
 
 Use `<cds-aichat-card-steps>` to display multi-step processes with status indicators.
 
@@ -279,12 +267,13 @@ footer.addEventListener("cds-aichat-card-footer-action", (event) => {
 ```
 
 **Available step kinds:**
+
 - `ICON_INDICATOR_KIND.SUCCEEDED` - Completed step
 - `ICON_INDICATOR_KIND["IN-PROGRESS"]` - Currently active step
 - `ICON_INDICATOR_KIND["NOT-STARTED"]` - Pending step
 - `ICON_INDICATOR_KIND.FAILED` - Failed step
 
-### Image-Only Card
+### Image-only card
 
 ```html
 <cds-aichat-card is-flush="true">
@@ -306,7 +295,7 @@ import "@carbon/ai-chat-components/es/components/card/index.js";
 
 ## `cds-aichat-card`
 
-<ArgTypes of={CardStories.Default} />
+<ArgTypes of="cds-aichat-card" />
 
 ## `cds-aichat-card-footer`
 
@@ -324,7 +313,7 @@ type Action = {
 };
 ```
 
-<ArgTypes of={CardStories.CardFooter} />
+<ArgTypes of="cds-aichat-card-footer" />
 
 ## `cds-aichat-card-steps`
 
@@ -337,4 +326,14 @@ type Step = {
 };
 ```
 
-<ArgTypes of={PreviewCardStories.CardSteps} />
+<ArgTypes of="cds-aichat-card-steps" />
+
+## JS (via import)
+
+```javascript
+import "@carbon/ai-chat-components/es/components/card/index.js";
+```
+
+## Feedback
+
+Open an issue at https://github.com/carbon-design-system/carbon-ai-chat/issues to provide feedback or request changes.

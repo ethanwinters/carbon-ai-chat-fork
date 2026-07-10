@@ -58,62 +58,36 @@ export const Default = {
   `,
 };
 
-export const LongContent = {
+export const EmptyState = {
+  argTypes: {
+    emptyStateHeading: {
+      control: "text",
+      description: "Heading text shown when the workspace has no content.",
+      table: { defaultValue: { summary: "No content available" } },
+    },
+    emptyStateMessage: {
+      control: "text",
+      description:
+        "Supporting message shown when the workspace has no content.",
+      table: {
+        defaultValue: {
+          summary: "This workspace is empty. Add content to get started.",
+        },
+      },
+    },
+  },
   args: {
-    contentType: "long",
+    emptyStateHeading: "No content available",
+    emptyStateMessage: "This workspace is empty. Add content to get started.",
   },
   render: (args) => html`
-    <cds-aichat-workspace-shell-body>
-      ${getBodyContent(args.contentType)}
-    </cds-aichat-workspace-shell-body>
-  `,
-};
-
-export const WithCustomContent = {
-  render: () => html`
-    <cds-aichat-workspace-shell-body>
-      <div>
-        <h3 style="margin-bottom: 1rem;">Custom Content Example</h3>
-        <p style="margin-bottom: 1rem;">
-          This body can contain any custom HTML or components. The content will
-          automatically scroll if it exceeds the available height.
-        </p>
-        <div
-          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;"
-        >
-          <div
-            style="padding: 1rem; background: var(--cds-layer-01); border-radius: 4px;"
-          >
-            <h4 style="margin-bottom: 0.5rem;">Card 1</h4>
-            <p>Custom card content</p>
-          </div>
-          <div
-            style="padding: 1rem; background: var(--cds-layer-01); border-radius: 4px;"
-          >
-            <h4 style="margin-bottom: 0.5rem;">Card 2</h4>
-            <p>Custom card content</p>
-          </div>
-          <div
-            style="padding: 1rem; background: var(--cds-layer-01); border-radius: 4px;"
-          >
-            <h4 style="margin-bottom: 0.5rem;">Card 3</h4>
-            <p>Custom card content</p>
-          </div>
-        </div>
-      </div>
-    </cds-aichat-workspace-shell-body>
-  `,
-};
-
-export const EmptyState = {
-  render: () => html`
     <cds-aichat-workspace-shell-body>
       <div
         style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 2rem; text-align: center;"
       >
-        <h3 style="margin-bottom: 1rem;">No content available</h3>
+        <h3 style="margin-bottom: 1rem;">${args.emptyStateHeading}</h3>
         <p style="color: var(--cds-text-secondary);">
-          This workspace is empty. Add content to get started.
+          ${args.emptyStateMessage}
         </p>
       </div>
     </cds-aichat-workspace-shell-body>

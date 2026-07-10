@@ -34,8 +34,16 @@ import { focusElementAfterRepaint } from "../../../globals/utils/focus-utils";
 
 import { PinFilled, Search, Time } from "@carbon/icons-react";
 
+import ChatHistoryMeta, {
+  Default as DefaultWC,
+  SearchResults as SearchResultsWC,
+  Loading as LoadingWC,
+  EmptyState as EmptyStateWC,
+  DeleteFlow as DeleteFlowWC,
+} from "./chat-history.stories";
+
 export default {
-  title: "Preview/Chat History",
+  title: "Components/Chat History",
   component: HistoryShell,
   decorators: [
     (Story) => (
@@ -63,46 +71,8 @@ const findSelectedItemId = (pinnedItems, regularItems) => {
 };
 
 export const Default = {
-  argTypes: {
-    HeaderTitle: {
-      control: "text",
-      description: "Header title text of the chat history shell",
-    },
-    searchOff: {
-      control: "boolean",
-      description:
-        "true if search should be turned off in chat history toolbar.",
-    },
-    searchAttributes: {
-      control: "object",
-      description:
-        "Optional attributes to pass to the cds-search component. Allows customization of search behavior and appearance (e.g., label-text, placeholder, disabled, value, close-button-label-text).",
-    },
-    overflowMenuLabel: {
-      control: "text",
-      description: "Overflow menu tooltip label for history panel items.",
-    },
-    showCloseAction: {
-      control: "boolean",
-      description: "renders close chat history action in header.",
-    },
-    showActions: {
-      control: "boolean",
-      description: "Show actions on all history panel items.",
-    },
-  },
-  args: {
-    HeaderTitle: "Chats",
-    searchOff: false,
-    searchAttributes: {
-      "label-text": "Search",
-      placeholder: "Search",
-      "close-button-label-text": "Clear search",
-    },
-    overflowMenuLabel: "Options",
-    showCloseAction: true,
-    showActions: false,
-  },
+  argTypes: { ...ChatHistoryMeta.argTypes },
+  args: { ...DefaultWC.args },
   render: (args) => {
     const historyShellRef = useRef(null);
     const [searchResults, setSearchResults] = useState([]);
@@ -369,7 +339,7 @@ export const Default = {
     return (
       <HistoryShell ref={historyShellRef}>
         <HistoryHeader
-          headerTitle={args.HeaderTitle}
+          headerTitle={args.headerTitle}
           showCloseAction={args.showCloseAction}
         />
         <HistoryToolbar
@@ -378,26 +348,26 @@ export const Default = {
           onSearchInput={handleSearchInput}
         />
         <HistoryContent
-          resultsLabel="Results"
+          resultsLabel={args.resultsLabel}
           resultsCount={
             showSearchResults || noSearchResults ? searchTotalCount : ""
           }
         >
           <HistoryPanel
             showActions={args.showActions}
-            aria-label="Chat history"
+            aria-label={args.panelAriaLabel}
           >
             <HistoryPanelItems>
               {noSearchResults && (
-                <HistoryPanelMenu expanded title="Search results">
+                <HistoryPanelMenu expanded title={args.searchResultsTitle}>
                   <Search slot="title-icon" />
                   <HistorySearchItem disabled>
-                    No available chats
+                    {args.noResultsText}
                   </HistorySearchItem>
                 </HistoryPanelMenu>
               )}
               {showSearchResults && (
-                <HistoryPanelMenu expanded title="Search results">
+                <HistoryPanelMenu expanded title={args.searchResultsTitle}>
                   <Search slot="title-icon" />
                   {searchResults.map((result) => (
                     <HistorySearchItem
@@ -411,7 +381,7 @@ export const Default = {
               {!showSearchResults && !noSearchResults && (
                 <>
                   {pinnedItems.length > 0 && (
-                    <HistoryPanelMenu expanded title="Pinned">
+                    <HistoryPanelMenu expanded title={args.pinnedSectionTitle}>
                       <PinFilled slot="title-icon" />
                       {pinnedItems.map((item) => (
                         <HistoryPanelItem
@@ -477,18 +447,17 @@ export const Default = {
 };
 
 export const SearchResults = {
-  args: {
-    HeaderTitle: "Chats",
-  },
+  argTypes: { ...SearchResultsWC.argTypes },
+  args: { ...SearchResultsWC.args },
   render: (args) => {
     return (
       <HistoryShell>
-        <HistoryHeader headerTitle={args.HeaderTitle} />
+        <HistoryHeader headerTitle={args.headerTitle} />
         <HistoryToolbar />
-        <HistoryContent resultsLabel="Results" resultsCount="4">
-          <HistoryPanel aria-label="Search results">
+        <HistoryContent resultsLabel={args.resultsLabel} resultsCount="4">
+          <HistoryPanel aria-label={args.panelAriaLabel}>
             <HistoryPanelItems>
-              <HistoryPanelMenu expanded title="Search results">
+              <HistoryPanelMenu expanded title={args.searchResultsTitle}>
                 <Search slot="title-icon" />
                 <HistorySearchItem date="Monday, 12:04 PM">
                   Here's the onboarding doc that includes all the information to
@@ -513,13 +482,12 @@ export const SearchResults = {
 };
 
 export const Loading = {
-  args: {
-    HeaderTitle: "Chats",
-  },
+  argTypes: { ...LoadingWC.argTypes },
+  args: { ...LoadingWC.args },
   render: (args) => {
     return (
       <HistoryShell>
-        <HistoryHeader headerTitle={args.HeaderTitle} />
+        <HistoryHeader headerTitle={args.headerTitle} />
         <HistoryToolbar />
         <HistoryLoading />
       </HistoryShell>
@@ -528,13 +496,12 @@ export const Loading = {
 };
 
 export const EmptyState = {
-  args: {
-    HeaderTitle: "Chats",
-  },
+  argTypes: { ...EmptyStateWC.argTypes },
+  args: { ...EmptyStateWC.args },
   render: (args) => {
     return (
       <HistoryShell>
-        <HistoryHeader headerTitle={args.HeaderTitle} />
+        <HistoryHeader headerTitle={args.headerTitle} />
         <HistoryToolbar />
         <HistoryContent></HistoryContent>
       </HistoryShell>
@@ -543,18 +510,17 @@ export const EmptyState = {
 };
 
 export const DeleteFlow = {
-  args: {
-    HeaderTitle: "Chats",
-  },
+  argTypes: { ...DeleteFlowWC.argTypes },
+  args: { ...DeleteFlowWC.args },
   render: (args) => {
     return (
       <HistoryShell>
-        <HistoryHeader headerTitle={args.HeaderTitle} />
+        <HistoryHeader headerTitle={args.headerTitle} />
         <HistoryToolbar />
         <HistoryContent>
           <HistoryPanel aria-label="Chat history">
             <HistoryPanelItems>
-              <HistoryPanelMenu expanded title="Pinned">
+              <HistoryPanelMenu expanded title={args.pinnedSectionTitle}>
                 <PinFilled slot="title-icon" />
                 {pinnedHistoryItems.map((item) => (
                   <HistoryPanelItem

@@ -1,83 +1,40 @@
-import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as ReasoningStepsReactStories from "./reasoning-steps-react.stories.jsx";
 
-<Meta of={ReasoningStepsReactStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={ReasoningStepsReactStories} />
 
 # Reasoning steps
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/reasoning-steps) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Component API](#component-api)
-- [Feedback](#feedback)
-
-
 ## Overview
 
-The `<ReasoningSteps>` and `<ReasoningStep>` components wrap the underlying web components so you can showcase chain-of-thought style reasoning in React applications without managing event wiring manually.
+The `<ReasoningSteps>` and `<ReasoningStep>` components wrap the underlying web components so you can show chain-of-thought style reasoning in React applications without managing event wiring manually.
 
-### Getting started
+<Canvas of={ReasoningStepsReactStories.Default} />
 
-```jsx
-import ReasoningSteps from "@carbon/ai-chat-components/es/react/reasoning-steps.js";
-import ReasoningStep from "@carbon/ai-chat-components/es/react/reasoning-step.js";
+### With static steps
 
-export function ReasoningExample({ steps }) {
-  return (
-    <ReasoningSteps open>
-      {steps.map((step) => (
-        <ReasoningStep key={step.id} title={step.title} open={step.open}>
-          {step.body}
-        </ReasoningStep>
-      ))}
-    </ReasoningSteps>
-  );
-}
-```
+Steps without body content render as a static line, useful for work that is still pending or awaiting input.
+
+<Canvas of={ReasoningStepsReactStories.WithStaticSteps} />
+
+### Controlled
+
+When `controlled` is set, the host application owns each step's open state and responds to `onToggle` events.
+
+<Canvas of={ReasoningStepsReactStories.Controlled} />
 
 ## Component API
 
 <ArgTypes of={ReasoningStepsReactStories.Default} />
 
-#### Handling toggle events
+## JS (via import)
 
 ```jsx
-function AuditTrail({ steps }) {
-  const [openSteps, setOpenSteps] = React.useState(new Set());
-
-  return (
-    <ReasoningSteps open controlled>
-      {steps.map((step) => (
-        <ReasoningStep
-          key={step.id}
-          data-step-id={step.id}
-          title={step.title}
-          open={openSteps.has(step.id)}
-          controlled
-          onToggle={(event) => {
-            setOpenSteps((prev) => {
-              const next = new Set(prev);
-              if (event.detail.open) {
-                next.add(step.id);
-              } else {
-                next.delete(step.id);
-              }
-              return next;
-            });
-          }}
-        >
-          {step.body}
-        </ReasoningStep>
-      ))}
-    </ReasoningSteps>
-  );
-}
+import ReasoningSteps from "@carbon/ai-chat-components/es/react/reasoning-steps.js";
+import ReasoningStep from "@carbon/ai-chat-components/es/react/reasoning-step.js";
 ```
-
-`event.detail.open` indicates whether the user requested the step to be open or closed, enabling full control over UI state when compliance or audit requirements demand deterministic presentation.
 
 ## Feedback
 

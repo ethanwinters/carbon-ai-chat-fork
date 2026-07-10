@@ -12,6 +12,7 @@ import "../../card/src/card";
 import { html } from "lit";
 import styles from "./story-styles.scss?lit";
 import { map } from "lit/directives/map.js";
+import { action } from "storybook/actions";
 
 const cards = Array(8)
   .fill(null)
@@ -26,16 +27,15 @@ const argTypes = {
     control: "text",
     description: "Text for the previous button",
   },
-  onChange: {
-    action: "cds-aichat-carousel-onchange",
-    table: {
-      disable: true,
-    },
+  "@cds-aichat-carousel-onchange": {
+    action: "change",
+    description: "Fired when the visible carousel item changes.",
+    table: { category: "events" },
   },
 };
 
 export default {
-  title: "Preview/Carousel",
+  title: "Components/Carousel",
   argTypes,
   decorators: [
     (story) => html`
@@ -45,11 +45,11 @@ export default {
       ${story()}
     `,
   ],
-  render: ({ nextBtnText, onChange, previousBtnText }) => html`
+  render: ({ nextBtnText, previousBtnText }) => html`
     <cds-aichat-carousel
       nextBtnText=${nextBtnText}
       previousBtnText=${previousBtnText}
-      @cds-aichat-carousel-onchange=${onChange}
+      @cds-aichat-carousel-onchange=${(e) => action("change")(e.detail)}
     >
       <div>
         ${map(

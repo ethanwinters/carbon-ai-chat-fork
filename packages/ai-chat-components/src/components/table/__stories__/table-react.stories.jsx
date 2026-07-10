@@ -11,8 +11,11 @@ import React from "react";
 import { createComponent } from "@lit/react";
 import "../index";
 import { CDSAIChatTable } from "../src/table";
-import { headers, rows } from "./story-data";
 import Card from "../../../react/card";
+import TableStoriesMeta, {
+  Default as DefaultWC,
+  Loading as LoadingWC,
+} from "./table.stories";
 
 const Table = createComponent({
   tagName: "cds-aichat-table",
@@ -56,49 +59,24 @@ const renderTable = (args) => {
 export default {
   title: "Components/Table",
   component: Table,
-  argTypes: {
-    // Story-specific control (not a component property)
-    useCard: {
-      control: "boolean",
-      description: "Wrap in card wrapper (story-only control)",
-      table: {
-        category: "Story",
-      },
-    },
-    // Disable controls for complex array/object properties
-    headers: {
-      control: false,
-      table: { category: "Data" },
-    },
-    rows: {
-      control: false,
-      table: { category: "Data" },
-    },
-  },
 };
 
 export const Default = {
+  argTypes: {
+    ...TableStoriesMeta.argTypes,
+  },
   args: {
-    useCard: true,
-    tableTitle: "Agent roster",
-    tableDescription: "Operational view of AI chat team members.",
-    headers,
-    rows,
-    loading: false,
-    filterPlaceholderText: "Filter rows",
-    previousPageText: "Previous page",
-    nextPageText: "Next page",
-    itemsPerPageText: "Items per page",
-    locale: "en",
-    defaultPageSize: 5,
+    ...DefaultWC.args,
   },
   render: (args) => renderTable(args),
 };
 
 export const Loading = {
+  argTypes: {
+    ...TableStoriesMeta.argTypes,
+  },
   args: {
-    ...Default.args,
-    loading: true,
+    ...LoadingWC.args,
   },
   render: (args) => renderTable(args),
 };

@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -31,19 +31,14 @@ export default {
       control: "select",
       table: { category: "slot" },
       options: ["default", "with truncation", "none"],
-      mapping: {
-        default: html`<div slot="title">
-          Title <span class="bold">text</span>
-        </div>`,
-        "with truncation": html`<div slot="title">
-          <span class="truncated-text">
-            Lorem ipsum dolor sit amet <span class="bold">consectetur</span>
-          </span>
-        </div>`,
-        none: undefined,
-      },
       description:
         "Title text for the Toolbar component. This Storybook-only control populates the title slot. `slot='title'`",
+    },
+    titleSlotText: {
+      control: "text",
+      table: { category: "slot" },
+      description:
+        "Text rendered in the title slot when `title` is set to `default`.",
     },
     navigation: {
       control: "select",
@@ -157,6 +152,16 @@ export default {
       control: "boolean",
       description: "AI Label slot in the toolbar component `slot='decorator'`",
     },
+    aiLabelHeading: {
+      table: { category: "slot" },
+      control: "text",
+      description: "Heading text rendered in the AI Label's body text.",
+    },
+    aiLabelBody: {
+      table: { category: "slot" },
+      control: "text",
+      description: "Body text rendered in the AI Label's body text.",
+    },
     "--cds-aichat-border-radius": {
       control: "boolean",
       description:
@@ -176,55 +181,72 @@ export default {
 export const Default = {
   args: {
     title: "default",
+    titleSlotText: "Title text",
     overflow: true,
     actions: "Advanced list",
     navigation: "home",
     fixedActions: "none",
     aiLabel: true,
+    aiLabelHeading: "Powered by IBM watsonx",
+    aiLabelBody:
+      "IBM watsonx is powered by the latest AI models to intelligently process conversations and provide help whenever and wherever you may need it.",
     "--cds-aichat-border-radius": false,
   },
 
   render: ({
     title,
+    titleSlotText,
     overflow,
     actions,
     aiLabel,
+    aiLabelHeading,
+    aiLabelBody,
     navigation,
     fixedActions,
     "--cds-aichat-border-radius": borderRadius,
-  }) => html`
-    <cds-aichat-toolbar
-      .actions=${actions}
-      ?overflow=${overflow}
-      style=${borderRadius ? "--cds-aichat-border-radius: 8px;" : ""}
-    >
-      <!-- Navigation slot -->
-      ${navigation}
+  }) => {
+    const titleContent =
+      title === "default"
+        ? html`<div slot="title">${titleSlotText}</div>`
+        : title === "with truncation"
+          ? html`<div slot="title">
+              <span class="truncated-text">
+                Lorem ipsum dolor sit amet
+                <span class="bold">consectetur</span>
+              </span>
+            </div>`
+          : "";
 
-      <!-- Title slot -->
-      ${title}
+    return html`
+      <cds-aichat-toolbar
+        .actions=${actions}
+        ?overflow=${overflow}
+        style=${borderRadius ? "--cds-aichat-border-radius: 8px;" : ""}
+      >
+        <!-- Navigation slot -->
+        ${navigation}
 
-      <!-- Fixed actions slot -->
-      ${fixedActions}
+        <!-- Title slot -->
+        ${titleContent}
 
-      <!-- AI Label slot -->
-      ${aiLabel
-        ? html` <cds-ai-label
-            size="2xs"
-            autoalign
-            alignment="bottom"
-            slot="decorator"
-          >
-            <div slot="body-text">
-              <h4 class="margin-bottom-05">Powered by IBM watsonx</h4>
-              <div>
-                IBM watsonx is powered by the latest AI models to intelligently
-                process conversations and provide help whenever and wherever you
-                may need it.
+        <!-- Fixed actions slot -->
+        ${fixedActions}
+
+        <!-- AI Label slot -->
+        ${aiLabel
+          ? html` <cds-ai-label
+              size="2xs"
+              autoalign
+              alignment="bottom"
+              slot="decorator"
+            >
+              <div slot="body-text">
+                <h4 class="margin-bottom-05">${aiLabelHeading}</h4>
+                <div>${aiLabelBody}</div>
               </div>
-            </div>
-          </cds-ai-label>`
-        : ""}
-    </cds-aichat-toolbar>
-  `,
+            </cds-ai-label>`
+          : ""}
+      </cds-aichat-toolbar>
+    `;
+  },
 };

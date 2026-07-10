@@ -1,28 +1,23 @@
-import { ArgTypes, Canvas, Markdown, Meta } from "@storybook/addon-docs/blocks";
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as ChatButtonReactStories from "./chat-button-react.stories.jsx";
 
-<Meta of={ChatButtonReactStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={ChatButtonReactStories} />
 
-# Button
+# Chat button
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/chat-button) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Component API](#component-api)
-- [Feedback](#feedback)
-
-
 ## Overview
 
-The `<ChatButton>` component wraps the `cds-aichat-button` web component and exposes a React API for AI chat surfaces, including quick-action and icon-only variants.
+Use `<ChatButton>` to wrap the `cds-aichat-button` web component with a React API for AI chat surfaces, including quick-action and icon-only variants.
 
-### Getting started
+<Canvas of={ChatButtonReactStories.Default} />
 
-Here's a quick example to get you started.
+## Component API
+
+<ArgTypes of={ChatButtonReactStories.Default} />
+
+## JS (via import)
 
 ```jsx
 import ChatButton from "@carbon/ai-chat-components/es/react/chat-button.js";
@@ -35,10 +30,6 @@ function ChatButtonExample() {
   );
 }
 ```
-
-## Component API
-
-<ArgTypes of={ChatButtonReactStories.Default} />
 
 ## Feedback
 

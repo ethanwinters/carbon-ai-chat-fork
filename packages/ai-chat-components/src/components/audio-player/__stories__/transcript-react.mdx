@@ -1,11 +1,17 @@
-import { ArgTypes, Markdown, Meta } from "@storybook/addon-docs/blocks";
-import * as TranscriptReactStories from "./transcript-react.stories";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./transcript-react.stories";
 
-<Meta of={TranscriptReactStories} />
+<Meta of={Stories} />
 
 # Transcript
 
-The `<Transcript>` React component provides an accessible, expandable/collapsible interface for displaying audio and video transcripts.
+[Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/audio-player) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
+
+## Overview
+
+The `<Transcript>` component wraps `cds-aichat-transcript` to give audio and video content an accessible, expandable/collapsible text alternative.
+
+<Canvas of={Stories.Default} />
 
 ## Key Features
 
@@ -15,74 +21,15 @@ The `<Transcript>` React component provides an accessible, expandable/collapsibl
 - **Event handling**: React-friendly event callbacks
 - **Internationalization**: Support for multiple languages
 
-## Use Cases
+## With Audio Player
 
-The transcript component is ideal for:
+The transcript component works seamlessly with the audio player in a Card layout.
 
-- Providing text alternatives for audio content
-- Meeting accessibility requirements (WCAG)
-- Allowing users to search or reference specific content
-- Supporting users who prefer reading over listening
+<Canvas of={Stories.WithAudioPlayer} />
 
-## Getting started
+## Events
 
-Here's a quick example to get you started.
-
-### Installation
-
-```bash
-npm install @carbon/ai-chat-components
-```
-
-### Basic Usage
-
-```jsx
-import { Transcript } from "@carbon/ai-chat-components/es/react/transcript";
-
-function MyComponent() {
-  return (
-    <Transcript
-      text="My text input is, you know, I am a teapot and then my image input is a picture of David Hasselhoff."
-      label="English Transcript"
-      language="en"
-    />
-  );
-}
-```
-
-### With Audio Player
-
-The transcript component works seamlessly with the audio player in a Card layout:
-
-```jsx
-import { AudioPlayer } from "@carbon/ai-chat-components/es/react/audio-player";
-import { Card } from "@carbon/ai-chat-components/es/react/card";
-import { Transcript } from "@carbon/ai-chat-components/es/react/transcript";
-
-function AudioWithTranscript() {
-  return (
-    <Card>
-      <div slot="media" data-rounded="top">
-        <AudioPlayer
-          source="https://example.com/audio.mp3"
-          ariaLabel="Audio title"
-        />
-      </div>
-      <div slot="body">
-        <h4>Audio Title</h4>
-        <p>Audio description</p>
-        <Transcript
-          text="Transcript text here..."
-          label="English Transcript"
-          language="en"
-        />
-      </div>
-    </Card>
-  );
-}
-```
-
-### With Event Handling
+`expanded` is a controlled prop — the component only fires the event below, so the host is responsible for setting `expanded` back on the element:
 
 ```jsx
 import { Transcript } from "@carbon/ai-chat-components/es/react/transcript";
@@ -92,29 +39,27 @@ function TranscriptWithState() {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div>
-      <p>Transcript is currently: {isExpanded ? "Expanded" : "Collapsed"}</p>
-      <Transcript
-        text="Transcript text here..."
-        label="English Transcript"
-        language="en"
-        onCdsAichatTranscriptToggle={(e) => {
-          setIsExpanded(e.detail.expanded);
-        }}
-      />
-    </div>
+    <Transcript
+      text="Transcript text here..."
+      label="English Transcript"
+      language="en"
+      expanded={isExpanded}
+      onTranscriptToggle={(e) => {
+        setIsExpanded(e.detail.expanded);
+      }}
+    />
   );
 }
 ```
 
-## Events
-
-The component supports the following event:
-
-| Event Name | Description | Event Detail |
-|------------|-------------|--------------|
-| `onCdsAichatTranscriptToggle` | Fired when transcript is expanded or collapsed | `{ expanded: boolean }` |
+| Event Prop           | Event Name                     | Description                                    | Event Detail            |
+| -------------------- | ------------------------------ | ---------------------------------------------- | ----------------------- |
+| `onTranscriptToggle` | `cds-aichat-transcript-toggle` | Fired when transcript is expanded or collapsed | `{ expanded: boolean }` |
 
 ## Component API
 
-<ArgTypes of={TranscriptReactStories} />
+<ArgTypes of={Stories.Default} />
+
+## Feedback
+
+Open an issue at https://github.com/carbon-design-system/carbon-ai-chat/issues to provide feedback or request changes.

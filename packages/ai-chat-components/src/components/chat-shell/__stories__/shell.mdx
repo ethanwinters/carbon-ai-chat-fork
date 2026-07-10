@@ -1,6 +1,4 @@
-import { ArgTypes, Canvas, Markdown, Meta } from '@storybook/addon-docs/blocks';
-
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as ChatShellStories from "./shell.stories";
 
 <Meta of={ChatShellStories} />
@@ -9,20 +7,14 @@ import * as ChatShellStories from "./shell.stories";
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/chat-shell) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Customization](#customization)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
 ## Overview
 
 Use `cds-aichat-shell` to create a flexible chat interface layout with support for headers, messages, input areas, workspaces, history panels, and overlay panels. The shell component provides a structured container that manages the layout and positioning of various chat interface elements.
 
+<Canvas of={ChatShellStories.Default} />
+
 The shell includes support for:
+
 - **Header and footer slots** for custom branding and actions
 - **Messages and input areas** with before/after extension points
 - **Workspace and history sidebars** with configurable positioning
@@ -35,7 +27,7 @@ The shell includes support for:
 Here's a quick example to get you started.
 
 ```html
-<cds-aichat-shell content-max-width show-frame rounded-corners>
+<cds-aichat-shell content-max-width show-frame corner-all="round">
   <div slot="header">Chat Header</div>
   <div slot="messages">Messages Area</div>
   <div slot="input">Input Area</div>
@@ -51,14 +43,15 @@ Panels can be added to create overlay experiences with different priorities and 
   <div slot="header">Chat Header</div>
   <div slot="messages">Messages Area</div>
   <div slot="input">Input Area</div>
-  
+
   <div slot="panels">
-    <cds-aichat-panel 
-      open 
-      show-chat-header 
+    <cds-aichat-panel
+      open
+      show-chat-header
       show-frame
       animation-on-open="slide-in-from-bottom"
-      animation-on-close="slide-out-to-bottom">
+      animation-on-close="slide-out-to-bottom"
+    >
       <div slot="header">Panel Header</div>
       <div slot="body">Panel Content</div>
     </cds-aichat-panel>
@@ -66,11 +59,23 @@ Panels can be added to create overlay experiences with different priorities and 
 </cds-aichat-shell>
 ```
 
+## Slots
+
+`Slots` demonstrates every slot the shell exposes, with checkboxes to toggle each one's visibility and controls for the layout tokens below.
+
+<Canvas of={ChatShellStories.Slots} />
+
+## Sidebar workspace
+
+`SidebarWorkspace` shows the workspace sidebar sliding open alongside the messages area, toggled from a button inside the messages slot.
+
+<Canvas of={ChatShellStories.SidebarWorkspace} />
+
 ## Customization
 
 > ** For information about styling slotted content with modifiers (`data-rounded`, `data-stacked`) and CSS custom properties, see [Styling & Modifiers](/docs/introduction-styling-modifiers--overview).**
 
-### Layout Tokens
+### Layout tokens
 
 Use CSS custom properties to adjust layout sizing.
 
@@ -84,17 +89,15 @@ cds-aichat-shell {
 }
 ```
 
-| Token | Default | Description |
-| --- | --- | --- |
-| `--cds-aichat-messages-max-width` | `672px` | Maximum width for message content area |
-| `--cds-aichat-messages-min-width` | `320px` | Minimum width for message content area |
-| `--cds-aichat-workspace-min-width` | `480px` | Minimum width for workspace panel |
-| `--cds-aichat-history-width` | `320px` | Width of the history / conversation list panel |
-| `--cds-aichat-card-max-width` | `424px` | Maximum width for card components |
+| Token                              | Default | Description                                    |
+| ---------------------------------- | ------- | ---------------------------------------------- |
+| `--cds-aichat-messages-max-width`  | `672px` | Maximum width for message content area         |
+| `--cds-aichat-messages-min-width`  | `320px` | Minimum width for message content area         |
+| `--cds-aichat-workspace-min-width` | `480px` | Minimum width for workspace panel              |
+| `--cds-aichat-history-width`       | `320px` | Width of the history / conversation list panel |
+| `--cds-aichat-card-max-width`      | `424px` | Maximum width for card components              |
 
 ## Component API
-
-### cds-aichat-shell
 
 <ArgTypes of="cds-aichat-shell" />
 
@@ -103,10 +106,6 @@ cds-aichat-shell {
 ```javascript
 import "@carbon/ai-chat-components/es/components/chat-shell/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(["chat-shell"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
 
 ## Feedback
 

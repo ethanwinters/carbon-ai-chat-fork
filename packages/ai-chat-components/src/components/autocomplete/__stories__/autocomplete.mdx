@@ -1,5 +1,4 @@
-import { ArgTypes, Canvas, Markdown, Meta } from '@storybook/addon-docs/blocks';
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as AutocompleteStories from "./autocomplete.stories";
 
 <Meta of={AutocompleteStories} />
@@ -8,60 +7,52 @@ import * as AutocompleteStories from "./autocomplete.stories";
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/autocomplete) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Customization](#customization)
-- [Events](#events)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
-
 ## Overview
 
 Use `cds-aichat-autocomplete` to display contextual suggestions for user input.
 
+<Canvas of={AutocompleteStories.Default} />
+
+## Usage
+
 The autocomplete component includes support for:
-- **Flat Suggestions** - Simple list of suggestion items
-- **Grouped Suggestions** - Organized suggestions with category headers
-- **Rich Content** - Support for avatars and descriptions
-- **Send Button** - Optional button to send message directly from suggestion list item
-- **Header** - Optional header with custom title
+
+- **Flat suggestions** - Simple list of suggestion items
+- **Grouped suggestions** - Organized suggestions with category headers
+- **Rich content** - Support for avatars and descriptions
+- **Send button** - Optional button to send message directly from a suggestion item
+- **Header** - Optional header with a custom title, configured via the `headerConfig` object (`{ showHeader, title }`)
 
 ### Getting started
 
 Here's a quick example to get you started.
 
 ```html
-<cds-aichat-autocomplete
-  .items=${[
-    { id: "1", label: "When is the best time to eat?" },
-    { id: "2", label: "When is the sun rising today?" }
-  ]}
-  attached
-  enable-send-button>
-</cds-aichat-autocomplete>
+<cds-aichat-autocomplete attached enable-send-button></cds-aichat-autocomplete>
 ```
 
+```javascript
+document.querySelector("cds-aichat-autocomplete").items = [
+  { id: "1", label: "When is the best time to eat?" },
+  { id: "2", label: "When is the sun rising today?" },
+];
+```
 
 ## Customization
 
-### Layout Tokens
+### Layout tokens
 
 Use CSS custom properties to adjust layout sizing.
 
-| Token | Description |
-| --- | --- |
+| Token                                  | Description                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------ |
 | `--cds-aichat-autocomplete-max-height` | Controls the maximum height of the autocomplete panel before it scrolls. |
-
 
 ## Events
 
 The autocomplete component emits the following custom events that you can listen for to handle user interactions:
 
-<table style={{width: '100%'}}>
+<table style={{ width: "100%" }}>
   <thead>
     <tr>
       <th>Event Name</th>
@@ -71,31 +62,34 @@ The autocomplete component emits the following custom events that you can listen
   </thead>
   <tbody>
     <tr>
-      <td><code>cds-aichat-autocomplete-select</code></td>
+      <td>
+        <code>cds-aichat-autocomplete-select</code>
+      </td>
       <td>Fired when a suggestion item is selected.</td>
       <td>
         • <code>item</code> (SuggestionItem) - The selected suggestion item
       </td>
     </tr>
     <tr>
-      <td><code>cds-aichat-autocomplete-send</code></td>
+      <td>
+        <code>cds-aichat-autocomplete-send</code>
+      </td>
       <td>Fired when the send button is clicked for a suggestion item.</td>
       <td>
         • <code>text</code> (string) - The label text of the suggestion item
       </td>
     </tr>
     <tr>
-      <td><code>cds-aichat-autocomplete-dismiss</code></td>
+      <td>
+        <code>cds-aichat-autocomplete-dismiss</code>
+      </td>
       <td>Fired when the autocomplete panel is dismissed.</td>
       <td>None</td>
     </tr>
   </tbody>
 </table>
 
-
 ## Component API
-
-### cds-aichat-autocomplete
 
 <ArgTypes of="cds-aichat-autocomplete" />
 
@@ -104,11 +98,6 @@ The autocomplete component emits the following custom events that you can listen
 ```javascript
 import "@carbon/ai-chat-components/es/components/autocomplete/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(["autocomplete"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
-
 
 ## Feedback
 

@@ -1,28 +1,24 @@
-import { ArgTypes, Markdown, Meta } from '@storybook/addon-docs/blocks';
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
 import * as WorkspaceShellStories from "./workspace-shell.stories";
+import * as WorkspaceShellBodyStories from "./workspace-shell-body.stories";
+import * as WorkspaceShellHeaderStories from "./workspace-shell-header.stories";
 
-<Meta of={WorkspaceShellStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={WorkspaceShellStories} />
 
 # Workspace shell
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/workspace-shell) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Customization](#customization)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
 ## Overview
 
-The **`<cds-aichat-workspace-shell>`** component defines five dedicated slots that structure the overall workspace layout:
+Use `cds-aichat-workspace-shell` to lay out a workspace panel's toolbar, notification, header, body, and footer into a single consistent structure.
 
-<table style={{width: '100%'}}>
+<Canvas of={WorkspaceShellStories.Default} />
+
+The `<cds-aichat-workspace-shell>` component defines five dedicated slots that structure the overall workspace layout:
+
+<table style={{ width: "100%" }}>
   <thead>
     <tr>
       <th>Slot Name</th>
@@ -31,34 +27,44 @@ The **`<cds-aichat-workspace-shell>`** component defines five dedicated slots th
   </thead>
   <tbody>
     <tr>
-      <td><code>toolbar</code></td>
+      <td>
+        <code>toolbar</code>
+      </td>
       <td>Represents the toolbar area of the workspace.</td>
     </tr>
     <tr>
-      <td><code>header</code></td>
-      <td>Represents the header section, containing title, subtitle and actions.</td>
+      <td>
+        <code>header</code>
+      </td>
+      <td>
+        Represents the header section, containing title, subtitle and actions.
+      </td>
     </tr>
     <tr>
-      <td><code>notification</code></td>
+      <td>
+        <code>notification</code>
+      </td>
       <td>Area for displaying workspace notifications.</td>
     </tr>
     <tr>
-      <td><code>body</code></td>
+      <td>
+        <code>body</code>
+      </td>
       <td>The main content area of the workspace.</td>
     </tr>
     <tr>
-      <td><code>footer</code></td>
+      <td>
+        <code>footer</code>
+      </td>
       <td>Represents the footer section, usually containing action buttons.</td>
     </tr>
   </tbody>
 </table>
 
-
 Each of these slots can accept **any element or component**, allowing users to freely construct and customize the workspace layout as needed.
 Alternatively, adopters can use the **provided subcomponents**, which are designed specifically for each section. These subcomponents offer consistent styling and default behaviors that align with the AI Chat Workspace design patterns.
 
-
-<table style={{width: '100%'}}>
+<table style={{ width: "100%" }}>
   <thead>
     <tr>
       <th>Section</th>
@@ -68,19 +74,24 @@ Alternatively, adopters can use the **provided subcomponents**, which are design
   <tbody>
     <tr>
       <td>Header</td>
-      <td><code>&lt;cds-aichat-workspace-shell-header&gt;</code></td>
+      <td>
+        <code>&lt;cds-aichat-workspace-shell-header&gt;</code>
+      </td>
     </tr>
     <tr>
       <td>Body</td>
-      <td><code>&lt;cds-aichat-workspace-shell-body&gt;</code></td>
+      <td>
+        <code>&lt;cds-aichat-workspace-shell-body&gt;</code>
+      </td>
     </tr>
     <tr>
       <td>Footer</td>
-      <td><code>&lt;cds-aichat-workspace-shell-footer&gt;</code></td>
+      <td>
+        <code>&lt;cds-aichat-workspace-shell-footer&gt;</code>
+      </td>
     </tr>
   </tbody>
 </table>
-
 
 Using these subcomponents ensures visual consistency and predictable structure while still giving you the flexibility to build a fully customized workspace experience.
 
@@ -101,24 +112,56 @@ cds-aichat-shell {
 }
 ```
 
-| Token | Default | Description |
-| --- | --- | --- |
-| `--cds-aichat-workspace-min-width` | `480px` | Minimum width for workspace panel |
-| `--cds-aichat-history-width` | `320px` | Width of the history / conversation list panel |
+| Token                              | Default | Description                                    |
+| ---------------------------------- | ------- | ---------------------------------------------- |
+| `--cds-aichat-workspace-min-width` | `480px` | Minimum width for workspace panel              |
+| `--cds-aichat-history-width`       | `320px` | Width of the history / conversation list panel |
+
+## Examples
+
+### Body
+
+#### Empty state
+
+<Canvas of={WorkspaceShellBodyStories.EmptyState} />
+
+### Header
+
+#### With description
+
+<Canvas of={WorkspaceShellHeaderStories.WithDescription} />
+
+#### With tags
+
+<Canvas of={WorkspaceShellHeaderStories.WithTags} />
+
+#### Collapsible
+
+<Canvas of={WorkspaceShellHeaderStories.Collapsible} />
 
 ## Component API
 
+### Workspace shell
+
 <ArgTypes of="cds-aichat-workspace-shell" />
+
+### Header
+
+<ArgTypes of="cds-aichat-workspace-shell-header" />
+
+### Body
+
+<ArgTypes of="cds-aichat-workspace-shell-body" />
+
+### Footer
+
+<ArgTypes of="cds-aichat-workspace-shell-footer" />
 
 ## JS (via import)
 
 ```javascript
 import "@carbon/ai-chat-components/es/components/workspace-shell/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(['workspace-shell'])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
 
 ## Feedback
 

@@ -1,109 +1,60 @@
+/**
+ * @license
+ *
+ * Copyright IBM Corp. 2025, 2026
+ *
+ * This source code is licensed under the Apache-2.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 /* eslint-disable */
 import React, { useState } from "react";
 
 import ChatShell from "../../../react/chat-shell";
 import Toolbar from "../../../react/toolbar";
+import {
+  default as ShellStoriesMeta,
+  Slots as SlotsWC,
+  SidebarWorkspace as SidebarWorkspaceWC,
+} from "./shell.stories";
 import "./story-styles.scss";
 
 // Core slot content for stories
-const CoreSlotContent = () => (
+const CoreSlotContent = ({
+  headerTitle,
+  historyText,
+  workspaceText,
+  messagesText,
+  inputText,
+}) => (
   <>
     <div slot="header">
       <Toolbar>
-        <div slot="title">Header</div>
+        <div slot="title">{headerTitle}</div>
       </Toolbar>
     </div>
     <div slot="history" className="history slot-sample">
-      History
+      {historyText}
     </div>
     <div slot="workspace" className="workspace slot-sample">
-      Workspace
+      {workspaceText}
     </div>
     <div slot="messages" className="messages slot-sample">
-      Messages
+      {messagesText}
     </div>
     <div slot="input" className="input slot-sample">
-      Input
+      {inputText}
     </div>
   </>
 );
 
 export default {
   title: "Preview/Chat shell",
-  argTypes: {
-    aiEnabled: {
-      control: "boolean",
-      description: "Enable AI-specific theming",
-    },
-    showFrame: {
-      control: "boolean",
-      description: "Show visual frame around content",
-    },
-    cornerAll: {
-      control: { type: "radio" },
-      options: ["round", "square"],
-      description: "Sets all corners (individual corners override this)",
-    },
-    cornerStartStart: {
-      control: { type: "radio" },
-      options: [undefined, "round", "square"],
-      description: "Top-left corner in LTR (overrides cornerAll)",
-    },
-    cornerStartEnd: {
-      control: { type: "radio" },
-      options: [undefined, "round", "square"],
-      description: "Top-right corner in LTR (overrides cornerAll)",
-    },
-    cornerEndStart: {
-      control: { type: "radio" },
-      options: [undefined, "round", "square"],
-      description: "Bottom-left corner in LTR (overrides cornerAll)",
-    },
-    cornerEndEnd: {
-      control: { type: "radio" },
-      options: [undefined, "round", "square"],
-      description: "Bottom-right corner in LTR (overrides cornerAll)",
-    },
-    showHistory: {
-      control: "boolean",
-      description: "Show history sidebar",
-    },
-    showWorkspace: {
-      control: "boolean",
-      description: "Show workspace sidebar",
-    },
-    contentMaxWidth: {
-      control: "boolean",
-      description: "Constrains content to a maximum width",
-    },
-    workspaceLocation: {
-      control: { type: "radio" },
-      options: ["start", "end"],
-      description: "Position of workspace sidebar",
-    },
-    historyLocation: {
-      control: { type: "radio" },
-      options: ["start", "end"],
-      description: "Position of history sidebar",
-    },
-  },
+  argTypes: { ...ShellStoriesMeta.argTypes },
 };
 
 export const Default = {
-  args: {
-    aiEnabled: false,
-    showFrame: true,
-    cornerAll: "round",
-    cornerStartStart: undefined,
-    cornerStartEnd: undefined,
-    cornerEndStart: undefined,
-    cornerEndEnd: undefined,
-    showHistory: false,
-    showWorkspace: false,
-    workspaceLocation: "start",
-    historyLocation: "start",
-    contentMaxWidth: true,
-  },
+  args: { ...ShellStoriesMeta.args },
   render: (args) => {
     const {
       aiEnabled,
@@ -118,6 +69,11 @@ export const Default = {
       workspaceLocation,
       historyLocation,
       contentMaxWidth,
+      headerTitle,
+      historyText,
+      workspaceText,
+      messagesText,
+      inputText,
     } = args;
 
     return (
@@ -135,7 +91,13 @@ export const Default = {
         historyLocation={historyLocation}
         contentMaxWidth={contentMaxWidth}
       >
-        <CoreSlotContent />
+        <CoreSlotContent
+          headerTitle={headerTitle}
+          historyText={historyText}
+          workspaceText={workspaceText}
+          messagesText={messagesText}
+          inputText={inputText}
+        />
       </ChatShell>
     );
   },
@@ -155,62 +117,8 @@ const SLOT_CONFIGS = [
 ];
 
 export const Slots = {
-  args: {
-    aiEnabled: false,
-    showFrame: true,
-    cornerAll: "round",
-    cornerStartStart: undefined,
-    cornerStartEnd: undefined,
-    cornerEndStart: undefined,
-    cornerEndEnd: undefined,
-    showHistory: false,
-    showWorkspace: false,
-    workspaceLocation: "start",
-    historyLocation: "start",
-    contentMaxWidth: true,
-    messagesMaxWidth: "672px",
-    messagesMinWidth: "320px",
-    workspaceMinWidth: "640px",
-    historyWidth: "320px",
-  },
-  argTypes: {
-    messagesMaxWidth: {
-      control: { type: "select" },
-      options: ["480px", "560px", "672px", "800px", "960px"],
-      description: "CSS custom property: --cds-aichat-messages-max-width",
-      table: {
-        category: "CSS Custom Properties",
-        defaultValue: { summary: "672px" },
-      },
-    },
-    messagesMinWidth: {
-      control: { type: "select" },
-      options: ["280px", "320px", "400px", "480px"],
-      description: "CSS custom property: --cds-aichat-messages-min-width",
-      table: {
-        category: "CSS Custom Properties",
-        defaultValue: { summary: "320px" },
-      },
-    },
-    workspaceMinWidth: {
-      control: { type: "select" },
-      options: ["480px", "560px", "640px", "800px", "960px"],
-      description: "CSS custom property: --cds-aichat-workspace-min-width",
-      table: {
-        category: "CSS Custom Properties",
-        defaultValue: { summary: "640px" },
-      },
-    },
-    historyWidth: {
-      control: { type: "select" },
-      options: ["256px", "320px", "400px", "480px"],
-      description: "CSS custom property: --cds-aichat-history-width",
-      table: {
-        category: "CSS Custom Properties",
-        defaultValue: { summary: "320px" },
-      },
-    },
-  },
+  args: { ...ShellStoriesMeta.args, ...SlotsWC.args },
+  argTypes: { ...SlotsWC.argTypes },
   render: (args) => {
     const {
       aiEnabled,
@@ -238,13 +146,6 @@ export const Slots = {
         return acc;
       }, {}),
     );
-
-    const [cssVars, setCssVars] = useState({
-      messagesMaxWidth,
-      messagesMinWidth,
-      workspaceMinWidth,
-      historyWidth,
-    });
 
     const toggleSlot = (slotName) => {
       setSlotVisibility((prev) => ({
@@ -286,10 +187,10 @@ export const Slots = {
           historyLocation={historyLocation}
           contentMaxWidth={contentMaxWidth}
           style={{
-            "--cds-aichat-messages-max-width": cssVars.messagesMaxWidth,
-            "--cds-aichat-messages-min-width": cssVars.messagesMinWidth,
-            "--cds-aichat-workspace-min-width": cssVars.workspaceMinWidth,
-            "--cds-aichat-history-width": cssVars.historyWidth,
+            "--cds-aichat-messages-max-width": messagesMaxWidth,
+            "--cds-aichat-messages-min-width": messagesMinWidth,
+            "--cds-aichat-workspace-min-width": workspaceMinWidth,
+            "--cds-aichat-history-width": historyWidth,
           }}
         >
           {SLOT_CONFIGS.map((slot) =>
@@ -310,22 +211,8 @@ export const Slots = {
 };
 
 export const SidebarWorkspace = {
-  args: {
-    aiEnabled: false,
-    showFrame: true,
-    cornerAll: "round",
-    cornerStartStart: undefined,
-    cornerStartEnd: undefined,
-    cornerEndStart: undefined,
-    cornerEndEnd: undefined,
-    workspaceLocation: "start",
-    contentMaxWidth: true,
-  },
-  argTypes: {
-    showHistory: { control: false, table: { disable: true } },
-    historyLocation: { control: false, table: { disable: true } },
-    showWorkspace: { control: false, table: { disable: true } },
-  },
+  args: { ...ShellStoriesMeta.args, ...SidebarWorkspaceWC.args },
+  argTypes: { ...SidebarWorkspaceWC.argTypes },
   render: (args) => {
     const {
       aiEnabled,
@@ -337,6 +224,12 @@ export const SidebarWorkspace = {
       cornerEndEnd,
       workspaceLocation,
       contentMaxWidth,
+      headerText,
+      messagesText,
+      workspaceTitle,
+      workspaceBodyText,
+      workspaceBodyText2,
+      inputText,
     } = args;
     const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
 
@@ -355,11 +248,11 @@ export const SidebarWorkspace = {
         contentMaxWidth={contentMaxWidth}
       >
         <div slot="header" className="header slot-sample">
-          Chat Header
+          {headerText}
         </div>
         <div slot="messages" className="messages slot-sample">
           <div className="messages-content">
-            <p>Messages area</p>
+            <p>{messagesText}</p>
             <button
               className="workspace-toggle-btn"
               onClick={() => setIsWorkspaceOpen(!isWorkspaceOpen)}
@@ -371,7 +264,7 @@ export const SidebarWorkspace = {
         <div slot="workspace" className="workspace slot-sample">
           <div className="workspace-content">
             <div className="workspace-header">
-              <h3>Workspace</h3>
+              <h3>{workspaceTitle}</h3>
               <button
                 className="workspace-toggle-btn"
                 onClick={() => setIsWorkspaceOpen(false)}
@@ -380,13 +273,13 @@ export const SidebarWorkspace = {
               </button>
             </div>
             <div className="workspace-body">
-              <p>Workspace content goes here</p>
-              <p>This area can contain any additional tools or information.</p>
+              <p>{workspaceBodyText}</p>
+              <p>{workspaceBodyText2}</p>
             </div>
           </div>
         </div>
         <div slot="input" className="input slot-sample">
-          Input area
+          {inputText}
         </div>
       </ChatShell>
     );

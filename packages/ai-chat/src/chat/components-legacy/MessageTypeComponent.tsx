@@ -122,6 +122,7 @@ const selectMessageTypeStrings = (state: AppState) => ({
     state.languagePack.chainOfThought_statusSucceededLabel,
   chainOfThought_toolLabel: state.languagePack.chainOfThought_toolLabel,
   errors_imageSource: state.languagePack.errors_imageSource,
+  feedback_cancelLabel: state.languagePack.feedback_cancelLabel,
   feedback_categoriesLabel: state.languagePack.feedback_categoriesLabel,
   feedback_defaultPlaceholder: state.languagePack.feedback_defaultPlaceholder,
   feedback_defaultPrompt: state.languagePack.feedback_defaultPrompt,
@@ -957,6 +958,7 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
           placeholder={placeholder || languagePack.feedback_defaultPlaceholder}
           disclaimer={disclaimer}
           primaryLabel={languagePack.feedback_submitLabel}
+          cancelLabel={languagePack.feedback_cancelLabel}
         />
       );
     }

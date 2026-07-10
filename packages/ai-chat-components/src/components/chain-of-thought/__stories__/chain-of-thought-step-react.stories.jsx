@@ -1,9 +1,20 @@
+/*
+ *  Copyright IBM Corp. 2025, 2026
+ *
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ *
+ *  @license
+ */
+
 /* eslint-disable */
 import React from "react";
 import ChainOfThought from "../../../react/chain-of-thought";
 import ChainOfThoughtStep from "../../../react/chain-of-thought-step";
 import ToolCallData from "../../../react/tool-call-data";
 import Markdown from "../../../react/markdown";
+import { action } from "storybook/actions";
+import ChainOfThoughtStepWCMeta from "./chain-of-thought-step.stories";
 
 const request = `\`\`\`json
 { "query": "recent outages in eu-west", "limit": 3 }
@@ -30,36 +41,7 @@ export default {
     },
   },
   argTypes: {
-    title: {
-      control: "text",
-      description: "Label displayed in the step header.",
-    },
-    status: {
-      control: "select",
-      options: ["success", "failure", "processing"],
-      description: "Status indicator for the step.",
-    },
-    open: {
-      control: "boolean",
-      description: "Whether the step is expanded.",
-    },
-    controlled: {
-      control: "boolean",
-      description:
-        "When true, the host application must update the open state in response to toggle events.",
-    },
-    statusSucceededLabelText: {
-      control: "text",
-      description: "Assistive text when a step has succeeded.",
-    },
-    statusFailedLabelText: {
-      control: "text",
-      description: "Assistive text when a step failed.",
-    },
-    statusProcessingLabelText: {
-      control: "text",
-      description: "Assistive text when a step is processing.",
-    },
+    ...ChainOfThoughtStepWCMeta.argTypes,
     onBeforeToggle: {
       action: "onBeforeToggle",
       table: { category: "events" },
@@ -74,19 +56,9 @@ export default {
     },
   },
   args: {
-    title: "Check recent incidents",
-    status: "success",
-    open: true,
-    controlled: false,
-    statusSucceededLabelText: "Succeeded",
-    statusFailedLabelText: "Failed",
-    statusProcessingLabelText: "Processing",
-    onBeforeToggle: (event) => {
-      console.log("onBeforeToggle", event?.detail);
-    },
-    onToggle: (event) => {
-      console.log("onToggle", event?.detail);
-    },
+    ...ChainOfThoughtStepWCMeta.args,
+    onBeforeToggle: (event) => action("onBeforeToggle")(event?.detail),
+    onToggle: (event) => action("onToggle")(event?.detail),
   },
 };
 
@@ -106,17 +78,14 @@ export const Default = {
           onBeforeToggle={args.onBeforeToggle}
           onToggle={args.onToggle}
         >
-          <ToolCallData toolName="incident_lookup">
-            <Markdown
-              slot="description"
-              markdown="Look up recent outages affecting the EU region before escalating."
-            />
+          <ToolCallData toolName={args.toolName}>
+            <Markdown slot="description" markdown={args.toolDescription} />
             <Markdown slot="input" markdown={request} />
             <Markdown slot="output" markdown={response} />
           </ToolCallData>
         </ChainOfThoughtStep>
         <ChainOfThoughtStep
-          title="Awaiting confirmation"
+          title={args.secondStepTitle}
           status="processing"
           stepNumber={2}
           onBeforeToggle={args.onBeforeToggle}

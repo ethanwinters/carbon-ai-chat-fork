@@ -1,33 +1,17 @@
-import { ArgTypes, Markdown, Meta } from "@storybook/addon-docs/blocks";
-
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
 import * as ChatButtonStories from "./chat-button.stories";
 
-<Meta of={ChatButtonStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={ChatButtonStories} />
 
-# Button
+# Chat button
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/chat-button) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
 ## Overview
 
-The `cds-aichat-button` extends the Carbon Design System's [Button](https://web-components.carbondesignsystem.com/?path=/docs/components-button--overview) component with AI Chat-specific features including a quick action mode, and rounded corners designed for chat interfaces.
+Use `cds-aichat-button` to extend the Carbon Design System's [Button](https://web-components.carbondesignsystem.com/?path=/docs/components-button--overview) component with AI Chat-specific features, including a quick action mode and rounded corners designed for chat interfaces.
 
-### Getting started
-
-Here's a quick example to get you started.
-
-```html
-<cds-aichat-button> Button </cds-aichat-button>
-```
+<Canvas of={ChatButtonStories.Default} />
 
 ## Component API
 
@@ -38,10 +22,6 @@ Here's a quick example to get you started.
 ```javascript
 import "@carbon/ai-chat-components/es/components/chat-button/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(["chat-button"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
 
 ## Feedback
 

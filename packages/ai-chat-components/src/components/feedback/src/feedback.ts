@@ -113,6 +113,13 @@ class CDSAIChatFeedback extends LitElement {
   primaryLabel?: string;
 
   /**
+   * The accessible label for the button that closes the panel without submitting. A default value
+   * will be used if no value is provided here.
+   */
+  @property({ type: String, attribute: "cancel-label", reflect: true })
+  cancelLabel = "Cancel";
+
+  /**
    * The accessible label for the categories listbox. This label is used by screen readers to describe the purpose of the category selection list.
    */
   @property({ type: String, attribute: "categories-label", reflect: true })
@@ -268,7 +275,7 @@ class CDSAIChatFeedback extends LitElement {
           @click=${this._handleCancel}
         >
           <span slot="icon">${iconLoader(Close16)}</span>
-          <span slot="tooltip-content">Close</span>
+          <span slot="tooltip-content">${this.cancelLabel}</span>
         </cds-icon-button>
       </div>
       <div class="${prefix}--title-row">

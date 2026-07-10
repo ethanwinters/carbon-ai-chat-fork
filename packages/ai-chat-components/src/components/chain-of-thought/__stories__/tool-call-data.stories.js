@@ -1,5 +1,5 @@
 /*
- *  Copyright IBM Corp. 2025
+ *  Copyright IBM Corp. 2025, 2026
  *
  *  This source code is licensed under the Apache-2.0 license found in the
  *  LICENSE file in the root directory of this source tree.
@@ -41,18 +41,31 @@ export default {
     toolName: {
       control: "text",
       description: "Plain text name of the tool.",
+      table: { defaultValue: { summary: "kb_search" } },
     },
     inputLabelText: {
       control: "text",
       description: "Label text shown above the input slot.",
+      table: { defaultValue: { summary: "Input" } },
     },
     outputLabelText: {
       control: "text",
       description: "Label text shown above the output slot.",
+      table: { defaultValue: { summary: "Output" } },
     },
     toolLabelText: {
       control: "text",
       description: "Label text shown above the tool name.",
+      table: { defaultValue: { summary: "Tool" } },
+    },
+    descriptionText: {
+      control: "text",
+      description: "Description text rendered in the description slot.",
+      table: {
+        defaultValue: {
+          summary: "Searching knowledge base for password reset guidance.",
+        },
+      },
     },
   },
   args: {
@@ -60,6 +73,7 @@ export default {
     inputLabelText: "Input",
     outputLabelText: "Output",
     toolLabelText: "Tool",
+    descriptionText: "Searching knowledge base for password reset guidance.",
   },
 };
 
@@ -73,7 +87,7 @@ export const Default = {
     >
       <div slot="description">
         <cds-aichat-markdown
-          .markdown=${"Searching knowledge base for password reset guidance."}
+          .markdown=${args.descriptionText}
         ></cds-aichat-markdown>
       </div>
       <div slot="input">

@@ -13,8 +13,6 @@ import { html } from "lit";
 import { FooterActionList } from "./story-data";
 import styles from "./story-styles.scss?lit";
 
-const defaultBodyText = `This is sample content to demonstrate the footer positioning. The footer will be pushed to the bottom of the workspace shell. Shrink the workspace width below 671px to see the footer buttons stack vertically with primary actions appearing first.`;
-
 export default {
   title: "Components/Workspace shell/Footer",
   component: "cds-aichat-workspace-shell-footer",
@@ -34,6 +32,22 @@ export default {
       options: Object.keys(FooterActionList),
       description: "Select a predefined set of actions",
     },
+    bodyText: {
+      control: "text",
+      description:
+        "Sample body content shown above the footer to demonstrate footer positioning.",
+      table: {
+        defaultValue: {
+          summary:
+            "This is sample content to demonstrate the footer positioning. The footer will be pushed to the bottom of the workspace shell. Shrink the workspace width below 671px to see the footer buttons stack vertically with primary actions appearing first.",
+        },
+      },
+    },
+    "@cds-aichat-workspace-shell-footer-clicked": {
+      action: "footer-action",
+      table: { category: "events" },
+      description: "Event fired when a footer button is clicked.",
+    },
   },
   decorators: [
     (story) => html`
@@ -50,61 +64,12 @@ export default {
 export const Default = {
   args: {
     actionPreset: "Two buttons",
+    bodyText:
+      "This is sample content to demonstrate the footer positioning. The footer will be pushed to the bottom of the workspace shell. Shrink the workspace width below 671px to see the footer buttons stack vertically with primary actions appearing first.",
   },
   render: (args) => html`
     <cds-aichat-workspace-shell-body>
-      <p>${defaultBodyText}</p>
-    </cds-aichat-workspace-shell-body>
-    <cds-aichat-workspace-shell-footer
-      @cds-aichat-workspace-shell-footer-clicked=${(e) =>
-        action("footer-action")(e.detail)}
-      .actions=${FooterActionList[args.actionPreset]}
-    >
-    </cds-aichat-workspace-shell-footer>
-  `,
-};
-
-export const ThreeButtons = {
-  args: {
-    actionPreset: "Three buttons with one ghost",
-  },
-  render: (args) => html`
-    <cds-aichat-workspace-shell-body>
-      <p>${defaultBodyText}</p>
-    </cds-aichat-workspace-shell-body>
-    <cds-aichat-workspace-shell-footer
-      @cds-aichat-workspace-shell-footer-clicked=${(e) =>
-        action("footer-action")(e.detail)}
-      .actions=${FooterActionList[args.actionPreset]}
-    >
-    </cds-aichat-workspace-shell-footer>
-  `,
-};
-
-export const WithDisabled = {
-  args: {
-    actionPreset: "With disabled button",
-  },
-  render: (args) => html`
-    <cds-aichat-workspace-shell-body>
-      <p>${defaultBodyText}</p>
-    </cds-aichat-workspace-shell-body>
-    <cds-aichat-workspace-shell-footer
-      @cds-aichat-workspace-shell-footer-clicked=${(e) =>
-        action("footer-action")(e.detail)}
-      .actions=${FooterActionList[args.actionPreset]}
-    >
-    </cds-aichat-workspace-shell-footer>
-  `,
-};
-
-export const DangerActions = {
-  args: {
-    actionPreset: "Danger actions",
-  },
-  render: (args) => html`
-    <cds-aichat-workspace-shell-body>
-      <p>${defaultBodyText}</p>
+      <p>${args.bodyText}</p>
     </cds-aichat-workspace-shell-body>
     <cds-aichat-workspace-shell-footer
       @cds-aichat-workspace-shell-footer-clicked=${(e) =>

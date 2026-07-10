@@ -1,12 +1,17 @@
-import { ArgTypes, Markdown, Meta } from "@storybook/addon-docs/blocks";
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
-import * as TranscriptStories from "./transcript.stories";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./transcript.stories";
 
-<Meta of={TranscriptStories} />
+<Meta of={Stories} />
 
 # Transcript
 
-`<cds-aichat-transcript>` provides an accessible, expandable/collapsible interface for displaying audio and video transcripts.
+[Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/audio-player) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
+
+## Overview
+
+Use `cds-aichat-transcript` to give audio and video content an accessible, expandable/collapsible text alternative.
+
+<Canvas of={Stories.Default} />
 
 ## Key Features
 
@@ -16,75 +21,34 @@ import * as TranscriptStories from "./transcript.stories";
 - **Event handling**: Custom events for expand/collapse state changes
 - **Internationalization**: Support for multiple languages
 
-## Use Cases
+## With Audio Player
 
-The transcript component is ideal for:
+The transcript component works seamlessly with the audio player in a Card layout.
 
-- Providing text alternatives for audio content
-- Meeting accessibility requirements (WCAG)
-- Allowing users to search or reference specific content
-- Supporting users who prefer reading over listening
-
-## Getting started
-
-Here's a quick example to get you started.
-
-```html
-<cds-aichat-transcript
-  text="My text input is, you know, I am a teapot and then my image input is a picture of David Hasselhoff."
-  label="English Transcript"
-  language="en"
->
-</cds-aichat-transcript>
-```
-
-### With Audio Player
-
-The transcript component works seamlessly with the audio player in a Card layout:
-
-```html
-<cds-aichat-card>
-  <div slot="media" data-rounded="top">
-    <cds-aichat-audio-player
-      source="https://example.com/audio.mp3"
-      aria-label="Audio title"
-    >
-    </cds-aichat-audio-player>
-  </div>
-  <div slot="body">
-    <h4>Audio Title</h4>
-    <p>Audio description</p>
-    <cds-aichat-transcript
-      text="Transcript text here..."
-      label="English Transcript"
-      language="en"
-    >
-    </cds-aichat-transcript>
-  </div>
-</cds-aichat-card>
-```
-
-### JS (via import)
-
-```javascript
-import "@carbon/ai-chat-components/es/components/audio-player/index.js";
-```
-
-<Markdown>{`${cdnJs(["audio-player"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
+<Canvas of={Stories.WithAudioPlayer} />
 
 ## Events
 
-The component fires the following custom event:
+`expanded` is a controlled property — the component only dispatches the toggle event below, so the host is responsible for setting `expanded` back on the element:
 
 ```javascript
-const transcript = document.querySelector('cds-aichat-transcript');
+const transcript = document.querySelector("cds-aichat-transcript");
 
-transcript.addEventListener('cds-aichat-transcript-toggle', (event) => {
-  console.log('Transcript expanded:', event.detail.expanded);
+transcript.addEventListener("cds-aichat-transcript-toggle", (event) => {
+  transcript.expanded = event.detail.expanded;
 });
 ```
 
 ## Component API
 
-<ArgTypes of={TranscriptStories} />
+<ArgTypes of="cds-aichat-transcript" />
+
+## JS (via import)
+
+```javascript
+import "@carbon/ai-chat-components/es/components/audio-player/index.js";
+```
+
+## Feedback
+
+Open an issue at https://github.com/carbon-design-system/carbon-ai-chat/issues to provide feedback or request changes.

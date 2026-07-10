@@ -11,84 +11,34 @@
 import React from "react";
 
 import Feedback from "../../../react/feedback";
+import FeedbackMetaWC, {
+  Default as DefaultWC,
+  WithCategories as WithCategoriesWC,
+  WithDisclaimer as WithDisclaimerWC,
+  ReadOnly as ReadOnlyWC,
+} from "./feedback.stories";
 
-const negativeCategories = [
-  "Inaccurate",
-  "Unhelpful",
-  "Inappropriate",
-  "Not relevant",
-  "Too verbose",
-  "Missing information",
-];
-
-const positiveCategories = [
-  "Accurate",
-  "Helpful",
-  "Well-formatted",
-  "Clear explanation",
-  "Comprehensive",
-];
+const {
+  "@feedback-submit": submitEventWC,
+  "@feedback-close": closeEventWC,
+  ...feedbackArgTypesWC
+} = FeedbackMetaWC.argTypes;
 
 export default {
-  title: "Preview/Feedback",
+  title: "Components/Feedback",
   argTypes: {
-    isOpen: {
-      control: "boolean",
-      description: "Whether the feedback panel is open",
-    },
-    isReadonly: {
-      control: "boolean",
-      description: "Whether the feedback is in read-only mode",
-    },
-    title: {
-      control: "text",
-      description: "Title of the feedback panel",
-    },
-    body: {
-      control: "text",
-      description: "Body text for the user",
-    },
-    disclaimer: {
-      control: "text",
-      description: "Legal disclaimer text",
-      table: { type: { summary: "string" } },
-    },
-    disclaimerCheckbox: {
-      control: "text",
-      description: "Label text to display with disclaimer checkbox",
-      table: { type: { summary: "string" } },
-    },
-    placeholder: {
-      control: "text",
-      description: "Placeholder for the text area",
-    },
-    primaryLabel: {
-      control: "text",
-      description: "Label for the primary button",
-    },
-    showTextArea: {
-      control: "boolean",
-      description: "Show the text area (defaults to false)",
-    },
-    showBody: {
-      control: "boolean",
-      description: "Show the body text (defaults to false)",
-    },
+    ...feedbackArgTypesWC,
     onSubmit: {
       action: "onSubmit",
+      control: "none",
       table: { category: "events" },
-      description:
-        "Fires when feedback is submitted. `event.detail` includes text and selectedCategories.",
+      description: submitEventWC.description,
     },
     onClose: {
       action: "onClose",
+      control: "none",
       table: { category: "events" },
-      description: "Fires when the panel is closed without submitting.",
-    },
-    maxLength: {
-      control: "number",
-      description:
-        "The maximum number of characters allowed in the feedback text area.",
+      description: closeEventWC.description,
     },
   },
 };
@@ -109,13 +59,15 @@ const renderFeedback = (args, options) => {
         title={args.title}
         body={args.body}
         placeholder={args.placeholder}
+        categoriesLabel={args.categoriesLabel}
         primaryLabel={args.primaryLabel}
+        cancelLabel={args.cancelLabel}
         showTextArea={args.showTextArea}
         showBody={args.showBody}
-        categories={options?.categories}
+        categories={args.categories}
         disclaimer={args.disclaimer}
         disclaimerCheckbox={args.disclaimerCheckbox}
-        initialValues={options?.initialValues}
+        initialValues={args.initialValues}
         onSubmit={(event) => {
           const details = event.detail;
           handleSubmit?.(details);
@@ -130,19 +82,7 @@ const renderFeedback = (args, options) => {
 };
 
 export const Default = {
-  args: {
-    isOpen: true,
-    isReadonly: false,
-    title: "Provide feedback",
-    body: "Help us improve by sharing your thoughts",
-    placeholder: "Tell us more...",
-    primaryLabel: "Submit",
-    showTextArea: true,
-    showBody: true,
-    onSubmit: undefined,
-    onClose: undefined,
-    maxLength: 1000,
-  },
+  args: { ...DefaultWC.args },
   render: (args) =>
     renderFeedback(args, {
       onSubmit: (details) => {
@@ -160,22 +100,11 @@ export const Default = {
 };
 
 export const WithCategories = {
-  args: {
-    isOpen: true,
-    isReadonly: false,
-    title: "What went wrong?",
-    body: "Select all that apply and provide details",
-    placeholder: "Please describe the issue...",
-    primaryLabel: "Submit",
-    showTextArea: true,
-    showBody: true,
-    maxLength: 1000,
-  },
+  args: { ...WithCategoriesWC.args },
   render: (args) =>
     renderFeedback(args, {
       description:
         "Provide multiple categories when collecting specific negative feedback.",
-      categories: negativeCategories,
       onSubmit: (details) => {
         console.log("Feedback submitted:", details);
         if (typeof window !== "undefined") {
@@ -191,24 +120,9 @@ export const WithCategories = {
 };
 
 export const WithDisclaimer = {
-  args: {
-    isOpen: true,
-    isReadonly: false,
-    title: "Additional feedback",
-    body: "Help us improve by sharing your thoughts",
-    placeholder: "Your feedback...",
-    disclaimer:
-      "To better understand your feedback, a dedicated IBM team may review additional information (such as your prompt and the model output) to drive improvement of AI-powered features. Your content will not be used to train or enhance the AI model.",
-    disclaimerCheckbox:
-      "I agree to IBM collecting information related to my feedback.",
-    primaryLabel: "Submit",
-    showTextArea: true,
-    showBody: true,
-    maxLength: 1000,
-  },
+  args: { ...WithDisclaimerWC.args },
   render: (args) =>
     renderFeedback(args, {
-      categories: positiveCategories,
       onSubmit: (details) => {
         console.log("Feedback submitted:", details);
         if (typeof window !== "undefined") {
@@ -224,20 +138,6 @@ export const WithDisclaimer = {
 };
 
 export const ReadOnly = {
-  args: {
-    isOpen: true,
-    isReadonly: true,
-    title: "Your feedback",
-    showTextArea: true,
-    showBody: false,
-    maxLength: 1000,
-  },
-  render: (args) =>
-    renderFeedback(args, {
-      categories: negativeCategories,
-      initialValues: {
-        text: "The response was inaccurate and didn't address my question properly. It also included irrelevant information.",
-        selectedCategories: ["Inaccurate", "Not relevant"],
-      },
-    }),
+  args: { ...ReadOnlyWC.args },
+  render: (args) => renderFeedback(args, {}),
 };

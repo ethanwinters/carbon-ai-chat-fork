@@ -1,61 +1,36 @@
+/*
+ *  Copyright IBM Corp. 2025, 2026
+ *
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ *
+ *  @license
+ */
+
 /* eslint-disable */
 import React from "react";
 
 import Feedback from "../../../react/feedback";
 import FeedbackButtons from "../../../react/feedback-buttons";
+import FeedbackButtonsMetaWC, {
+  Default as DefaultWC,
+  WithDetailsPanel as WithDetailsPanelWC,
+} from "./feedback-buttons.stories";
+
+const {
+  "@feedback-buttons-click": clickEventWC,
+  ...feedbackButtonsArgTypesWC
+} = FeedbackButtonsMetaWC.argTypes;
 
 export default {
-  title: "Preview/Feedback/Buttons",
+  title: "Components/Feedback/Buttons",
   argTypes: {
-    isPositiveSelected: {
-      control: "boolean",
-      description: "Whether the positive button is selected",
-    },
-    isNegativeSelected: {
-      control: "boolean",
-      description: "Whether the negative button is selected",
-    },
-    isPositiveDisabled: {
-      control: "boolean",
-      description: "Whether the positive button is disabled",
-    },
-    isNegativeDisabled: {
-      control: "boolean",
-      description: "Whether the negative button is disabled",
-    },
-    positiveLabel: {
-      control: "text",
-      description: "Accessibility label for positive button",
-    },
-    negativeLabel: {
-      control: "text",
-      description: "Accessibility label for negative button",
-    },
-    // Panel-related properties - hidden by default, shown only in WithDetailsPanel story
-    hasPositiveDetails: {
-      control: "boolean",
-      description: "Whether positive button opens a details panel",
-      table: { disable: true },
-    },
-    hasNegativeDetails: {
-      control: "boolean",
-      description: "Whether negative button opens a details panel",
-      table: { disable: true },
-    },
-    isPositiveOpen: {
-      control: "boolean",
-      description: "Whether the positive details panel is open",
-      table: { disable: true },
-    },
-    isNegativeOpen: {
-      control: "boolean",
-      description: "Whether the negative details panel is open",
-      table: { disable: true },
-    },
-    panelID: {
-      control: "text",
-      description: "ID of the associated feedback panel",
-      table: { disable: true },
+    ...feedbackButtonsArgTypesWC,
+    onClick: {
+      action: "onClick",
+      control: "none",
+      table: { category: "events" },
+      description: clickEventWC.description,
     },
   },
 };
@@ -110,6 +85,14 @@ const FeedbackButtonsWithDetailsDemo = ({
   panelID,
   positiveLabel,
   negativeLabel,
+  positivePanelTitle,
+  negativePanelTitle,
+  positivePanelPrompt,
+  negativePanelPrompt,
+  positiveTextAreaPlaceholder,
+  negativeTextAreaPlaceholder,
+  cancelLabel,
+  submitLabel,
 }) => {
   const [state, setState] = React.useState({
     isPositiveSelected: false,
@@ -192,9 +175,11 @@ const FeedbackButtonsWithDetailsDemo = ({
     const categories = isPositive
       ? reactPositiveCategories
       : reactNegativeCategories;
+    const title = isPositive ? positivePanelTitle : negativePanelTitle;
+    const prompt = isPositive ? positivePanelPrompt : negativePanelPrompt;
     const placeholder = isPositive
-      ? "What worked well?"
-      : "How could this be improved?";
+      ? positiveTextAreaPlaceholder
+      : negativeTextAreaPlaceholder;
 
     return (
       <Feedback
@@ -205,16 +190,12 @@ const FeedbackButtonsWithDetailsDemo = ({
         isReadonly={state.isSubmitted}
         categories={categories}
         showTextArea
-        showPrompt
-        title={isPositive ? "Tell us what worked" : "Tell us what went wrong"}
-        prompt={
-          isPositive
-            ? "Share what made this response helpful."
-            : "Share what missed the mark so we can improve."
-        }
+        showBody
+        title={title}
+        body={prompt}
         placeholder={placeholder}
-        cancelLabel="Close"
-        submitLabel="Submit"
+        cancelLabel={cancelLabel}
+        primaryLabel={submitLabel}
         onClose={() => handleButtonClick(isPositive)}
         onSubmit={(event) => handleSubmit(isPositive, event.detail)}
       />
@@ -262,14 +243,7 @@ const FeedbackButtonsWithDetailsDemo = ({
 };
 
 export const Default = {
-  args: {
-    isPositiveSelected: false,
-    isNegativeSelected: false,
-    isPositiveDisabled: false,
-    isNegativeDisabled: false,
-    positiveLabel: "Thumbs up",
-    negativeLabel: "Thumbs down",
-  },
+  args: { ...DefaultWC.args },
   render: (args) =>
     renderButtons(args, {
       description: "Click the buttons to provide feedback on this message.",
@@ -285,31 +259,8 @@ export const Default = {
 };
 
 export const WithDetailsPanel = {
-  args: {
-    positiveLabel: "Thumbs up",
-    negativeLabel: "Thumbs down",
-    panelID: "feedback-panel-example",
-    hasPositiveDetails: true,
-    hasNegativeDetails: true,
-  },
-  argTypes: {
-    // Show panel-related properties in the table but make them read-only
-    hasPositiveDetails: {
-      control: "boolean",
-      description: "Whether positive button opens a details panel",
-      table: { disable: false },
-    },
-    hasNegativeDetails: {
-      control: "boolean",
-      description: "Whether negative button opens a details panel",
-      table: { disable: false },
-    },
-    panelID: {
-      control: false,
-      description: "ID of the associated feedback panel",
-      table: { disable: false },
-    },
-  },
+  args: { ...WithDetailsPanelWC.args },
+  argTypes: { ...WithDetailsPanelWC.argTypes },
   render: (args) => (
     <FeedbackButtonsWithDetailsDemo
       hasPositiveDetails={args.hasPositiveDetails}
@@ -317,6 +268,14 @@ export const WithDetailsPanel = {
       panelID={args.panelID}
       positiveLabel={args.positiveLabel}
       negativeLabel={args.negativeLabel}
+      positivePanelTitle={args.positivePanelTitle}
+      negativePanelTitle={args.negativePanelTitle}
+      positivePanelPrompt={args.positivePanelPrompt}
+      negativePanelPrompt={args.negativePanelPrompt}
+      positiveTextAreaPlaceholder={args.positiveTextAreaPlaceholder}
+      negativeTextAreaPlaceholder={args.negativeTextAreaPlaceholder}
+      cancelLabel={args.cancelLabel}
+      submitLabel={args.submitLabel}
     />
   ),
 };

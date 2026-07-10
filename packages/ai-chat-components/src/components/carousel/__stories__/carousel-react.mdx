@@ -1,16 +1,20 @@
-import { ArgTypes, Markdown, Meta } from "@storybook/addon-docs/blocks";
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
 import * as CarouselReactStories from "./carousel-react.stories";
 
 <Meta of={CarouselReactStories} />
 
 # Carousel
 
-A basic carousel component implementation based on the `@carbon/utilities` carousel utility. For more information on the implementation refer to the [carousel](https://github.com/carbon-design-system/carbon/tree/main/packages/utilities/src/carousel) documentation in carbon core.
+[Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/carousel) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-## Getting started
+## Overview
 
-Here's a quick example to get you started.
+The `<Carousel>` component wraps the `cds-aichat-carousel` web component to scroll a set of children, such as `Card` elements, through a paged viewport with next/previous controls.
+
+<Canvas of={CarouselReactStories.Default} />
+
+## Usage
 
 ```jsx
 import { Carousel } from "@carbon/ai-chat-components/es/react/carousel.js";
@@ -39,6 +43,8 @@ function CarouselExample() {
 
 ## Component API
 
-## `<Carousel>`
-
 <ArgTypes of={CarouselReactStories.Default} />
+
+## Feedback
+
+Open an issue at https://github.com/carbon-design-system/carbon-ai-chat/issues to provide feedback or request changes.

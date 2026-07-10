@@ -1,7 +1,7 @@
 /**
  * @license
  *
- * Copyright IBM Corp. 2025
+ * Copyright IBM Corp. 2025, 2026
  *
  * This source code is licensed under the Apache-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,14 +15,16 @@ import { html, nothing } from "lit";
 import styles from "./story-styles.scss?lit";
 
 // Core slots for Default, No Header, and Panels stories
-const coreSlotContent = html`
+const coreSlotContent = (args) => html`
   <cds-aichat-toolbar slot="header">
-    <div slot="title">Header</div>
+    <div slot="title">${args.headerTitle}</div>
   </cds-aichat-toolbar>
-  <div slot="history" class="history slot-sample">History</div>
-  <div slot="workspace" class="workspace slot-sample">Workspace</div>
-  <div slot="messages" class="messages slot-sample">Messages</div>
-  <div slot="input" class="input slot-sample">Input</div>
+  <div slot="history" class="history slot-sample">${args.historyText}</div>
+  <div slot="workspace" class="workspace slot-sample">
+    ${args.workspaceText}
+  </div>
+  <div slot="messages" class="messages slot-sample">${args.messagesText}</div>
+  <div slot="input" class="input slot-sample">${args.inputText}</div>
 `;
 
 export default {
@@ -40,10 +42,21 @@ export default {
     workspaceLocation: "start",
     historyLocation: "start",
     contentMaxWidth: true,
+    headerTitle: "Header",
+    historyText: "History",
+    workspaceText: "Workspace",
+    messagesText: "Messages",
+    inputText: "Input",
   },
   argTypes: {
-    aiEnabled: { control: "boolean" },
-    showFrame: { control: "boolean" },
+    aiEnabled: {
+      control: "boolean",
+      description: "Enable AI-specific theming",
+    },
+    showFrame: {
+      control: "boolean",
+      description: "Show visual frame around content",
+    },
     cornerAll: {
       control: { type: "radio" },
       options: ["round", "square"],
@@ -69,16 +82,52 @@ export default {
       options: [undefined, "round", "square"],
       description: "Bottom-right corner in LTR (overrides cornerAll)",
     },
-    showHistory: { control: "boolean" },
-    showWorkspace: { control: "boolean" },
-    contentMaxWidth: { control: "boolean" },
+    showHistory: {
+      control: "boolean",
+      description: "Show history sidebar",
+    },
+    showWorkspace: {
+      control: "boolean",
+      description: "Show workspace sidebar",
+    },
+    contentMaxWidth: {
+      control: "boolean",
+      description: "Constrains content to a maximum width",
+    },
     workspaceLocation: {
       control: { type: "radio" },
       options: ["start", "end"],
+      description: "Position of workspace sidebar",
     },
     historyLocation: {
       control: { type: "radio" },
       options: ["start", "end"],
+      description: "Position of history sidebar",
+    },
+    headerTitle: {
+      control: "text",
+      description: "Text shown in the header slot's toolbar title.",
+      table: { defaultValue: { summary: "Header" } },
+    },
+    historyText: {
+      control: "text",
+      description: "Text shown in the history slot.",
+      table: { defaultValue: { summary: "History" } },
+    },
+    workspaceText: {
+      control: "text",
+      description: "Text shown in the workspace slot.",
+      table: { defaultValue: { summary: "Workspace" } },
+    },
+    messagesText: {
+      control: "text",
+      description: "Text shown in the messages slot.",
+      table: { defaultValue: { summary: "Messages" } },
+    },
+    inputText: {
+      control: "text",
+      description: "Text shown in the input slot.",
+      table: { defaultValue: { summary: "Input" } },
     },
   },
   decorators: [
@@ -123,7 +172,7 @@ export const Default = {
         workspace-location=${workspaceLocation}
         history-location=${historyLocation}
       >
-        ${coreSlotContent}
+        ${coreSlotContent(args)}
       </cds-aichat-shell>
     `;
   },
@@ -322,11 +371,42 @@ export const SidebarWorkspace = {
     showWorkspace: undefined,
     showHistory: undefined,
     historyLocation: undefined,
+    headerText: "Chat Header",
+    messagesText: "Messages area",
+    workspaceTitle: "Workspace",
+    workspaceBodyText: "Workspace content goes here",
+    workspaceBodyText2:
+      "This area can contain any additional tools or information.",
+    inputText: "Input area",
   },
   argTypes: {
     showHistory: { control: false, table: { disable: true } },
     historyLocation: { control: false, table: { disable: true } },
     showWorkspace: { control: false, table: { disable: true } },
+    headerText: {
+      control: "text",
+      description: "Text shown in the header slot.",
+      table: { defaultValue: { summary: "Chat Header" } },
+    },
+    workspaceTitle: {
+      control: "text",
+      description: "Title shown in the workspace panel.",
+      table: { defaultValue: { summary: "Workspace" } },
+    },
+    workspaceBodyText: {
+      control: "text",
+      description: "First body paragraph in the workspace panel.",
+      table: { defaultValue: { summary: "Workspace content goes here" } },
+    },
+    workspaceBodyText2: {
+      control: "text",
+      description: "Second body paragraph in the workspace panel.",
+      table: {
+        defaultValue: {
+          summary: "This area can contain any additional tools or information.",
+        },
+      },
+    },
   },
   render: (args) => {
     const {
@@ -339,6 +419,12 @@ export const SidebarWorkspace = {
       cornerEndEnd,
       workspaceLocation,
       contentMaxWidth,
+      headerText,
+      messagesText,
+      workspaceTitle,
+      workspaceBodyText,
+      workspaceBodyText2,
+      inputText,
     } = args;
 
     // Configuration constants
@@ -382,10 +468,10 @@ export const SidebarWorkspace = {
         ?content-max-width=${contentMaxWidth}
         workspace-location=${workspaceLocation}
       >
-        <div slot="header" class="header slot-sample">Chat Header</div>
+        <div slot="header" class="header slot-sample">${headerText}</div>
         <div slot="messages" class="messages slot-sample">
           <div class="messages-content">
-            <p>Messages area</p>
+            <p>${messagesText}</p>
             <button class="workspace-toggle-btn" @click=${toggleWorkspace}>
               Open workspace
             </button>
@@ -394,18 +480,18 @@ export const SidebarWorkspace = {
         <div slot="workspace" class="workspace slot-sample">
           <div class="workspace-content">
             <div class="workspace-header">
-              <h3>Workspace</h3>
+              <h3>${workspaceTitle}</h3>
               <button class="workspace-toggle-btn" @click=${toggleWorkspace}>
                 Close
               </button>
             </div>
             <div class="workspace-body">
-              <p>Workspace content goes here</p>
-              <p>This area can contain any additional tools or information.</p>
+              <p>${workspaceBodyText}</p>
+              <p>${workspaceBodyText2}</p>
             </div>
           </div>
         </div>
-        <div slot="input" class="input slot-sample">Input area</div>
+        <div slot="input" class="input slot-sample">${inputText}</div>
       </cds-aichat-shell>
     `;
   },

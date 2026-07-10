@@ -1,33 +1,17 @@
-import { ArgTypes, Markdown, Meta } from '@storybook/addon-docs/blocks';
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./processing.stories";
 
-import { cdnJs, cdnCss } from "../../../globals/internal/storybook-cdn";
-import * as ProcessingStories from "./processing.stories";
-
-<Meta of={ProcessingStories} parameters={{ previewTabs: { "storybook/docs/panel": { title: "Overview" } } }} />
+<Meta of={Stories} />
 
 # Processing
 
 [Source code](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/packages/ai-chat-components/src/components/processing) &nbsp;|&nbsp; [Feedback](https://github.com/carbon-design-system/carbon-ai-chat/issues)
 
-
-## Table of Contents
-- [Overview](#overview)
-- [Component API](#component-api)
-- [JS (via import)](#js-via-import)
-- [JS (via CDN)](#js-via-cdn)
-- [Feedback](#feedback)
-
 ## Overview
 
 Use `cds-aichat-processing` to show a compact loading treatment while an AI response is being generated.
 
-### Getting started
-
-Here's a quick example to get you started.
-
-```html
-<cds-aichat-processing loop></cds-aichat-processing>
-```
+<Canvas of={Stories.Default} />
 
 ## Component API
 
@@ -38,10 +22,6 @@ Here's a quick example to get you started.
 ```javascript
 import "@carbon/ai-chat-components/es/components/processing/index.js";
 ```
-
-
-<Markdown>{`${cdnJs(["processing"])}`}</Markdown>
-<Markdown>{`${cdnCss()}`}</Markdown>
 
 ## Feedback
 
