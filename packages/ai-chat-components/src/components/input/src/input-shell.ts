@@ -66,7 +66,13 @@ class InputShellElement extends LitElement {
   private _hasMessageActions = false;
 
   @state()
+  private _hasFileUploads = false;
+
+  @state()
   private _editorKeyboardFocus = false;
+
+  /** Watches the slotted file-uploads element for `has-uploads` attribute changes. */
+  private _fileUploadsObserver: MutationObserver | null = null;
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -90,6 +96,7 @@ class InputShellElement extends LitElement {
       "cds-aichat-prompt-blur",
       this._handlePromptBlur as EventListener,
     );
+    this._fileUploadsObserver?.disconnect();
   }
 
   override willUpdate(changedProperties: PropertyValues): void {
@@ -104,6 +111,7 @@ class InputShellElement extends LitElement {
     // Deriving here (rather than snapshotting in the handler) re-reads the
     // settled assignment each render, so the occupancy can't latch.
     this._updateHasMessageActions();
+    this._updateHasFileUploads();
   }
 
   override render() {
@@ -112,6 +120,12 @@ class InputShellElement extends LitElement {
       [`${prefix}--input-container--has-message-actions`]:
         this._hasMessageActions,
       [`${prefix}--input-container--expanded`]: this.expanded,
+    };
+
+    const uploadsRowClasses = {
+      [`${prefix}--input-uploads-and-autocomplete`]: true,
+      [`${prefix}--input-uploads-and-autocomplete--has-uploads`]:
+        this._hasFileUploads,
     };
 
     const textAreaClasses = {
@@ -137,8 +151,11 @@ class InputShellElement extends LitElement {
     return html`
       <div class="${prefix}--input-shell">
         <div class=${classMap(containerClasses)}>
-          <div class="${prefix}--input-uploads-and-autocomplete">
-            <slot name="file-uploads"></slot>
+          <div class=${classMap(uploadsRowClasses)}>
+            <slot
+              name="file-uploads"
+              @slotchange=${this._handleFileUploadsSlotChange}
+            ></slot>
             <slot name="autocomplete-content"></slot>
           </div>
           <div class="${prefix}--field-messaging-container">
@@ -175,6 +192,29 @@ class InputShellElement extends LitElement {
     this.requestUpdate();
   };
 
+  private _handleFileUploadsSlotChange = (): void => {
+    // Reconnect the MutationObserver to whatever element is now slotted so we
+    // re-render when its `has-uploads` attribute changes (which doesn't fire a
+    // slotchange event).
+    this._fileUploadsObserver?.disconnect();
+    const slot = this.renderRoot?.querySelector(
+      `slot[name="file-uploads"]`,
+    ) as HTMLSlotElement | null;
+    const el = slot?.assignedElements()[0];
+    if (el) {
+      if (!this._fileUploadsObserver) {
+        this._fileUploadsObserver = new MutationObserver(() =>
+          this.requestUpdate(),
+        );
+      }
+      this._fileUploadsObserver.observe(el, {
+        attributes: true,
+        attributeFilter: ["has-uploads"],
+      });
+    }
+    this.requestUpdate();
+  };
+
   /**
    * Derives `_hasMessageActions` from the `message-actions` slot's current
    * occupancy. Consumers may project a writeable passthrough
@@ -191,6 +231,18 @@ class InputShellElement extends LitElement {
           .assignedElements()
           .some((element) => !element.hasAttribute("data-prompt-line-slot"))
       : false;
+  }
+
+  private _updateHasFileUploads(): void {
+    const slot = this.renderRoot?.querySelector(
+      `slot[name="file-uploads"]`,
+    ) as HTMLSlotElement | null;
+
+    this._hasFileUploads = slot
+      ? slot.assignedElements().some((el) => el.hasAttribute("has-uploads"))
+      : false;
+
+    this.toggleAttribute("has-file-uploads", this._hasFileUploads);
   }
 }
 

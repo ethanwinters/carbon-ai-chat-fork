@@ -66,11 +66,15 @@
 // drop shadow appear above the shell instead of below.
 :host(:not([rounded]):not([disabled])) .#{$prefix}--input-container--expanded {
   border-block-end: none;
-  border-block-start: 1px solid theme.$border-subtle;
 
   &:focus-within {
     box-shadow: 0 -4px 8px 0 theme.$ai-drop-shadow;
   }
+}
+
+:host(:not([rounded]):not([disabled]):not([has-error]):not([has-file-uploads]))
+  .#{$prefix}--input-container--expanded {
+  border-block-start: 1px solid theme.$border-subtle;
 }
 
 .#{$prefix}--input-container:focus-within {
@@ -96,6 +100,13 @@
   border: 1px solid theme.$support-error;
 }
 
+// Non-rounded shell with file uploads — round the top corners to visually
+// contain the upload chips.
+:host(:not([rounded])[has-file-uploads]) .#{$prefix}--input-container {
+  border-start-end-radius: layout.$spacing-03;
+  border-start-start-radius: layout.$spacing-03;
+}
+
 // Message actions visible — reduce start padding
 .#{$prefix}--input-container--has-message-actions {
   padding-inline-start: layout.$spacing-03;
@@ -109,8 +120,21 @@
 // the row break.
 // -----------------------------------------------------------
 .#{$prefix}--input-uploads-and-autocomplete {
+  position: relative;
+  box-sizing: border-box;
   flex-basis: 100%;
-  inline-size: 100%;
+}
+
+.#{$prefix}--input-uploads-and-autocomplete--has-uploads::after {
+  position: absolute;
+  z-index: -1;
+  display: block;
+  background: theme.$border-subtle-00;
+  block-size: 1px;
+  content: "";
+  inline-size: calc(100% + #{layout.$spacing-05} + #{layout.$spacing-03});
+  inset-block-end: 0;
+  inset-inline-start: calc(-1 * #{layout.$spacing-03});
 }
 
 // -----------------------------------------------------------
@@ -218,6 +242,7 @@
   flex-wrap: wrap;
   inline-size: 100%;
   margin-block-start: layout.$spacing-03;
+  margin-inline-start: layout.$spacing-03;
   max-block-size: 200px;
   overflow-x: hidden;
   overflow-y: auto;
