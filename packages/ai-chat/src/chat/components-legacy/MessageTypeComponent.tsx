@@ -10,7 +10,7 @@
 /* eslint-disable react/no-array-index-key */
 
 import Attachment16 from "@carbon/icons/es/attachment/16.js";
-import { carbonIconToReact } from "./../utils/carbonIcon";
+import { carbonIconToReact } from "../utils/carbonIcon";
 import React, {
   useCallback,
   useEffect,
@@ -33,11 +33,11 @@ import Feedback, {
 import prefix from "@carbon/ai-chat-components/es/globals/settings.js";
 import { SystemMessage } from "../components/SystemMessage";
 import { ConnectToHumanAgent } from "./responseTypes/humanAgent/ConnectToHumanAgent";
-import { AudioComponent } from "./responseTypes/audio/AudioComponent";
+import { AudioComponent } from "../components/messages/AudioComponent";
 import { ButtonItemComponent } from "./responseTypes/buttonItem/ButtonItemComponent";
-import { CardItemComponent } from "./responseTypes/card/CardItemComponent";
+import { CardItemComponent } from "../components/messages/CardItemComponent";
 import { PreviewCardComponent } from "./responseTypes/previewCard/PreviewCardComponent";
-import { CarouselItemComponent } from "./responseTypes/carousel/CarouselItemComponent";
+import { CarouselItemComponent } from "../components/messages/CarouselItemComponent";
 import { ConversationalSearch } from "./responseTypes/conversationalSearch/ConversationalSearch";
 import UserDefinedResponse from "../components/UserDefinedResponse";
 import CustomFooterSlot from "./responseTypes/custom/CustomFooterSlot";
@@ -48,7 +48,7 @@ import { IFrameMessage } from "./responseTypes/iframe/IFrameMessage";
 import { Image } from "./responseTypes/image/Image";
 import { OptionComponent } from "./responseTypes/options/OptionComponent";
 import { MarkdownWithErrorHandling } from "../components/util/MarkdownWithErrorHandling";
-import { VideoComponent } from "./responseTypes/video/VideoComponent";
+import { VideoComponent } from "../components/messages/VideoComponent";
 import { useSelector } from "../hooks/useSelector";
 import { shallowEqual } from "../store/appStore";
 import { AppState } from "../../types/state/AppState";

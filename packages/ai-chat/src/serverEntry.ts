@@ -184,7 +184,7 @@ export {
   textToDoc,
 } from "./types/utilities/inputUtils";
 
-export { DeepPartial } from "../src/types/utilities/DeepPartial";
+export { DeepPartial } from "./types/utilities/DeepPartial";
 export type { default as ObjectMap } from "./types/utilities/ObjectMap";
 
 export {
