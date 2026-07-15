@@ -23,7 +23,7 @@ import prefix from "../../../globals/settings.js";
 import type {
   FileUpload,
   FileRemoveEventDetail,
-} from "../../input/src/types.js";
+} from "../../prompt-line/src/types.js";
 
 import "./file-upload-item.js";
 import styles from "./file-uploads.scss?lit";
@@ -210,22 +210,24 @@ class FileUploadsElement extends LitElement {
     return html`
       <div class="${prefix}--file-uploads-live-region" aria-live="polite"></div>
       <div class="${prefix}--file-uploads-live-region" aria-live="polite"></div>
-      ${this.uploads && this.uploads.length > 0
-        ? html`
-            <div class="${prefix}--file-uploads-container">
-              ${this.uploads.map(
-                (upload) => html`
-                  <cds-aichat-file-upload-item
-                    .upload="${upload}"
-                    remove-file-label="${this.removeFileLabel}"
-                    uploading-file-label="${this.uploadingFileLabel}"
-                    @cds-aichat-file-remove="${this._handleFileRemove}"
-                  ></cds-aichat-file-upload-item>
-                `,
-              )}
-            </div>
-          `
-        : nothing}
+      ${
+        this.uploads && this.uploads.length > 0
+          ? html`
+              <div class="${prefix}--file-uploads-container">
+                ${this.uploads.map(
+                  (upload) => html`
+                    <cds-aichat-file-upload-item
+                      .upload="${upload}"
+                      remove-file-label="${this.removeFileLabel}"
+                      uploading-file-label="${this.uploadingFileLabel}"
+                      @cds-aichat-file-remove="${this._handleFileRemove}"
+                    ></cds-aichat-file-upload-item>
+                  `,
+                )}
+              </div>
+            `
+          : nothing
+      }
     `;
   }
 }

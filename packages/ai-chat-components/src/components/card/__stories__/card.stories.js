@@ -353,12 +353,16 @@ export const CardFooter = {
       args.maxWidth,
       () => html`
         <cds-aichat-card-footer
-          style=${args["--cds-aichat-border-radius"]
-            ? "--cds-aichat-border-radius: 8px;"
-            : ""}
-          .actions=${{ ...cardFooterPresets, ...previewCardFooterPresets }[
-            args.footerActions
-          ]}
+          style=${
+            args["--cds-aichat-border-radius"]
+              ? "--cds-aichat-border-radius: 8px;"
+              : ""
+          }
+          .actions=${
+            { ...cardFooterPresets, ...previewCardFooterPresets }[
+              args.footerActions
+            ]
+          }
           size=${ifDefined(args.footerSize)}
           @cds-aichat-card-footer-action=${(e) => action("action")(e.detail)}
         ></cds-aichat-card-footer>

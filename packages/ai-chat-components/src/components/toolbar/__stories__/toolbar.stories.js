@@ -233,19 +233,21 @@ export const Default = {
         ${fixedActions}
 
         <!-- AI Label slot -->
-        ${aiLabel
-          ? html` <cds-ai-label
-              size="2xs"
-              autoalign
-              alignment="bottom"
-              slot="decorator"
-            >
-              <div slot="body-text">
-                <h4 class="margin-bottom-05">${aiLabelHeading}</h4>
-                <div>${aiLabelBody}</div>
-              </div>
-            </cds-ai-label>`
-          : ""}
+        ${
+          aiLabel
+            ? html` <cds-ai-label
+                size="2xs"
+                autoalign
+                alignment="bottom"
+                slot="decorator"
+              >
+                <div slot="body-text">
+                  <h4 class="margin-bottom-05">${aiLabelHeading}</h4>
+                  <div>${aiLabelBody}</div>
+                </div>
+              </cds-ai-label>`
+            : ""
+        }
       </cds-aichat-toolbar>
     `;
   },

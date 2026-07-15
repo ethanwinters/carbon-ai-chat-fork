@@ -19,7 +19,7 @@ import SendFilled16 from "@carbon/icons/es/send--filled/16.js";
 
 import styles from "./autocomplete-item.scss?lit";
 
-import type { SuggestionItem } from "../../input/src/types.js";
+import type { SuggestionItem } from "../../prompt-line/src/types.js";
 
 const blockClass = `${prefix}-autocomplete-item`;
 
@@ -162,39 +162,49 @@ class AutocompleteItemElement extends LitElement {
           ${this._renderAvatar()}
           <div class="${blockClass}__text">
             <div class="${blockClass}__label">
-              ${typed
-                ? html`<span class="${blockClass}__label-typed">${typed}</span>`
-                : ""}${remainder
-                ? html`<span class="${blockClass}__label-remainder"
-                    >${remainder}</span
-                  >`
-                : ""}
+              ${
+                typed
+                  ? html`<span class="${blockClass}__label-typed"
+                      >${typed}</span
+                    >`
+                  : ""
+              }${
+                remainder
+                  ? html`<span class="${blockClass}__label-remainder"
+                      >${remainder}</span
+                    >`
+                  : ""
+              }
             </div>
-            ${this.item.description
-              ? html`
-                  <div class="${blockClass}__description">
-                    ${this.item.description}
-                  </div>
-                `
-              : null}
+            ${
+              this.item.description
+                ? html`
+                    <div class="${blockClass}__description">
+                      ${this.item.description}
+                    </div>
+                  `
+                : null
+            }
           </div>
         </div>
-        ${this.enableSendButton
-          ? html`
-              <cds-icon-button
-                class="${blockClass}__send"
-                kind="ghost"
-                size="md"
-                align="${this.isRTL ? "top-start" : "top-end"}"
-                @click="${this._handleSendClick}"
-                @keydown="${this._handleSendKeydown}"
-                aria-label="Send ${this.item.label}"
-              >
-                ${iconLoader(SendFilled16, { slot: "icon" })}
-                <span slot="tooltip-content">Send message</span>
-              </cds-icon-button>
-            `
-          : null}
+        ${
+          this.enableSendButton
+            ? html`
+                <cds-icon-button
+                  class="${blockClass}__send"
+                  kind="ghost"
+                  size="md"
+                  align="${this.isRTL ? "top-start" : "top-end"}"
+                  @click="${this._handleSendClick}"
+                  @keydown="${this._handleSendKeydown}"
+                  aria-label="Send ${this.item.label}"
+                >
+                  ${iconLoader(SendFilled16, { slot: "icon" })}
+                  <span slot="tooltip-content">Send message</span>
+                </cds-icon-button>
+              `
+            : null
+        }
       </div>
     `;
   }

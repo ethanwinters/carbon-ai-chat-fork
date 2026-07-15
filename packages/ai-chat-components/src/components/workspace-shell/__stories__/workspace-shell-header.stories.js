@@ -89,16 +89,20 @@ const renderHeader = (args) => html`
     subtitle-text="${args.subTitleText}"
     ?collapsible=${args.collapsible}
   >
-    ${args.descriptionType !== "none"
-      ? getHeaderDescription(args.descriptionType)
-      : ""}
-    ${args.showAction
-      ? html`
-          <cds-button kind="tertiary" slot="header-action">
-            Edit Plan ${iconLoader(Edit16, { slot: "icon" })}
-          </cds-button>
-        `
-      : ""}
+    ${
+      args.descriptionType !== "none"
+        ? getHeaderDescription(args.descriptionType)
+        : ""
+    }
+    ${
+      args.showAction
+        ? html`
+            <cds-button kind="tertiary" slot="header-action">
+              Edit Plan ${iconLoader(Edit16, { slot: "icon" })}
+            </cds-button>
+          `
+        : ""
+    }
   </cds-aichat-workspace-shell-header>
   <cds-aichat-workspace-shell-body>
     ${getBodyContent("short")}

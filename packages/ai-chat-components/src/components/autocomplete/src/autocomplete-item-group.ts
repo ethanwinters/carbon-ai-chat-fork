@@ -17,7 +17,7 @@ import prefix from "../../../globals/settings.js";
 import styles from "./autocomplete-item-group.scss?lit";
 import "./autocomplete-item.js";
 
-import type { SuggestionItem } from "../../input/src/types.js";
+import type { SuggestionItem } from "../../prompt-line/src/types.js";
 
 const blockClass = `${prefix}-autocomplete-item-group`;
 
@@ -101,9 +101,11 @@ class AutocompleteItemGroupElement extends LitElement {
 
     return html`
       <div class="${blockClass}" role="listbox" aria-label="${this.title}">
-        ${this.title
-          ? html` <div class="${blockClass}__title">${this.title}</div> `
-          : null}
+        ${
+          this.title
+            ? html` <div class="${blockClass}__title">${this.title}</div> `
+            : null
+        }
         <div class="${blockClass}__items">
           ${this.items.map((item, index) => {
             const isLastItem =

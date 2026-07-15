@@ -92,26 +92,30 @@ export const Small = {
             <h4>${args.cardTitle}</h4>
             <p>${args.cardSubtitle}</p>
           </div>
-          ${args.footerActions
-            ? html`
-                <cds-aichat-card-footer
-                  size="md"
-                  .actions=${previewCardFooterPresets[args.footerActions]}
-                  @cds-aichat-card-footer-action=${(e) =>
-                    action("action")(e.detail)}
-                ></cds-aichat-card-footer>
-              `
-            : ""}
-          ${args.aiLabel
-            ? html`<cds-ai-label
-                size="mini"
-                autoalign
-                alignment="bottom-right"
-                slot="decorator"
-              >
-                ${aiContent}
-              </cds-ai-label>`
-            : ""}
+          ${
+            args.footerActions
+              ? html`
+                  <cds-aichat-card-footer
+                    size="md"
+                    .actions=${previewCardFooterPresets[args.footerActions]}
+                    @cds-aichat-card-footer-action=${(e) =>
+                      action("action")(e.detail)}
+                  ></cds-aichat-card-footer>
+                `
+              : ""
+          }
+          ${
+            args.aiLabel
+              ? html`<cds-ai-label
+                  size="mini"
+                  autoalign
+                  alignment="bottom-right"
+                  slot="decorator"
+                >
+                  ${aiContent}
+                </cds-ai-label>`
+              : ""
+          }
         </cds-aichat-card>
       `,
     ),
@@ -151,26 +155,30 @@ export const Default = {
             <br />
           </div>
 
-          ${args.footerActions
-            ? html`
-                <cds-aichat-card-footer
-                  size="md"
-                  .actions=${previewCardFooterPresets[args.footerActions]}
-                  @cds-aichat-card-footer-action=${(e) =>
-                    action("action")(e.detail)}
-                ></cds-aichat-card-footer>
-              `
-            : ""}
-          ${args.aiLabel
-            ? html`<cds-ai-label
-                size="mini"
-                autoalign
-                alignment="bottom-right"
-                slot="decorator"
-              >
-                ${aiContent}
-              </cds-ai-label>`
-            : ""}
+          ${
+            args.footerActions
+              ? html`
+                  <cds-aichat-card-footer
+                    size="md"
+                    .actions=${previewCardFooterPresets[args.footerActions]}
+                    @cds-aichat-card-footer-action=${(e) =>
+                      action("action")(e.detail)}
+                  ></cds-aichat-card-footer>
+                `
+              : ""
+          }
+          ${
+            args.aiLabel
+              ? html`<cds-ai-label
+                  size="mini"
+                  autoalign
+                  alignment="bottom-right"
+                  slot="decorator"
+                >
+                  ${aiContent}
+                </cds-ai-label>`
+              : ""
+          }
         </cds-aichat-card>
       `,
     ),
@@ -216,16 +224,18 @@ export const WithToolbar = {
                 </h4>
               </div>
               <!-- AI Label slot -->
-              ${args.aiLabel
-                ? html` <cds-ai-label
-                    size="2xs"
-                    autoalign
-                    alignment="bottom"
-                    slot="decorator"
-                  >
-                    ${aiContent}
-                  </cds-ai-label>`
-                : ""}
+              ${
+                args.aiLabel
+                  ? html` <cds-ai-label
+                      size="2xs"
+                      autoalign
+                      alignment="bottom"
+                      slot="decorator"
+                    >
+                      ${aiContent}
+                    </cds-ai-label>`
+                  : ""
+              }
             </cds-aichat-toolbar>
           </div>
           <div slot="body">
@@ -238,16 +248,18 @@ export const WithToolbar = {
             <br />
           </div>
 
-          ${args.footerActions
-            ? html`
-                <cds-aichat-card-footer
-                  size="md"
-                  .actions=${previewCardFooterPresets[args.footerActions]}
-                  @cds-aichat-card-footer-action=${(e) =>
-                    action("action")(e.detail)}
-                ></cds-aichat-card-footer>
-              `
-            : ""}
+          ${
+            args.footerActions
+              ? html`
+                  <cds-aichat-card-footer
+                    size="md"
+                    .actions=${previewCardFooterPresets[args.footerActions]}
+                    @cds-aichat-card-footer-action=${(e) =>
+                      action("action")(e.detail)}
+                  ></cds-aichat-card-footer>
+                `
+              : ""
+          }
         </cds-aichat-card>
       `,
     ),
@@ -349,18 +361,20 @@ export const WithSteps = {
                   <p id="status-label">Status: running</p>
                 </div>
               </div>
-              ${args.aiLabel
-                ? html`
-                    <cds-ai-label
-                      size="mini"
-                      autoalign
-                      alignment="bottom"
-                      slot="decorator"
-                    >
-                      ${aiContent}
-                    </cds-ai-label>
-                  `
-                : ""}
+              ${
+                args.aiLabel
+                  ? html`
+                      <cds-ai-label
+                        size="mini"
+                        autoalign
+                        alignment="bottom"
+                        slot="decorator"
+                      >
+                        ${aiContent}
+                      </cds-ai-label>
+                    `
+                  : ""
+              }
             </cds-aichat-toolbar>
           </div>
 

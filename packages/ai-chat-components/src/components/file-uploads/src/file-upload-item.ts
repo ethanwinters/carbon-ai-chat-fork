@@ -31,7 +31,7 @@ import PlayFilledAlt16 from "@carbon/icons/es/play--filled--alt/16.js";
 import type {
   FileUpload,
   FileRemoveEventDetail,
-} from "../../input/src/types.js";
+} from "../../prompt-line/src/types.js";
 
 import styles from "./file-upload-item.scss?lit";
 
@@ -271,9 +271,11 @@ class FileUploadItemElement extends LitElement {
       <cds-file-uploader-item
         size="md"
         .state="${this.upload.status}"
-        .iconDescription="${this.upload.status === "uploading"
-          ? this.uploadingFileLabel
-          : this.removeFileLabel}"
+        .iconDescription="${
+          this.upload.status === "uploading"
+            ? this.uploadingFileLabel
+            : this.removeFileLabel
+        }"
         .errorSubject="${this.upload.errorMessage || ""}"
         ?invalid="${this.upload.isError}"
         @cds-file-uploader-item-deleted="${this._handleRemove}"

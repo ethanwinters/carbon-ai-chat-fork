@@ -132,10 +132,12 @@ class FeedbackButtonsDetailsDemo extends LitElement {
         ?is-negative-open=${this._isNegativeOpen}
         ?is-positive-selected=${this._isPositiveSelected}
         ?is-negative-selected=${this._isNegativeSelected}
-        ?is-positive-disabled=${this._isNegativeSelected ||
-        this._isFeedbackSubmitted}
-        ?is-negative-disabled=${this._isPositiveSelected ||
-        this._isFeedbackSubmitted}
+        ?is-positive-disabled=${
+          this._isNegativeSelected || this._isFeedbackSubmitted
+        }
+        ?is-negative-disabled=${
+          this._isPositiveSelected || this._isFeedbackSubmitted
+        }
         positive-label=${this.positiveLabel}
         negative-label=${this.negativeLabel}
         panel-id=${this.panelId}
@@ -146,19 +148,23 @@ class FeedbackButtonsDetailsDemo extends LitElement {
         ${this.hasPositiveDetails ? this._renderFeedbackPanel(true) : nothing}
         ${this.hasNegativeDetails ? this._renderFeedbackPanel(false) : nothing}
       </div>
-      ${this._lastSubmission
-        ? html`<p class="feedback-demo-note">
-            Last submission:
-            <strong
-              >${this._lastSubmission.isPositive
-                ? "Positive"
-                : "Negative"}</strong
-            >
-            ${this._lastSubmission.text
-              ? html`— ${this._lastSubmission.text}`
-              : nothing}
-          </p>`
-        : nothing}
+      ${
+        this._lastSubmission
+          ? html`<p class="feedback-demo-note">
+              Last submission:
+              <strong
+                >${
+                  this._lastSubmission.isPositive ? "Positive" : "Negative"
+                }</strong
+              >
+              ${
+                this._lastSubmission.text
+                  ? html`— ${this._lastSubmission.text}`
+                  : nothing
+              }
+            </p>`
+          : nothing
+      }
     `;
   }
 
