@@ -4,7 +4,7 @@ title: Theming
 
 ## Overview
 
-Customize the Carbon theme of the chat. By default, it inherits a Carbon theme from the host page. If your site doesn't use Carbon and you don't set `injectCarbonTheme`, the chat renders the white theme: it reads your page background and switches to a dark theme only when your page is dark. To take control, pick one of four built-in themes, or inject your own and override specific colors.
+Customize the Carbon theme of the chat. By default, it inherits a Carbon theme from the host page. If your site doesn't use Carbon and you don't set `injectCarbonTheme`, the chat renders the white theme - it reads your page background and switches to a dark theme only when your page is dark. To take control, pick one of four built-in themes, or inject your own and override specific colors.
 
 ## Pick a built-in theme
 
