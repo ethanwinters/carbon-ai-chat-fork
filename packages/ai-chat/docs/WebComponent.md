@@ -12,7 +12,7 @@ You don't need {@link CdsAiChatContainerAttributes | cds-aichat-container} for a
 
 You get the {@link ChatInstance} from {@link CdsAiChatContainerAttributes.onBeforeRender}, which you need before any slotted content.
 
-> **Note**: This page covers only what's specific to web components. For theming, layout, slotting your own content, and the rest of the config shared across every framework, see [UI customization](./Customization.md).
+> **Note**: This page covers only what's specific to web components. For theming, layout, slotting your own content, and the rest of the configuration shared across every framework, see [UI customization](./Customization.md).
 
 ## Installation
 
