@@ -1,0 +1,38 @@
+/*
+ *  Copyright IBM Corp. 2026
+ *
+ *  This source code is licensed under the Apache-2.0 license found in the
+ *  LICENSE file in the root directory of this source tree.
+ */
+
+@use "@carbon/layout";
+
+:host {
+  display: block;
+}
+
+// Visually-hidden live regions used to announce upload state changes to
+// screen readers. Kept in the DOM whenever uploading is available so the
+// last file's removal still announces.
+.cds-aichat--file-uploads-live-region {
+  position: absolute;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  margin: -1px;
+  block-size: 1px;
+  clip: rect(0, 0, 0, 0);
+  inline-size: 1px;
+  white-space: nowrap;
+}
+
+.cds-aichat--file-uploads-container {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  cds-aichat-file-upload-item {
+    flex-shrink: 0;
+  }
+}
