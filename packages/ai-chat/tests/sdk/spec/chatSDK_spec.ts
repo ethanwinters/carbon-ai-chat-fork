@@ -74,39 +74,21 @@ describe("acquireChatSDK", () => {
     __resetReuseInstanceRegistry();
   });
 
-  it("cold boots: initializes the ServiceManager and creates the instance (with host element)", async () => {
-    const container = document.createElement("div");
-    const host = document.createElement("div");
-
+  it("cold boots: initializes the ServiceManager and creates the instance", async () => {
     const publicConfig = mergePublicConfig(createBaseTestProps());
 
-    const { sdk, adopted } = await acquireChatSDK(publicConfig, {
-      container,
-      customHostElement: host,
-    });
+    const { sdk, adopted } = await acquireChatSDK(publicConfig);
 
     expect(adopted).toBe(false);
     expect(sdk).toBeTruthy();
     expect(sdk.instance).toBeTruthy();
     expect(sdk.serviceManager.instance).toBe(sdk.instance);
-    expect(sdk.serviceManager.container).toBe(container);
-    expect(sdk.serviceManager.customHostElement).toBe(host);
 
     // The core does not hold a reference to the facade (that would invert the layering). Instead
     // cold boot installs a bare teardown hook that routes back through this facade's destroy().
     expect(typeof sdk.serviceManager.onDestroy).toBe("function");
     sdk.serviceManager.onDestroy!();
     expect(sdk.serviceManager.disposed).toBe(true);
-  });
-
-  it("cold boots without a host element, leaving customHostElement unset", async () => {
-    const container = document.createElement("div");
-
-    const publicConfig = mergePublicConfig(createBaseTestProps());
-
-    const { sdk } = await acquireChatSDK(publicConfig, { container });
-
-    expect(sdk.serviceManager.customHostElement).toBeUndefined();
   });
 
   it("cold-boots once, then adopts the same ChatSDK/instance on a reuse remount", async () => {
@@ -117,29 +99,18 @@ describe("acquireChatSDK", () => {
       featureFlags: { reuseInstance: true, reuseInstanceGraceMs: 100000 },
     };
 
-    const container1 = document.createElement("div");
-    const { sdk: sdk1, adopted: adopted1 } = await acquireChatSDK(
-      publicConfig,
-      { container: container1 },
-    );
+    const { sdk: sdk1, adopted: adopted1 } = await acquireChatSDK(publicConfig);
     expect(adopted1).toBe(false);
     expect(createSM).toHaveBeenCalledTimes(1);
 
     sdk1.release();
 
-    const container2 = document.createElement("div");
-    const { sdk: sdk2, adopted: adopted2 } = await acquireChatSDK(
-      publicConfig,
-      { container: container2, customHostElement: container2 },
-    );
+    const { sdk: sdk2, adopted: adopted2 } = await acquireChatSDK(publicConfig);
 
     expect(adopted2).toBe(true);
     expect(sdk2).toBe(sdk1);
     expect(sdk2.instance).toBe(sdk1.instance);
     expect(createSM).toHaveBeenCalledTimes(1); // no second cold boot
-    // `attach` rebinds to the new host.
-    expect(sdk2.serviceManager.container).toBe(container2);
-    expect(sdk2.serviceManager.customHostElement).toBe(container2);
   });
 
   it("preserves slot state across an adopted re-acquire", async () => {
@@ -149,9 +120,7 @@ describe("acquireChatSDK", () => {
       featureFlags: { reuseInstance: true, reuseInstanceGraceMs: 100000 },
     };
 
-    const { sdk: sdk1 } = await acquireChatSDK(publicConfig, {
-      container: document.createElement("div"),
-    });
+    const { sdk: sdk1 } = await acquireChatSDK(publicConfig);
     await sdk1.serviceManager.fire({
       type: BusEventType.USER_DEFINED_RESPONSE,
       data: {
@@ -162,9 +131,7 @@ describe("acquireChatSDK", () => {
     } as any);
     sdk1.release();
 
-    const { sdk: sdk2 } = await acquireChatSDK(publicConfig, {
-      container: document.createElement("div"),
-    });
+    const { sdk: sdk2 } = await acquireChatSDK(publicConfig);
 
     expect(sdk2.slotStates.userDefinedBySlot.get().s1.messageItem).toEqual({
       id: "i1",
@@ -179,9 +146,7 @@ describe("acquireChatSDK", () => {
       featureFlags: { reuseInstance: true, reuseInstanceGraceMs: 20 },
     };
 
-    const { sdk: sdk1 } = await acquireChatSDK(publicConfig, {
-      container: document.createElement("div"),
-    });
+    const { sdk: sdk1 } = await acquireChatSDK(publicConfig);
     expect(createSM).toHaveBeenCalledTimes(1);
 
     sdk1.release();
@@ -189,9 +154,7 @@ describe("acquireChatSDK", () => {
     await new Promise((resolve) => setTimeout(resolve, 60));
     expect(sdk1.serviceManager.disposed).toBe(true);
 
-    const { sdk: sdk2, adopted } = await acquireChatSDK(publicConfig, {
-      container: document.createElement("div"),
-    });
+    const { sdk: sdk2, adopted } = await acquireChatSDK(publicConfig);
 
     expect(adopted).toBe(false);
     expect(sdk2).not.toBe(sdk1);
@@ -205,26 +168,20 @@ describe("acquireChatSDK", () => {
       featureFlags: { reuseInstance: true, reuseInstanceGraceMs: 100000 },
     };
 
-    const { sdk } = await acquireChatSDK(publicConfig, {
-      container: document.createElement("div"),
-    });
+    const { sdk } = await acquireChatSDK(publicConfig);
 
     sdk.destroy();
     expect(sdk.serviceManager.disposed).toBe(true);
 
     const createSM = jest.spyOn(loadServicesModule, "createServiceManager");
-    const { adopted } = await acquireChatSDK(publicConfig, {
-      container: document.createElement("div"),
-    });
+    const { adopted } = await acquireChatSDK(publicConfig);
     expect(adopted).toBe(false); // nothing left to adopt; cold-boots fresh
     expect(createSM).toHaveBeenCalledTimes(1);
   });
 
   it("runInitialViewChange() runs once per cold boot", async () => {
     const publicConfig = mergePublicConfig(createBaseTestProps());
-    const { sdk } = await acquireChatSDK(publicConfig, {
-      container: document.createElement("div"),
-    });
+    const { sdk } = await acquireChatSDK(publicConfig);
 
     const changeViewSpy = jest.spyOn(sdk.serviceManager.actions, "changeView");
     await sdk.runInitialViewChange();

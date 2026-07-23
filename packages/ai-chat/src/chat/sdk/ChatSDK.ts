@@ -9,9 +9,10 @@
 
 /**
  * The internal `ChatSDK` lifecycle facade. This module's shape is what becomes the public
- * `@carbon/ai-chat/sdk` surface in 2.0: `acquireChatSDK` (create-or-adopt), the `ChatSDK` class
- * (`instance`, `slotStates`, `attach`, `release`, `destroy`, `runInitialViewChange`), and
- * `ChatSDKHost`. Internal only until 2.0: never exported from `aiChatEntry.tsx`/`serverEntry.ts`.
+ * `@carbon/ai-chat/sdk` surface in 2.0: `acquireChatSDK` (create-or-adopt) and the `ChatSDK` class
+ * (`instance`, `slotStates`, `release`, `destroy`, `runInitialViewChange`). Deliberately DOM-free:
+ * host elements are the shell's business (`ChatAppEntry` keeps them as props), so the facade never
+ * names a DOM type. Internal only until 2.0: never exported from `aiChatEntry.tsx`/`serverEntry.ts`.
  */
 
 import dayjs from "dayjs";
@@ -79,19 +80,10 @@ export async function performInitialViewChange(serviceManager: ServiceManager) {
 }
 
 /**
- * The host DOM anchors a `ChatSDK` binds/rebinds to: the boot-container element, and (for a WC
- * surface) the custom host element the container fills.
- */
-export interface ChatSDKHost {
-  container: HTMLElement;
-  customHostElement?: HTMLElement;
-}
-
-/**
  * The facade for a given manager. Owned here, in the lifecycle layer, rather than as a field on
  * `ServiceManager`: the core must not name the layer built on top of it, or `sdk/` could not be
- * lifted out as `@carbon/ai-chat/sdk` in 2.0. A reuse re-attach maps the cached manager back to its
- * original facade through this map (see `acquireChatSDK`).
+ * lifted out as `@carbon/ai-chat/sdk` in 2.0. A reuse re-acquire maps the cached manager back to
+ * its original facade through this map (see `acquireChatSDK`).
  */
 const sdkByManager = new WeakMap<ServiceManager, ChatSDK>();
 
@@ -128,17 +120,6 @@ export class ChatSDK {
   /** Boot-once post-render sequencing. Caller runs only when `!adopted`. */
   runInitialViewChange(): Promise<void> {
     return performInitialViewChange(this.serviceManager);
-  }
-
-  /**
-   * Rebinds a live sdk to a new host: points it at the new container/host element. Does not
-   * re-create services, re-run localization, or touch the live connection — the manager is reused
-   * as-is. Host-container styling is the shell's job (`src/chat/boot/appBoot.ts`), run after every
-   * acquire.
-   */
-  attach(host: ChatSDKHost): void {
-    this.serviceManager.container = host.container;
-    this.serviceManager.customHostElement = host.customHostElement;
   }
 
   /**
@@ -184,16 +165,15 @@ export class ChatSDK {
 }
 
 /**
- * Create-or-adopt: returns the cached `ChatSDK` for the namespace when reuse is on and one is
- * available, else cold-boots services and the instance. `config` is the already-merged
- * `PublicConfig` (see `src/chat/boot/appBoot.ts`'s `mergePublicConfig`).
+ * Create-or-adopt, headless: returns the cached `ChatSDK` for the namespace when reuse is on and
+ * one is available, else cold-boots services and the instance. Binds no DOM — host elements stay
+ * in the shell (`ChatAppEntry` holds them as props), a view concern the facade never names.
+ * `config` is the already-merged `PublicConfig` (see `src/chat/boot/appBoot.ts`'s
+ * `mergePublicConfig`).
  */
 export async function acquireChatSDK(
   config: PublicConfig,
-  host: ChatSDKHost,
 ): Promise<{ sdk: ChatSDK; adopted: boolean }> {
-  const { container, customHostElement } = host;
-
   // Extend dayjs with LocalizedFormat plugin once before usage
   dayjs.extend(LocalizedFormat);
 
@@ -205,7 +185,6 @@ export async function acquireChatSDK(
       // SAME facade: `reuseRegistration` lives on it, and a fresh wrapper would not know it is
       // registered, so `release()` would hard-unload instead of grace-releasing.
       const sdk = sdkByManager.get(cached)!;
-      sdk.attach({ container, customHostElement });
       return { sdk, adopted: true };
     }
   }
@@ -218,10 +197,6 @@ export async function acquireChatSDK(
   // failed boot must unload them before propagating — nothing else can reach a manager whose
   // acquire never returned.
   try {
-    // Set container + hosting information
-    serviceManager.container = container;
-    serviceManager.customHostElement = customHostElement;
-
     // Load language and locale
     const languagePack = serviceManager.store.getState().languagePack;
     const localePack = await loadLocale(

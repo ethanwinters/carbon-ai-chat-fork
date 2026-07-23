@@ -15,7 +15,6 @@
  */
 
 export { ChatSDK, acquireChatSDK } from "./ChatSDK.js";
-export type { ChatSDKHost } from "./ChatSDK.js";
 
 export { attachSlotStateTracking } from "./slotStates.js";
 export type { ChatSlotStates } from "./slotStates.js";

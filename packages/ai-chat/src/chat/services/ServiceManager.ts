@@ -69,17 +69,6 @@ class ServiceManager {
   actions: ChatActionsImpl;
 
   /**
-   * The optional custom element for rendering provided in the publicConfig.
-   */
-  customHostElement: HTMLElement;
-
-  /**
-   * The entire wrapping element for the chat that includes styles and render. This is the element that
-   * is either appended to the body or the custom element. It includes the main window, and the launcher.
-   */
-  container: HTMLElement;
-
-  /**
    * The event bus on which events can be fired.
    */
   eventBus: EventBus;

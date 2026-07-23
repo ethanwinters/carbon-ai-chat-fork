@@ -230,16 +230,14 @@ export function ChatAppEntry({
         // before the async acquire so the container is sized during boot, not just after it.
         applyBootContainerClasses(container, !!element);
 
-        const { sdk, adopted } = await acquireChatSDK(publicConfig, {
-          container,
-          customHostElement: element,
-        });
+        const { sdk, adopted } = await acquireChatSDK(publicConfig);
         if (cancelled) {
           // Unmounted while boot was in flight: hand the manager straight back (grace-release
           // under reuse, dispose otherwise) and leave this mount's refs/state untouched.
           sdk.release();
           return;
         }
+
         sdkRef.current = sdk;
         serviceManagerRef.current = sdk.serviceManager;
 
@@ -522,7 +520,7 @@ export function ChatAppEntry({
             <AriaAnnouncerProvider>
               <AppShell
                 serviceManager={serviceManager}
-                hostElement={serviceManager.customHostElement}
+                hostElement={element}
                 writeableElementsPresentKeys={writeableElementsPresentKeys}
               />
               {renderUserDefinedResponse && (
