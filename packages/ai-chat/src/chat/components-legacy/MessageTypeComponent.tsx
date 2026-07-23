@@ -10,7 +10,7 @@
 /* eslint-disable react/no-array-index-key */
 
 import Attachment16 from "@carbon/icons/es/attachment/16.js";
-import { carbonIconToReact } from "./../utils-react/carbonIcon";
+import { carbonIconToReact } from "../utils-react/carbonIcon";
 import React, {
   useCallback,
   useEffect,
@@ -31,25 +31,24 @@ import Feedback, {
   type FeedbackSubmitDetails,
 } from "@carbon/ai-chat-components/es/react/feedback.js";
 import prefix from "@carbon/ai-chat-components/es/globals/settings.js";
-import { ResponseStopped } from "./ResponseStopped";
-import { SystemMessage } from "./SystemMessage";
+import { SystemMessage } from "../components/SystemMessage";
 import { ConnectToHumanAgent } from "./responseTypes/humanAgent/ConnectToHumanAgent";
-import { AudioComponent } from "./responseTypes/audio/AudioComponent";
-import { ButtonItemComponent } from "./responseTypes/buttonItem/ButtonItemComponent";
-import { CardItemComponent } from "./responseTypes/card/CardItemComponent";
+import { AudioComponent } from "../components/messages/AudioComponent";
+import { ButtonItemComponent } from "../components/ButtonItemComponent";
+import { CardItemComponent } from "../components/messages/CardItemComponent";
 import { PreviewCardComponent } from "./responseTypes/previewCard/PreviewCardComponent";
-import { CarouselItemComponent } from "./responseTypes/carousel/CarouselItemComponent";
+import { CarouselItemComponent } from "../components/messages/CarouselItemComponent";
 import { ConversationalSearch } from "./responseTypes/conversationalSearch/ConversationalSearch";
-import UserDefinedResponse from "./responseTypes/custom/UserDefinedResponse";
+import UserDefinedResponse from "../components/UserDefinedResponse";
 import CustomFooterSlot from "./responseTypes/custom/CustomFooterSlot";
-import { DatePickerComponent } from "./responseTypes/datePicker/DatePickerComponent";
+import { DatePickerComponent } from "../components/responseTypes/datePicker/DatePickerComponent";
 import InlineError from "../components/util/InlineError";
 import { GridItemComponent } from "./responseTypes/grid/GridItemComponent";
 import { IFrameMessage } from "./responseTypes/iframe/IFrameMessage";
 import { Image } from "./responseTypes/image/Image";
-import { OptionComponent } from "./responseTypes/options/OptionComponent";
+import { OptionComponent } from "../components/responseTypes/options/OptionComponent";
 import { MarkdownWithErrorHandling } from "../components/util/MarkdownWithErrorHandling";
-import { VideoComponent } from "./responseTypes/video/VideoComponent";
+import { VideoComponent } from "../components/messages/VideoComponent";
 import { useSelector } from "../hooks/useSelector";
 import { shallowEqual } from "../store/appStore";
 import { AppState } from "../../types/state/AppState";
@@ -101,6 +100,7 @@ import {
   PreviewCardItem,
 } from "../../types/messaging/Messages";
 import { MarkdownWithDefaults } from "../components/util/MarkdownWithDefaults";
+import { MessageRichUserContent } from "./MessageRichUserContent";
 import type { CDSAIChatChainOfThought } from "@carbon/ai-chat-components/es/components/chain-of-thought/src/chain-of-thought.js";
 import Carousel from "@carbon/ai-chat-components/es/react/carousel.js";
 
@@ -218,7 +218,7 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
       return (
         <>
           {response}
-          {isResponseStopped && <ResponseStopped />}
+          {isResponseStopped && <SystemMessage responseStopped />}
           {props.showChainOfThought &&
             renderChainOfThought(localMessageItem, message)}
           {renderFeedbackAndCustomFooter(localMessageItem, message)}
@@ -244,10 +244,14 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
       // If this was user entered text, show the user's original text before showing the text that was actually sent to
       // the assistant.
       const userText = localMessageItem.ui_state.originalUserText || text;
+      const displayContent = originalMessage.input.display_content;
+      const isFile =
+        originalMessage.input.message_type ===
+        (InternalMessageRequestType.FILE as unknown as MessageInputType);
+
       return (
         <div className="cds-aichat--sent--text">
-          {originalMessage.input.message_type ===
-            (InternalMessageRequestType.FILE as unknown as MessageInputType) && (
+          {isFile && (
             <Attachment
               className="cds-aichat--sent-file-icon"
               aria-label={languagePack.fileSharing_fileIcon}
@@ -257,11 +261,18 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
               next/previous heading hotkeys in JAWS to enable a screen reader user an easier ability to navigate
               messages. */}
           <div role="heading" aria-level={2}>
-            <MarkdownWithDefaults
-              text={userText}
-              removeHTML
-              overrideSanitize={true}
-            ></MarkdownWithDefaults>
+            {displayContent && !isFile ? (
+              <MessageRichUserContent
+                content={displayContent}
+                message={originalMessage}
+              />
+            ) : (
+              <MarkdownWithDefaults
+                text={userText}
+                removeHTML
+                overrideSanitize={true}
+              ></MarkdownWithDefaults>
+            )}
           </div>
         </div>
       );

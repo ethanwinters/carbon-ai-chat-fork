@@ -14,7 +14,7 @@
 import { FileUpload } from "../../types/config/ServiceDeskConfig";
 import { FileStatusValue, WA_CONSOLE_PREFIX } from "./constants";
 import { resolveOrTimeout } from "./lang/promiseUtils";
-import { OnErrorData, OnErrorType } from "../../types/config/PublicConfig";
+import { OnErrorData, OnErrorType } from "../../types/config/ErrorConfig";
 
 /**
  * The subset of React's `ErrorInfo` that {@link createDidCatchErrorData} actually reads. Declared

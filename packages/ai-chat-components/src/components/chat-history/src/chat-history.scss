@@ -35,8 +35,6 @@
   align-items: center;
   justify-content: space-between;
   border-block-end: convert.rem(1px) solid theme.$border-subtle-00;
-  @include type.type-style("body-compact-01");
-
   font-weight: 600;
   inline-size: 100%;
   letter-spacing: 0.1px;
@@ -48,6 +46,8 @@
   }
 
   .#{$prefix}--history-header__title {
+    @include type.type-style("heading-compact-01");
+
     overflow: hidden;
     inline-size: 100%;
     margin-inline-start: layout.$spacing-04;
@@ -158,7 +158,7 @@
   position: relative;
 
   .#{$cds-prefix}--side-nav__link {
-    @include type.type-style("body-01");
+    @include type.type-style("body-compact-01");
 
     position: relative;
     display: flex;
@@ -197,7 +197,8 @@
 :host(#{$prefix}-history-panel-item[rename]) {
   display: flex;
   align-items: center;
-  block-size: convert.rem(40px);
+  min-block-size: convert.rem(40px);
+  padding-block: layout.$spacing-02;
 }
 
 :host(#{$prefix}-history-panel-item[selected]) {
@@ -221,15 +222,56 @@
 
   .#{$prefix}--history-panel-item--rename__input {
     display: flex;
+    flex-direction: column;
+    inline-size: 100%;
+    outline: layout.$spacing-01 solid theme.$focus;
+
+    input {
+      padding-inline-start: layout.$spacing-05;
+    }
+  }
+
+  .#{$prefix}--history-panel-item--rename__input-row {
+    display: flex;
     align-items: center;
     justify-content: space-between;
     block-size: layout.$spacing-07;
-    inline-size: 100%;
-    outline: layout.$spacing-01 solid theme.$focus;
+  }
+
+  .#{$prefix}--history-panel-item--rename__input--invalid {
+    outline: layout.$spacing-01 solid theme.$support-error;
+
+    .#{$prefix}--history-panel-item-input__invalid-message-container {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      gap: layout.$spacing-05;
+      padding-block-end: layout.$spacing-03;
+      padding-inline-start: layout.$spacing-05;
+
+      .#{$prefix}__invalid-message-text {
+        @include type.type-style("body-compact-01");
+
+        flex-grow: 1;
+        color: theme.$support-error;
+      }
+
+      .#{$prefix}__warning-icon {
+        display: flex;
+        flex: 0 0 layout.$spacing-07;
+        flex-direction: column;
+        align-items: center;
+        justify-content: start;
+
+        svg {
+          fill: theme.$support-error;
+        }
+      }
+    }
   }
 
   input {
-    @include type.type-style("body-01");
+    @include type.type-style("body-compact-01");
 
     overflow: hidden;
     flex-grow: 2;
@@ -263,7 +305,7 @@
   .#{$cds-prefix}--side-nav__link-subtitle {
     @include type.type-style("label-01");
 
-    color: theme.$text-secondary;
+    color: theme.$text-placeholder;
     padding-block-start: layout.$spacing-01;
   }
 }

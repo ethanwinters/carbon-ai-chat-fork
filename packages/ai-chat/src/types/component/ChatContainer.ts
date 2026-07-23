@@ -23,13 +23,19 @@ import type {
   MarkdownRendererTableData as _MarkdownRendererTableData,
   TokenTree as _TokenTree,
 } from "@carbon/ai-chat-components/es/components/markdown/index.js";
-import { type ChatInstance, WriteableElements } from "../instance/ChatInstance";
-import { GenericItem, MessageResponse } from "../messaging/Messages";
+import { type ChatInstance } from "../instance/ChatInstance";
+import { WriteableElements } from "../instance/WriteableElements";
+import {
+  GenericItem,
+  MessageRequest,
+  MessageResponse,
+} from "../messaging/Messages";
 import { PublicConfig, PublicConfigMarkdown } from "../config/PublicConfig";
 import {
   BusEventViewChange,
   BusEventViewPreChange,
 } from "../events/eventBusTypes";
+import type { JSONContent } from "@tiptap/core";
 import {
   RenderCustomMessageFooterState,
   RenderUserDefinedState,
@@ -105,6 +111,50 @@ type WCRenderUserDefinedResponse = (
  */
 type WCRenderCustomMessageFooter = (
   state: RenderCustomMessageFooterState,
+  instance: ChatInstance,
+) => HTMLElement | null;
+
+/**
+ * The state passed to a `renderUserDefinedInputNode` call. The chat surfaces
+ * one call per non-text TipTap node inside a sent user message's
+ * `display_content` — typically a consumer-registered custom node such as a
+ * task card, file pill, or mention with rich rendering.
+ *
+ * @category React
+ * @experimental
+ */
+interface RenderUserDefinedInputNodeState {
+  /** The TipTap JSONContent node being rendered (carries `type`, `attrs`, etc.). */
+  node: JSONContent;
+  /** The full user message this node belongs to. */
+  message: MessageRequest;
+}
+
+/**
+ * React-side renderer for custom TipTap node types in user message bubbles.
+ * Returned content mounts into LIGHT DOM so consumer stylesheets apply. The
+ * library manages the slot lifecycle — register a renderer that returns the
+ * React node for nodes you care about and `null` for everything else.
+ *
+ * @category React
+ * @experimental
+ */
+type RenderUserDefinedInputNode = (
+  state: RenderUserDefinedInputNodeState,
+  instance: ChatInstance,
+) => ReactNode;
+
+/**
+ * Web-component renderer for custom TipTap node types in user message
+ * bubbles. Mirrors {@link RenderUserDefinedInputNode} but returns an
+ * `HTMLElement` (or `null`). The library moves / removes the element as
+ * messages mount and unmount.
+ *
+ * @category Web component
+ * @experimental
+ */
+type WCRenderUserDefinedInputNode = (
+  state: RenderUserDefinedInputNodeState,
   instance: ChatInstance,
 ) => HTMLElement | null;
 
@@ -464,6 +514,16 @@ interface ChatContainerProps extends Omit<PublicConfig, "markdown"> {
   renderUserDefinedResponse?: RenderUserDefinedResponse;
 
   /**
+   * Renderer for custom TipTap node types inside sent user message bubbles
+   * (rich user message content). Invoked once per non-built-in node in a
+   * user message's `display_content`; returned React content mounts into
+   * light DOM. Return `null` for nodes you don't recognize.
+   *
+   * @experimental
+   */
+  renderUserDefinedInputNode?: RenderUserDefinedInputNode;
+
+  /**
    * This is the render function this component will call when it needs to render a writeable element.
    */
   renderWriteableElements?: RenderWriteableElementResponse;
@@ -488,4 +548,7 @@ export {
   WCMarkdown,
   WCRenderCustomMessageFooter,
   WCRenderUserDefinedResponse,
+  RenderUserDefinedInputNode,
+  RenderUserDefinedInputNodeState,
+  WCRenderUserDefinedInputNode,
 };

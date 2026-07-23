@@ -13,27 +13,42 @@
 
 import { ServiceManager } from "../services/ServiceManager";
 import { BusEventType } from "../../types/events/eventBusTypes";
-import { PublicChatState } from "../../types/instance/ChatInstance";
+import { PublicChatState } from "../../types/instance/PublicChatState";
 import isEqual from "lodash-es/isEqual.js";
 import { refreshLocalization } from "../utils/intlUtils";
+import { toPersistableState } from "./persistenceUtils";
 
 /**
- * Copies persistedToBrowserStorage to the session history.
+ * Persists `persistedToBrowserStorage` whenever it changes. By default this writes to the browser's
+ * sessionStorage. When the host owns persistence (`config.persistedState`), the change is reported to
+ * its `onStateChange` callback instead — the persisted-slice reference gate below is exactly "the
+ * persistable state changed", so the callback is not fired on transient changes such as input text.
  */
 function copyToSessionStorage(serviceManager: ServiceManager) {
   let previousPersistedToBrowserStorage =
     serviceManager.store.getState().persistedToBrowserStorage;
   return () => {
-    const { persistedToBrowserStorage } = serviceManager.store.getState();
+    const { persistedToBrowserStorage, config } =
+      serviceManager.store.getState();
     const persistChatSession =
       previousPersistedToBrowserStorage !== persistedToBrowserStorage;
 
     if (persistChatSession) {
       previousPersistedToBrowserStorage = persistedToBrowserStorage;
 
-      serviceManager.userSessionStorageService.persistSession(
-        persistedToBrowserStorage,
-      );
+      const persistedStateConfig = config.public.persistedState;
+      if (
+        persistedStateConfig?.initialState ||
+        persistedStateConfig?.onStateChange
+      ) {
+        persistedStateConfig.onStateChange?.(
+          toPersistableState(persistedToBrowserStorage),
+        );
+      } else {
+        serviceManager.userSessionStorageService.persistSession(
+          persistedToBrowserStorage,
+        );
+      }
     }
   };
 }
@@ -48,7 +63,6 @@ function fireStateChangeEvent(serviceManager: ServiceManager) {
   return () => {
     const newState = serviceManager.actions.getPublicChatState();
 
-    // Use deep equality check to detect any changes in the state
     if (!isEqual(previousState, newState)) {
       serviceManager.eventBus.fireSync(
         {

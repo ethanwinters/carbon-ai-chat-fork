@@ -27,8 +27,8 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { AISlug } from "../../components/carbon/AISlug";
-import WriteableElement from "../../components/util/WriteableElement";
+import { AISlug } from "../carbon/AISlug";
+import WriteableElement from "../util/WriteableElement";
 import ChatHeader from "@carbon/ai-chat-components/es/react/chat-header.js";
 import type { ToolbarAction } from "@carbon/ai-chat-components/es/react/toolbar.js";
 import { useSelector } from "../../hooks/useSelector";
@@ -40,7 +40,7 @@ import { doFocusRef, isDirectionRTL } from "../../utils/domUtils";
 import {
   HeaderConfig,
   MinimizeButtonIconType,
-} from "../../../types/config/PublicConfig";
+} from "../../../types/config/HeaderConfig";
 import { AppState } from "../../../types/state/AppState";
 import { HasRequestFocus } from "../../../types/utilities/HasRequestFocus";
 import { PageObjectId } from "../../../testing/PageObjectId";

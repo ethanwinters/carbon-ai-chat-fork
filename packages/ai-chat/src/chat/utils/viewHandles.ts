@@ -10,9 +10,11 @@
 /**
  * Framework-neutral view-handle interfaces referenced by the core (`ServiceManager`) but
  * implemented by the view layer. Kept in `utils/` (which the SDK core may import) so the non-view
- * core does not depend on view modules (`AppShell`, `components-legacy/`, `contexts/`); those view
+ * core does not depend on view modules (`AppShell`, `components/`, `contexts/`); those view
  * files re-export these so their public import shape is unchanged.
  */
+
+import type { Editor, JSONContent } from "@tiptap/core";
 
 import { HasDoAutoScroll } from "../../types/utilities/HasDoAutoScroll";
 import { HasRequestFocus } from "../../types/utilities/HasRequestFocus";
@@ -44,12 +46,6 @@ export interface MainWindowFunctions extends HasRequestFocus, HasDoAutoScroll {
  */
 export interface InputFunctions {
   /**
-   * Instructs the text area to take focus.
-   * @deprecated Use requestFocus() instead for consistency with focus management pattern
-   */
-  takeFocus: () => void;
-
-  /**
    * Requests focus on the input field.
    * Follows the generic focus management pattern for web components.
    * @returns {boolean} True if focus was successfully set, false otherwise
@@ -62,6 +58,35 @@ export interface InputFunctions {
    * @returns {boolean} True if the input field has focus
    */
   hasFocus: () => boolean;
+
+  /**
+   * Replace the entire input content. Throws if the editor is not currently
+   * rendered.
+   */
+  setContent: (
+    next: JSONContent | string | ((prev: JSONContent) => JSONContent),
+  ) => void;
+
+  /**
+   * Insert content at the cursor or at `options.at` (a PM document offset).
+   * Throws if the editor is not currently rendered.
+   */
+  insertContent: (
+    content: JSONContent | string,
+    options?: { at?: number },
+  ) => void;
+
+  /**
+   * Probe-style access to the live Tiptap editor. Returns `null` when the
+   * editor is not mounted. Never triggers a load.
+   */
+  getEditor: () => Editor | null;
+
+  /**
+   * Loads Tiptap on demand (upgrading the textarea in place), then resolves
+   * with the live editor. Rejects when the input surface is not mounted.
+   */
+  ensureEditor: () => Promise<Editor>;
 }
 
 /**

@@ -56,6 +56,7 @@ class ChatHistoryDemo extends LitElement {
     searchTotalCount: { type: Number },
     searchValue: { type: String },
     searchOff: { type: Boolean, attribute: "search-off" },
+    autofocus: { type: Boolean },
     searchAttributes: { type: Object },
     overflowMenuLabel: { type: String, attribute: "overflow-menu-label" },
     selectedId: { type: String },
@@ -78,6 +79,7 @@ class ChatHistoryDemo extends LitElement {
     super();
     this.headerTitle = "Chats";
     this.searchOff = false;
+    this.autofocus = false;
     this.searchAttributes = {
       "label-text": "Search",
       placeholder: "Search",
@@ -113,6 +115,10 @@ class ChatHistoryDemo extends LitElement {
     this.addEventListener("history-delete-cancel", this._handleDeleteCancel);
     this.addEventListener("history-delete-confirm", this._handleDeleteConfirm);
     this.addEventListener("history-item-selected", this._handleSelectChat);
+    this.addEventListener(
+      "history-panel-item-input-change",
+      this._handleRenameChange,
+    );
     this.addEventListener(
       "history-panel-item-input-save",
       this._handleRenameSave,
@@ -274,6 +280,41 @@ class ChatHistoryDemo extends LitElement {
     this.requestUpdate();
   };
 
+  _handleRenameChange = (event) => {
+    const { itemId, value } = event.detail;
+
+    if (itemId) {
+      const invalid = value.length > 75;
+
+      this.pinnedItems = this.pinnedItems.map((chat) =>
+        chat.id === itemId
+          ? {
+              ...chat,
+              renameInvalid: invalid,
+              renameInvalidMessage: invalid
+                ? "Title cannot exceed 75 characters."
+                : "",
+            }
+          : chat,
+      );
+
+      this.regularItems = this.regularItems.map((section) => ({
+        ...section,
+        chats: section.chats.map((chat) =>
+          chat.id === itemId
+            ? {
+                ...chat,
+                renameInvalid: invalid,
+                renameInvalidMessage: invalid
+                  ? "Title cannot exceed 75 characters."
+                  : "",
+              }
+            : chat,
+        ),
+      }));
+    }
+  };
+
   _handleRenameSave = (event) => {
     const itemId = event.detail.itemId;
 
@@ -347,6 +388,7 @@ class ChatHistoryDemo extends LitElement {
         ></cds-aichat-history-header>
         <cds-aichat-history-toolbar
           ?search-off=${this.searchOff}
+          ?autofocus=${this.autofocus}
           .searchAttributes=${this.searchAttributes}
         >
         </cds-aichat-history-toolbar>
@@ -421,6 +463,10 @@ class ChatHistoryDemo extends LitElement {
                                       name="${item.name}"
                                       ?selected=${item.selected}
                                       ?rename=${item.rename}
+                                      ?rename-invalid=${item.renameInvalid}
+                                      rename-invalid-message=${
+                                        item.renameInvalidMessage ?? ""
+                                      }
                                       overflow-menu-label="${
                                         this.overflowMenuLabel
                                       }"
@@ -447,6 +493,10 @@ class ChatHistoryDemo extends LitElement {
                                     id="${chat.id}"
                                     name="${chat.name}"
                                     ?selected=${chat.selected}
+                                    ?rename-invalid=${item.renameInvalid}
+                                    rename-invalid-message=${
+                                      item.renameInvalidMessage ?? ""
+                                    }
                                     overflow-menu-label="${
                                       this.overflowMenuLabel
                                     }"
@@ -506,6 +556,10 @@ export const Default = {
       description:
         "true if search should be turned off in chat history toolbar.",
     },
+    autofocus: {
+      control: "boolean",
+      description: "Toggles the native autofocus attribute on the text input",
+    },
     searchAttributes: {
       control: "object",
       description:
@@ -527,6 +581,7 @@ export const Default = {
   args: {
     HeaderTitle: "Chats",
     searchOff: false,
+    autofocus: false,
     searchAttributes: {
       "label-text": "Search",
       placeholder: "Search",
@@ -540,6 +595,7 @@ export const Default = {
     <cds-aichat-history-demo
       header-title="${args.HeaderTitle}"
       ?search-off=${args.searchOff}
+      ?autofocus=${args.autofocus}
       .searchAttributes=${args.searchAttributes}
       overflow-menu-label="${args.overflowMenuLabel}"
       ?show-close-action=${args.showCloseAction}

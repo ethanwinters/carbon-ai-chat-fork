@@ -25,7 +25,7 @@ import { DEFAULT_MESSAGE_FOCUS_TOGGLE_SHORTCUT } from "../types/config/ShortcutC
 
 import AppShellErrorBoundary from "./AppShellErrorBoundary";
 import { LauncherContainer } from "./components-legacy/launcher/LauncherContainer";
-import { InputFunctions } from "./components-legacy/input/Input";
+import { InputFunctions } from "./components/input/Input";
 import Layer from "./components/carbon/Layer";
 import ChatShell from "@carbon/ai-chat-components/es/react/chat-shell.js";
 import { Header } from "./components/header/Header";
@@ -33,7 +33,7 @@ import MessagesComponent, {
   MessagesComponentClass,
 } from "./components-legacy/MessagesComponent";
 import { HomeScreen } from "./components/homeScreen/HomeScreen";
-import { Input } from "./components-legacy/input/Input";
+import { Input } from "./components/input/Input";
 import { AppShellWriteableElements } from "./AppShellWriteableElements";
 import { EndHumanAgentChatModal } from "./components/modals/EndHumanAgentChatModal";
 import { RequestScreenShareModal } from "./components/modals/RequestScreenShareModal";
@@ -95,7 +95,8 @@ import { AutoScrollOptions } from "../types/utilities/HasDoAutoScroll";
 import { HasRequestFocus } from "../types/utilities/HasRequestFocus";
 import { MainWindowFunctions } from "./utils/viewHandles.js";
 import { MessageSendSource, BusEventType } from "../types/events/eventBusTypes";
-import { CarbonTheme } from "../types/config/PublicConfig";
+import type { JSONContent } from "@tiptap/core";
+import { CarbonTheme } from "../types/config/CarbonTheme";
 import { FileStatusValue } from "./utils/constants";
 import type { FileUpload } from "../types/config/ServiceDeskConfig";
 
@@ -427,6 +428,39 @@ function AppShell({
     uploadConfig?.maxFiles !== undefined &&
     inputFields.pendingUploads.length >= uploadConfig.maxFiles;
 
+  // Derive InputConfig.error
+  const inputError = useMemo(() => {
+    // check file and pending uploads first
+    const fileWithError = inputFields.files.find((f) => f.isError);
+    const pendingUploadWithError = inputFields.pendingUploads.find(
+      (u) => u.status === "error",
+    );
+
+    const uploadError = fileWithError || pendingUploadWithError;
+    if (uploadError) {
+      return {
+        title: "File upload error",
+        description:
+          "errorMessage" in uploadError ? uploadError.errorMessage : undefined,
+        collapsible: false,
+      };
+    }
+
+    // Fall back to config-provided error if no file upload errors
+    return publicConfig.input?.error;
+  }, [
+    inputFields.files,
+    inputFields.pendingUploads,
+    publicConfig.input?.error,
+  ]);
+
+  // Disable the human-agent upload button once its (optional) max number of files
+  // is reached, on top of the existing connection/streaming gating.
+  const humanAgentUploadButtonDisabled =
+    showUploadButtonDisabled ||
+    (inputFields.maxFiles !== undefined &&
+      inputFields.files.length >= inputFields.maxFiles);
+
   // Panel callbacks
   const {
     onPanelOpenStart,
@@ -572,7 +606,13 @@ function AppShell({
 
   // Stable wrapper so <Input> receives a referentially stable onSendInput prop
   const onSendInputFromInput = useCallback(
-    (text: string) => onSendInput(text, MessageSendSource.MESSAGE_INPUT),
+    (text: string, displayContent?: JSONContent) =>
+      onSendInput(
+        text,
+        MessageSendSource.MESSAGE_INPUT,
+        undefined,
+        displayContent,
+      ),
     [onSendInput],
   );
 
@@ -862,7 +902,6 @@ function AppShell({
               <div slot="input">
                 <Input
                   ref={inputRef}
-                  serviceManager={serviceManager}
                   disableInput={shouldDisableInput()}
                   disableSend={shouldDisableSend()}
                   isInputVisible={isInputFieldVisible}
@@ -873,7 +912,7 @@ function AppShell({
                   }
                   disableUploadButton={
                     inputFields.allowFileUploads
-                      ? showUploadButtonDisabled
+                      ? humanAgentUploadButtonDisabled
                       : assistantUploadButtonDisabled
                   }
                   allowedFileUploadTypes={
@@ -886,6 +925,16 @@ function AppShell({
                       ? inputFields.allowMultipleFileUploads
                       : uploadConfig?.maxFiles === undefined ||
                         uploadConfig.maxFiles > 1
+                  }
+                  maxFileSizeBytes={
+                    inputFields.allowFileUploads
+                      ? inputFields.maxFileSizeBytes
+                      : uploadConfig?.maxFileSizeBytes
+                  }
+                  maxFiles={
+                    inputFields.allowFileUploads
+                      ? inputFields.maxFiles
+                      : uploadConfig?.maxFiles
                   }
                   pendingUploads={
                     inputFields.allowFileUploads
@@ -913,6 +962,13 @@ function AppShell({
                   }
                   maxInputChars={publicConfig.input?.maxInputCharacters}
                   trackInputState
+                  rounded={
+                    chatWidthBreakpoint === ChatWidthBreakpoint.WIDE &&
+                    layout.hasContentMaxWidth &&
+                    (!IS_PHONE_IN_PORTRAIT_MODE ||
+                      !!publicConfig.disableCustomElementMobileEnhancements)
+                  }
+                  error={inputError}
                 />
               </div>
 
