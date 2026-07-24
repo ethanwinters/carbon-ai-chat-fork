@@ -50,6 +50,7 @@ The summary count can lag a cached read; when the summary and the paginated list
 ## Grouping and ordering
 
 - Keep related children together and order them roughly in the sequence they'll be tackled, so the epic reads as a plan.
+- Ordering is intent; a hard blocker is a dependency link. Record it with the `blocked_by` API — see [Recording blockers](issue-authoring.md#recording-blockers) — and keep the epic body for the reason, not `Blocked by: #N` in place of the link.
 - When a child grows its own multi-issue scope, spin it into its **own** epic and link the two — don't nest sub-issues arbitrarily deep or overload one epic past its bounded scope.
 
 ## Related guidance

@@ -15,7 +15,7 @@ Internal development work uses these sections — the same ones the [DEVELOPMENT
 - **Acceptance criteria** — a `- [ ]` checkbox list of conditions that must hold before closing.
 - **Public API / contract** — the up-front type contract (see below); omit when there's no public-API change.
 - **Out of scope** — what this deliberately does not cover.
-- **Related** — parent epic, siblings, PRs, designs.
+- **Related** — parent epic, siblings, PRs, designs. A `Depends on: #N (reason)` line carries the _reason_ a blocker blocks; the relationship itself is a dependency link, not prose — see [Recording blockers](#recording-blockers).
 
 ## Define the contract up front
 
@@ -52,6 +52,29 @@ gh api --paginate "repos/<owner>/<repo>/issues/<parent>/sub_issues?per_page=100"
 ```
 
 Check the children list, and `sub_issues_summary.total` on the parent. The summary count can lag a cached read — trust the paginated list if the two disagree.
+
+## Recording blockers
+
+Record a blocker with the dependencies API. GitHub then banners the blocked issue, lists it in the blocker's sidebar, and clears the banner when the blocker closes — body prose does none of that.
+
+The API mirrors sub-issues, including the gotcha: it keys on the blocker's database **id**, not its issue number.
+
+```bash
+# 1. Resolve the BLOCKER's database id (NOT its issue number).
+BLOCKER_ID=$(gh api repos/<owner>/<repo>/issues/<blocker> --jq .id)
+
+# 2. Link it: <blocked> is now blocked by <blocker>.
+gh api --method POST repos/<owner>/<repo>/issues/<blocked>/dependencies/blocked_by \
+  -F issue_id="$BLOCKER_ID"
+
+# 3. Verify from either side.
+gh api repos/<owner>/<repo>/issues/<blocked>/dependencies/blocked_by
+gh api repos/<owner>/<repo>/issues/<blocker>/dependencies/blocking
+```
+
+- Unlink with `DELETE repos/<owner>/<repo>/issues/<blocked>/dependencies/blocked_by/$BLOCKER_ID` — database id again.
+- Keep the `Depends on: #N (reason)` prose for the _why_, but never in place of the link.
+- Bulk linking in a burst trips secondary rate limits. Pace the calls.
 
 ## Internal vs. external
 
