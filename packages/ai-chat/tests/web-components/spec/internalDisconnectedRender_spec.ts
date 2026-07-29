@@ -15,28 +15,28 @@
  * render decision, never a real boot.
  */
 
-import "../../../src/web-components/cds-aichat-container/cds-aichat-internal";
-import { createBaseConfig } from "../../test_helpers";
+import '../../../src/web-components/cds-aichat-container/cds-aichat-internal';
+import { createBaseConfig } from '../../test_helpers';
 
 const flushMicrotasks = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 function createInternal() {
-  const element = document.createElement("cds-aichat-internal") as any;
+  const element = document.createElement('cds-aichat-internal') as any;
   element.config = createBaseConfig();
   // Intercept the render so no real SDK boot runs; we only assert whether it was invoked.
   const renderSpy = jest
-    .spyOn(element, "renderReactApp")
+    .spyOn(element, 'renderReactApp')
     .mockImplementation(() => undefined);
   return { element, renderSpy };
 }
 
-describe("cds-aichat-internal disconnected render guard", () => {
+describe('cds-aichat-internal disconnected render guard', () => {
   afterEach(() => {
-    document.body.innerHTML = "";
+    document.body.innerHTML = '';
     jest.restoreAllMocks();
   });
 
-  it("renders on first connect", async () => {
+  it('renders on first connect', async () => {
     const { element, renderSpy } = createInternal();
     document.body.appendChild(element);
     await element.updateComplete;
@@ -46,7 +46,7 @@ describe("cds-aichat-internal disconnected render guard", () => {
     expect(renderSpy).toHaveBeenCalled();
   });
 
-  it("does not render on a property change while disconnected", async () => {
+  it('does not render on a property change while disconnected', async () => {
     const { element, renderSpy } = createInternal();
     document.body.appendChild(element);
     await element.updateComplete;
@@ -58,13 +58,13 @@ describe("cds-aichat-internal disconnected render guard", () => {
 
     // A reactive property changes while detached — Lit still runs updated(), but the guard
     // must keep it from re-booting into the detached shadow root.
-    element.element = document.createElement("div");
+    element.element = document.createElement('div');
     await element.updateComplete;
 
     expect(renderSpy).not.toHaveBeenCalled();
   });
 
-  it("re-renders on reconnect so a moved element is not left blank", async () => {
+  it('re-renders on reconnect so a moved element is not left blank', async () => {
     const { element, renderSpy } = createInternal();
     document.body.appendChild(element);
     await element.updateComplete;

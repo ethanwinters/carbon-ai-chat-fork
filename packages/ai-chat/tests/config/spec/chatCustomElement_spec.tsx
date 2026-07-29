@@ -15,43 +15,43 @@
  * newly-added config field cannot be silently dropped or leaked onto the host.
  */
 
-import React from "react";
-import { render, waitFor } from "@testing-library/react";
+import React from 'react';
+import { render, waitFor } from '@testing-library/react';
 
-import { ChatCustomElement } from "../../../src/react/ChatCustomElement";
-import { createBaseTestProps } from "../../test_helpers";
-import { AppState } from "../../../src/types/state/AppState";
-import { enLanguagePack } from "../../../src/types/config/LanguagePack";
-import { ChatInstance } from "../../../src/types/instance/ChatInstance";
+import { ChatCustomElement } from '../../../src/react/ChatCustomElement';
+import { createBaseTestProps } from '../../test_helpers';
+import { AppState } from '../../../src/types/state/AppState';
+import { enLanguagePack } from '../../../src/types/config/LanguagePack';
+import { ChatInstance } from '../../../src/types/instance/ChatInstance';
 import {
   peekReuseEntry,
   __resetReuseInstanceRegistry,
-} from "../../../src/chat/services/reuseInstanceRegistry";
+} from '../../../src/chat/services/reuseInstanceRegistry';
 
-describe("ChatCustomElement prop forwarding", () => {
+describe('ChatCustomElement prop forwarding', () => {
   afterEach(() => {
-    document.body.innerHTML = "";
+    document.body.innerHTML = '';
     jest.clearAllMocks();
   });
 
-  it("forwards flattened config to the chat and DOM attributes to the wrapper element", async () => {
+  it('forwards flattened config to the chat and DOM attributes to the wrapper element', async () => {
     let capturedInstance: any = null;
 
     render(
       React.createElement(ChatCustomElement, {
         ...createBaseTestProps(),
-        className: "my-custom-chat",
-        id: "custom-chat-id",
+        className: 'my-custom-chat',
+        id: 'custom-chat-id',
         // Flattened PublicConfig fields — must reach the chat through the inner
         // ChatContainer's shared reconstruction.
-        namespace: "custom-ns",
-        strings: { input_placeholder: "Custom element placeholder" },
+        namespace: 'custom-ns',
+        strings: { input_placeholder: 'Custom element placeholder' },
         // An arbitrary DOM attribute — must stay on the wrapper element.
-        "aria-label": "custom chat region",
+        'aria-label': 'custom chat region',
         onBeforeRender: (instance: any) => {
           capturedInstance = instance;
         },
-      }),
+      })
     );
 
     await waitFor(() => expect(capturedInstance).not.toBeNull(), {
@@ -60,28 +60,28 @@ describe("ChatCustomElement prop forwarding", () => {
 
     const state: AppState = capturedInstance.serviceManager.store.getState();
     // Flattened config fields reached the chat.
-    expect(state.config.public.namespace).toBe("custom-ns");
+    expect(state.config.public.namespace).toBe('custom-ns');
     expect(state.languagePack.input_placeholder).toBe(
-      "Custom element placeholder",
+      'Custom element placeholder'
     );
     // An unspecified string keeps its default (config folded, not replaced).
     expect(state.languagePack.launcher_isOpen).toBe(
-      enLanguagePack.launcher_isOpen,
+      enLanguagePack.launcher_isOpen
     );
 
     // className, id, and the arbitrary DOM attribute landed on the wrapper
     // element — not swallowed into config, not pushed onto the inner host.
     const wrapper = document.querySelector('[aria-label="custom chat region"]');
     expect(wrapper).not.toBeNull();
-    expect(wrapper?.tagName).toBe("DIV");
-    expect(wrapper?.classList.contains("my-custom-chat")).toBe(true);
-    expect(wrapper?.id).toBe("custom-chat-id");
+    expect(wrapper?.tagName).toBe('DIV');
+    expect(wrapper?.classList.contains('my-custom-chat')).toBe(true);
+    expect(wrapper?.id).toBe('custom-chat-id');
   });
 });
 
-describe("ChatCustomElement reuse re-attach visibility", () => {
+describe('ChatCustomElement reuse re-attach visibility', () => {
   afterEach(() => {
-    document.body.innerHTML = "";
+    document.body.innerHTML = '';
     __resetReuseInstanceRegistry();
     jest.clearAllMocks();
   });
@@ -89,14 +89,14 @@ describe("ChatCustomElement reuse re-attach visibility", () => {
   function reuseProps(namespace: string) {
     return {
       ...createBaseTestProps(),
-      className: "sized-chat",
+      className: 'sized-chat',
       namespace,
       featureFlags: { reuseInstance: true, reuseInstanceGraceMs: 100000 },
     };
   }
 
   it("seeds a fresh element's hidden class from the preserved (closed) view state on re-attach", async () => {
-    const namespace = "custom-element-reattach-hidden";
+    const namespace = 'custom-element-reattach-hidden';
     let instance: ChatInstance | null = null;
 
     const first = render(
@@ -105,15 +105,15 @@ describe("ChatCustomElement reuse re-attach visibility", () => {
         onAttach: (i: ChatInstance) => {
           instance = i;
         },
-      }),
+      })
     );
     await waitFor(() => expect(instance).not.toBeNull());
 
     // Close the chat, then confirm the mounted element reflects it.
     await instance!.changeView({ launcher: true, mainWindow: false });
-    const firstWrapper = document.querySelector(".sized-chat") as HTMLElement;
+    const firstWrapper = document.querySelector('.sized-chat') as HTMLElement;
     await waitFor(() =>
-      expect(firstWrapper.classList.contains("cds-aichat--hidden")).toBe(true),
+      expect(firstWrapper.classList.contains('cds-aichat--hidden')).toBe(true)
     );
 
     // Unmount + remount within the grace window: the fresh element must adopt the closed state
@@ -125,14 +125,14 @@ describe("ChatCustomElement reuse re-attach visibility", () => {
     await waitFor(() => expect(peekReuseEntry(namespace)?.refCount).toBe(1));
 
     await waitFor(() => {
-      const wrappers = document.querySelectorAll(".sized-chat");
+      const wrappers = document.querySelectorAll('.sized-chat');
       const fresh = wrappers[wrappers.length - 1] as HTMLElement;
-      expect(fresh.classList.contains("cds-aichat--hidden")).toBe(true);
+      expect(fresh.classList.contains('cds-aichat--hidden')).toBe(true);
     });
   });
 
-  it("keeps view changes flowing to the remounted element (handlers re-subscribed per attach)", async () => {
-    const namespace = "custom-element-reattach-viewchange";
+  it('keeps view changes flowing to the remounted element (handlers re-subscribed per attach)', async () => {
+    const namespace = 'custom-element-reattach-viewchange';
     let instance: ChatInstance | null = null;
 
     const first = render(
@@ -141,7 +141,7 @@ describe("ChatCustomElement reuse re-attach visibility", () => {
         onAttach: (i: ChatInstance) => {
           instance = i;
         },
-      }),
+      })
     );
     await waitFor(() => expect(instance).not.toBeNull());
     await instance!.changeView({ launcher: true, mainWindow: false });
@@ -156,9 +156,9 @@ describe("ChatCustomElement reuse re-attach visibility", () => {
     // handler must clear its hidden class.
     await instance!.changeView({ launcher: false, mainWindow: true });
     await waitFor(() => {
-      const wrappers = document.querySelectorAll(".sized-chat");
+      const wrappers = document.querySelectorAll('.sized-chat');
       const fresh = wrappers[wrappers.length - 1] as HTMLElement;
-      expect(fresh.classList.contains("cds-aichat--hidden")).toBe(false);
+      expect(fresh.classList.contains('cds-aichat--hidden')).toBe(false);
     });
   });
 });

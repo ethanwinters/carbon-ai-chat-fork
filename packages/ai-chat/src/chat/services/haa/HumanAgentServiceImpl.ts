@@ -7,16 +7,16 @@
  *  @license
  */
 
-import cloneDeep from "lodash-es/cloneDeep.js";
-import merge from "lodash-es/merge.js";
-import { DeepPartial } from "../../../types/utilities/DeepPartial";
+import cloneDeep from 'lodash-es/cloneDeep.js';
+import merge from 'lodash-es/merge.js';
+import { DeepPartial } from '../../../types/utilities/DeepPartial';
 
-import inputItemToLocalItem from "../../schema/inputItemToLocalItem";
+import inputItemToLocalItem from '../../schema/inputItemToLocalItem';
 import {
   createLocalMessageForInlineError,
   outputItemToLocalItem,
-} from "../../schema/outputItemToLocalItem";
-import actions from "../../store/actions";
+} from '../../schema/outputItemToLocalItem';
+import actions from '../../store/actions';
 import {
   agentUpdateIsTyping,
   endChat,
@@ -30,32 +30,32 @@ import {
   setShowScreenShareRequest,
   updateCapabilities,
   updateFilesUploadInProgress,
-} from "../../store/humanAgentActions";
-import { FileUpload } from "../../../types/config/ServiceDeskConfig";
+} from '../../store/humanAgentActions';
+import { FileUpload } from '../../../types/config/ServiceDeskConfig';
 import {
   LocalMessageItem,
   MessageErrorState,
-} from "../../../types/messaging/LocalMessageItem";
-import { FileStatusValue } from "../../utils/constants";
-import { deepFreeze } from "../../utils/lang/objectUtils";
-import { resolveOrTimeout } from "../../utils/lang/promiseUtils";
+} from '../../../types/messaging/LocalMessageItem';
+import { FileStatusValue } from '../../utils/constants';
+import { deepFreeze } from '../../utils/lang/objectUtils';
+import { resolveOrTimeout } from '../../utils/lang/promiseUtils';
 import {
   addDefaultsToMessage,
   createMessageRequestForFileUpload,
   createMessageRequestForText,
   createMessageResponseForText,
-} from "../../utils/messageUtils";
-import { assertType, consoleError, debugLog } from "../../utils/miscUtils";
+} from '../../utils/messageUtils';
+import { assertType, consoleError, debugLog } from '../../utils/miscUtils';
 import {
   ResolvablePromise,
   resolvablePromise,
-} from "../../utils/resolvablePromise";
-import { ServiceManager } from "../ServiceManager";
+} from '../../utils/resolvablePromise';
+import { ServiceManager } from '../ServiceManager';
 import {
   HumanAgentsOnlineStatus,
   CreateHumanAgentServiceFunction,
   HumanAgentService,
-} from "./HumanAgentService";
+} from './HumanAgentService';
 import {
   addHumanAgentEndChatMessage,
   addAssistantReturnMessage,
@@ -63,7 +63,7 @@ import {
   createHumanAgentLocalMessage,
   LocalAndOriginalMessagesPair,
   toPair,
-} from "./humanAgentUtils";
+} from './humanAgentUtils';
 import {
   HumanAgentMessageType,
   ResponseUserProfile,
@@ -71,7 +71,7 @@ import {
   Message,
   MessageResponse,
   TextItem,
-} from "../../../types/messaging/Messages";
+} from '../../../types/messaging/Messages';
 import {
   AdditionalDataToAgent,
   AgentAvailability,
@@ -82,12 +82,12 @@ import {
   ServiceDeskCapabilities,
   ServiceDeskErrorInfo,
   ServiceDeskFactoryParameters,
-} from "../../../types/config/ServiceDeskConfig";
+} from '../../../types/config/ServiceDeskConfig';
 import {
   BusEventHumanAgentPreEndChat,
   BusEventHumanAgentPreStartChat,
   BusEventType,
-} from "../../../types/events/eventBusTypes";
+} from '../../../types/events/eventBusTypes';
 
 /**
  * The amount of time to wait when a message is sent to the service desk before displaying a warning if the service
@@ -212,7 +212,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
    */
   public async initialize() {
     if (this.serviceDesk) {
-      throw new Error("A service desk has already been created!");
+      throw new Error('A service desk has already been created!');
     }
 
     this.hasInitialized = true;
@@ -221,12 +221,12 @@ class HumanAgentServiceImpl implements HumanAgentService {
     const state = store.getState();
     const { config, persistedToBrowserStorage } = state;
     const serviceDeskState = cloneDeep(
-      persistedToBrowserStorage.humanAgentState.serviceDeskState,
+      persistedToBrowserStorage.humanAgentState.serviceDeskState
     );
 
     this.serviceDeskCallback = new ServiceDeskCallbackImpl(
       this.serviceManager,
-      this,
+      this
     );
 
     if (config.public.serviceDeskFactory) {
@@ -238,7 +238,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
       };
       this.serviceDesk = await config.public.serviceDeskFactory(parameters);
       validateCustomServiceDesk(this.serviceDesk);
-      debugLog("Initializing a custom service desk");
+      debugLog('Initializing a custom service desk');
     }
 
     // If the service desk supports reconnecting, we don't need to show this warning.
@@ -256,11 +256,11 @@ class HumanAgentServiceImpl implements HumanAgentService {
    */
   public async startChat(
     localConnectMessage: LocalMessageItem<ConnectToHumanAgentItem>,
-    originalMessage: Message,
+    originalMessage: Message
   ): Promise<void> {
     if (!this.serviceDesk) {
       // No service desk connected.
-      throw new Error("A service desk has not been configured.");
+      throw new Error('A service desk has not been configured.');
     }
 
     if (
@@ -275,7 +275,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
 
     if (this.chatStarted) {
       throw new Error(
-        "A chat is already running. A call to endChat must be made before a new chat can start.",
+        'A chat is already running. A call to endChat must be made before a new chat can start.'
       );
     }
 
@@ -286,7 +286,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
       this.isHumanAgentTyping = false;
       this.uploadingFiles.clear();
       this.serviceManager.store.dispatch(
-        updateFilesUploadInProgress(this.uploadingFiles.size > 0),
+        updateFilesUploadInProgress(this.uploadingFiles.size > 0)
       );
 
       // Fire off the pre-start event.
@@ -311,12 +311,12 @@ class HumanAgentServiceImpl implements HumanAgentService {
       if (agentJoinTimeout) {
         this.waitingForHumanAgentJoinedTimer = setTimeout(
           () => this.handleHumanAgentJoinedTimeout(),
-          agentJoinTimeout * 1000,
+          agentJoinTimeout * 1000
         );
       }
 
       serviceManager.store.dispatch(
-        setIsConnecting(true, localConnectMessage.ui_state.id),
+        setIsConnecting(true, localConnectMessage.ui_state.id)
       );
 
       await this.serviceDesk.startChat(originalMessage as MessageResponse, {
@@ -324,8 +324,8 @@ class HumanAgentServiceImpl implements HumanAgentService {
       });
     } catch (error) {
       consoleError(
-        "[startChat] An error with the service desk occurred.",
-        error,
+        '[startChat] An error with the service desk occurred.',
+        error
       );
       // If it failed to start, then stop connecting and clear the service desk.
       if (this.serviceDeskCallback) {
@@ -348,7 +348,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
    * added by a listener.
    */
   async firePreEndChat(
-    endedByHumanAgent: boolean,
+    endedByHumanAgent: boolean
   ): Promise<BusEventHumanAgentPreEndChat> {
     // Before ending the chat, fire an event.
     const event: BusEventHumanAgentPreEndChat = {
@@ -391,7 +391,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
     endedByUser: boolean,
     showHumanAgentLeftMessage = true,
     showAssistantReturnMessage = true,
-    options: { forceEnd?: boolean } = {},
+    options: { forceEnd?: boolean } = {}
   ): Promise<void> {
     if (!this.chatStarted || !this.serviceDesk) {
       // Already ended or no service desk.
@@ -413,7 +413,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
       event?.preEndChatPayload,
       showHumanAgentLeftMessage,
       showAssistantReturnMessage,
-      endMessageType,
+      endMessageType
     );
   }
 
@@ -425,7 +425,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
     preEndChatPayload: unknown,
     showHumanAgentLeftMessage: boolean,
     showAssistantReturnMessage: boolean,
-    agentEndChatMessageType: HumanAgentMessageType,
+    agentEndChatMessageType: HumanAgentMessageType
   ): Promise<void> {
     const { isConnected } = this.persistedHumanAgentState();
     const wasSuspended = this.isSuspended();
@@ -436,12 +436,12 @@ class HumanAgentServiceImpl implements HumanAgentService {
     try {
       await resolveOrTimeout(
         this.serviceDesk.endChat({ endedByHumanAgent, preEndChatPayload }),
-        END_CHAT_TIMEOUT_MS,
+        END_CHAT_TIMEOUT_MS
       );
     } catch (error) {
       consoleError(
-        "[doEndChat] An error with the service desk occurred.",
-        error,
+        '[doEndChat] An error with the service desk occurred.',
+        error
       );
     }
 
@@ -452,7 +452,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
         responseUserProfile,
         true,
         wasSuspended,
-        this.serviceManager,
+        this.serviceManager
       );
     }
 
@@ -466,7 +466,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
       await addAssistantReturnMessage(
         BOT_RETURN_DELAY,
         wasSuspended,
-        this.serviceManager,
+        this.serviceManager
       );
     }
   }
@@ -480,7 +480,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
    */
   public async sendMessageToAgent(
     text: string,
-    uploads: FileUpload[],
+    uploads: FileUpload[]
   ): Promise<void> {
     if (!this.serviceDesk || !this.chatStarted) {
       // No service desk connected.
@@ -503,7 +503,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
     // Add the outgoing message to the store immediately.
     const textMessage: LocalMessageItem<TextItem> = inputItemToLocalItem(
       originalMessage,
-      originalMessage.input.text,
+      originalMessage.input.text
     );
     const localMessageID = textMessage.ui_state.id;
 
@@ -521,14 +521,14 @@ class HumanAgentServiceImpl implements HumanAgentService {
       const uploadLocalMessage: LocalMessageItem = inputItemToLocalItem(
         uploadOriginalMessage,
         uploadOriginalMessage.input.text,
-        upload.id,
+        upload.id
       );
       pairs.push(toPair([uploadLocalMessage], uploadOriginalMessage));
 
       this.uploadingFiles.add(upload.id);
     });
     this.serviceManager.store.dispatch(
-      updateFilesUploadInProgress(this.uploadingFiles.size > 0),
+      updateFilesUploadInProgress(this.uploadingFiles.size > 0)
     );
 
     await addMessages(pairs, !this.isSuspended(), serviceManager);
@@ -541,7 +541,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
       if (!messageSucceeded && !messageFailed) {
         this.setMessageErrorState(
           textMessage.fullMessageID,
-          MessageErrorState.RETRYING,
+          MessageErrorState.RETRYING
         );
       }
     }, SEND_TIMEOUT_WARNING_MS);
@@ -549,7 +549,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
       if (!messageSucceeded) {
         this.setMessageErrorState(
           textMessage.fullMessageID,
-          MessageErrorState.FAILED,
+          MessageErrorState.FAILED
         );
       }
     }, SEND_TIMEOUT_ERROR_MS);
@@ -563,12 +563,12 @@ class HumanAgentServiceImpl implements HumanAgentService {
       await this.serviceDesk.sendMessageToAgent(
         originalMessage,
         localMessageID,
-        additionalData,
+        additionalData
       );
       messageSucceeded = true;
       this.setMessageErrorState(
         textMessage.fullMessageID,
-        MessageErrorState.NONE,
+        MessageErrorState.NONE
       );
 
       await serviceManager.fire({
@@ -579,12 +579,12 @@ class HumanAgentServiceImpl implements HumanAgentService {
     } catch (error) {
       messageFailed = true;
       consoleError(
-        "[sendMessageToAgent] An error with the service desk occurred.",
-        error,
+        '[sendMessageToAgent] An error with the service desk occurred.',
+        error
       );
       this.setMessageErrorState(
         textMessage.fullMessageID,
-        MessageErrorState.FAILED,
+        MessageErrorState.FAILED
       );
     }
   }
@@ -603,8 +603,8 @@ class HumanAgentServiceImpl implements HumanAgentService {
       this.serviceDesk.filesSelectedForUpload?.(uploads);
     } catch (error) {
       consoleError(
-        "[userReadMessages] An error with the service desk occurred.",
-        error,
+        '[userReadMessages] An error with the service desk occurred.',
+        error
       );
     }
   }
@@ -622,8 +622,8 @@ class HumanAgentServiceImpl implements HumanAgentService {
       await this.serviceDesk.userReadMessages();
     } catch (error) {
       consoleError(
-        "[userReadMessages] An error with the service desk occurred.",
-        error,
+        '[userReadMessages] An error with the service desk occurred.',
+        error
       );
     }
   }
@@ -636,7 +636,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
    * so it can perform a more specific check.
    */
   public async checkAreAnyHumanAgentsOnline(
-    connectMessage: MessageResponse,
+    connectMessage: MessageResponse
   ): Promise<HumanAgentsOnlineStatus> {
     let resultValue: HumanAgentsOnlineStatus;
     const initialRestartCount = this.serviceManager.restartCount;
@@ -653,7 +653,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
           : AVAILABILITY_TIMEOUT_MS;
         const result = await resolveOrTimeout(
           this.serviceDesk.areAnyAgentsOnline(connectMessage),
-          timeout,
+          timeout
         );
 
         if (result === true) {
@@ -665,7 +665,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
           resultValue = HumanAgentsOnlineStatus.UNKNOWN;
         }
       } catch (error) {
-        consoleError("Error attempting to get agent availability", error);
+        consoleError('Error attempting to get agent availability', error);
         // If we fail to get an answer we'll just return false to indicate that no agents are available.
         resultValue = HumanAgentsOnlineStatus.OFFLINE;
       }
@@ -697,8 +697,8 @@ class HumanAgentServiceImpl implements HumanAgentService {
       await this.serviceDesk.userTyping?.(isTyping);
     } catch (error) {
       consoleError(
-        "[userTyping] An error with the service desk occurred.",
-        error,
+        '[userTyping] An error with the service desk occurred.',
+        error
       );
     }
   }
@@ -712,7 +712,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
    */
   setMessageErrorState(messageID: string, errorState: MessageErrorState) {
     this.serviceManager.store.dispatch(
-      actions.setMessageErrorState(messageID, errorState),
+      actions.setMessageErrorState(messageID, errorState)
     );
   }
 
@@ -729,7 +729,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
     await addMessages(
       [toPair([localMessage], originalMessage)],
       !this.isSuspended(),
-      this.serviceManager,
+      this.serviceManager
     );
 
     // End the chat.
@@ -796,7 +796,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
    */
   async handleHydration(
     allowReconnect: boolean,
-    allowEndChatMessages: boolean,
+    allowEndChatMessages: boolean
   ) {
     const { store } = this.serviceManager;
 
@@ -843,7 +843,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
             responseUserProfile,
             false,
             wasSuspended,
-            this.serviceManager,
+            this.serviceManager
           );
           await addAssistantReturnMessage(0, wasSuspended, this.serviceManager);
         }
@@ -866,7 +866,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
       this.screenShareRequestPromise = null;
     }
     this.serviceManager.store.dispatch(
-      setIsScreenSharing(state === ScreenShareState.ACCEPTED),
+      setIsScreenSharing(state === ScreenShareState.ACCEPTED)
     );
   }
 
@@ -876,7 +876,7 @@ class HumanAgentServiceImpl implements HumanAgentService {
   async addHumanAgentLocalMessage(
     agentMessageType: HumanAgentMessageType,
     responseUserProfile?: ResponseUserProfile,
-    fireEvents = true,
+    fireEvents = true
   ) {
     if (!responseUserProfile) {
       responseUserProfile = this.persistedHumanAgentState().responseUserProfile;
@@ -886,12 +886,12 @@ class HumanAgentServiceImpl implements HumanAgentService {
         agentMessageType,
         this.serviceManager,
         responseUserProfile,
-        fireEvents,
+        fireEvents
       );
     await addMessages(
       [toPair([localMessage], originalMessage)],
       !this.isSuspended(),
-      this.serviceManager,
+      this.serviceManager
     );
   }
 
@@ -942,7 +942,7 @@ class ServiceDeskCallbackImpl<
    */
   updateCapabilities(capabilities: Partial<ServiceDeskCapabilities>): void {
     this.serviceManager.store.dispatch(
-      updateCapabilities(cloneDeep(capabilities)),
+      updateCapabilities(cloneDeep(capabilities))
     );
   }
 
@@ -993,7 +993,7 @@ class ServiceDeskCallbackImpl<
       // The chat is no longer running.
       return;
     }
-    debugLog("[ServiceDeskCallbackImpl] agentReadMessages");
+    debugLog('[ServiceDeskCallbackImpl] agentReadMessages');
   }
 
   /**
@@ -1029,7 +1029,7 @@ class ServiceDeskCallbackImpl<
     }
 
     const messageResponse =
-      typeof message === "string"
+      typeof message === 'string'
         ? createMessageResponseForText(message)
         : message;
     addDefaultsToMessage(messageResponse);
@@ -1058,7 +1058,7 @@ class ServiceDeskCallbackImpl<
           this.persistedHumanAgentState().responseUserProfile;
         if (responseUserProfile) {
           consoleError(
-            `Got agent ID ${agentID} but no agent with that ID joined the conversation. Using the current agent instead.`,
+            `Got agent ID ${agentID} but no agent with that ID joined the conversation. Using the current agent instead.`
           );
         }
       }
@@ -1081,7 +1081,7 @@ class ServiceDeskCallbackImpl<
     await addMessages(
       [toPair(localMessages, messageResponse)],
       !this.service.isSuspended(),
-      this.serviceManager,
+      this.serviceManager
     );
 
     await serviceManager.fire({
@@ -1110,7 +1110,7 @@ class ServiceDeskCallbackImpl<
 
     await this.service.addHumanAgentLocalMessage(
       TRANSFER_TO_HUMAN_AGENT,
-      profile,
+      profile
     );
   }
 
@@ -1148,7 +1148,7 @@ class ServiceDeskCallbackImpl<
       event.preEndChatPayload,
       true,
       true,
-      HUMAN_AGENT_ENDED_CHAT,
+      HUMAN_AGENT_ENDED_CHAT
     );
   }
 
@@ -1170,7 +1170,7 @@ class ServiceDeskCallbackImpl<
     if (logInfo) {
       consoleError(
         `An error occurred in the service desk (type=${type})`,
-        logInfo,
+        logInfo
       );
     }
 
@@ -1192,7 +1192,7 @@ class ServiceDeskCallbackImpl<
           await this.service.addHumanAgentLocalMessage(
             DISCONNECTED,
             null,
-            true,
+            true
           );
           store.dispatch(actions.updateInputState({ isReadonly: true }, true));
         } else if (this.service.showingDisconnectedError) {
@@ -1214,7 +1214,7 @@ class ServiceDeskCallbackImpl<
         await addMessages(
           [toPair([localMessage], originalMessage)],
           !this.service.isSuspended(),
-          this.serviceManager,
+          this.serviceManager
         );
 
         // Cancel the connecting status.
@@ -1227,7 +1227,7 @@ class ServiceDeskCallbackImpl<
       case ErrorType.USER_MESSAGE: {
         this.service.setMessageErrorState(
           errorInfo.messageID,
-          MessageErrorState.FAILED,
+          MessageErrorState.FAILED
         );
         break;
       }
@@ -1256,7 +1256,7 @@ class ServiceDeskCallbackImpl<
   async setFileUploadStatus(
     fileID: string,
     isError?: boolean,
-    errorMessage?: string,
+    errorMessage?: string
   ): Promise<void> {
     const { store } = this.serviceManager;
 
@@ -1272,16 +1272,16 @@ class ServiceDeskCallbackImpl<
         store.dispatch(
           actions.setMessageResponseHistoryProperty(
             fileID,
-            "file_upload_status",
-            FileStatusValue.COMPLETE,
-          ),
+            'file_upload_status',
+            FileStatusValue.COMPLETE
+          )
         );
         store.dispatch(
           actions.setMessageResponseHistoryProperty(
             fileID,
-            "error_state",
-            MessageErrorState.FAILED,
-          ),
+            'error_state',
+            MessageErrorState.FAILED
+          )
         );
         partialMessage.history.error_state = MessageErrorState.FAILED;
 
@@ -1291,8 +1291,8 @@ class ServiceDeskCallbackImpl<
         // double-reading), mirroring the success announcement above.
         store.dispatch(
           actions.announceMessage({
-            messageID: "fileSharing_uploadFailed",
-          }),
+            messageID: 'fileSharing_uploadFailed',
+          })
         );
 
         if (errorMessage) {
@@ -1304,7 +1304,7 @@ class ServiceDeskCallbackImpl<
           await addMessages(
             [toPair([localMessage], originalMessage)],
             !this.service.isSuspended(),
-            this.serviceManager,
+            this.serviceManager
           );
         }
       } else {
@@ -1313,14 +1313,14 @@ class ServiceDeskCallbackImpl<
         store.dispatch(
           actions.setMessageResponseHistoryProperty(
             fileID,
-            "file_upload_status",
-            FileStatusValue.SUCCESS,
-          ),
+            'file_upload_status',
+            FileStatusValue.SUCCESS
+          )
         );
         store.dispatch(
           actions.announceMessage({
-            messageID: "fileSharing_ariaAnnounceSuccess",
-          }),
+            messageID: 'fileSharing_ariaAnnounceSuccess',
+          })
         );
       }
     } else if (isError) {
@@ -1330,7 +1330,7 @@ class ServiceDeskCallbackImpl<
 
     this.service.uploadingFiles.delete(fileID);
     this.serviceManager.store.dispatch(
-      updateFilesUploadInProgress(this.service.uploadingFiles.size > 0),
+      updateFilesUploadInProgress(this.service.uploadingFiles.size > 0)
     );
   }
 
@@ -1345,7 +1345,7 @@ class ServiceDeskCallbackImpl<
   async screenShareRequest() {
     if (!this.persistedHumanAgentState().isConnected) {
       return Promise.reject(
-        new Error("Cannot request screen sharing if no chat is in progress."),
+        new Error('Cannot request screen sharing if no chat is in progress.')
       );
     }
 
@@ -1408,7 +1408,7 @@ class ServiceDeskCallbackImpl<
    */
   updatePersistedState(
     state: DeepPartial<TPersistedStateType>,
-    mergeWithCurrent = true,
+    mergeWithCurrent = true
   ): void {
     const { store } = this.serviceManager;
     let newState;
@@ -1417,7 +1417,7 @@ class ServiceDeskCallbackImpl<
         {},
         store.getState().persistedToBrowserStorage.humanAgentState
           .serviceDeskState,
-        state,
+        state
       );
     } else {
       newState = cloneDeep(state);
@@ -1430,7 +1430,7 @@ class ServiceDeskCallbackImpl<
  * Returns a new instance of the service implementation.
  */
 function createHumanAgentService(
-  serviceManager: ServiceManager,
+  serviceManager: ServiceManager
 ): HumanAgentService {
   return new HumanAgentServiceImpl(serviceManager);
 }
@@ -1444,27 +1444,27 @@ assertType<CreateHumanAgentServiceFunction>(createHumanAgentService);
 function validateCustomServiceDesk(serviceDesk: ServiceDesk) {
   if (!serviceDesk) {
     consoleError(
-      "The custom service desk does not appear to be valid. No service desk was provided.",
-      serviceDesk,
+      'The custom service desk does not appear to be valid. No service desk was provided.',
+      serviceDesk
     );
-  } else if (typeof serviceDesk !== "object") {
+  } else if (typeof serviceDesk !== 'object') {
     consoleError(
       `The custom service desk does not appear to be valid. The type should be "object" but is "${typeof serviceDesk}"`,
-      serviceDesk,
+      serviceDesk
     );
   } else {
     const propertyNames: (keyof ServiceDesk)[] = [
-      "startChat",
-      "endChat",
-      "sendMessageToAgent",
+      'startChat',
+      'endChat',
+      'sendMessageToAgent',
     ];
     propertyNames.forEach((propertyName) => {
       const value = serviceDesk[propertyName];
-      if (typeof value !== "function") {
+      if (typeof value !== 'function') {
         consoleError(
           `The custom service desk does not appear to be valid. The type of property "${propertyName}"should be "function" but is "${typeof value}"`,
           value,
-          serviceDesk,
+          serviceDesk
         );
       }
     });
@@ -1472,10 +1472,10 @@ function validateCustomServiceDesk(serviceDesk: ServiceDesk) {
     const name = serviceDesk.getName?.();
 
     if (!name) {
-      throw Error("The custom service desk does not have a name.");
+      throw Error('The custom service desk does not have a name.');
     }
 
-    if (name && (typeof name !== "string" || name.length > 40)) {
+    if (name && (typeof name !== 'string' || name.length > 40)) {
       throw new Error(`The custom service desk name "${name}" is not valid.`);
     }
   }

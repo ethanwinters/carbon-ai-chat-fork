@@ -15,4 +15,4 @@
  * "SDK boundary" note in the package AGENTS.md). Framework-freeness is enforced transitively by
  * `tests/sdk/spec/sdkBoundary_spec.ts`. Mirrors the `browser-utils` re-export in `browserUtils.ts`.
  */
-export { uuid } from "@carbon/ai-chat-components/es/globals/utils/uuid.js";
+export { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';

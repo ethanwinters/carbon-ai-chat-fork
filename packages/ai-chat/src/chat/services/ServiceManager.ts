@@ -7,30 +7,30 @@
  *  @license
  */
 
-import type { AppStore } from "../store/appStore";
-import { IntlShape } from "../utils/i18n";
+import type { AppStore } from '../store/appStore';
+import { IntlShape } from '../utils/i18n';
 import {
   AriaAnnouncerFunctionType,
   InputFunctions,
   MainWindowFunctions,
-} from "../utils/viewHandles.js";
+} from '../utils/viewHandles.js';
 
-import { EventBus } from "../events/EventBus";
-import { AppState } from "../../types/state/AppState";
-import { HumanAgentService } from "./haa/HumanAgentService";
-import { CustomPanelManager } from "./CustomPanelManager";
-import { HistoryService } from "./HistoryService";
-import { MessageUpsertCoordinator } from "./MessageUpsertCoordinator";
-import MessageService from "./MessageService";
-import { NamespaceService } from "./NamespaceService";
-import { ThemeWatcherService } from "./ThemeWatcherService";
-import { UserSessionStorageService } from "./UserSessionStorageService";
-import { ChatInstance } from "../../types/instance/ChatInstance";
-import { WriteableElements } from "../../types/instance/WriteableElements";
-import { BusEvent } from "../../types/events/eventBusTypes";
-import { ChatActionsImpl } from "./ChatActionsImpl";
-import { HasRequestFocus } from "../../types/utilities/HasRequestFocus";
-import { ChatSlotStates } from "../sdk/slotStates.js";
+import { EventBus } from '../events/EventBus';
+import { AppState } from '../../types/state/AppState';
+import { HumanAgentService } from './haa/HumanAgentService';
+import { CustomPanelManager } from './CustomPanelManager';
+import { HistoryService } from './HistoryService';
+import { MessageUpsertCoordinator } from './MessageUpsertCoordinator';
+import MessageService from './MessageService';
+import { NamespaceService } from './NamespaceService';
+import { ThemeWatcherService } from './ThemeWatcherService';
+import { UserSessionStorageService } from './UserSessionStorageService';
+import { ChatInstance } from '../../types/instance/ChatInstance';
+import { WriteableElements } from '../../types/instance/WriteableElements';
+import { BusEvent } from '../../types/events/eventBusTypes';
+import { ChatActionsImpl } from './ChatActionsImpl';
+import { HasRequestFocus } from '../../types/utilities/HasRequestFocus';
+import { ChatSlotStates } from '../sdk/slotStates.js';
 
 export interface UserDefinedElementRegistryItem {
   slotName: string;

@@ -10,11 +10,11 @@
 import {
   applyBootContainerClasses,
   mergePublicConfig,
-} from "../../../src/chat/boot/appBoot";
-import { createBaseTestProps } from "../../test_helpers";
+} from '../../../src/chat/boot/appBoot';
+import { createBaseTestProps } from '../../test_helpers';
 
-describe("mergePublicConfig", () => {
-  it("merges defaults with provided config", () => {
+describe('mergePublicConfig', () => {
+  it('merges defaults with provided config', () => {
     const base = createBaseTestProps();
     const publicConfig = mergePublicConfig(base);
 
@@ -25,7 +25,7 @@ describe("mergePublicConfig", () => {
 
     // Provided fields preserved
     expect(publicConfig.messaging?.customSendMessage).toBe(
-      base.messaging?.customSendMessage,
+      base.messaging?.customSendMessage
     );
     expect(publicConfig.exposeServiceManagerForTesting).toBe(true);
   });
@@ -34,81 +34,81 @@ describe("mergePublicConfig", () => {
     const base = createBaseTestProps();
     const publicConfig = mergePublicConfig(base);
 
-    expect(publicConfig.assistantName).toBe("watsonx");
+    expect(publicConfig.assistantName).toBe('watsonx');
   });
 
-  it("preserves custom assistantName when provided", () => {
+  it('preserves custom assistantName when provided', () => {
     const base = createBaseTestProps();
-    base.assistantName = "Custom Assistant";
+    base.assistantName = 'Custom Assistant';
     const publicConfig = mergePublicConfig(base);
 
-    expect(publicConfig.assistantName).toBe("Custom Assistant");
+    expect(publicConfig.assistantName).toBe('Custom Assistant');
   });
 
-  it("uses default assistantName when not provided", () => {
+  it('uses default assistantName when not provided', () => {
     const base = createBaseTestProps();
     delete (base as any).assistantName;
     const publicConfig = mergePublicConfig(base);
 
-    expect(publicConfig.assistantName).toBe("watsonx");
+    expect(publicConfig.assistantName).toBe('watsonx');
   });
 
-  it("allows empty string as assistantName", () => {
+  it('allows empty string as assistantName', () => {
     const base = createBaseTestProps();
-    base.assistantName = "";
+    base.assistantName = '';
     const publicConfig = mergePublicConfig(base);
 
-    expect(publicConfig.assistantName).toBe("");
+    expect(publicConfig.assistantName).toBe('');
   });
 });
 
-describe("applyBootContainerClasses", () => {
-  it("fills the container when a custom host element is present", () => {
-    const container = document.createElement("div");
+describe('applyBootContainerClasses', () => {
+  it('fills the container when a custom host element is present', () => {
+    const container = document.createElement('div');
 
     applyBootContainerClasses(container, true);
 
-    expect(container.classList.contains("cds-aichat--boot-container")).toBe(
-      true,
+    expect(container.classList.contains('cds-aichat--boot-container')).toBe(
+      true
     );
     expect(
-      container.classList.contains("cds-aichat--boot-container--filled"),
+      container.classList.contains('cds-aichat--boot-container--filled')
     ).toBe(true);
     expect(
-      container.classList.contains("cds-aichat--boot-container--collapsed"),
+      container.classList.contains('cds-aichat--boot-container--collapsed')
     ).toBe(false);
   });
 
-  it("collapses the container when no custom host element is present", () => {
-    const container = document.createElement("div");
+  it('collapses the container when no custom host element is present', () => {
+    const container = document.createElement('div');
 
     applyBootContainerClasses(container, false);
 
     expect(
-      container.classList.contains("cds-aichat--boot-container--collapsed"),
+      container.classList.contains('cds-aichat--boot-container--collapsed')
     ).toBe(true);
     expect(
-      container.classList.contains("cds-aichat--boot-container--filled"),
+      container.classList.contains('cds-aichat--boot-container--filled')
     ).toBe(false);
   });
 
-  it("styles a second container on re-attach independently of the first", () => {
-    const firstContainer = document.createElement("div");
+  it('styles a second container on re-attach independently of the first', () => {
+    const firstContainer = document.createElement('div');
     applyBootContainerClasses(firstContainer, true);
 
-    const secondContainer = document.createElement("div");
+    const secondContainer = document.createElement('div');
     applyBootContainerClasses(secondContainer, false);
 
     expect(
-      firstContainer.classList.contains("cds-aichat--boot-container--filled"),
+      firstContainer.classList.contains('cds-aichat--boot-container--filled')
     ).toBe(true);
     expect(
       secondContainer.classList.contains(
-        "cds-aichat--boot-container--collapsed",
-      ),
+        'cds-aichat--boot-container--collapsed'
+      )
     ).toBe(true);
     expect(
-      secondContainer.classList.contains("cds-aichat--boot-container--filled"),
+      secondContainer.classList.contains('cds-aichat--boot-container--filled')
     ).toBe(false);
   });
 });

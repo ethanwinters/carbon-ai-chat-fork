@@ -20,15 +20,15 @@
  * `featureFlags.reuseInstance` with a unique namespace, purely as the event-firing mechanism.
  */
 
-import { waitFor } from "@testing-library/react";
+import { waitFor } from '@testing-library/react';
 
-import "../../../src/web-components/cds-aichat-container";
-import { createBaseConfig } from "../../test_helpers";
-import { BusEventType } from "../../../src/types/events/eventBusTypes";
+import '../../../src/web-components/cds-aichat-container';
+import { createBaseConfig } from '../../test_helpers';
+import { BusEventType } from '../../../src/types/events/eventBusTypes';
 import {
   peekReuseEntry,
   __resetReuseInstanceRegistry,
-} from "../../../src/chat/services/reuseInstanceRegistry";
+} from '../../../src/chat/services/reuseInstanceRegistry';
 
 function mount(overrides: {
   namespace: string;
@@ -36,7 +36,7 @@ function mount(overrides: {
   renderCustomMessageFooter?: (...args: any[]) => any;
 }) {
   let capturedInstance: any = null;
-  const element = document.createElement("cds-aichat-container") as any;
+  const element = document.createElement('cds-aichat-container') as any;
   element.config = {
     ...createBaseConfig(),
     namespace: overrides.namespace,
@@ -60,18 +60,18 @@ function fire(namespace: string, event: any) {
   return serviceManager.fire(event);
 }
 
-describe("Web component: slot-state adoption", () => {
+describe('Web component: slot-state adoption', () => {
   afterEach(() => {
-    document.body.innerHTML = "";
+    document.body.innerHTML = '';
     jest.clearAllMocks();
     __resetReuseInstanceRegistry();
   });
 
-  it("renders a user-defined response from the slot-state store, including streaming chunks", async () => {
-    const namespace = "slot-state-user-defined";
+  it('renders a user-defined response from the slot-state store, including streaming chunks', async () => {
+    const namespace = 'slot-state-user-defined';
     const renderUserDefinedResponse = jest.fn((state: any) => {
-      const el = document.createElement("div");
-      el.textContent = state.messageItem?.id ?? "";
+      const el = document.createElement('div');
+      el.textContent = state.messageItem?.id ?? '';
       return el;
     });
 
@@ -84,7 +84,7 @@ describe("Web component: slot-state adoption", () => {
     // A streaming chunk...
     await fire(namespace, {
       type: BusEventType.CHUNK_USER_DEFINED_RESPONSE,
-      data: { slot: "s1", chunk: { partial_item: { id: "partial" } } },
+      data: { slot: 's1', chunk: { partial_item: { id: 'partial' } } },
     });
     await waitFor(() => {
       expect(element.querySelector('[slot="s1"]')).not.toBeNull();
@@ -94,23 +94,23 @@ describe("Web component: slot-state adoption", () => {
     await fire(namespace, {
       type: BusEventType.USER_DEFINED_RESPONSE,
       data: {
-        slot: "s1",
-        fullMessage: { id: "m1" },
-        message: { id: "i1" },
+        slot: 's1',
+        fullMessage: { id: 'm1' },
+        message: { id: 'i1' },
       },
     });
 
     await waitFor(() => {
-      expect(element.querySelector('[slot="s1"]')?.textContent).toBe("i1");
+      expect(element.querySelector('[slot="s1"]')?.textContent).toBe('i1');
     });
     expect(renderUserDefinedResponse).toHaveBeenCalled();
   });
 
-  it("renders a custom message footer from the slot-state store", async () => {
-    const namespace = "slot-state-custom-footer";
+  it('renders a custom message footer from the slot-state store', async () => {
+    const namespace = 'slot-state-custom-footer';
     const renderCustomMessageFooter = jest.fn((state: any) => {
-      const el = document.createElement("div");
-      el.textContent = state.messageItem?.id ?? "";
+      const el = document.createElement('div');
+      el.textContent = state.messageItem?.id ?? '';
       return el;
     });
 
@@ -123,29 +123,29 @@ describe("Web component: slot-state adoption", () => {
     await fire(namespace, {
       type: BusEventType.CUSTOM_FOOTER_SLOT,
       data: {
-        slotName: "footer1",
-        message: { id: "msg1" },
-        messageItem: { id: "item1" },
+        slotName: 'footer1',
+        message: { id: 'msg1' },
+        messageItem: { id: 'item1' },
       },
     });
 
     await waitFor(() => {
       expect(element.querySelector('[slot="footer1"]')?.textContent).toBe(
-        "item1",
+        'item1'
       );
     });
   });
 
-  it("clears rendered slot content on RESTART_CONVERSATION", async () => {
-    const namespace = "slot-state-restart";
+  it('clears rendered slot content on RESTART_CONVERSATION', async () => {
+    const namespace = 'slot-state-restart';
     const renderUserDefinedResponse = jest.fn((state: any) => {
-      const el = document.createElement("div");
-      el.textContent = state.messageItem?.id ?? "";
+      const el = document.createElement('div');
+      el.textContent = state.messageItem?.id ?? '';
       return el;
     });
     const renderCustomMessageFooter = jest.fn((state: any) => {
-      const el = document.createElement("div");
-      el.textContent = state.messageItem?.id ?? "";
+      const el = document.createElement('div');
+      el.textContent = state.messageItem?.id ?? '';
       return el;
     });
 
@@ -158,14 +158,14 @@ describe("Web component: slot-state adoption", () => {
 
     await fire(namespace, {
       type: BusEventType.USER_DEFINED_RESPONSE,
-      data: { slot: "s1", fullMessage: { id: "m1" }, message: { id: "i1" } },
+      data: { slot: 's1', fullMessage: { id: 'm1' }, message: { id: 'i1' } },
     });
     await fire(namespace, {
       type: BusEventType.CUSTOM_FOOTER_SLOT,
       data: {
-        slotName: "footer1",
-        message: { id: "msg1" },
-        messageItem: { id: "item1" },
+        slotName: 'footer1',
+        message: { id: 'msg1' },
+        messageItem: { id: 'item1' },
       },
     });
     await waitFor(() => {
@@ -181,11 +181,11 @@ describe("Web component: slot-state adoption", () => {
     });
   });
 
-  it("shows already-accumulated slot content immediately on a reuse remount, without a new event", async () => {
-    const namespace = "slot-state-reuse-remount";
+  it('shows already-accumulated slot content immediately on a reuse remount, without a new event', async () => {
+    const namespace = 'slot-state-reuse-remount';
     const renderUserDefinedResponse = jest.fn((state: any) => {
-      const el = document.createElement("div");
-      el.textContent = state.messageItem?.id ?? "";
+      const el = document.createElement('div');
+      el.textContent = state.messageItem?.id ?? '';
       return el;
     });
 
@@ -194,11 +194,11 @@ describe("Web component: slot-state adoption", () => {
 
     await fire(namespace, {
       type: BusEventType.USER_DEFINED_RESPONSE,
-      data: { slot: "s1", fullMessage: { id: "m1" }, message: { id: "i1" } },
+      data: { slot: 's1', fullMessage: { id: 'm1' }, message: { id: 'i1' } },
     });
     await waitFor(() => {
       expect(first.element.querySelector('[slot="s1"]')?.textContent).toBe(
-        "i1",
+        'i1'
       );
     });
 
@@ -213,19 +213,19 @@ describe("Web component: slot-state adoption", () => {
     // No new bus event fired — the content must already be present from the retained store.
     await waitFor(() => {
       expect(second.element.querySelector('[slot="s1"]')?.textContent).toBe(
-        "i1",
+        'i1'
       );
     });
   });
 
-  it("re-initializes a fresh element on a reuse remount: onAttach, instance arg, writeable elements, legacy handlers", async () => {
-    const namespace = "wc-reattach-wiring";
+  it('re-initializes a fresh element on a reuse remount: onAttach, instance arg, writeable elements, legacy handlers', async () => {
+    const namespace = 'wc-reattach-wiring';
     const attaches: Array<{ instance: any; remount: boolean }> = [];
     const instanceArgs: any[] = [];
     const renderUserDefinedResponse = jest.fn((state: any, instance: any) => {
       instanceArgs.push(instance);
-      const el = document.createElement("div");
-      el.textContent = state.messageItem?.id ?? "";
+      const el = document.createElement('div');
+      el.textContent = state.messageItem?.id ?? '';
       return el;
     });
 
@@ -237,7 +237,7 @@ describe("Web component: slot-state adoption", () => {
 
     await fire(namespace, {
       type: BusEventType.USER_DEFINED_RESPONSE,
-      data: { slot: "s1", fullMessage: { id: "m1" }, message: { id: "i1" } },
+      data: { slot: 's1', fullMessage: { id: 'm1' }, message: { id: 'i1' } },
     });
     await waitFor(() => {
       expect(first.element.querySelector('[slot="s1"]')).not.toBeNull();
@@ -246,7 +246,7 @@ describe("Web component: slot-state adoption", () => {
     // The writeable elements live in the first element's light DOM.
     const writeableKey = Object.keys(instance.writeableElements)[0];
     expect(instance.writeableElements[writeableKey].parentElement).toBe(
-      first.element,
+      first.element
     );
 
     first.element.remove();
@@ -268,7 +268,7 @@ describe("Web component: slot-state adoption", () => {
     // DEFINED instance (the adopted one), not undefined.
     await waitFor(() => {
       expect(second.element.querySelector('[slot="s1"]')?.textContent).toBe(
-        "i1",
+        'i1'
       );
     });
     expect(instanceArgs[instanceArgs.length - 1]).toBe(instance);
@@ -276,13 +276,13 @@ describe("Web component: slot-state adoption", () => {
     // The writeable elements were re-projected into the fresh element.
     await waitFor(() => {
       expect(instance.writeableElements[writeableKey].parentElement).toBe(
-        second.element,
+        second.element
       );
     });
   });
 
-  it("renders legacy (no render callback) user-defined slots for events fired after a reuse remount", async () => {
-    const namespace = "wc-reattach-legacy";
+  it('renders legacy (no render callback) user-defined slots for events fired after a reuse remount', async () => {
+    const namespace = 'wc-reattach-legacy';
 
     const first = mount({ namespace });
     await waitFor(() => expect(first.getInstance()).not.toBeNull());
@@ -297,20 +297,20 @@ describe("Web component: slot-state adoption", () => {
     // (re)registered its handlers to render the slot forwarder for a post-remount event.
     await fire(namespace, {
       type: BusEventType.USER_DEFINED_RESPONSE,
-      data: { slot: "s2", fullMessage: { id: "m2" }, message: { id: "i2" } },
+      data: { slot: 's2', fullMessage: { id: 'm2' }, message: { id: 'i2' } },
     });
     await waitFor(() => {
       expect(
-        second.element.shadowRoot?.querySelector('slot[name="s2"]'),
+        second.element.shadowRoot?.querySelector('slot[name="s2"]')
       ).not.toBeNull();
     });
   });
 
-  it("unsubscribes from the slot-state stores on disconnect", async () => {
-    const namespace = "slot-state-teardown";
+  it('unsubscribes from the slot-state stores on disconnect', async () => {
+    const namespace = 'slot-state-teardown';
     const renderUserDefinedResponse = jest.fn((state: any) => {
-      const el = document.createElement("div");
-      el.textContent = state.messageItem?.id ?? "";
+      const el = document.createElement('div');
+      el.textContent = state.messageItem?.id ?? '';
       return el;
     });
 
@@ -322,7 +322,7 @@ describe("Web component: slot-state adoption", () => {
 
     await fire(namespace, {
       type: BusEventType.USER_DEFINED_RESPONSE,
-      data: { slot: "s1", fullMessage: { id: "m1" }, message: { id: "i1" } },
+      data: { slot: 's1', fullMessage: { id: 'm1' }, message: { id: 'i1' } },
     });
     await waitFor(() => {
       expect(element.querySelector('[slot="s1"]')).not.toBeNull();
@@ -337,12 +337,12 @@ describe("Web component: slot-state adoption", () => {
     // new slot's event directly against it. The now-disconnected element must not react.
     await fire(namespace, {
       type: BusEventType.USER_DEFINED_RESPONSE,
-      data: { slot: "s2", fullMessage: { id: "m2" }, message: { id: "i2" } },
+      data: { slot: 's2', fullMessage: { id: 'm2' }, message: { id: 'i2' } },
     });
 
     expect(element.querySelector('[slot="s2"]')).toBeNull();
     expect(renderUserDefinedResponse.mock.calls.length).toBe(
-      callsBeforeFurtherEvent,
+      callsBeforeFurtherEvent
     );
   });
 });

@@ -30,11 +30,11 @@
  * SDK core stays framework-agnostic while the parallel Lit-views migration churns the tree.
  */
 
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from 'fs';
+import * as path from 'path';
 
-const SRC_ROOT = path.resolve(__dirname, "../../../src");
-const ENTRY = path.join(SRC_ROOT, "chat/sdk/index.ts");
+const SRC_ROOT = path.resolve(__dirname, '../../../src');
+const ENTRY = path.join(SRC_ROOT, 'chat/sdk/index.ts');
 
 // The sibling component package's source root. A runtime import of one of its modules is verified
 // by resolution, not banned outright: the walker maps the specifier here and follows it (the build
@@ -42,14 +42,14 @@ const ENTRY = path.join(SRC_ROOT, "chat/sdk/index.ts");
 // flagged at the file that pulls it. See `resolveComponentsPackage` and the walker below.
 const COMPONENTS_PKG_SRC = path.resolve(
   SRC_ROOT,
-  "../../ai-chat-components/src",
+  '../../ai-chat-components/src'
 );
 
 // Bare framework runtime packages. A *runtime* import of any of these — anywhere in the reachable
 // graph, including inside the component package the walker follows into — pulls a framework into
 // the SDK bundle. Type-only imports are erased; a react/lit type on an ai-chat public-types file is
 // separately governed by the decision-10 allowlist (rule c), and Tiptap *types* are always fine.
-const REACT_ISH_BARE = new Set(["react", "react-dom", "lit", "@lit/react"]);
+const REACT_ISH_BARE = new Set(['react', 'react-dom', 'lit', '@lit/react']);
 const TIPTAP_BARE = /^@tiptap\//;
 // Classifies a `@carbon/ai-chat-components` specifier (used by both the resolve-and-follow runtime
 // branch and the decision-10 type-only check).
@@ -58,25 +58,25 @@ const COMPONENTS_PKG_SPECIFIER =
   /^@carbon\/ai-chat-components\/(?:es|es-custom)\/(.+)$/;
 
 const VIEW_DIR_SEGMENTS = [
-  "/components/",
-  "/components-legacy/",
-  "/hooks/",
-  "/providers/",
-  "/contexts/",
-  "/hocs/",
-  "/utils-react/",
-  "/boot/",
+  '/components/',
+  '/components-legacy/',
+  '/hooks/',
+  '/providers/',
+  '/contexts/',
+  '/hocs/',
+  '/utils-react/',
+  '/boot/',
 ];
 
 /** Matches the eslint fence's view-directory glob list (`**\/AppShell*`, etc.). */
 function isViewDirPath(absPath: string): boolean {
-  const normalized = absPath.split(path.sep).join("/");
+  const normalized = absPath.split(path.sep).join('/');
   if (VIEW_DIR_SEGMENTS.some((segment) => normalized.includes(segment))) {
     return true;
   }
   return normalized
-    .split("/")
-    .some((segment) => segment.startsWith("AppShell"));
+    .split('/')
+    .some((segment) => segment.startsWith('AppShell'));
 }
 
 /**
@@ -95,10 +95,10 @@ function isViewDirPath(absPath: string): boolean {
  * it reachable from `src/chat/sdk/index.ts` and it needs the exemption at that point.
  */
 const ALLOWLIST = [
-  "types/config/MarkdownConfig.ts",
-  "types/config/PublicConfig.ts",
-  "types/config/HeaderConfig.ts",
-  "types/config/InputConfig.ts",
+  'types/config/MarkdownConfig.ts',
+  'types/config/PublicConfig.ts',
+  'types/config/HeaderConfig.ts',
+  'types/config/InputConfig.ts',
 ].map((relativePath) => path.join(SRC_ROOT, relativePath));
 
 interface ImportRef {
@@ -109,7 +109,7 @@ interface ImportRef {
 /** True only if every entry in a `{ ... }` named-import list is individually `type`-prefixed. */
 function isFullyTypeOnlyNamedList(namedList: string): boolean {
   const entries = namedList
-    .split(",")
+    .split(',')
     .map((entry) => entry.trim())
     .filter(Boolean);
   return entries.length > 0 && entries.every((entry) => /^type\s+/.test(entry));
@@ -123,8 +123,8 @@ function isFullyTypeOnlyNamedList(namedList: string): boolean {
  */
 function stripComments(content: string): string {
   return content
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/(^|[^:"'`\\])\/\/[^\n]*/g, "$1");
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:"'`\\])\/\/[^\n]*/g, '$1');
 }
 
 /**
@@ -147,8 +147,8 @@ function extractImports(source: string, isDts: boolean): ImportRef[] {
     const trimmedClause = clause.trim();
     if (
       !typeOnly &&
-      trimmedClause.startsWith("{") &&
-      trimmedClause.endsWith("}")
+      trimmedClause.startsWith('{') &&
+      trimmedClause.endsWith('}')
     ) {
       typeOnly = isFullyTypeOnlyNamedList(trimmedClause.slice(1, -1));
     }
@@ -168,7 +168,7 @@ function extractImports(source: string, isDts: boolean): ImportRef[] {
     const [, typeKeyword, clause, specifier] = match;
     let typeOnly = Boolean(typeKeyword);
     const trimmedClause = clause.trim();
-    if (!typeOnly && trimmedClause.startsWith("{")) {
+    if (!typeOnly && trimmedClause.startsWith('{')) {
       typeOnly = isFullyTypeOnlyNamedList(trimmedClause.slice(1, -1));
     }
     refs.push({ specifier, typeOnly: typeOnly || isDts });
@@ -181,7 +181,7 @@ function extractImports(source: string, isDts: boolean): ImportRef[] {
  * `.js`-extension convention on relative imports). Returns `null` if nothing resolves. */
 function resolveRelative(fromFile: string, specifier: string): string | null {
   const dir = path.dirname(fromFile);
-  const clean = specifier.replace(/\.js$/, "");
+  const clean = specifier.replace(/\.js$/, '');
   const base = path.resolve(dir, clean);
   const candidates = [
     base, // already has a literal extension the repo doesn't strip (e.g. "en.json")
@@ -189,8 +189,8 @@ function resolveRelative(fromFile: string, specifier: string): string | null {
     `${base}.tsx`,
     `${base}.d.ts`,
     `${base}.json`,
-    path.join(base, "index.ts"),
-    path.join(base, "index.tsx"),
+    path.join(base, 'index.ts'),
+    path.join(base, 'index.tsx'),
   ];
   return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
 }
@@ -202,20 +202,20 @@ function resolveComponentsPackage(specifier: string): string | null {
   if (!match) {
     return null;
   }
-  const rest = match[1].replace(/\.js$/, "");
+  const rest = match[1].replace(/\.js$/, '');
   const base = path.join(COMPONENTS_PKG_SRC, rest);
   const candidates = [
     base,
     `${base}.ts`,
     `${base}.tsx`,
     `${base}.d.ts`,
-    path.join(base, "index.ts"),
-    path.join(base, "index.tsx"),
+    path.join(base, 'index.ts'),
+    path.join(base, 'index.tsx'),
   ];
   return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
 }
 
-describe("sdk boundary import graph", () => {
+describe('sdk boundary import graph', () => {
   const visited = new Set<string>();
   const runtimeViolations: string[] = [];
   const viewDirViolations: string[] = [];
@@ -229,7 +229,7 @@ describe("sdk boundary import graph", () => {
       allowlistUsed.add(file);
     } else {
       typeOnlyViolations.push(
-        `${path.relative(SRC_ROOT, file)} -> ${specifier}`,
+        `${path.relative(SRC_ROOT, file)} -> ${specifier}`
       );
     }
   }
@@ -245,25 +245,25 @@ describe("sdk boundary import graph", () => {
     // its own `src/components/…` shape is unrelated to the ai-chat view-layer ban (b) / allowlist (c).
     const inComponentsPkg = file.startsWith(COMPONENTS_PKG_SRC);
 
-    const content = fs.readFileSync(file, "utf8");
-    const isDts = file.endsWith(".d.ts");
+    const content = fs.readFileSync(file, 'utf8');
+    const isDts = file.endsWith('.d.ts');
     const refs = extractImports(content, isDts);
 
     for (const ref of refs) {
       const { specifier, typeOnly } = ref;
 
       // Relative import: resolve within whichever tree `file` lives in and recurse.
-      if (specifier.startsWith(".")) {
+      if (specifier.startsWith('.')) {
         const resolved = resolveRelative(file, specifier);
         if (!resolved) {
           throw new Error(
             `sdkBoundary_spec: could not resolve "${specifier}" imported from ${file}. ` +
-              "Update the walker's resolution logic if this is a legitimate new import shape.",
+              "Update the walker's resolution logic if this is a legitimate new import shape."
           );
         }
         if (!inComponentsPkg && isViewDirPath(resolved)) {
           viewDirViolations.push(
-            `${path.relative(SRC_ROOT, file)} -> ${path.relative(SRC_ROOT, resolved)}`,
+            `${path.relative(SRC_ROOT, file)} -> ${path.relative(SRC_ROOT, resolved)}`
           );
         }
         walk(resolved);
@@ -275,7 +275,7 @@ describe("sdk boundary import graph", () => {
       if (REACT_ISH_BARE.has(specifier) || TIPTAP_BARE.test(specifier)) {
         if (!typeOnly) {
           runtimeViolations.push(
-            `${path.relative(SRC_ROOT, file)} -> ${specifier}`,
+            `${path.relative(SRC_ROOT, file)} -> ${specifier}`
           );
         } else if (!inComponentsPkg && REACT_ISH_BARE.has(specifier)) {
           // A react/lit *type* on an ai-chat public-types file is decision-10 territory (c). Tiptap
@@ -298,7 +298,7 @@ describe("sdk boundary import graph", () => {
         if (!resolved) {
           // A built-only artifact with no source counterpart — can't prove it framework-free.
           runtimeViolations.push(
-            `${path.relative(SRC_ROOT, file)} -> ${specifier} (unresolved)`,
+            `${path.relative(SRC_ROOT, file)} -> ${specifier} (unresolved)`
           );
           continue;
         }
@@ -314,21 +314,21 @@ describe("sdk boundary import graph", () => {
     walk(ENTRY);
   });
 
-  it("has no runtime react/lit imports anywhere in the reachable graph", () => {
+  it('has no runtime react/lit imports anywhere in the reachable graph', () => {
     expect(runtimeViolations).toEqual([]);
   });
 
-  it("does not import view-layer modules anywhere in the reachable graph", () => {
+  it('does not import view-layer modules anywhere in the reachable graph', () => {
     expect(viewDirViolations).toEqual([]);
   });
 
-  it("limits type-only react-ish imports to the exact decision-10 allowlist", () => {
+  it('limits type-only react-ish imports to the exact decision-10 allowlist', () => {
     expect(typeOnlyViolations).toEqual([]);
   });
 
-  it("keeps the decision-10 allowlist exact (every entry still needs its exemption)", () => {
+  it('keeps the decision-10 allowlist exact (every entry still needs its exemption)', () => {
     const stale = ALLOWLIST.filter((file) => !allowlistUsed.has(file)).map(
-      (file) => path.relative(SRC_ROOT, file),
+      (file) => path.relative(SRC_ROOT, file)
     );
     expect(stale).toEqual([]);
   });

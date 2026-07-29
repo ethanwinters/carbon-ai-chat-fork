@@ -15,35 +15,35 @@
  * names a DOM type. Internal only until 2.0: never exported from `aiChatEntry.tsx`/`serverEntry.ts`.
  */
 
-import dayjs from "dayjs";
-import LocalizedFormat from "dayjs/plugin/localizedFormat.js";
-import isEqual from "lodash-es/isEqual.js";
+import dayjs from 'dayjs';
+import LocalizedFormat from 'dayjs/plugin/localizedFormat.js';
+import isEqual from 'lodash-es/isEqual.js';
 
-import { createServiceManager } from "../services/loadServices";
-import { ServiceManager } from "../services/ServiceManager";
-import { createChatInstance } from "../instance/ChatInstanceImpl";
-import { createAppConfig } from "../store/doCreateStore";
-import { setIntl } from "../utils/intlUtils";
-import { consoleError } from "../utils/miscUtils";
-import createHumanAgentService from "../services/haa/HumanAgentServiceImpl";
+import { createServiceManager } from '../services/loadServices';
+import { ServiceManager } from '../services/ServiceManager';
+import { createChatInstance } from '../instance/ChatInstanceImpl';
+import { createAppConfig } from '../store/doCreateStore';
+import { setIntl } from '../utils/intlUtils';
+import { consoleError } from '../utils/miscUtils';
+import createHumanAgentService from '../services/haa/HumanAgentServiceImpl';
 import {
   acquireServiceManager,
   DEFAULT_REUSE_GRACE_MS,
   evictServiceManager,
   registerServiceManager,
   releaseServiceManager,
-} from "../services/reuseInstanceRegistry";
-import { attachSlotStateTracking } from "./slotStates.js";
+} from '../services/reuseInstanceRegistry';
+import { attachSlotStateTracking } from './slotStates.js';
 
 import {
   MainWindowOpenReason,
   ViewChangeReason,
-} from "../../types/events/eventBusTypes";
-import { VIEW_STATE_ALL_CLOSED } from "../store/reducerUtils";
-import { PublicConfig } from "../../types/config/PublicConfig";
-import { ChatInstance } from "../../types/instance/ChatInstance";
-import { loadLocale } from "../utils/languageUtils";
-import { ChatSlotStates } from "./slotStates.js";
+} from '../../types/events/eventBusTypes';
+import { VIEW_STATE_ALL_CLOSED } from '../store/reducerUtils';
+import { PublicConfig } from '../../types/config/PublicConfig';
+import { ChatInstance } from '../../types/instance/ChatInstance';
+import { loadLocale } from '../utils/languageUtils';
+import { ChatSlotStates } from './slotStates.js';
 
 /**
  * Applies the first view transition after boot, deciding between restoring a
@@ -74,7 +74,7 @@ export async function performInitialViewChange(serviceManager: ServiceManager) {
       targetViewState,
       { viewChangeReason },
       tryHydrating,
-      forceViewChange,
+      forceViewChange
     );
   }
 }
@@ -137,7 +137,7 @@ export class ChatSDK {
         this.reuseRegistration.namespace,
         this.serviceManager,
         featureFlags?.reuseInstanceGraceMs ?? DEFAULT_REUSE_GRACE_MS,
-        (manager) => manager.actions.unloadServices(),
+        (manager) => manager.actions.unloadServices()
       );
     } else {
       this.serviceManager.actions.unloadServices();
@@ -156,7 +156,7 @@ export class ChatSDK {
       evictServiceManager(
         this.reuseRegistration.namespace,
         this.serviceManager,
-        (manager) => manager.actions.unloadServices(),
+        (manager) => manager.actions.unloadServices()
       );
     } else {
       this.serviceManager.actions.unloadServices();
@@ -172,7 +172,7 @@ export class ChatSDK {
  * `mergePublicConfig`).
  */
 export async function acquireChatSDK(
-  config: PublicConfig,
+  config: PublicConfig
 ): Promise<{ sdk: ChatSDK; adopted: boolean }> {
   // Extend dayjs with LocalizedFormat plugin once before usage
   dayjs.extend(LocalizedFormat);
@@ -200,7 +200,7 @@ export async function acquireChatSDK(
     // Load language and locale
     const languagePack = serviceManager.store.getState().languagePack;
     const localePack = await loadLocale(
-      serviceManager.store.getState().config.public.locale || "en",
+      serviceManager.store.getState().config.public.locale || 'en'
     );
 
     // Set up human agent service (created once here; may be recreated
@@ -218,8 +218,8 @@ export async function acquireChatSDK(
     const uploadConfig = serviceManager.store.getState().config.public.upload;
     if (uploadConfig?.is_on && !uploadConfig.onFileUpload) {
       consoleError(
-        "[upload] UploadConfig.is_on is true but onFileUpload is not provided. " +
-          "File upload will be disabled. Please provide an onFileUpload handler in config.upload.",
+        '[upload] UploadConfig.is_on is true but onFileUpload is not provided. ' +
+          'File upload will be disabled. Please provide an onFileUpload handler in config.upload.'
       );
     }
 
@@ -244,7 +244,7 @@ export async function acquireChatSDK(
     // decision on the facade so release/destroy branch on it rather than on the live config.
     if (config.featureFlags?.reuseInstance) {
       registerServiceManager(config.namespace, serviceManager, (manager) =>
-        manager.actions.unloadServices(),
+        manager.actions.unloadServices()
       );
       sdk.markRegisteredForReuse(config.namespace);
     }

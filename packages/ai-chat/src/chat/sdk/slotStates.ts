@@ -7,18 +7,18 @@
  *  @license
  */
 
-import type { ServiceManager } from "../services/ServiceManager";
-import { createValueStore, ReadableValueStore, ValueStore } from "./valueStore";
+import type { ServiceManager } from '../services/ServiceManager';
+import { createValueStore, ReadableValueStore, ValueStore } from './valueStore';
 import {
   BusEventChunkUserDefinedResponse,
   BusEventCustomFooterSlot,
   BusEventType,
   BusEventUserDefinedResponse,
-} from "../../types/events/eventBusTypes";
+} from '../../types/events/eventBusTypes';
 import {
   RenderCustomMessageFooterState,
   RenderUserDefinedState,
-} from "../../types/component/slotStates";
+} from '../../types/component/slotStates';
 
 /**
  * Framework-agnostic slot-projection state for the two portal surfaces (user-defined responses and
@@ -44,7 +44,7 @@ export interface ChatSlotStates {
  * stores without re-registering handlers.
  */
 export function attachSlotStateTracking(
-  serviceManager: ServiceManager,
+  serviceManager: ServiceManager
 ): ChatSlotStates {
   if (serviceManager.slotStates) {
     return serviceManager.slotStates;
@@ -68,7 +68,7 @@ export function attachSlotStateTracking(
   }
 
   function userDefinedChunkHandler(event: BusEventChunkUserDefinedResponse) {
-    if ("complete_item" in event.data.chunk) {
+    if ('complete_item' in event.data.chunk) {
       const messageItem = event.data.chunk.complete_item;
       userDefinedBySlot.set((bySlot) => ({
         ...bySlot,
@@ -76,7 +76,7 @@ export function attachSlotStateTracking(
           messageItem,
         },
       }));
-    } else if ("partial_item" in event.data.chunk) {
+    } else if ('partial_item' in event.data.chunk) {
       const itemChunk = event.data.chunk.partial_item;
       userDefinedBySlot.set((bySlot) => ({
         ...bySlot,

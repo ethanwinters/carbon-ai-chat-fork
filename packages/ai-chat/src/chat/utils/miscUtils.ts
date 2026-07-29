@@ -11,10 +11,10 @@
  * Miscellaneous utilities that don't fit anywhere else.
  */
 
-import { FileUpload } from "../../types/config/ServiceDeskConfig";
-import { FileStatusValue, WA_CONSOLE_PREFIX } from "./constants";
-import { resolveOrTimeout } from "./lang/promiseUtils";
-import { OnErrorData, OnErrorType } from "../../types/config/ErrorConfig";
+import { FileUpload } from '../../types/config/ServiceDeskConfig';
+import { FileStatusValue, WA_CONSOLE_PREFIX } from './constants';
+import { resolveOrTimeout } from './lang/promiseUtils';
+import { OnErrorData, OnErrorType } from '../../types/config/ErrorConfig';
 
 /**
  * The subset of React's `ErrorInfo` that {@link createDidCatchErrorData} actually reads. Declared
@@ -99,10 +99,10 @@ function isEnableDebugLog() {
 async function safeFetchTextWithTimeout(response: Response): Promise<string> {
   try {
     if (response) {
-      return resolveOrTimeout(response.text(), 2000, "Getting response text");
+      return resolveOrTimeout(response.text(), 2000, 'Getting response text');
     }
   } catch (error) {
-    consoleError("Error getting fetch text", error);
+    consoleError('Error getting fetch text', error);
   }
   return undefined;
 }
@@ -114,7 +114,7 @@ function createDidCatchErrorData(
   component: string,
   error: Error,
   errorInfo: RenderErrorInfo,
-  isCatastrophicError?: boolean,
+  isCatastrophicError?: boolean
 ): OnErrorData {
   return {
     errorType: OnErrorType.RENDER,
@@ -151,7 +151,7 @@ function callOnError(onError: (data: OnErrorData) => void, data: OnErrorData) {
     try {
       onError(data);
     } catch (error) {
-      consoleError("Error calling onError", error);
+      consoleError('Error calling onError', error);
     }
   }
 }

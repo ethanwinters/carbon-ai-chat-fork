@@ -15,9 +15,9 @@
  * that imports React.
  */
 
-import { GenericItem, Message, MessageResponse } from "../messaging/Messages";
-import { DeepPartial } from "../utilities/DeepPartial";
-import { MessageState } from "../config/MessagingConfig";
+import { GenericItem, Message, MessageResponse } from '../messaging/Messages';
+import { DeepPartial } from '../utilities/DeepPartial';
+import { MessageState } from '../config/MessagingConfig';
 
 /**
  * The user_defined message object passed into the renderUserDefinedResponse property on the main chat components.

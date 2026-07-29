@@ -7,9 +7,9 @@
  *  @license
  */
 
-import React from "react";
+import React from 'react';
 
-import type { AriaAnnouncerFunctionType } from "../utils/viewHandles.js";
+import type { AriaAnnouncerFunctionType } from '../utils/viewHandles.js';
 
 /**
  * This file contains the instance of the {@link AriaAnnouncerContext} which is used to provide access to the

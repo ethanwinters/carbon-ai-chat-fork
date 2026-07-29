@@ -24,4 +24,4 @@ export {
   getRawText,
   projectRawValue,
   textToDoc,
-} from "./src/tiptap/json-utils.js";
+} from './src/tiptap/json-utils.js';

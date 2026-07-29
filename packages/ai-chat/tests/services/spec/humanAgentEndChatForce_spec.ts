@@ -7,8 +7,8 @@
  *  @license
  */
 
-import createHumanAgentService from "../../../src/chat/services/haa/HumanAgentServiceImpl";
-import { ServiceManager } from "../../../src/chat/services/ServiceManager";
+import createHumanAgentService from '../../../src/chat/services/haa/HumanAgentServiceImpl';
+import { ServiceManager } from '../../../src/chat/services/ServiceManager';
 
 /**
  * A stub manager whose store reports a live agent connection, enough for endChat to reach the
@@ -38,8 +38,8 @@ const createStartedService = (cancelEndChat: boolean) => {
   return service;
 };
 
-describe("HumanAgentService.endChat forceEnd", () => {
-  it("honors a pre:endChat veto on the normal path", async () => {
+describe('HumanAgentService.endChat forceEnd', () => {
+  it('honors a pre:endChat veto on the normal path', async () => {
     const service = createStartedService(true);
 
     await service.endChat(true, false, false);
@@ -49,7 +49,7 @@ describe("HumanAgentService.endChat forceEnd", () => {
     expect(service.doEndChat).not.toHaveBeenCalled();
   });
 
-  it("skips the cancellable pre:endChat event and always ends when forceEnd is set", async () => {
+  it('skips the cancellable pre:endChat event and always ends when forceEnd is set', async () => {
     const service = createStartedService(true);
 
     await service.endChat(true, false, false, { forceEnd: true });

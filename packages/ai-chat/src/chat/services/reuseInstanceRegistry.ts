@@ -7,8 +7,8 @@
  *  @license
  */
 
-import type { ServiceManager } from "./ServiceManager";
-import { consoleError } from "../utils/miscUtils";
+import type { ServiceManager } from './ServiceManager';
+import { consoleError } from '../utils/miscUtils';
 
 /**
  * Framework-agnostic registry that keeps a live {@link ServiceManager} alive across a host
@@ -40,7 +40,7 @@ const registry = new Map<string, ReuseInstanceEntry>();
 export const DEFAULT_REUSE_GRACE_MS = 3000;
 
 function keyFor(namespace: string | undefined): string {
-  return namespace ?? "";
+  return namespace ?? '';
 }
 
 /**
@@ -48,7 +48,7 @@ function keyFor(namespace: string | undefined): string {
  * registry bookkeeping (ref-count, the cached manager) without mutating it.
  */
 export function peekReuseEntry(
-  namespace: string | undefined,
+  namespace: string | undefined
 ): ReuseInstanceEntry | undefined {
   return registry.get(keyFor(namespace));
 }
@@ -64,7 +64,7 @@ export function peekReuseEntry(
 export function registerServiceManager(
   namespace: string | undefined,
   serviceManager: ServiceManager,
-  dispose: (serviceManager: ServiceManager) => void,
+  dispose: (serviceManager: ServiceManager) => void
 ): void {
   const key = keyFor(namespace);
   const existing = registry.get(key);
@@ -92,7 +92,7 @@ export function registerServiceManager(
  * remount) and logs a dev error, but still shares the manager.
  */
 export function acquireServiceManager(
-  namespace: string | undefined,
+  namespace: string | undefined
 ): ServiceManager | undefined {
   const entry = registry.get(keyFor(namespace));
   if (!entry) {
@@ -101,8 +101,8 @@ export function acquireServiceManager(
   if (entry.refCount >= 1) {
     consoleError(
       `Two live Carbon AI Chat mounts share namespace "${keyFor(
-        namespace,
-      )}" with featureFlags.reuseInstance enabled. Concurrent mounts of the same namespace are not supported — give each chat a unique namespace.`,
+        namespace
+      )}" with featureFlags.reuseInstance enabled. Concurrent mounts of the same namespace are not supported — give each chat a unique namespace.`
     );
   }
   if (entry.graceTimer) {
@@ -124,7 +124,7 @@ export function releaseServiceManager(
   namespace: string | undefined,
   serviceManager: ServiceManager,
   graceMs: number,
-  dispose: (serviceManager: ServiceManager) => void,
+  dispose: (serviceManager: ServiceManager) => void
 ): void {
   const key = keyFor(namespace);
   const entry = registry.get(key);
@@ -161,7 +161,7 @@ export function releaseServiceManager(
 export function evictServiceManager(
   namespace: string | undefined,
   serviceManager: ServiceManager,
-  dispose: (serviceManager: ServiceManager) => void,
+  dispose: (serviceManager: ServiceManager) => void
 ): void {
   const key = keyFor(namespace);
   const entry = registry.get(key);

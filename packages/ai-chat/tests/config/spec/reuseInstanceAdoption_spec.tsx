@@ -7,19 +7,19 @@
  *  @license
  */
 
-import React from "react";
-import { render, cleanup, waitFor } from "@testing-library/react";
+import React from 'react';
+import { render, cleanup, waitFor } from '@testing-library/react';
 
-import { ChatContainer } from "../../../src/react/ChatContainer";
-import { PublicConfig } from "../../../src/types/config/PublicConfig";
-import { ChatInstance } from "../../../src/types/instance/ChatInstance";
-import * as loadServicesModule from "../../../src/chat/services/loadServices";
+import { ChatContainer } from '../../../src/react/ChatContainer';
+import { PublicConfig } from '../../../src/types/config/PublicConfig';
+import { ChatInstance } from '../../../src/types/instance/ChatInstance';
+import * as loadServicesModule from '../../../src/chat/services/loadServices';
 import {
   peekReuseEntry,
   __resetReuseInstanceRegistry,
-} from "../../../src/chat/services/reuseInstanceRegistry";
-import { createBaseConfig, setupBeforeEach } from "../../test_helpers";
-import { BusEventType } from "../../../src/types/events/eventBusTypes";
+} from '../../../src/chat/services/reuseInstanceRegistry';
+import { createBaseConfig, setupBeforeEach } from '../../test_helpers';
+import { BusEventType } from '../../../src/types/events/eventBusTypes';
 
 /** A long grace so the timer never fires mid-test; reuse is exercised, not eviction. */
 function reuseConfig(namespace: string, reuseInstance: boolean): PublicConfig {
@@ -37,7 +37,7 @@ function renderChat(config: PublicConfig) {
     capturedInstance = i;
   });
   return render(
-    React.createElement(ChatContainer, { ...config, onBeforeRender }),
+    React.createElement(ChatContainer, { ...config, onBeforeRender })
   );
 }
 
@@ -55,7 +55,7 @@ async function waitForAcquire(namespace: string) {
   });
 }
 
-describe("reuseInstance adoption (remount survival)", () => {
+describe('reuseInstance adoption (remount survival)', () => {
   beforeEach(() => {
     setupBeforeEach();
     capturedInstance = null;
@@ -65,32 +65,32 @@ describe("reuseInstance adoption (remount survival)", () => {
   afterEach(() => {
     cleanup();
     __resetReuseInstanceRegistry();
-    document.body.innerHTML = "";
+    document.body.innerHTML = '';
     jest.restoreAllMocks();
   });
 
-  it("reuses the same ServiceManager across a remount (no second cold boot)", async () => {
-    const createSM = jest.spyOn(loadServicesModule, "createServiceManager");
-    const config = reuseConfig("reuse-survive", true);
+  it('reuses the same ServiceManager across a remount (no second cold boot)', async () => {
+    const createSM = jest.spyOn(loadServicesModule, 'createServiceManager');
+    const config = reuseConfig('reuse-survive', true);
 
     const first = renderChat(config);
     await waitForColdBoot();
-    const sm1 = peekReuseEntry("reuse-survive")?.serviceManager;
+    const sm1 = peekReuseEntry('reuse-survive')?.serviceManager;
     expect(sm1).toBeDefined();
     expect(createSM).toHaveBeenCalledTimes(1);
 
     // Unmount releases to the registry (grace timer running); remount reuses it.
     first.unmount();
     renderChat(config);
-    await waitForAcquire("reuse-survive");
+    await waitForAcquire('reuse-survive');
 
-    expect(peekReuseEntry("reuse-survive")?.serviceManager).toBe(sm1);
+    expect(peekReuseEntry('reuse-survive')?.serviceManager).toBe(sm1);
     expect(createSM).toHaveBeenCalledTimes(1); // never cold-booted a second time
   });
 
-  it("cold-boots a fresh ServiceManager each mount when reuseInstance is off", async () => {
-    const createSM = jest.spyOn(loadServicesModule, "createServiceManager");
-    const config = reuseConfig("no-reuse", false);
+  it('cold-boots a fresh ServiceManager each mount when reuseInstance is off', async () => {
+    const createSM = jest.spyOn(loadServicesModule, 'createServiceManager');
+    const config = reuseConfig('no-reuse', false);
 
     const first = renderChat(config);
     await waitForColdBoot();
@@ -103,18 +103,18 @@ describe("reuseInstance adoption (remount survival)", () => {
 
     expect(capturedInstance).not.toBe(instance1);
     expect(createSM).toHaveBeenCalledTimes(2);
-    expect(peekReuseEntry("no-reuse")).toBeUndefined(); // nothing registered
+    expect(peekReuseEntry('no-reuse')).toBeUndefined(); // nothing registered
   });
 
-  it("fires onAttach on every mount with the remount flag and a stable instance", async () => {
+  it('fires onAttach on every mount with the remount flag and a stable instance', async () => {
     const attaches: Array<{ instance: ChatInstance; remount: boolean }> = [];
     const onAttach = jest.fn((instance: ChatInstance, details) =>
-      attaches.push({ instance, remount: details.remount }),
+      attaches.push({ instance, remount: details.remount })
     );
-    const config = reuseConfig("attach-signal", true);
+    const config = reuseConfig('attach-signal', true);
 
     const first = render(
-      React.createElement(ChatContainer, { ...config, onAttach }),
+      React.createElement(ChatContainer, { ...config, onAttach })
     );
     await waitFor(() => expect(attaches).toHaveLength(1));
     expect(attaches[0].remount).toBe(false); // first boot
@@ -126,25 +126,25 @@ describe("reuseInstance adoption (remount survival)", () => {
     expect(attaches[1].instance).toBe(attaches[0].instance); // same instance object
   });
 
-  it("preserves accumulated slot state across a reuse remount without new events", async () => {
-    const config = reuseConfig("slot-survive", true);
+  it('preserves accumulated slot state across a reuse remount without new events', async () => {
+    const config = reuseConfig('slot-survive', true);
 
     const first = renderChat(config);
     await waitForColdBoot();
-    const sm1 = peekReuseEntry("slot-survive")?.serviceManager as any;
+    const sm1 = peekReuseEntry('slot-survive')?.serviceManager as any;
     expect(sm1?.slotStates).toBeDefined();
 
     // Drive a user-defined response and a custom footer slot through the event bus.
     await sm1.fire({
       type: BusEventType.USER_DEFINED_RESPONSE,
-      data: { slot: "s1", fullMessage: { id: "m1" }, message: { id: "i1" } },
+      data: { slot: 's1', fullMessage: { id: 'm1' }, message: { id: 'i1' } },
     });
     await sm1.fire({
       type: BusEventType.CUSTOM_FOOTER_SLOT,
       data: {
-        slotName: "footer1",
-        message: { id: "msg1" },
-        messageItem: { id: "item1" },
+        slotName: 'footer1',
+        message: { id: 'msg1' },
+        messageItem: { id: 'item1' },
       },
     });
     expect(sm1.slotStates.userDefinedBySlot.get().s1).toBeDefined();
@@ -154,40 +154,40 @@ describe("reuseInstance adoption (remount survival)", () => {
     // accumulated slot state is immediately present on the new mount without any new events.
     first.unmount();
     renderChat(config);
-    await waitForAcquire("slot-survive");
+    await waitForAcquire('slot-survive');
 
-    const sm2 = peekReuseEntry("slot-survive")?.serviceManager as any;
+    const sm2 = peekReuseEntry('slot-survive')?.serviceManager as any;
     expect(sm2).toBe(sm1);
     expect(sm2.slotStates.userDefinedBySlot.get().s1.messageItem).toEqual({
-      id: "i1",
+      id: 'i1',
     });
     expect(sm2.slotStates.customFooterBySlot.get().footer1.slotName).toBe(
-      "footer1",
+      'footer1'
     );
   });
 
-  it("applies a config changed across a reuse remount to the adopted store", async () => {
-    const config = reuseConfig("config-across-remount", true);
+  it('applies a config changed across a reuse remount to the adopted store', async () => {
+    const config = reuseConfig('config-across-remount', true);
 
-    const first = renderChat({ ...config, assistantName: "First" });
+    const first = renderChat({ ...config, assistantName: 'First' });
     await waitForColdBoot();
-    const sm = peekReuseEntry("config-across-remount")?.serviceManager;
-    expect(sm.store.getState().config.public.assistantName).toBe("First");
+    const sm = peekReuseEntry('config-across-remount')?.serviceManager;
+    expect(sm.store.getState().config.public.assistantName).toBe('First');
 
     // Remount within the grace window with a DIFFERENT config: the adopted store still holds the
     // old config, so the delta must be applied rather than silently dropped.
     first.unmount();
-    renderChat({ ...config, assistantName: "Second" });
-    await waitForAcquire("config-across-remount");
+    renderChat({ ...config, assistantName: 'Second' });
+    await waitForAcquire('config-across-remount');
 
     await waitFor(() =>
-      expect(sm.store.getState().config.public.assistantName).toBe("Second"),
+      expect(sm.store.getState().config.public.assistantName).toBe('Second')
     );
   });
 
-  it("fires onAttach before onBeforeRender, with remount false on every non-reuse mount", async () => {
+  it('fires onAttach before onBeforeRender, with remount false on every non-reuse mount', async () => {
     const order: string[] = [];
-    const config = reuseConfig("attach-ordering", false);
+    const config = reuseConfig('attach-ordering', false);
     const instances: ChatInstance[] = [];
 
     const props = {
@@ -197,13 +197,13 @@ describe("reuseInstance adoption (remount survival)", () => {
         instances.push(instance);
       },
       onBeforeRender: () => {
-        order.push("beforeRender");
+        order.push('beforeRender');
       },
     };
 
     const first = render(React.createElement(ChatContainer, props));
     await waitFor(() =>
-      expect(order).toEqual(["attach:false", "beforeRender"]),
+      expect(order).toEqual(['attach:false', 'beforeRender'])
     );
 
     // With reuse off, a remount is a fresh cold boot: onAttach reports remount false again and
@@ -212,17 +212,17 @@ describe("reuseInstance adoption (remount survival)", () => {
     render(React.createElement(ChatContainer, props));
     await waitFor(() =>
       expect(order).toEqual([
-        "attach:false",
-        "beforeRender",
-        "attach:false",
-        "beforeRender",
-      ]),
+        'attach:false',
+        'beforeRender',
+        'attach:false',
+        'beforeRender',
+      ])
     );
     expect(instances[1]).not.toBe(instances[0]);
   });
 
-  it("releases the manager when the host unmounts before boot resolves (reuse on)", async () => {
-    const config = reuseConfig("unmount-mid-boot", true);
+  it('releases the manager when the host unmounts before boot resolves (reuse on)', async () => {
+    const config = reuseConfig('unmount-mid-boot', true);
 
     // Unmount synchronously, before the async acquire can resolve.
     const first = renderChat(config);
@@ -231,13 +231,13 @@ describe("reuseInstance adoption (remount survival)", () => {
     // The cancelled boot must still register + immediately release: the entry ends ref-count 0
     // (grace timer armed) rather than being stranded at 1 forever.
     await waitFor(() =>
-      expect(peekReuseEntry("unmount-mid-boot")?.refCount).toBe(0),
+      expect(peekReuseEntry('unmount-mid-boot')?.refCount).toBe(0)
     );
   });
 
-  it("disposes the manager when the host unmounts before boot resolves (reuse off)", async () => {
-    const createSM = jest.spyOn(loadServicesModule, "createServiceManager");
-    const config = reuseConfig("unmount-mid-boot-off", false);
+  it('disposes the manager when the host unmounts before boot resolves (reuse off)', async () => {
+    const createSM = jest.spyOn(loadServicesModule, 'createServiceManager');
+    const config = reuseConfig('unmount-mid-boot-off', false);
 
     const first = renderChat(config);
     first.unmount();
@@ -248,7 +248,7 @@ describe("reuseInstance adoption (remount survival)", () => {
   });
 
   it("delivers view-change events to the remounted host's handlers after a reuse re-attach", async () => {
-    const config = reuseConfig("view-handler-rewire", true);
+    const config = reuseConfig('view-handler-rewire', true);
     const firstMountEvents: string[] = [];
     const secondMountEvents: string[] = [];
 
@@ -260,9 +260,9 @@ describe("reuseInstance adoption (remount survival)", () => {
           attached = instance;
         },
         onViewChange: () => {
-          firstMountEvents.push("viewChange");
+          firstMountEvents.push('viewChange');
         },
-      }),
+      })
     );
     await waitFor(() => expect(attached).not.toBeNull());
 
@@ -271,11 +271,11 @@ describe("reuseInstance adoption (remount survival)", () => {
       React.createElement(ChatContainer, {
         ...config,
         onViewChange: () => {
-          secondMountEvents.push("viewChange");
+          secondMountEvents.push('viewChange');
         },
-      }),
+      })
     );
-    await waitForAcquire("view-handler-rewire");
+    await waitForAcquire('view-handler-rewire');
 
     // Drive a view change on the persistent instance: only the LIVE mount's handler may fire —
     // the first mount's was unsubscribed on unmount. (The first mount legitimately saw the
@@ -286,8 +286,8 @@ describe("reuseInstance adoption (remount survival)", () => {
     expect(firstMountEvents).toHaveLength(0);
   });
 
-  it("instance.destroy() evicts the cached manager so the next mount cold-boots", async () => {
-    const config = reuseConfig("destroy-evicts", true);
+  it('instance.destroy() evicts the cached manager so the next mount cold-boots', async () => {
+    const config = reuseConfig('destroy-evicts', true);
 
     const first = renderChat(config);
     await waitForColdBoot();
@@ -295,12 +295,12 @@ describe("reuseInstance adoption (remount survival)", () => {
 
     // Release to the registry, then destroy: the grace-held manager is evicted.
     first.unmount();
-    expect(peekReuseEntry("destroy-evicts")).toBeDefined();
+    expect(peekReuseEntry('destroy-evicts')).toBeDefined();
 
     instance1.destroy();
-    expect(peekReuseEntry("destroy-evicts")).toBeUndefined();
+    expect(peekReuseEntry('destroy-evicts')).toBeUndefined();
 
-    const createSM = jest.spyOn(loadServicesModule, "createServiceManager");
+    const createSM = jest.spyOn(loadServicesModule, 'createServiceManager');
     capturedInstance = null;
     renderChat(config);
     await waitForColdBoot();

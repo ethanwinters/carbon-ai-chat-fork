@@ -7,14 +7,14 @@
  *  @license
  */
 
-import React from "react";
-import { render, cleanup, waitFor } from "@testing-library/react";
+import React from 'react';
+import { render, cleanup, waitFor } from '@testing-library/react';
 
-import { ChatContainer } from "../../../src/react/ChatContainer";
-import { ChatInstance } from "../../../src/types/instance/ChatInstance";
-import { PublicConfig } from "../../../src/types/config/PublicConfig";
-import { __resetReuseInstanceRegistry } from "../../../src/chat/services/reuseInstanceRegistry";
-import { createBaseConfig, setupBeforeEach } from "../../test_helpers";
+import { ChatContainer } from '../../../src/react/ChatContainer';
+import { ChatInstance } from '../../../src/types/instance/ChatInstance';
+import { PublicConfig } from '../../../src/types/config/PublicConfig';
+import { __resetReuseInstanceRegistry } from '../../../src/chat/services/reuseInstanceRegistry';
+import { createBaseConfig, setupBeforeEach } from '../../test_helpers';
 
 let capturedInstance: ChatInstance | null;
 
@@ -23,7 +23,7 @@ function renderChat(config: PublicConfig) {
     capturedInstance = i;
   });
   return render(
-    React.createElement(ChatContainer, { ...config, onBeforeRender }),
+    React.createElement(ChatContainer, { ...config, onBeforeRender })
   );
 }
 
@@ -35,34 +35,34 @@ async function waitForBoot() {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe("accidental-reboot warning", () => {
+describe('accidental-reboot warning', () => {
   let warnSpy: jest.SpyInstance;
 
   beforeEach(() => {
     setupBeforeEach();
     capturedInstance = null;
     __resetReuseInstanceRegistry();
-    warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
     cleanup();
     __resetReuseInstanceRegistry();
-    document.body.innerHTML = "";
+    document.body.innerHTML = '';
     warnSpy.mockRestore();
   });
 
   const rebootWarnings = () =>
     warnSpy.mock.calls.filter((args) =>
       args.some((a: unknown) =>
-        String(a).includes("re-initialized from scratch"),
-      ),
+        String(a).includes('re-initialized from scratch')
+      )
     );
 
-  it("warns once (debug) when a namespace cold-boots again after a remount", async () => {
+  it('warns once (debug) when a namespace cold-boots again after a remount', async () => {
     const config = {
       ...createBaseConfig(),
-      namespace: "reboot-warn",
+      namespace: 'reboot-warn',
       debug: true,
     };
 
@@ -79,10 +79,10 @@ describe("accidental-reboot warning", () => {
     expect(rebootWarnings()).toHaveLength(1);
   });
 
-  it("stays silent when debug is off", async () => {
+  it('stays silent when debug is off', async () => {
     const config = {
       ...createBaseConfig(),
-      namespace: "reboot-nodebug",
+      namespace: 'reboot-nodebug',
       debug: false,
     };
 
@@ -97,10 +97,10 @@ describe("accidental-reboot warning", () => {
     expect(rebootWarnings()).toHaveLength(0);
   });
 
-  it("stays silent when reuseInstance is enabled (the remount reuses the instance)", async () => {
+  it('stays silent when reuseInstance is enabled (the remount reuses the instance)', async () => {
     const config = {
       ...createBaseConfig(),
-      namespace: "reboot-reuse",
+      namespace: 'reboot-reuse',
       debug: true,
       featureFlags: { reuseInstance: true, reuseInstanceGraceMs: 100000 },
     };

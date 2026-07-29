@@ -13,35 +13,35 @@ import {
   renderChatAndGetInstanceWithStore,
   setupBeforeEach,
   setupAfterEach,
-} from "../../test_helpers";
+} from '../../test_helpers';
 
-describe("ChatInstance.destroy / unloadServices", () => {
+describe('ChatInstance.destroy / unloadServices', () => {
   beforeEach(setupBeforeEach);
   afterEach(setupAfterEach);
 
-  it("exposes destroy alongside destroySession", async () => {
+  it('exposes destroy alongside destroySession', async () => {
     const instance = await renderChatAndGetInstance(createBaseConfig());
 
-    expect(typeof instance.destroy).toBe("function");
-    expect(typeof instance.destroySession).toBe("function");
+    expect(typeof instance.destroy).toBe('function');
+    expect(typeof instance.destroySession).toBe('function');
   });
 
-  it("tears down every service on destroy", async () => {
+  it('tears down every service on destroy', async () => {
     const { instance, serviceManager } =
       await renderChatAndGetInstanceWithStore(createBaseConfig());
 
-    const clearBus = jest.spyOn(serviceManager.eventBus, "clear");
+    const clearBus = jest.spyOn(serviceManager.eventBus, 'clear');
     const stopWatching = jest.spyOn(
       serviceManager.themeWatcherService,
-      "stopWatching",
+      'stopWatching'
     );
     const disposeMessages = jest.spyOn(
       serviceManager.messageService,
-      "dispose",
+      'dispose'
     );
     const clearUpserts = jest.spyOn(
       serviceManager.messageUpsertCoordinator,
-      "clearAll",
+      'clearAll'
     );
 
     instance.destroy();
@@ -52,11 +52,11 @@ describe("ChatInstance.destroy / unloadServices", () => {
     expect(clearUpserts).toHaveBeenCalledTimes(1);
   });
 
-  it("is idempotent — a second destroy tears nothing down again and does not throw", async () => {
+  it('is idempotent — a second destroy tears nothing down again and does not throw', async () => {
     const { instance, serviceManager } =
       await renderChatAndGetInstanceWithStore(createBaseConfig());
 
-    const clearBus = jest.spyOn(serviceManager.eventBus, "clear");
+    const clearBus = jest.spyOn(serviceManager.eventBus, 'clear');
 
     instance.destroy();
     expect(clearBus).toHaveBeenCalledTimes(1);
@@ -65,7 +65,7 @@ describe("ChatInstance.destroy / unloadServices", () => {
     expect(clearBus).toHaveBeenCalledTimes(1);
   });
 
-  it("unsubscribes every captured store subscription on teardown", async () => {
+  it('unsubscribes every captured store subscription on teardown', async () => {
     const { instance, serviceManager } =
       await renderChatAndGetInstanceWithStore(createBaseConfig());
 
@@ -82,7 +82,7 @@ describe("ChatInstance.destroy / unloadServices", () => {
     instance.destroy();
 
     wrapped.forEach((unsubscribe) =>
-      expect(unsubscribe).toHaveBeenCalledTimes(1),
+      expect(unsubscribe).toHaveBeenCalledTimes(1)
     );
   });
 });

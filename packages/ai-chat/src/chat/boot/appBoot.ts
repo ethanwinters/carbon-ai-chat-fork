@@ -15,12 +15,12 @@
  * no boot container, no launcher defaults, and no React remount semantics.
  */
 
-import merge from "lodash-es/merge.js";
+import merge from 'lodash-es/merge.js';
 
-import { setVarsForSelector } from "@carbon/ai-chat-components/es/components/shared/dynamic-css-var-sheet.js";
+import { setVarsForSelector } from '@carbon/ai-chat-components/es/components/shared/dynamic-css-var-sheet.js';
 
-import { consoleWarn } from "../utils/miscUtils";
-import { PublicConfig } from "../../types/config/PublicConfig";
+import { consoleWarn } from '../utils/miscUtils';
+import { PublicConfig } from '../../types/config/PublicConfig';
 
 let bootContainerRulesInstalled = false;
 
@@ -44,13 +44,13 @@ function ensureBootContainerStyleRules(): void {
   if (bootContainerRulesInstalled) {
     return;
   }
-  setVarsForSelector(".cds-aichat--boot-container--filled", {
-    width: "100% !important",
-    height: "100% !important",
+  setVarsForSelector('.cds-aichat--boot-container--filled', {
+    width: '100% !important',
+    height: '100% !important',
   });
-  setVarsForSelector(".cds-aichat--boot-container--collapsed", {
-    width: "0 !important",
-    height: "0 !important",
+  setVarsForSelector('.cds-aichat--boot-container--collapsed', {
+    width: '0 !important',
+    height: '0 !important',
   });
   bootContainerRulesInstalled = true;
 }
@@ -62,17 +62,17 @@ function ensureBootContainerStyleRules(): void {
  */
 export function applyBootContainerClasses(
   container: HTMLElement,
-  hasCustomHostElement: boolean,
+  hasCustomHostElement: boolean
 ): void {
   ensureBootContainerStyleRules();
-  container.classList.add("cds-aichat--boot-container");
+  container.classList.add('cds-aichat--boot-container');
   container.classList.toggle(
-    "cds-aichat--boot-container--filled",
-    hasCustomHostElement,
+    'cds-aichat--boot-container--filled',
+    hasCustomHostElement
   );
   container.classList.toggle(
-    "cds-aichat--boot-container--collapsed",
-    !hasCustomHostElement,
+    'cds-aichat--boot-container--collapsed',
+    !hasCustomHostElement
   );
 }
 
@@ -85,7 +85,7 @@ export function applyBootContainerClasses(
  * calls this once per cold boot.
  */
 export function maybeWarnAccidentalReboot(publicConfig: PublicConfig): void {
-  const namespace = publicConfig.namespace ?? "";
+  const namespace = publicConfig.namespace ?? '';
   const now = Date.now();
   const prior = bootDiagnosticsByNamespace.get(namespace);
 
@@ -104,10 +104,10 @@ export function maybeWarnAccidentalReboot(publicConfig: PublicConfig): void {
   if (shouldWarn) {
     consoleWarn(
       `Carbon AI Chat re-initialized from scratch for namespace "${namespace}", discarding the ` +
-        "conversation. Its host element was unmounted and remounted (React StrictMode, a changing " +
-        "`key`, a component defined inside render, or conditional rendering). Mount the chat once " +
-        "and keep it mounted — toggle visibility with CSS or the view API. To make a remount reuse " +
-        "the existing conversation, set `featureFlags.reuseInstance: true`.",
+        'conversation. Its host element was unmounted and remounted (React StrictMode, a changing ' +
+        '`key`, a component defined inside render, or conditional rendering). Mount the chat once ' +
+        'and keep it mounted — toggle visibility with CSS or the view API. To make a remount reuse ' +
+        'the existing conversation, set `featureFlags.reuseInstance: true`.'
     );
   }
 }
@@ -118,7 +118,7 @@ export function maybeWarnAccidentalReboot(publicConfig: PublicConfig): void {
  * branches. Callers can override any of these via the incoming partial config.
  */
 export const DEFAULT_PUBLIC_CONFIG: Partial<PublicConfig> = {
-  assistantName: "watsonx",
+  assistantName: 'watsonx',
   openChatByDefault: false,
   shouldTakeFocusIfOpensAutomatically: true,
   serviceDesk: {},

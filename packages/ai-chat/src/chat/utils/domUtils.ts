@@ -7,10 +7,10 @@
  *  @license
  */
 
-import { compute } from "compute-scroll-into-view";
-import { memoizeFunction } from "./memoizerUtils";
-import { tabbable } from "tabbable";
-import { setVarsForSelector } from "@carbon/ai-chat-components/es/components/shared/dynamic-css-var-sheet.js";
+import { compute } from 'compute-scroll-into-view';
+import { memoizeFunction } from './memoizerUtils';
+import { tabbable } from 'tabbable';
+import { setVarsForSelector } from '@carbon/ai-chat-components/es/components/shared/dynamic-css-var-sheet.js';
 
 /**
  * A minimal ref shape — structurally identical to React's `RefObject<HTMLElement | null>` for the
@@ -44,9 +44,9 @@ function ensureScrollbarMeasureRule(): void {
   if (scrollbarMeasureRuleInstalled) {
     return;
   }
-  setVarsForSelector(".cds-aichat--scrollbar-measure", {
-    visibility: "hidden",
-    overflow: "scroll",
+  setVarsForSelector('.cds-aichat--scrollbar-measure', {
+    visibility: 'hidden',
+    overflow: 'scroll',
   });
   scrollbarMeasureRuleInstalled = true;
 }
@@ -68,14 +68,14 @@ const SCROLLBAR_WIDTH = memoizeFunction(getScrollbarWidth);
 function doScrollElementIntoView(
   element: Element,
   animate = false,
-  boundary?: Element,
+  boundary?: Element
 ) {
   if (element) {
     const actions = compute(element, {
       boundary,
-      scrollMode: "if-needed",
-      block: "nearest",
-      inline: "nearest",
+      scrollMode: 'if-needed',
+      block: 'nearest',
+      inline: 'nearest',
     });
 
     actions.forEach(({ el, top, left }) => {
@@ -97,14 +97,14 @@ function doScrollElement(
   element: Element,
   scrollTop: number,
   scrollLeft: number,
-  animate = false,
+  animate = false
 ) {
   if (element) {
     if (animate && element.scroll) {
       element.scroll({
         top: scrollTop,
         left: scrollLeft,
-        behavior: "smooth",
+        behavior: 'smooth',
       });
     } else {
       element.scrollTop = scrollTop;
@@ -120,12 +120,12 @@ function doScrollElement(
 function getScrollbarWidth(): number {
   ensureScrollbarMeasureRule();
   // Creating invisible container
-  const outer = document.createElement("div");
-  outer.className = "cds-aichat--scrollbar-measure";
+  const outer = document.createElement('div');
+  outer.className = 'cds-aichat--scrollbar-measure';
   document.body.appendChild(outer);
 
   // Creating inner element and placing it in the container.
-  const inner = document.createElement("div");
+  const inner = document.createElement('div');
   outer.appendChild(inner);
 
   // Calculating difference between container's full width and the child width.
@@ -190,21 +190,21 @@ function isTextNode(node: Node): node is Text {
  * Determines if the given node is a INPUT html element.
  */
 function isInputNode(node: Node): node is HTMLInputElement {
-  return (node as Element)?.tagName === "INPUT";
+  return (node as Element)?.tagName === 'INPUT';
 }
 
 /**
  * Determines if the given node is an IMG html element.
  */
 function isImageNode(node: Node): node is HTMLImageElement {
-  return (node as Element)?.tagName === "IMG";
+  return (node as Element)?.tagName === 'IMG';
 }
 
 /**
  * Determines if the given node is a TEXTAREA html element.
  */
 function isTextAreaNode(node: Node): node is HTMLTextAreaElement {
-  return (node as Element)?.tagName === "TEXTAREA";
+  return (node as Element)?.tagName === 'TEXTAREA';
 }
 
 /**
@@ -216,7 +216,7 @@ function isTextAreaNode(node: Node): node is HTMLTextAreaElement {
  * @returns boolean explaining if there was a focusable element or not.
  */
 function focusOnFirstFocusableItemInArrayOfElements(
-  elements: HTMLElement[],
+  elements: HTMLElement[]
 ): boolean {
   for (let index = 0; index < elements.length; index++) {
     if (focusOnFirstFocusableElement(elements[index])) {
@@ -248,7 +248,7 @@ function focusOnFirstFocusableElement(parentElement: HTMLElement) {
  * missing some properties).
  */
 function isEnterKey(event: StructuralKeyboardEvent | KeyboardEvent) {
-  if (event.key === "Enter" && !hasModifiers(event)) {
+  if (event.key === 'Enter' && !hasModifiers(event)) {
     // Users using IMEs could be making a word selection when they hit enter. This check will prevent the user’s
     // message from being sent prematurely.
     return !((event as KeyboardEvent).isComposing || event.keyCode === 229);
@@ -325,30 +325,30 @@ function getDeepActiveElement(): Element | null {
  * Slot elements are used in shadow DOM to distribute content from the light DOM.
  */
 function isSlotElement(node: Node): node is HTMLSlotElement {
-  return node.nodeName === "SLOT";
+  return node.nodeName === 'SLOT';
 }
 
 // The set of types for an INPUT node that we want to announce the value of.
 const ANNOUNCE_INPUT_TYPES = new Set([
-  "button",
-  "date",
-  "datetime-local",
-  "email",
-  "file",
-  "month",
-  "number",
-  "range",
-  "reset",
-  "search",
-  "submit",
-  "tel",
-  "text",
-  "time",
-  "url",
-  "week",
+  'button',
+  'date',
+  'datetime-local',
+  'email',
+  'file',
+  'month',
+  'number',
+  'range',
+  'reset',
+  'search',
+  'submit',
+  'tel',
+  'text',
+  'time',
+  'url',
+  'week',
 ]);
 
-const ANNOUNCE_NODE_EXCLUDE_ATTRIBUTE = "data-cds-aichat-exclude-node-read";
+const ANNOUNCE_NODE_EXCLUDE_ATTRIBUTE = 'data-cds-aichat-exclude-node-read';
 
 /**
  * Converts the given node into text by extracting all of the text content from it and any children inside of it.
@@ -360,21 +360,21 @@ const ANNOUNCE_NODE_EXCLUDE_ATTRIBUTE = "data-cds-aichat-exclude-node-read";
 function nodeToText(node: Node, strings: string[]) {
   if (isElement(node)) {
     if (
-      (typeof window === "undefined" ||
-        window.getComputedStyle(node).display !== "none") &&
-      node.getAttribute("aria-hidden") !== "true" &&
+      (typeof window === 'undefined' ||
+        window.getComputedStyle(node).display !== 'none') &&
+      node.getAttribute('aria-hidden') !== 'true' &&
       !node.hasAttribute(ANNOUNCE_NODE_EXCLUDE_ATTRIBUTE) &&
-      node.tagName !== "BUTTON" &&
-      node.getAttribute("role") !== "button"
+      node.tagName !== 'BUTTON' &&
+      node.getAttribute('role') !== 'button'
     ) {
-      trimAndPush(node.getAttribute("aria-label"), strings);
+      trimAndPush(node.getAttribute('aria-label'), strings);
 
       if (
         isInputNode(node) &&
         ANNOUNCE_INPUT_TYPES.has(node.type.toLowerCase())
       ) {
         // If the node has a value, announce that. Otherwise announce any placeholder text.
-        if (node.value === "") {
+        if (node.value === '') {
           trimAndPush(node.placeholder, strings);
         } else {
           trimAndPush(node.value, strings);
@@ -382,7 +382,7 @@ function nodeToText(node: Node, strings: string[]) {
       } else if (isTextAreaNode(node)) {
         // For text areas, the value is built from children so we don't need to add the value to the strings here.
         // The children will get added below.
-        if (node.value === "") {
+        if (node.value === '') {
           trimAndPush(node.placeholder, strings);
         }
       } else if (isImageNode(node)) {
@@ -397,7 +397,7 @@ function nodeToText(node: Node, strings: string[]) {
         // This prevents double-reading when components use hidden slots to hold source content
         // while displaying rendered content elsewhere (e.g., cds-aichat-markdown)
         const parent = node.parentElement;
-        if (parent && parent.getAttribute("aria-hidden") === "true") {
+        if (parent && parent.getAttribute('aria-hidden') === 'true') {
           // Skip processing this slot entirely since its parent is marked as hidden
           return;
         }
@@ -443,7 +443,7 @@ function trimAndPush(value: string, strings: string[]) {
   if (value) {
     value = value.trim();
     if (value) {
-      strings.push(value.replaceAll("\n", " "));
+      strings.push(value.replaceAll('\n', ' '));
     }
   }
 }
@@ -459,7 +459,7 @@ function isDirectionRTL(): boolean {
     return false;
   }
 
-  return document.dir === "rtl" || document.documentElement.dir === "rtl";
+  return document.dir === 'rtl' || document.documentElement.dir === 'rtl';
 }
 
 export {

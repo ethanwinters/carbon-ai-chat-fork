@@ -14,11 +14,11 @@
  * files re-export these so their public import shape is unchanged.
  */
 
-import type { Editor, JSONContent } from "@tiptap/core";
+import type { Editor, JSONContent } from '@tiptap/core';
 
-import { HasDoAutoScroll } from "../../types/utilities/HasDoAutoScroll";
-import { HasRequestFocus } from "../../types/utilities/HasRequestFocus";
-import { AnnounceMessage } from "../../types/state/AppState";
+import { HasDoAutoScroll } from '../../types/utilities/HasDoAutoScroll';
+import { HasRequestFocus } from '../../types/utilities/HasRequestFocus';
+import { AnnounceMessage } from '../../types/state/AppState';
 
 /**
  * These are the public imperative functions that are available on the MainWindow component. This
@@ -64,7 +64,7 @@ export interface InputFunctions {
    * rendered.
    */
   setContent: (
-    next: JSONContent | string | ((prev: JSONContent) => JSONContent),
+    next: JSONContent | string | ((prev: JSONContent) => JSONContent)
   ) => void;
 
   /**
@@ -73,7 +73,7 @@ export interface InputFunctions {
    */
   insertContent: (
     content: JSONContent | string,
-    options?: { at?: number },
+    options?: { at?: number }
   ) => void;
 
   /**
@@ -95,5 +95,5 @@ export interface InputFunctions {
  * @see AriaAnnouncerProvider
  */
 export type AriaAnnouncerFunctionType = (
-  value: Node | AnnounceMessage | string,
+  value: Node | AnnounceMessage | string
 ) => void;

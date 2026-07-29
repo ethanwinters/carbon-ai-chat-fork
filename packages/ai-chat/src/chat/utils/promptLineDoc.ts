@@ -20,4 +20,4 @@
 export {
   getRawText,
   textToDoc,
-} from "@carbon/ai-chat-components/es/components/prompt-line/json-utils.js";
+} from '@carbon/ai-chat-components/es/components/prompt-line/json-utils.js';

@@ -11,16 +11,16 @@
 // custom element module is imported by re-exporting its exports.
 // This prevents bundlers (and our own multi-entry Rollup build)
 // from pruning the side-effect-only import.
-export { default as __cds_aichat_container_register } from "../cds-aichat-container";
-import "../cds-aichat-container";
+export { default as __cds_aichat_container_register } from '../cds-aichat-container';
+import '../cds-aichat-container';
 
-import { html } from "lit";
-import { property, state } from "lit/decorators.js";
+import { html } from 'lit';
+import { property, state } from 'lit/decorators.js';
 
-import { carbonElement } from "@carbon/ai-chat-components/es/globals/decorators/index.js";
-import { PublicConfig } from "../../types/config/PublicConfig";
-import { FlattenedConfigElement } from "../shared/FlattenedConfigElement";
-import { ChatInstance } from "../../types/instance/ChatInstance";
+import { carbonElement } from '@carbon/ai-chat-components/es/globals/decorators/index.js';
+import { PublicConfig } from '../../types/config/PublicConfig';
+import { FlattenedConfigElement } from '../shared/FlattenedConfigElement';
+import { ChatInstance } from '../../types/instance/ChatInstance';
 import {
   BusEventChunkUserDefinedResponse,
   BusEventCustomFooterSlot,
@@ -28,14 +28,14 @@ import {
   BusEventUserDefinedResponse,
   BusEventViewChange,
   BusEventViewPreChange,
-} from "../../types/events/eventBusTypes";
+} from '../../types/events/eventBusTypes';
 import type {
   OnAttachDetails,
   WCMarkdown,
   WCRenderCustomMessageFooter,
   WCRenderUserDefinedResponse,
   WCRenderUserDefinedInputNode,
-} from "../../types/component/ChatContainer";
+} from '../../types/component/ChatContainer';
 
 /**
  * cds-aichat-custom-element will is a pass through to cds-aichat-container. It takes any user_defined and writeable element
@@ -45,7 +45,7 @@ import type {
  *
  * The custom element should be sized using external CSS. When hidden, the 'cds-aichat--hidden' class is added to set dimensions to 0x0.
  */
-@carbonElement("cds-aichat-custom-element")
+@carbonElement('cds-aichat-custom-element')
 class ChatCustomElement extends FlattenedConfigElement {
   /**
    * Shared stylesheet for hiding styles.
@@ -219,11 +219,11 @@ class ChatCustomElement extends FlattenedConfigElement {
   private _instance!: ChatInstance;
 
   private defaultViewChangeHandler = (event: BusEventViewChange) => {
-    this.classList.toggle("cds-aichat--hidden", !event.newViewState.mainWindow);
+    this.classList.toggle('cds-aichat--hidden', !event.newViewState.mainWindow);
   };
 
   private userDefinedHandler = (
-    event: BusEventUserDefinedResponse | BusEventChunkUserDefinedResponse,
+    event: BusEventUserDefinedResponse | BusEventChunkUserDefinedResponse
   ) => {
     const { slot } = event.data;
     if (!this._userDefinedSlotNames.includes(slot)) {
@@ -263,9 +263,9 @@ class ChatCustomElement extends FlattenedConfigElement {
     // Plugin fallbacks forward an HTML string instead.
     if (detail.element) {
       const element = detail.element;
-      element.setAttribute("slot", detail.slotName);
+      element.setAttribute('slot', detail.slotName);
       if (!detail.isInline) {
-        element.style.marginBlockStart = "1rem";
+        element.style.marginBlockStart = '1rem';
       }
       if (element.parentElement !== this) {
         this.appendChild(element);
@@ -274,20 +274,20 @@ class ChatCustomElement extends FlattenedConfigElement {
     }
     let host = this._pluginHosts.get(detail.slotName);
     if (!host) {
-      host = document.createElement(detail.isInline ? "span" : "div");
-      host.setAttribute("slot", detail.slotName);
+      host = document.createElement(detail.isInline ? 'span' : 'div');
+      host.setAttribute('slot', detail.slotName);
       // Match `.cds-aichat-markdown-stack > *:not(:first-child)` spacing;
       // shadow CSS doesn't reach this host (it lives in this element's
       // outer light DOM), so apply it inline. Inline output flows with
       // text and gets no extra spacing.
       if (!detail.isInline) {
-        host.style.marginBlockStart = "1rem";
+        host.style.marginBlockStart = '1rem';
       }
       this._pluginHosts.set(detail.slotName, host);
       this.appendChild(host);
     }
-    if (host.innerHTML !== (detail.html ?? "")) {
-      host.innerHTML = detail.html ?? "";
+    if (host.innerHTML !== (detail.html ?? '')) {
+      host.innerHTML = detail.html ?? '';
     }
   };
 
@@ -309,7 +309,7 @@ class ChatCustomElement extends FlattenedConfigElement {
       return;
     }
     this._pluginSlotNames = this._pluginSlotNames.filter(
-      (n) => n !== detail.slotName,
+      (n) => n !== detail.slotName
     );
     const host = this._pluginHosts.get(detail.slotName);
     if (host) {
@@ -325,31 +325,31 @@ class ChatCustomElement extends FlattenedConfigElement {
     // from the retained instance instead. No-ops before first boot.
     this.registerInstanceHandlers();
     this.addEventListener(
-      "cds-aichat-markdown-plugin-host-mount",
-      this.handlePluginHostMount,
+      'cds-aichat-markdown-plugin-host-mount',
+      this.handlePluginHostMount
     );
     this.addEventListener(
-      "cds-aichat-markdown-plugin-host-update",
-      this.handlePluginHostUpdate,
+      'cds-aichat-markdown-plugin-host-update',
+      this.handlePluginHostUpdate
     );
     this.addEventListener(
-      "cds-aichat-markdown-plugin-host-unmount",
-      this.handlePluginHostUnmount,
+      'cds-aichat-markdown-plugin-host-unmount',
+      this.handlePluginHostUnmount
     );
   }
 
   disconnectedCallback() {
     this.removeEventListener(
-      "cds-aichat-markdown-plugin-host-mount",
-      this.handlePluginHostMount,
+      'cds-aichat-markdown-plugin-host-mount',
+      this.handlePluginHostMount
     );
     this.removeEventListener(
-      "cds-aichat-markdown-plugin-host-update",
-      this.handlePluginHostUpdate,
+      'cds-aichat-markdown-plugin-host-update',
+      this.handlePluginHostUpdate
     );
     this.removeEventListener(
-      "cds-aichat-markdown-plugin-host-unmount",
-      this.handlePluginHostUnmount,
+      'cds-aichat-markdown-plugin-host-unmount',
+      this.handlePluginHostUnmount
     );
     for (const host of this._pluginHosts.values()) {
       host.remove();
@@ -378,7 +378,7 @@ class ChatCustomElement extends FlattenedConfigElement {
    */
   private onAttachOverride = (
     instance: ChatInstance,
-    details: OnAttachDetails,
+    details: OnAttachDetails
   ) => {
     this._instance = instance;
     this.registerInstanceHandlers();
@@ -389,8 +389,8 @@ class ChatCustomElement extends FlattenedConfigElement {
       // reappear full-size until the next toggle. Only when using the default handler; a consumer
       // onViewChange owns its own element sizing.
       this.classList.toggle(
-        "cds-aichat--hidden",
-        !instance.getState().viewState.mainWindow,
+        'cds-aichat--hidden',
+        !instance.getState().viewState.mainWindow
       );
     }
     this.onAttach?.(instance, details);
@@ -410,7 +410,7 @@ class ChatCustomElement extends FlattenedConfigElement {
     }
     const register = (
       type: BusEventType,
-      handler: (...args: unknown[]) => unknown,
+      handler: (...args: unknown[]) => unknown
     ) => {
       this._instance.on({ type, handler });
       this._instanceHandlers.push({ type, handler });
@@ -419,14 +419,14 @@ class ChatCustomElement extends FlattenedConfigElement {
     if (this.onViewPreChange) {
       register(
         BusEventType.VIEW_PRE_CHANGE,
-        this.onViewPreChange as (...args: unknown[]) => unknown,
+        this.onViewPreChange as (...args: unknown[]) => unknown
       );
     }
     register(
       BusEventType.VIEW_CHANGE,
       (this.onViewChange || this.defaultViewChangeHandler) as (
         ...args: unknown[]
-      ) => unknown,
+      ) => unknown
     );
 
     if (!this.renderUserDefinedResponse) {
@@ -434,11 +434,11 @@ class ChatCustomElement extends FlattenedConfigElement {
       // When renderUserDefinedResponse is set, the inner cds-aichat-container handles everything.
       register(
         BusEventType.USER_DEFINED_RESPONSE,
-        this.userDefinedHandler as (...args: unknown[]) => unknown,
+        this.userDefinedHandler as (...args: unknown[]) => unknown
       );
       register(
         BusEventType.CHUNK_USER_DEFINED_RESPONSE,
-        this.userDefinedHandler as (...args: unknown[]) => unknown,
+        this.userDefinedHandler as (...args: unknown[]) => unknown
       );
     }
 
@@ -447,7 +447,7 @@ class ChatCustomElement extends FlattenedConfigElement {
       // When renderCustomMessageFooter is set, the inner cds-aichat-container handles everything.
       register(
         BusEventType.CUSTOM_FOOTER_SLOT,
-        this.customFooterHandler as (...args: unknown[]) => unknown,
+        this.customFooterHandler as (...args: unknown[]) => unknown
       );
     }
   }
@@ -476,16 +476,15 @@ class ChatCustomElement extends FlattenedConfigElement {
         .element=${this}
         .renderUserDefinedResponse=${this.renderUserDefinedResponse}
         .renderCustomMessageFooter=${this.renderCustomMessageFooter}
-        .renderUserDefinedInputNode=${this.renderUserDefinedInputNode}
-      >
+        .renderUserDefinedInputNode=${this.renderUserDefinedInputNode}>
         ${this._writeableElementSlots.map(
-          (slot) => html`<slot name=${slot} slot=${slot}></slot>`,
+          (slot) => html`<slot name=${slot} slot=${slot}></slot>`
         )}
         ${
           this.renderUserDefinedResponse
             ? null
             : this._userDefinedSlotNames.map(
-                (slot) => html`<slot name=${slot} slot=${slot}></slot>`,
+                (slot) => html`<slot name=${slot} slot=${slot}></slot>`
               )
         }
         ${
@@ -493,11 +492,11 @@ class ChatCustomElement extends FlattenedConfigElement {
             ? null
             : this._customFooterSlotNames.map(
                 (slot) =>
-                  html`<div slot=${slot}><slot name=${slot}></slot></div>`,
+                  html`<div slot=${slot}><slot name=${slot}></slot></div>`
               )
         }
         ${this._pluginSlotNames.map(
-          (slot) => html`<slot name=${slot} slot=${slot}></slot>`,
+          (slot) => html`<slot name=${slot} slot=${slot}></slot>`
         )}
       </cds-aichat-container>
     `;
@@ -513,7 +512,7 @@ class ChatCustomElement extends FlattenedConfigElement {
  */
 interface CdsAiChatCustomElementAttributes extends Omit<
   PublicConfig,
-  "markdown"
+  'markdown'
 > {
   /**
    * Markdown rendering customization. Extends the framework-neutral

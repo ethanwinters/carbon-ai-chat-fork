@@ -53,7 +53,7 @@ export function createValueStore<T>(initial: T): ValueStore<T> {
     },
     set(next: T | ((previous: T) => T)): void {
       const nextValue =
-        typeof next === "function" ? (next as (previous: T) => T)(value) : next;
+        typeof next === 'function' ? (next as (previous: T) => T)(value) : next;
       if (Object.is(nextValue, value)) {
         return;
       }
