@@ -636,9 +636,10 @@ class ChatActionsImpl {
       return;
     }
 
-    // Rich editor mounted: apply directly so rich nodes / marks survive.
+    // Rich editor mounted: apply directly so rich nodes / marks survive. A live
+    // editor only comes from a live ref, so this cannot miss.
     if (editor) {
-      ref!.setContent(next);
+      ref?.setContent(next);
       return;
     }
 

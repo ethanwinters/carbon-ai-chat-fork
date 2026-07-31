@@ -117,8 +117,21 @@ Honor the `abortSignal`; it fires when the user removes a pending upload or the 
 
 A `file` field's value is a {@link FileFieldValue | file value}, one of two types. A {@link ExternalFileReference | reference} (`type: "reference"`) points to a file you uploaded yourself — the common case shown above. An {@link InlineFile | inline file} (`type: "inline"`) carries the raw `File` through to `customSendMessage` for you to upload there.
 
+### What the chat renders
+
+The user's message bubble shows one chip per `file`-typed {@link StructuredField | field}, in field order, below the message text. A chip is not interactive: it shows the file name and a file-type icon derived from `name` and `mime_type`.
+
+The chat reads only those two properties. It ignores `url`, so no download link is rendered, and it ignores `size` and `label`. All three remain available to your own code.
+
+A {@link ExternalFileReference | reference} renders from its metadata and needs no `File`, which is why it still displays after a conversation is restored. An {@link InlineFile | inline file} renders its `File`'s name, and nothing else — there is no preview.
+
+A `file` field whose value is neither shape is skipped, and the rest of the message still renders.
+
+> **Note**: A raw `File` cannot be serialized into a {@link HistoryItem}, so an inline file restored from history has no name left to show and its chip falls back to a generic label. Return an {@link ExternalFileReference | reference} from {@link UploadConfig.onFileUpload | onFileUpload} if you persist conversations. See [Conversation history](./CustomHistory.md).
+
 ## Related
 
 - [Message format](./MessageFormat.md) — the request and response shapes, including `input.structured_data`.
+- [Conversation history](./CustomHistory.md) — restoring messages, including their attachments.
 - [Server communication](./CustomServer.md) — wire the chat to your server.
 - File upload examples: [React](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/react/prompt-line-file-upload) and [web component](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/web-components/prompt-line-file-upload).

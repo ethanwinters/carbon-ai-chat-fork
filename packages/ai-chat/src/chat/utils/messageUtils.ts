@@ -156,6 +156,41 @@ function isTextItem(item: GenericItem): item is TextItem {
   );
 }
 
+/**
+ * The text a request's bubble renders, or undefined when it has none.
+ *
+ * A history label wins over the item's own text, and a user's original text wins
+ * over whatever was actually sent to the assistant.
+ */
+function getRequestBubbleText(
+  localMessageItem: LocalMessageItem,
+  originalMessage: MessageRequest
+): string | undefined {
+  const item = localMessageItem.item;
+  const text =
+    originalMessage.history?.label ||
+    (isTextItem(item) ? item.text : undefined);
+
+  return localMessageItem.ui_state.originalUserText || text;
+}
+
+/**
+ * Whether a request has anything to render inside its bubble.
+ *
+ * The bubble and its attachment row are rendered by different components, so both
+ * ask this rather than each deciding for itself — otherwise an attachment-only
+ * message gets an empty bubble above its chips.
+ */
+function hasRequestBubbleContent(
+  localMessageItem: LocalMessageItem,
+  originalMessage: MessageRequest
+): boolean {
+  return Boolean(
+    getRequestBubbleText(localMessageItem, originalMessage) ||
+    originalMessage.input?.display_content
+  );
+}
+
 function isTyping(message: GenericItem) {
   // eslint-disable-next-line eqeqeq
   return (
@@ -662,6 +697,8 @@ export {
   getOptionType,
   isResponse,
   isCardResponseType,
+  getRequestBubbleText,
+  hasRequestBubbleContent,
   isTextItem,
   isTyping,
   isPause,

@@ -14,6 +14,7 @@ import {
   FileStatusValue,
   type FileUpload,
 } from '@carbon/ai-chat-components/es/components/prompt-line/src/types.js';
+import type { FileAttachment } from '@carbon/ai-chat-components/es/components/file-uploads/src/types.js';
 
 /**
  * This repository uses the @web/test-runner library for testing
@@ -71,6 +72,113 @@ describe('file-upload-item', () => {
     );
     // Nothing rendered; confirm no uploader item is present.
     expect(el.renderRoot.querySelector('cds-file-uploader-item')).to.not.exist;
+  });
+
+  it('still renders a file-type icon after the icon picker extraction', async () => {
+    // makeUpload always builds a text/plain File, and PDF precedes TXT in the
+    // shared icon map, so a .pdf name resolves to the PDF icon.
+    const el = await mount(
+      makeUpload('a', FileStatusValue.EDIT, { name: 'a.pdf' })
+    );
+    expect(
+      el.renderRoot.querySelector('.cds-aichat-file-upload-item__icon svg')
+    ).to.exist;
+  });
+
+  describe('read-only (a file on a sent message)', () => {
+    async function mountReadOnly(
+      attachment: FileAttachment
+    ): Promise<FileUploadItemElement> {
+      return fixture<FileUploadItemElement>(
+        html`<cds-aichat-file-upload-item
+          read-only
+          fallback-label="Attachment"
+          .upload="${attachment}"></cds-aichat-file-upload-item>`
+      );
+    }
+
+    function innerItem(el: FileUploadItemElement) {
+      return el.renderRoot.querySelector('cds-file-uploader-item')!;
+    }
+
+    it('renders the attachment name with no File present', async () => {
+      const el = await mountReadOnly({ id: 'a', name: 'report.pdf' });
+      expect(el.renderRoot.textContent).to.contain('report.pdf');
+    });
+
+    it('falls back to the fallback label when the name is unknown', async () => {
+      // A File cannot be serialized into history, so a restored inline file has no
+      // name left to show.
+      const el = await mountReadOnly({ id: 'a' });
+      expect(el.renderRoot.textContent).to.contain('Attachment');
+    });
+
+    it('renders no status affordance', async () => {
+      const el = await mountReadOnly({ id: 'a', name: 'report.pdf' });
+      // An empty state falls through Carbon's status switch.
+      expect(innerItem(el).getAttribute('state')).to.not.equal('edit');
+      expect(innerItem(el).getAttribute('state')).to.not.equal('complete');
+      expect(innerItem(el).getAttribute('state')).to.not.equal('uploading');
+    });
+
+    it('collapses the status container Carbon reserves unconditionally', async () => {
+      // Without this the chip carries 36px of dead trailing space. Carbon exposes
+      // no part= for it, so the rule is injected into its shadow root.
+      const el = await mountReadOnly({ id: 'a', name: 'report.pdf' });
+      const injected = Array.from(
+        innerItem(el).shadowRoot?.querySelectorAll('style') ?? []
+      ).map((style) => style.textContent ?? '');
+      expect(
+        injected.some((text) => text.includes('.cds--file__state-container'))
+      ).to.be.true;
+    });
+
+    it('picks a file-type icon from the mime type alone', async () => {
+      const el = await mountReadOnly({
+        id: 'a',
+        mimeType: 'application/pdf',
+      });
+      expect(
+        el.renderRoot.querySelector('.cds-aichat-file-upload-item__icon svg')
+      ).to.exist;
+    });
+
+    it('never creates an object URL when there is no File', async () => {
+      const original = URL.createObjectURL;
+      let calls = 0;
+      URL.createObjectURL = ((...args: unknown[]) => {
+        calls += 1;
+        return (original as (...a: unknown[]) => string)(...args);
+      }) as typeof URL.createObjectURL;
+
+      try {
+        await mountReadOnly({
+          id: 'a',
+          name: 'photo.png',
+          mimeType: 'image/png',
+        });
+        expect(calls).to.equal(0);
+      } finally {
+        URL.createObjectURL = original;
+      }
+    });
+
+    it('still shows a media preview when a live File is present', async () => {
+      // A just-sent image renders its thumbnail; the same message after a reload
+      // has no File and falls back to an icon.
+      const el = await fixture<FileUploadItemElement>(
+        html`<cds-aichat-file-upload-item
+          read-only
+          .upload="${{
+            id: 'a',
+            file: new File(['x'], 'photo.png', { type: 'image/png' }),
+            status: FileStatusValue.COMPLETE,
+          }}"></cds-aichat-file-upload-item>`
+      );
+      expect(
+        el.renderRoot.querySelector('.cds-aichat-file-upload-item__preview')
+      ).to.exist;
+    });
   });
 
   it('reflects isError state onto the inner cds-file-uploader-item', async () => {

@@ -86,9 +86,11 @@ function formatBytes(bytes: number): string {
 /**
  * Mock server response handler for messages that contain file attachments.
  *
- * Inspects `request.input.structured_data` for `file`-typed fields and
- * responds with a text message summarising the metadata of every file
- * received — simulating what a real backend might echo back.
+ * Inspects `request.input.structured_data` for `file`-typed fields and responds
+ * with a text message summarising the metadata of every file received — this is
+ * what your *server* sees, not how the user sees the attachment. The chat already
+ * renders a chip per uploaded file in the user's own message bubble; this echo
+ * exists to show the fields arriving server-side.
  */
 function doFileUploadResponse(
   request: MessageRequest,
