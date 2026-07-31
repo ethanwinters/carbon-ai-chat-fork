@@ -136,6 +136,8 @@ export {
 } from './types/config/MessagingConfig';
 
 export {
+  ChatCoreConfig,
+  ChatShellConfig,
   PublicConfig,
   PublicConfigFeatureFlags,
 } from './types/config/PublicConfig';
@@ -159,7 +161,11 @@ export type {
 export { enLanguagePack, LanguagePack } from './types/config/LanguagePack';
 export { LayoutConfig } from './types/config/LayoutConfig';
 export { OnErrorData, OnErrorType } from './types/config/ErrorConfig';
-export { PublicConfigMessaging } from './types/config/PublicConfigMessaging';
+export {
+  ChatCoreConfigMessaging,
+  ChatShellConfigMessaging,
+  PublicConfigMessaging,
+} from './types/config/PublicConfigMessaging';
 export { UploadConfig } from './types/config/UploadConfig';
 
 export {

@@ -26,7 +26,11 @@ import { InputConfig } from './InputConfig';
 import { LanguagePack } from './LanguagePack';
 import { LayoutConfig } from './LayoutConfig';
 import { OnErrorData } from './ErrorConfig';
-import { PublicConfigMessaging } from './PublicConfigMessaging';
+import {
+  ChatCoreConfigMessaging,
+  ChatShellConfigMessaging,
+  PublicConfigMessaging,
+} from './PublicConfigMessaging';
 import { UploadConfig } from './UploadConfig';
 
 /**
@@ -63,17 +67,88 @@ export interface PublicConfigFeatureFlags {
 }
 
 /**
- * Configuration interface for Carbon AI Chat.
+ * The half of {@link PublicConfig} that configures the conversation itself: the transport, the
+ * identity a conversation is scoped to, lifecycle flags, and error and debug plumbing.
+ *
+ * Every field here applies whether or not the shipped UI is rendered, so this is the config a
+ * consumer composing their own interface supplies. The shipped React and web-component surfaces
+ * accept it as part of {@link PublicConfig} — they take this half and add
+ * {@link ChatShellConfig} on top.
  *
  * @category Config
  */
-export interface PublicConfig {
+export interface ChatCoreConfig {
   /**
    * This is a one-off listener for catastrophic errors. This is used instead of a normal event bus handler because this function can be
    * defined and called before the event bus has been created.
    */
   onError?: (data: OnErrorData) => void;
 
+  /**
+   * Add a bunch of noisy console.log messages!
+   */
+  debug?: boolean;
+
+  /**
+   * Expose internal serviceManager on ChatInstance for testing purposes.
+   * This should only be used in test environments.
+   *
+   * @internal
+   */
+  exposeServiceManagerForTesting?: boolean;
+
+  /**
+   * An optional namespace that can be added to the Carbon AI Chat that must be 30 characters or under. This value is
+   * intended to enable multiple instances of the Carbon AI Chat to be used on the same page. The namespace for this web
+   * chat. This value is used to generate a value to append to anything unique (id, session keys, etc) to allow
+   * multiple Carbon AI Chats on the same page.
+   *
+   * Note: this value is used in the aria region label for the Carbon AI Chat. This means this value will be read out loud
+   * by users using a screen reader.
+   */
+  namespace?: string;
+
+  /**
+   * Opt into behaviors slated to become the default in the next major release, following the
+   * feature-flag convention used across `@carbon/react`. See {@link PublicConfigFeatureFlags}.
+   * Enabling a flag here adopts a breaking change early to prepare for the upgrade.
+   */
+  featureFlags?: PublicConfigFeatureFlags;
+
+  /**
+   * Hands session-state persistence to the host page. By default the chat persists session state to
+   * the browser's `sessionStorage`; set this to boot from your own
+   * {@link PersistedStateConfig.initialState} and receive changes via
+   * {@link PersistedStateConfig.onStateChange} instead. See {@link PersistedStateConfig}.
+   */
+  persistedState?: PersistedStateConfig;
+
+  /**
+   * Config options for controlling messaging.
+   */
+  messaging?: ChatCoreConfigMessaging;
+
+  /**
+   * The locale to use for the widget. This controls regional formatting, such as how times and numbers are written
+   * and which plural rules apply to translated text. Example values include: 'en', 'en-us', 'fr', 'es'.
+   *
+   * This does not translate the interface. To render the chat in another language, supply the translated text
+   * through {@link PublicConfig.strings}.
+   */
+  locale?: string;
+}
+
+/**
+ * The half of {@link PublicConfig} that configures the shipped UI: the launcher, panels, header,
+ * composer, theming, and the copy rendered inside them.
+ *
+ * A consumer composing their own interface from `@carbon/ai-chat-components` renders none of these
+ * surfaces, so none of these fields apply to them. The shipped React and web-component surfaces
+ * layer this on top of {@link ChatCoreConfig}.
+ *
+ * @category Config
+ */
+export interface ChatShellConfig {
   /**
    * By default, the chat window will be rendered in a "closed" state.
    */
@@ -92,19 +167,6 @@ export interface PublicConfig {
    * value can be used to disable those enhancements while using a custom element.
    */
   disableCustomElementMobileEnhancements?: boolean;
-
-  /**
-   * Add a bunch of noisy console.log messages!
-   */
-  debug?: boolean;
-
-  /**
-   * Expose internal serviceManager on ChatInstance for testing purposes.
-   * This should only be used in test environments.
-   *
-   * @internal
-   */
-  exposeServiceManagerForTesting?: boolean;
 
   /**
    * Which Carbon theme tokens to inject. If unset (falsy), the chat inherits tokens from the host page.
@@ -144,24 +206,6 @@ export interface PublicConfig {
   shouldTakeFocusIfOpensAutomatically?: boolean;
 
   /**
-   * An optional namespace that can be added to the Carbon AI Chat that must be 30 characters or under. This value is
-   * intended to enable multiple instances of the Carbon AI Chat to be used on the same page. The namespace for this web
-   * chat. This value is used to generate a value to append to anything unique (id, session keys, etc) to allow
-   * multiple Carbon AI Chats on the same page.
-   *
-   * Note: this value is used in the aria region label for the Carbon AI Chat. This means this value will be read out loud
-   * by users using a screen reader.
-   */
-  namespace?: string;
-
-  /**
-   * Opt into behaviors slated to become the default in the next major release, following the
-   * feature-flag convention used across `@carbon/react`. See {@link PublicConfigFeatureFlags}.
-   * Enabling a flag here adopts a breaking change early to prepare for the upgrade.
-   */
-  featureFlags?: PublicConfigFeatureFlags;
-
-  /**
    * Indicates if Carbon AI Chat should sanitize HTML from the assistant.
    */
   shouldSanitizeHTML?: boolean;
@@ -177,14 +221,6 @@ export interface PublicConfig {
   history?: HistoryConfig;
 
   /**
-   * Hands session-state persistence to the host page. By default the chat persists session state to
-   * the browser's `sessionStorage`; set this to boot from your own
-   * {@link PersistedStateConfig.initialState} and receive changes via
-   * {@link PersistedStateConfig.onStateChange} instead. See {@link PersistedStateConfig}.
-   */
-  persistedState?: PersistedStateConfig;
-
-  /**
    * The config object for changing Carbon AI Chat's layout.
    */
   layout?: LayoutConfig;
@@ -192,7 +228,7 @@ export interface PublicConfig {
   /**
    * Config options for controlling messaging.
    */
-  messaging?: PublicConfigMessaging;
+  messaging?: ChatShellConfigMessaging;
 
   /**
    * Sets the chat into a read only mode for displaying old conversations.
@@ -218,15 +254,6 @@ export interface PublicConfig {
    * Sets the URL pointing to a custom avatar for the response author. This image should be a square. If not provided, the default Watsonx icon will be used.
    */
   assistantAvatarUrl?: string;
-
-  /**
-   * The locale to use for the widget. This controls regional formatting, such as how times and numbers are written
-   * and which plural rules apply to translated text. Example values include: 'en', 'en-us', 'fr', 'es'.
-   *
-   * This does not translate the interface. To render the chat in another language, supply the translated text
-   * through {@link PublicConfig.strings}.
-   */
-  locale?: string;
 
   /**
    * Configuration for the homescreen.
@@ -276,6 +303,27 @@ export interface PublicConfig {
    * @experimental
    */
   markdown?: PublicConfigMarkdown;
+}
+
+/**
+ * Configuration interface for Carbon AI Chat.
+ *
+ * Both halves of the config surface — {@link ChatCoreConfig} for the conversation and
+ * {@link ChatShellConfig} for the shipped UI — under the name the React `ChatContainer` and the
+ * `cds-aichat-*` web components accept. This type gains and loses nothing by being expressed as
+ * the union of the two.
+ *
+ * @category Config
+ */
+export interface PublicConfig extends ChatCoreConfig, ChatShellConfig {
+  /**
+   * Config options for controlling messaging.
+   *
+   * The `messaging` object is the one place the core/shell boundary runs through a nested config
+   * rather than between top-level fields, so it is restated here as the full
+   * {@link PublicConfigMessaging} that both halves compose to.
+   */
+  messaging?: PublicConfigMessaging;
 }
 
 /**
