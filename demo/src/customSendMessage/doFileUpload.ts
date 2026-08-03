@@ -45,13 +45,17 @@ async function mockOnFileUpload(
     );
   });
 
-  // Build a mock external reference as if the server stored the file.
+  // Build a mock external reference as if the server stored the file. A real
+  // integration returns the URL the server stored it at, which the chat uses as the
+  // preview source for an image; the object URL here stands in for that and lasts
+  // as long as the page does.
   const reference: ExternalFileReference = {
     type: 'reference',
     id: uuid(),
     name: file.name,
     mime_type: file.type || 'application/octet-stream',
     size: file.size,
+    url: URL.createObjectURL(file),
   };
 
   const contributedData: StructuredData = {

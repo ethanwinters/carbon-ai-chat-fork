@@ -119,11 +119,19 @@ A `file` field's value is a {@link FileFieldValue | file value}, one of two type
 
 ### What the chat renders
 
-The user's message bubble shows one chip per `file`-typed {@link StructuredField | field}, in field order, below the message text. A chip is not interactive: it shows the file name and a file-type icon derived from `name` and `mime_type`.
+The user's message bubble shows one chip per `file`-typed {@link StructuredField | field}, in field order, below the message text. A chip is not interactive: it shows the file name, and either a thumbnail or a file-type icon derived from `name` and `mime_type`.
 
-The chat reads only those two properties. It ignores `url`, so no download link is rendered, and it ignores `size` and `label`. All three remain available to your own code.
+A chip previews an image or video where it can, and falls back to the file-type icon where it cannot:
 
-A {@link ExternalFileReference | reference} renders from its metadata and needs no `File`, which is why it still displays after a conversation is restored. An {@link InlineFile | inline file} renders its `File`'s name, and nothing else — there is no preview.
+| Value | Preview |
+| --- | --- |
+| {@link InlineFile \| Inline file} | Image and video, read from the `File` in the page. |
+| {@link ExternalFileReference \| Reference} with a `url` | Image only, with `url` as the source. |
+| Either, restored from history | File-type icon. A `File` does not survive the round trip; a `url` does. |
+
+`url` is used as an image source and nothing else — no download link is rendered, and a video is never fetched back from the server. `size` and `label` are ignored entirely. All three remain available to your own code.
+
+A {@link ExternalFileReference | reference} renders from its metadata alone and needs no `File`, which is why it still displays after a conversation is restored.
 
 A `file` field whose value is neither shape is skipped, and the rest of the message still renders.
 

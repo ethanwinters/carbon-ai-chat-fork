@@ -57,6 +57,12 @@ import {
 const THREAD_ID_MAIN = 'main';
 
 /**
+ * Node types in a display-content doc that are structure alone. Anything else is a
+ * custom node the bubble renders on its own. See {@link isRenderableDisplayNode}.
+ */
+const DISPLAY_CONTENT_STRUCTURAL_NODES = new Set(['doc', 'paragraph', 'text']);
+
+/**
  * This function determines if the given message is an output message (i.e. a message output from the assistant) and
  * is a {@link MessageResponse}. This function acts as a type guard which will narrow the type to
  * {@link MessageResponse} if it returns true.
@@ -175,6 +181,38 @@ function getRequestBubbleText(
 }
 
 /**
+ * Whether a node in a display-content doc puts anything on screen.
+ *
+ * A custom node — a mention or command chip — renders on its own, with or without
+ * text. Everything else counts only if it holds non-whitespace text.
+ */
+function isRenderableDisplayNode(node: JSONContent): boolean {
+  if (node.type && !DISPLAY_CONTENT_STRUCTURAL_NODES.has(node.type)) {
+    return true;
+  }
+
+  if (node.text?.trim()) {
+    return true;
+  }
+
+  return Boolean(node.content?.some(isRenderableDisplayNode));
+}
+
+/**
+ * Whether a display-content doc has anything to render.
+ *
+ * An empty doc is still an object, so a plain truthiness test counts it as
+ * content. The prompt-line emits one on every change — including the wipe that
+ * follows a send — which is how a message carrying only file attachments used to
+ * end up with an empty bubble above its chips.
+ */
+function hasRenderableDisplayContent(
+  content: JSONContent | undefined
+): boolean {
+  return Boolean(content?.content?.some(isRenderableDisplayNode));
+}
+
+/**
  * Whether a request has anything to render inside its bubble.
  *
  * The bubble and its attachment row are rendered by different components, so both
@@ -187,7 +225,7 @@ function hasRequestBubbleContent(
 ): boolean {
   return Boolean(
     getRequestBubbleText(localMessageItem, originalMessage) ||
-    originalMessage.input?.display_content
+    hasRenderableDisplayContent(originalMessage.input?.display_content)
   );
 }
 
@@ -297,6 +335,10 @@ function createWelcomeRequest(): MessageRequest {
  * When the user sent the message via the TipTap-backed prompt-line, pass the editor's JSONContent as
  * `displayContent` so the user bubble can render structurally (mention chips, custom nodes). Programmatic
  * sends omit it and the bubble falls back to plain text.
+ *
+ * An empty doc is dropped rather than carried. The prompt-line emits one after every
+ * send, so a following file-only send would otherwise put a doc with nothing in it on
+ * the request — and from there into the host's `customSendMessage` and history.
  */
 function createMessageRequestForText(
   text: string,
@@ -309,7 +351,9 @@ function createMessageRequestForText(
       // The assistant will choke if we send it text with line breaks in it, so we have to remove them first.
       text,
       message_type: MessageInputType.TEXT,
-      ...(displayContent ? { display_content: displayContent } : {}),
+      ...(hasRenderableDisplayContent(displayContent)
+        ? { display_content: displayContent }
+        : {}),
     },
   });
 }
@@ -698,6 +742,7 @@ export {
   isResponse,
   isCardResponseType,
   getRequestBubbleText,
+  hasRenderableDisplayContent,
   hasRequestBubbleContent,
   isTextItem,
   isTyping,

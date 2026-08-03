@@ -7,8 +7,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { css, html, LitElement, nothing, unsafeCSS } from 'lit';
-import { property } from 'lit/decorators.js';
+import {
+  css,
+  html,
+  LitElement,
+  nothing,
+  type PropertyValues,
+  unsafeCSS,
+} from 'lit';
+import { property, state } from 'lit/decorators.js';
 
 import { carbonElement } from '../../../globals/decorators/carbon-element.js';
 import { isBrowser } from '../../../globals/utils/browser-utils.js';
@@ -37,6 +44,7 @@ interface ResolvedFile {
   name?: string;
   mimeType?: string;
   file?: File;
+  url?: string;
 }
 
 /**
@@ -85,6 +93,15 @@ class FileUploadItemElement extends LitElement {
   @property({ type: String, attribute: 'fallback-label' })
   fallbackLabel = 'Attachment';
 
+  /**
+   * A preview URL that failed to load, so the chip can fall back to a file-type
+   * icon. Holds the URL rather than a flag, so a new one is tried afresh: a stated
+   * URL can go dead between the send and the render — a signed link expires, or an
+   * object URL outlives the page that minted it.
+   */
+  @state()
+  private _failedPreviewURL: string | null = null;
+
   /** Object URL created for image/video previews. Revoked on disconnect or when the file changes. */
   private _objectURL: string | null = null;
 
@@ -92,25 +109,44 @@ class FileUploadItemElement extends LitElement {
   private _objectURLFile: File | null = null;
 
   /**
-   * The chip's content, resolved from whichever shape `upload` holds. An upload
-   * derives its name and type from the `File`; an attachment states them outright.
+   * The chip's content, resolved from whichever shape `upload` holds. Stated name
+   * and type win where they exist; a `File` supplies them otherwise. Both shapes may
+   * carry a `File`, so this branches on the `File` rather than on the shape.
    */
   private get _resolved(): ResolvedFile | null {
-    if (!this.upload) {
+    const value = this.upload;
+    if (!value) {
       return null;
     }
 
-    if (this._isUpload(this.upload)) {
-      const { name, type } = this.upload.file;
-      return { name, mimeType: type, file: this.upload.file };
+    const attachment = value as FileAttachment;
+    const file =
+      (value as FileUpload).file instanceof File
+        ? (value as FileUpload).file
+        : undefined;
+
+    if (file) {
+      return {
+        name: attachment.name ?? file.name,
+        mimeType: attachment.mimeType ?? file.type,
+        file,
+      };
     }
 
-    return { name: this.upload.name, mimeType: this.upload.mimeType };
+    return {
+      name: attachment.name,
+      mimeType: attachment.mimeType,
+      url: attachment.url,
+    };
   }
 
-  /** Whether `upload` is the live-`File` shape rather than metadata alone. */
+  /**
+   * Whether `upload` is a staged upload rather than a sent attachment. Keyed on
+   * `status`, which only an upload has — an attachment may carry a `File` too, so
+   * the `File` no longer tells the two apart.
+   */
   private _isUpload(value: FileUpload | FileAttachment): value is FileUpload {
-    return (value as FileUpload).file instanceof File;
+    return typeof (value as FileUpload).status === 'string';
   }
 
   /** Upload status, which only a staged file has. */
@@ -142,21 +178,40 @@ class FileUploadItemElement extends LitElement {
 
   private _hasMediaPreview(): boolean {
     const resolved = this._resolved;
-    // A preview needs the real File to build an object URL from, so a restored
-    // attachment falls back to a file-type icon.
-    if (!resolved?.file) {
+    if (!resolved) {
       return false;
     }
+
     const type = resolved.mimeType ?? '';
-    return type.startsWith('image/') || type.startsWith('video/');
+    if (resolved.file) {
+      return type.startsWith('image/') || type.startsWith('video/');
+    }
+
+    // With no `File` to build an object URL from, only a stated URL can stand in,
+    // and only for an image that loads. Everything else falls back to a file-type
+    // icon.
+    return this._canPreviewURL(resolved.url) && type.startsWith('image/');
   }
 
-  firstUpdated() {
-    this._syncInjectedStyles();
+  /** Whether a stated URL is usable as a preview source. */
+  private _canPreviewURL(url: string | undefined): url is string {
+    return Boolean(url) && url !== this._failedPreviewURL;
   }
 
-  updated() {
-    this._syncInjectedStyles();
+  /**
+   * Only the state the patched rules read can change what they say. The
+   * `_injectedStyle` check keeps the first cycle covered — and retries on the next
+   * one if Carbon's shadow root wasn't there to patch yet.
+   */
+  updated(changedProperties: PropertyValues) {
+    if (
+      !this._injectedStyle ||
+      changedProperties.has('readOnly') ||
+      changedProperties.has('upload') ||
+      changedProperties.has('_failedPreviewURL')
+    ) {
+      this._syncInjectedStyles();
+    }
   }
 
   /**
@@ -220,21 +275,21 @@ class FileUploadItemElement extends LitElement {
       return nothing;
     }
 
-    const { file, name } = resolved;
+    const { file, name, url } = resolved;
     const type = resolved.mimeType ?? '';
 
-    // Image preview. Needs the live File, so a restored attachment skips ahead to
-    // the file-type icon below.
+    // Image preview from the live File. An attachment without one falls through to
+    // the URL branch below, and failing that to a file-type icon.
     if (file && type.startsWith('image/')) {
-      const url = this._getOrCreateObjectURL(file);
-      if (!url) {
+      const objectURL = this._getOrCreateObjectURL(file);
+      if (!objectURL) {
         return nothing;
       }
 
       return html`<span class="${prefix}-file-upload-item__preview-wrapper"
         ><img
           class="${prefix}-file-upload-item__preview"
-          src="${url}"
+          src="${objectURL}"
           width="36"
           height="36"
           alt=""
@@ -244,8 +299,8 @@ class FileUploadItemElement extends LitElement {
 
     // Video preview
     if (file && type.startsWith('video/')) {
-      const url = this._getOrCreateObjectURL(file);
-      if (!url) {
+      const objectURL = this._getOrCreateObjectURL(file);
+      if (!objectURL) {
         return nothing;
       }
 
@@ -262,7 +317,7 @@ class FileUploadItemElement extends LitElement {
         style.textContent =
           '* { margin: 0; padding: 0; background: #000 } video { display: block; width: 100%; height: 100vh; object-fit: contain }';
         const video = newWindow.document.createElement('video');
-        video.src = url;
+        video.src = objectURL;
         video.controls = true;
         video.autoplay = true;
         newWindow.document.title = name ?? '';
@@ -292,6 +347,24 @@ class FileUploadItemElement extends LitElement {
           >${iconLoader(PlayFilledAlt16)}</span
         >
       </button>`;
+    }
+
+    // Image preview from a stated URL — an attachment whose file lives on a server
+    // rather than in the page. No video equivalent: playback would stream the file
+    // back, which a chip on a sent message has no business doing.
+    if (this._canPreviewURL(url) && type.startsWith('image/')) {
+      return html`<span class="${prefix}-file-upload-item__preview-wrapper"
+        ><img
+          class="${prefix}-file-upload-item__preview"
+          src="${url}"
+          width="36"
+          height="36"
+          alt=""
+          aria-hidden="true"
+          @error="${() => {
+            this._failedPreviewURL = url;
+          }}"
+      /></span>`;
     }
 
     // File type icon (for supported icons)

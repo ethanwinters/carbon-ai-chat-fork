@@ -43,7 +43,7 @@ describe('getMessageFileAttachments', () => {
       ]);
     });
 
-    it('carries neither url nor size, so neither can reach the UI by accident', () => {
+    it('carries the url as a preview source, but never the size', () => {
       const [attachment] = getMessageFileAttachments(
         fileField({
           type: 'reference',
@@ -55,7 +55,7 @@ describe('getMessageFileAttachments', () => {
         })
       );
 
-      expect(attachment).not.toHaveProperty('url');
+      expect(attachment.url).toBe('https://example.com/report.pdf');
       expect(attachment).not.toHaveProperty('size');
     });
 
@@ -69,15 +69,17 @@ describe('getMessageFileAttachments', () => {
   });
 
   describe('inline files', () => {
-    it('reads name and mime type off a live File', () => {
+    it('reads name and mime type off a live File, and carries the File itself', () => {
       const file = new File(['x'], 'notes.txt', { type: 'text/plain' });
 
       const result = getMessageFileAttachments(
         fileField({ type: 'inline', id: 'i1', file })
       );
 
+      // The File rides along so the chip can preview an image or video from it —
+      // the message already holds it, so nothing new is retained.
       expect(result).toEqual([
-        { id: 'i1', name: 'notes.txt', mimeType: 'text/plain' },
+        { id: 'i1', name: 'notes.txt', mimeType: 'text/plain', file },
       ]);
     });
 
@@ -89,8 +91,16 @@ describe('getMessageFileAttachments', () => {
       );
 
       expect(result).toEqual([
-        { id: 'i1', name: undefined, mimeType: undefined },
+        { id: 'i1', name: undefined, mimeType: undefined, file: undefined },
       ]);
+    });
+
+    it('drops a non-File husk rather than handing it to the chip', () => {
+      const [attachment] = getMessageFileAttachments(
+        fileField({ type: 'inline', id: 'i1', file: { name: 'notes.txt' } })
+      );
+
+      expect(attachment.file).toBeUndefined();
     });
   });
 

@@ -143,6 +143,77 @@ describe('file-upload-item', () => {
       ).to.exist;
     });
 
+    it('previews an image from a stated url when there is no File', async () => {
+      // The shape a server-side upload leaves behind: metadata plus the URL the
+      // file was stored at, and no File in the page at all.
+      const el = await mountReadOnly({
+        id: 'a',
+        name: 'photo.png',
+        mimeType: 'image/png',
+        url: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
+      });
+      const preview = el.renderRoot.querySelector<HTMLImageElement>(
+        'img.cds-aichat-file-upload-item__preview'
+      );
+      expect(preview).to.exist;
+      expect(preview!.getAttribute('src')).to.contain('data:image/gif');
+    });
+
+    it('falls back to an icon for a non-image url', async () => {
+      // Only images preview from a URL. Anything else keeps its file-type icon —
+      // a chip on a sent message has no business fetching the file back.
+      const el = await mountReadOnly({
+        id: 'a',
+        name: 'report.pdf',
+        mimeType: 'application/pdf',
+        url: 'https://example.com/report.pdf',
+      });
+      expect(
+        el.renderRoot.querySelector('.cds-aichat-file-upload-item__preview')
+      ).to.not.exist;
+      expect(
+        el.renderRoot.querySelector('.cds-aichat-file-upload-item__icon svg')
+      ).to.exist;
+    });
+
+    it('drops the preview when a stated url fails to load', async () => {
+      // A URL can go dead between the send and the render — a signed link expires,
+      // or an object URL outlives the page that minted it. Better no preview than a
+      // broken-image glyph.
+      const el = await mountReadOnly({
+        id: 'a',
+        name: 'photo.png',
+        mimeType: 'image/png',
+        url: 'https://example.invalid/photo.png',
+      });
+
+      const image = el.renderRoot.querySelector<HTMLImageElement>(
+        'img.cds-aichat-file-upload-item__preview'
+      );
+      expect(image).to.exist;
+
+      image!.dispatchEvent(new Event('error'));
+      await el.updateComplete;
+
+      expect(
+        el.renderRoot.querySelector('img.cds-aichat-file-upload-item__preview')
+      ).to.not.exist;
+    });
+
+    it('previews a File carried on an attachment, which has no upload status', async () => {
+      // The shape an inline file takes on a sent message: the live File, but none
+      // of the upload bookkeeping.
+      const el = await mountReadOnly({
+        id: 'a',
+        name: 'photo.png',
+        mimeType: 'image/png',
+        file: new File(['x'], 'photo.png', { type: 'image/png' }),
+      });
+      expect(
+        el.renderRoot.querySelector('img.cds-aichat-file-upload-item__preview')
+      ).to.exist;
+    });
+
     it('never creates an object URL when there is no File', async () => {
       const original = URL.createObjectURL;
       let calls = 0;

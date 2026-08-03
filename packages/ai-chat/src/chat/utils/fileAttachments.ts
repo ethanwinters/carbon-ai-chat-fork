@@ -22,9 +22,9 @@ import type {
  * component package, which the SDK import-graph spec walks for. Structural typing
  * makes the hand-off to the Lit element cast-free.
  *
- * Deliberately carries neither `url` nor `size`. The chat renders no download link
- * and shows no file size, and leaving both out of the view model means neither can
- * leak into the UI by accident.
+ * Deliberately carries no `size`: the chat shows no file size, and leaving it out of
+ * the view model means it cannot leak into the UI by accident. `url` is carried, but
+ * only ever as an image source — the chip renders no download link.
  */
 interface MessageFileAttachment {
   /** A unique ID, used to key the rendered list. */
@@ -33,6 +33,13 @@ interface MessageFileAttachment {
   name?: string;
   /** The MIME type, used to pick the file-type icon. */
   mimeType?: string;
+  /**
+   * The live `File`, for a file still held in the page. Backs the image and video
+   * previews. A message restored from history never has one.
+   */
+  file?: File;
+  /** A URL to read the file back from, used as an image preview source. */
+  url?: string;
 }
 
 /**
@@ -46,7 +53,13 @@ interface FileValueLike {
   id?: string;
   name?: ExternalFileReference['name'];
   mime_type?: ExternalFileReference['mime_type'];
+  url?: ExternalFileReference['url'];
   file?: InlineFile['file'];
+}
+
+/** Whether a value is a real `File`, rather than the husk history leaves behind. */
+function isFile(value: unknown): value is File {
+  return typeof File !== 'undefined' && value instanceof File;
 }
 
 /**
@@ -68,21 +81,29 @@ function toAttachment(
   const fileValue = value as FileValueLike;
 
   if (fileValue.type === 'reference') {
+    // A reference names a file held elsewhere, so its `url` is the only preview
+    // source there is. Passed through as stated; the chip uses it as an image
+    // source and nothing else.
     return {
       id: fileValue.id || fallbackID,
       name: fileValue.name,
       mimeType: fileValue.mime_type,
+      url: fileValue.url,
     };
   }
 
   if (fileValue.type === 'inline') {
-    // An inline file's name and type come from the live File. A File cannot be
-    // serialized into a HistoryItem, so a restored inline file has neither, and
-    // the chip falls back to a generic label.
+    // An inline file's name and type come from the live File, which is carried
+    // through so the chip can preview it. A File cannot be serialized into a
+    // HistoryItem, so a restored inline file has none of the three, and the chip
+    // falls back to a generic label.
+    const file = isFile(fileValue.file) ? fileValue.file : undefined;
+
     return {
       id: fileValue.id || fallbackID,
-      name: fileValue.file?.name,
-      mimeType: fileValue.file?.type,
+      name: file?.name,
+      mimeType: file?.type,
+      file,
     };
   }
 
