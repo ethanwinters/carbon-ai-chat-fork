@@ -9,6 +9,7 @@
 
 import throttle from 'lodash-es/throttle.js';
 import prefix from '@carbon/ai-chat-components/es/globals/settings.js';
+import { consoleError, consoleLog } from './miscUtils';
 
 /**
  * Framework-agnostic scroll/spacer engine extracted from `MessagesComponent`.
@@ -830,8 +831,7 @@ function applySafariScrollAnchoringRestore(
 
 function debugAutoScroll(message: string): void {
   if (DEBUG_AUTO_SCROLL) {
-    // eslint-disable-next-line no-console
-    console.log(message);
+    consoleLog(message);
   }
 }
 
@@ -1599,7 +1599,7 @@ export class MessagesScrollController {
     } catch (error) {
       // Just ignore any errors. It's not the end of the world if scrolling doesn't work for any reason.
       // eslint-disable-next-line no-console
-      console.error('An error occurred while attempting to scroll.', error);
+      consoleError('An error occurred while attempting to scroll.', error);
     }
   };
 
@@ -1614,7 +1614,7 @@ export class MessagesScrollController {
     } catch (error) {
       // Just ignore any errors. It's not the end of the world if scrolling doesn't work for any reason.
       // eslint-disable-next-line no-console
-      console.error('An error occurred while attempting to scroll.', error);
+      consoleError('An error occurred while attempting to scroll.', error);
     }
   };
 
@@ -1719,7 +1719,7 @@ export class MessagesScrollController {
     } catch (error) {
       // Just ignore any errors. It's not the end of the world if scrolling doesn't work for any reason.
       // eslint-disable-next-line no-console
-      console.error('An error occurred while attempting to scroll.', error);
+      consoleError('An error occurred while attempting to scroll.', error);
     }
   }
 

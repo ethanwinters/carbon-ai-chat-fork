@@ -32,6 +32,14 @@ For what makes a good example — self-contained, minimal, realistically typed, 
 
 `typedoc/` holds `moduleNamePlugin.js` (a small TypeDoc hook) — only edit when changing TypeDoc behavior. The Carbon theme lives in [`packages/typedoc-theme/`](../../typedoc-theme/); see its [AGENTS.md](../../typedoc-theme/AGENTS.md) for the loading model.
 
+## The checked-in API snapshot
+
+`docs/api/` (`markdown/*.md` + `symbol-index.json`) is **generated output** — written by `typedoc/apiIndexPlugin.js` under `WRITE_API_INDEX=1`. Never hand-edit it; change the JSDoc at the declaration site instead ([../src/types/AGENTS.md](../src/types/AGENTS.md)).
+
+**Do not regenerate it as part of a feature PR.** It is refreshed at release time — [.github/workflows/release-base.yml](../../../.github/workflows/release-base.yml) runs `npm run docs:api` — and `docs:api:check` is deliberately not part of PR CI. Because it is only rewritten on that cadence, at any given moment it lags `src/`, so a regeneration mid-cycle sweeps in every unrelated symbol that drifted since the last release: a one-line JSDoc change can produce thousands of lines of diff that are not yours. Leave the folder alone and let the release job do it.
+
+Regenerate deliberately (`npm run docs:api`) only when the snapshot itself is the point — a release, or a PR whose stated job is refreshing it.
+
 ## Build + preview
 
 Run `npm run build:docs` from the **monorepo root** to regenerate. This builds TypeDoc for all packages, not just `@carbon/ai-chat`.

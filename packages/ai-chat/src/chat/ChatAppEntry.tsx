@@ -22,7 +22,11 @@ import { ServiceManagerProvider } from './providers/ServiceManagerProvider';
 import { IntlProvider } from './providers/IntlProvider';
 import { AriaAnnouncerProvider } from './providers/AriaAnnouncerProvider';
 import { ServiceManager } from './services/ServiceManager';
-import { ChatSDK, acquireChatSDK } from './sdk/ChatSDK';
+import {
+  acquireChatForShell,
+  performInitialViewChange,
+  type HeadlessChatInstance,
+} from './sdk/ChatSDK';
 import type { ChatSlotStates } from './sdk/slotStates.js';
 import {
   applyBootContainerClasses,
@@ -40,7 +44,6 @@ import appActions from './store/actions';
 import { consoleError, consoleWarn } from './utils/miscUtils';
 import { isBrowser } from './utils/browserUtils';
 
-import { applyConfigChangesDynamically } from './utils/dynamicConfigUpdates';
 import { resolvePromptLineMode } from './components/input/promptLineMode';
 import { preloadBuildCarbonExtensions } from './components/input/buildExtensionsLoader';
 import { preloadPromptLineRich } from '@carbon/ai-chat-components/es/components/prompt-line/src/prompt-line-rich-loader.js';
@@ -172,8 +175,9 @@ export function ChatAppEntry({
   // captured the initial null) can reach the live manager to release or dispose it.
   const serviceManagerRef = useRef<ServiceManager | null>(null);
 
-  // Mirrors the acquired `ChatSDK` facade so the mount-only unmount cleanup can call `release()`.
-  const sdkRef = useRef<ChatSDK | null>(null);
+  // Mirrors the acquired handle so the mount-only unmount cleanup can call `release()`. Held only
+  // for its lifecycle members — host-facing code gets the plain instance, never this.
+  const chatRef = useRef<HeadlessChatInstance | null>(null);
 
   // Tracks which props we've already warned about so a host that re-creates an
   // object prop every render gets the diagnostic once, not on every commit.
@@ -205,7 +209,7 @@ export function ChatAppEntry({
   /**
    * On mount, fully initialize services and the chat instance, then render. The cleanup owns
    * teardown: a `cancelled` closure flag (not a ref — StrictMode's second mount must not see the
-   * first mount's flag) covers the window where the async boot has not yet populated `sdkRef`, so
+   * first mount's flag) covers the window where the async boot has not yet populated `chatRef`, so
    * an unmount mid-boot still releases the manager instead of leaking it.
    */
   useOnMount(() => {
@@ -230,40 +234,51 @@ export function ChatAppEntry({
         // before the async acquire so the container is sized during boot, not just after it.
         applyBootContainerClasses(container, !!element);
 
-        const { sdk, adopted } = await acquireChatSDK(publicConfig);
+        const {
+          chat,
+          adopted,
+          serviceManager: acquiredManager,
+        } = await acquireChatForShell(publicConfig);
         if (cancelled) {
           // Unmounted while boot was in flight: hand the manager straight back (grace-release
           // under reuse, dispose otherwise) and leave this mount's refs/state untouched.
-          sdk.release();
+          chat.release();
           return;
         }
 
-        sdkRef.current = sdk;
-        serviceManagerRef.current = sdk.serviceManager;
+        chatRef.current = chat;
+        serviceManagerRef.current = acquiredManager;
 
-        // An adopted manager normally finished the boot-once steps (initial view change,
-        // onBeforeRender/onAfterRender, markdown seed) on its original mount — but a mount that
-        // unmounted while acquire was in flight released the manager before ever running them
-        // (the `cancelled` branch above). The store's `initialViewChangeComplete` flag records
-        // whether they actually ran, so the adopter of a never-finished boot picks them up
-        // instead of skipping them forever and rendering a chat that never opened.
+        // Host-facing code gets the plain instance, not the handle: `release()` is the acquiring
+        // owner's to call, and this mount is the owner.
+        const chatInstance = acquiredManager.instance;
+
+        // Whether this mount owes the boot-once steps (initial view change,
+        // onBeforeRender/onAfterRender, markdown seed). The store's `initialViewChangeComplete`
+        // flag is the whole answer: it defaults to false, so a cold boot needs them; an adopted
+        // manager that finished its boot has it true; and an adopted manager whose original mount
+        // released mid-boot still has it false, so its adopter picks the steps up instead of
+        // skipping them forever and rendering a chat that never opened. (An `!adopted ||` term
+        // here would be dead — every row it could flip, the flag already flips.)
         const needsBootstrap =
-          !adopted ||
-          !sdk.serviceManager.store.getState().initialViewChangeComplete;
+          !acquiredManager.store.getState().initialViewChangeComplete;
 
         // The accidental-remount diagnostic is likewise a shell concern; a second cold boot for a
-        // namespace means the host discarded the conversation.
+        // namespace means the host discarded the conversation. Kept gated on `!adopted`: the
+        // guard is redundant (the diagnostic self-suppresses when `reuseInstance` is on, and
+        // `adopted` can only be true when it is), but it states the cold-boot intent at the call
+        // site and dropping it would change the diagnostic's per-namespace bookkeeping on an
+        // adopt.
         if (!adopted) {
           maybeWarnAccidentalReboot(publicConfig);
         }
 
-        if (adopted) {
-          // The preserved store still holds the previous mount's config. Diff against THAT, not
-          // this mount's (already seeded above), so a config changed across the remount is applied
-          // by the dynamic-update effect instead of silently dropped.
-          previousConfigRef.current =
-            sdk.serviceManager.store.getState().config.public;
-        }
+        // Diff future config changes against what the store actually holds. On an adopt that is
+        // the previous mount's config, so a change made across the remount is applied by the
+        // dynamic-update effect instead of silently dropped; on a cold boot it is the snapshot
+        // `createAppConfig` took of the config seeded above — the same to `isEqual` below.
+        previousConfigRef.current =
+          acquiredManager.store.getState().config.public;
 
         // Set the host markdown config before first paint so the initial
         // markdown render already has its custom renderers / plugins. `markdown`
@@ -274,29 +289,29 @@ export function ChatAppEntry({
         // that finished its boot already has this seeded (a later config change
         // applies via the effect).
         if (needsBootstrap && config.markdown) {
-          sdk.serviceManager.store.dispatch(
+          acquiredManager.store.dispatch(
             appActions.setAppStateValue('markdownConfig', config.markdown)
           );
         }
 
         // Portal-slot tracking is registered once by `attachSlotStateTracking` during boot
-        // (inside `acquireChatSDK`); the value stores hang off the manager and the React tree
+        // (inside the acquire); the value stores hang off the manager and the React tree
         // subscribes to them via `useSyncExternalStore` above — no per-mount wiring here.
-        setInstances(sdk.instance);
+        setInstances(chatInstance);
 
         // Internal-only: hand the slot-state stores to a Lit/WC host, unconditionally (unlike
         // `onBeforeRender` below, this is not gated by `!adopted` — a reuse re-attach still needs
         // the current store state immediately).
-        onSlotStatesReady?.(sdk.slotStates);
+        onSlotStatesReady?.(acquiredManager.slotStates);
 
         // Hand the (same) instance to the host on every mount, flagging whether this is a
         // reuse re-attach so consumers can run one-time setup only on the first attach.
-        onAttach?.(sdk.instance, { remount: adopted });
+        onAttach?.(chatInstance, { remount: adopted });
 
         // `onBeforeRender` is a boot-once first-render gate; it does not re-fire on a
         // reuse re-attach that already completed its boot.
         if (onBeforeRender && needsBootstrap) {
-          await onBeforeRender(sdk.instance);
+          await onBeforeRender(chatInstance);
           if (cancelled) {
             // Unmounted while the consumer's onBeforeRender was pending. The cleanup already
             // released the manager, so stop here rather than drive the view change and
@@ -318,7 +333,7 @@ export function ChatAppEntry({
           ]);
         }
 
-        setServiceManager(sdk.serviceManager);
+        setServiceManager(acquiredManager);
         setBeforeRenderComplete(true);
 
         // On a reuse re-attach of a fully booted manager the view state is already
@@ -326,8 +341,8 @@ export function ChatAppEntry({
         // re-running the initial view transition (which would re-fire the load
         // view-change).
         if (needsBootstrap) {
-          await sdk.runInitialViewChange();
-          sdk.serviceManager.store.dispatch(
+          await performInitialViewChange(acquiredManager);
+          acquiredManager.store.dispatch(
             appActions.setInitialViewChangeComplete(true)
           );
           if (cancelled) {
@@ -339,10 +354,10 @@ export function ChatAppEntry({
 
         // `onAfterRender` is boot-once, mirroring `onBeforeRender`.
         if (onAfterRender && needsBootstrap) {
-          setAfterRenderCallback(() => () => onAfterRender(sdk.instance));
+          setAfterRenderCallback(() => () => onAfterRender(chatInstance));
         }
       } catch (error) {
-        console.error('Error initializing chat:', error);
+        consoleError('Error initializing chat:', error);
       }
     };
 
@@ -355,7 +370,7 @@ export function ChatAppEntry({
       // within the grace window reuses it; otherwise it disposes immediately so the store
       // subscriptions, event bus, theme watcher, message service, and any human-agent
       // connection are torn down instead of leaked.
-      sdkRef.current?.release();
+      chatRef.current?.release();
     };
   });
 
@@ -386,15 +401,15 @@ export function ChatAppEntry({
       return;
     }
 
-    const currentServiceManager = serviceManager;
+    // Route through the handle's public `updateConfig` rather than reaching for the core helper,
+    // so the shipped shells exercise the same path a headless consumer gets. It reads the
+    // previous config off the store, which is why `previousEffective` above is only a
+    // change-detection input here, not the diff basis.
+    const currentChat = chatRef.current;
 
     const handleDynamicUpdate = async () => {
       try {
-        await applyConfigChangesDynamically(
-          previousEffective,
-          nextEffective,
-          currentServiceManager
-        );
+        await currentChat?.updateConfig(nextEffective);
       } catch (error) {
         consoleError('Failed to apply config changes dynamically:', error);
       }

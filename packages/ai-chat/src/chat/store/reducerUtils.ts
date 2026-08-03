@@ -242,6 +242,7 @@ const DEFAULT_CHAT_MESSAGES_STATE: ChatMessagesState = {
   messageIDs: [],
   activeResponseId: null,
   isMessageLoadingCounter: 0,
+  inFlightRequestCounter: 0,
   isMessageLoadingText: undefined,
   isHydratingCounter: 0,
 };

@@ -102,7 +102,7 @@ describe('Disabling the assistant input', () => {
     expect(selectInputIsReadonly(store.getState())).toBe(false);
 
     // Input-scoped disable must not gate programmatic sends.
-    await expect(instance.send('hello')).resolves.not.toThrow();
+    await expect(instance.messaging.send('hello')).resolves.not.toThrow();
   });
 
   it('whole-chat isReadonly DOES block programmatic send', async () => {
@@ -112,6 +112,19 @@ describe('Disabling the assistant input', () => {
     const { instance, store } = await renderChatAndGetInstanceWithStore(config);
 
     expect(selectInputIsReadonly(store.getState())).toBe(true);
+
+    await expect(instance.messaging.send('hello')).rejects.toThrow(
+      /read only/i
+    );
+  });
+
+  it('whole-chat isReadonly blocks the deprecated instance.send too', async () => {
+    // The guard lives on messaging.send now; the deprecated entry must inherit it rather than
+    // becoming a way around read-only mode.
+    const config = createBaseConfig();
+    config.isReadonly = true;
+
+    const { instance } = await renderChatAndGetInstanceWithStore(config);
 
     await expect(instance.send('hello')).rejects.toThrow(/read only/i);
   });

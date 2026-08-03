@@ -15,6 +15,7 @@ import type CarbonButtonElement from '@carbon/web-components/es/components/butto
 import { ModalPortal } from './ModalPortal';
 import { HasServiceManager } from '../../hocs/withServiceManager';
 import { AriaLiveMessage } from '../aria/AriaLiveMessage';
+import { consoleWarn } from '../../utils/miscUtils';
 
 /**
  * This component is a panel that is display in the messages list when the user clicks the "end chat" button that is
@@ -131,7 +132,7 @@ class ConfirmModal extends Component<
             innerButton.focus();
           }
         } catch (error) {
-          console.warn('Manual focus failed:', error);
+          consoleWarn('Manual focus failed:', error);
         }
       }, 100);
 

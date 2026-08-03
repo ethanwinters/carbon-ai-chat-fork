@@ -27,6 +27,7 @@ import { FileUpload } from '../config/ServiceDeskConfig';
 import { HumanAgentsOnlineStatus } from '../config/ServiceDeskConfig';
 import { PublicChatState } from '../instance/PublicChatState';
 import { MessageState } from '../config/MessagingConfig';
+import { MessagesState } from '../messaging/MessagesState';
 
 /** @category Events */
 export enum BusEventType {
@@ -217,7 +218,11 @@ export enum BusEventType {
   FEEDBACK = 'feedback',
 
   /**
-   * This event is fired when the "stop streaming" button in the input field is clicked.
+   * This event is fired when the active turn is stopped, whether by the "stop streaming" button in
+   * the input field or by a call to {@link ChatInstanceMessaging.stop}. It is not fired when there is
+   * no active turn to stop. Stopping only fires the abort signal handed to
+   * {@link PublicConfigMessaging.customSendMessage}, which is responsible for halting its stream —
+   * see {@link ChatInstanceMessaging.stop}.
    */
   STOP_STREAMING = 'stopStreaming',
 
@@ -226,6 +231,15 @@ export enum BusEventType {
    * This includes changes to viewState, showUnreadIndicator, and other persisted state.
    */
   STATE_CHANGE = 'state:change',
+
+  /**
+   * This event is fired whenever the snapshot returned by
+   * {@link ChatInstanceMessaging.getMessagesState} changes — the conversation's messages, status,
+   * or error. It fires independently of {@link BusEventType.STATE_CHANGE}.
+   *
+   * @experimental Ships alongside {@link ChatInstanceMessaging.getMessagesState}; the payload may evolve based on consumer feedback.
+   */
+  MESSAGES_STATE_CHANGE = 'messagesState:change',
 
   /**
    * Fired if the disclaimer is accepted.
@@ -298,7 +312,8 @@ export enum MessageSendSource {
   HISTORY_UPDATE = 'historyUpdate',
 
   /**
-   * An external call to the public "instance.send" method was made.
+   * An external call to the public {@link ChatInstanceMessaging.send} method was made. The
+   * deprecated top-level `instance.send` delegates to it and reports this same source.
    */
   INSTANCE_SEND = 'instanceSend',
 
@@ -1036,6 +1051,35 @@ export interface BusEventStateChange extends BusEvent {
    * The new state after the change.
    */
   newState: PublicChatState;
+}
+
+/**
+ * This event is fired whenever the snapshot returned by
+ * {@link ChatInstanceMessaging.getMessagesState} changes — the conversation's messages, status, or
+ * error. It fires independently of {@link BusEventStateChange}: the conversation's messages,
+ * status, and error live only in this snapshot and are never part of {@link PublicChatState}, so a
+ * consumer that only cares about the conversation can listen here alone and skip unrelated
+ * `STATE_CHANGE` traffic. A message can still cause its own {@link PublicChatState} change — for
+ * example flipping the unread indicator — which fires a separate `STATE_CHANGE` as usual.
+ *
+ * @category Events
+ * @experimental Ships alongside {@link ChatInstanceMessaging.getMessagesState}; the payload may evolve based on consumer feedback.
+ */
+export interface BusEventMessagesStateChange extends BusEvent {
+  /**
+   * The type of the event.
+   */
+  type: BusEventType.MESSAGES_STATE_CHANGE;
+
+  /**
+   * The messages, status, and error before the change.
+   */
+  previousState: MessagesState;
+
+  /**
+   * The messages, status, and error after the change.
+   */
+  newState: MessagesState;
 }
 
 /**

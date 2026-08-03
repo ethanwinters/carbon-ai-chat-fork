@@ -115,7 +115,8 @@ export interface InputConfig {
    * gated. Orthogonal to {@link InputConfig.isDisabled}: the editor stays
    * editable, only the send path is suppressed.
    *
-   * Programmatic `instance.send(...)` is NOT gated by this flag.
+   * Programmatic {@link ChatInstanceMessaging.send | instance.messaging.send()} is NOT gated by
+   * this flag.
    *
    * @experimental
    */

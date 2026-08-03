@@ -26,7 +26,6 @@ import {
 } from '../../store/selectors';
 import { ChatWidthBreakpoint, AppState } from '../../../types/state/AppState';
 import { useSelector } from '../../hooks/useSelector';
-import { BusEventType } from '../../../types/events/eventBusTypes';
 import { useServiceManager } from '../../hooks/useServiceManager';
 import { useIntl } from '../../hooks/useIntl';
 import { useAriaAnnouncer } from '../../hooks/useAriaAnnouncer';
@@ -428,12 +427,13 @@ function Input(props: InputProps, ref: Ref<InputFunctions>) {
   const handleStopStreaming = async () => {
     store.dispatch(actions.setStopStreamingButtonDisabled(true));
     try {
-      await serviceManager.fire({
-        type: BusEventType.STOP_STREAMING,
-      });
-      await serviceManager.messageService.cancelCurrentMessageRequest();
+      await serviceManager.actions.stopStreaming();
     } catch (error) {
       consoleError('Error stopping stream:', error);
+    } finally {
+      // A cancelled turn hides the button on its way out, making this a no-op. It matters when the
+      // click raced the turn finishing on its own: there was nothing left to stop, so nothing hides
+      // the button, and without this it would stay visible and permanently disabled.
       store.dispatch(actions.setStopStreamingButtonDisabled(false));
     }
   };

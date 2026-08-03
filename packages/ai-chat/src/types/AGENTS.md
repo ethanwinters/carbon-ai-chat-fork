@@ -50,6 +50,18 @@ Symbols the build pipeline forces into the public types for mechanical reasons b
 
 Symbols scheduled for removal. Include the replacement and target major: `@deprecated Use {@link NewThing} — removed in 2.0.0.`
 
+**Lead with the fact that it still works.** A reader who lands on a deprecated symbol needs to know whether their code is broken _now_ — and it isn't; that's what the target major means. Opening with the removal ("Carbon AI Chat no longer does X") reads as a change that has already landed. Open with the current behavior instead, then name the removal, then the migration:
+
+```ts
+/**
+ * @deprecated Still honored — the timeout behaves exactly as described above, and nothing changes
+ * for you in 1.x. Removed in 2.0.0, where Carbon AI Chat stops timing out requests on your behalf.
+ * Before upgrading, run your own timer and fail the turn yourself.
+ */
+```
+
+The terse one-line form stays fine when the replacement is a drop-in and the behavior is unchanged. Use the longer shape when the removal changes what the chat _does_, not just what it's called.
+
 ## Comment content bar
 
 - **State purpose, not shape.** The signature shows the shape; JSDoc explains what it _means_ and when to use it.

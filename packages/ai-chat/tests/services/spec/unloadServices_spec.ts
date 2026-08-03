@@ -14,6 +14,7 @@ import {
   setupBeforeEach,
   setupAfterEach,
 } from '../../test_helpers';
+import { MessageResponseTypes } from '../../../src/types/messaging/Messages';
 
 describe('ChatInstance.destroy / unloadServices', () => {
   beforeEach(setupBeforeEach);
@@ -69,12 +70,13 @@ describe('ChatInstance.destroy / unloadServices', () => {
     const { instance, serviceManager } =
       await renderChatAndGetInstanceWithStore(createBaseConfig());
 
-    // Boot registers four store subscriptions (copy-to-session-storage, fire-state-change,
-    // refresh-localization, and the theme watcher). The exposed serviceManager shares the same
-    // `storeUnsubscribers` array as the live manager, so mutate it in place to wrap each handle
-    // (reassigning would only swap this copy's reference).
+    // Boot registers five store subscriptions: four from loadServices (copy-to-session-storage,
+    // fire-state-change, refresh-localization, and the theme watcher) plus the messages-state
+    // reduction registered by `attachMessagesStateTracking`. The exposed serviceManager shares the
+    // same `storeUnsubscribers` array as the live manager, so mutate it in place to wrap each
+    // handle (reassigning would only swap this copy's reference).
     const handles = serviceManager.storeUnsubscribers;
-    expect(handles).toHaveLength(4);
+    expect(handles).toHaveLength(5);
     const wrapped = handles.map((unsubscribe) => jest.fn(unsubscribe));
     handles.length = 0;
     handles.push(...wrapped);
@@ -84,5 +86,59 @@ describe('ChatInstance.destroy / unloadServices', () => {
     wrapped.forEach((unsubscribe) =>
       expect(unsubscribe).toHaveBeenCalledTimes(1)
     );
+  });
+
+  it('clears a pending stop diagnostic so no warning fires after teardown', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const config = createBaseConfig();
+      config.debug = true;
+      config.messaging = {
+        customSendMessage: async (_message, { signal }) => {
+          await new Promise<void>((resolve) => {
+            signal.addEventListener('abort', () => resolve());
+          });
+        },
+      };
+
+      const { instance, serviceManager } =
+        await renderChatAndGetInstanceWithStore(config);
+
+      const sendPromise = instance.messaging.send('Test message');
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      await instance.messaging.addMessageChunk({
+        streaming_metadata: { response_id: 'never-closed-response' },
+        partial_item: {
+          streaming_metadata: { id: 'item-1' },
+          response_type: MessageResponseTypes.TEXT,
+          text: 'partial answer',
+        },
+      });
+
+      await instance.messaging.stop();
+      await sendPromise;
+
+      // The armed handle is only reachable on the actions instance, and asserting on it is what
+      // proves a diagnostic was actually pending when destroy ran.
+      const pending = (serviceManager.actions as any)
+        .stoppedStreamDiagnosticTimeouts as Set<unknown>;
+      expect(pending.size).toBe(1);
+
+      instance.destroy();
+      expect(pending.size).toBe(0);
+
+      // Past the diagnostic's own deadline: a cleared timer cannot blame the host's
+      // customSendMessage for a chat that no longer exists.
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+
+      expect(
+        warn.mock.calls.some(([message]) =>
+          String(message).includes('still streaming after')
+        )
+      ).toBe(false);
+    } finally {
+      warn.mockRestore();
+    }
   });
 });

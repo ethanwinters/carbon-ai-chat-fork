@@ -409,13 +409,6 @@ class CDSAIChatTable extends LitElement {
     // If one of the rows has a different number of cells than the number of columns in the header then set our internal
     // valid state to false.
     this._isValid = !this.rows.some((row) => row.cells.length !== columnCount);
-    // In the future, once we have an inlineError web component to use, we can render that when our table is not valid
-    // (as well as throwing the below error). Until then our React container is rendering the error component and
-    // throwing the error.
-
-    // throw new Error(
-    //   `${WA_CONSOLE_PREFIX} Number of cells in the table header does not match the number of cells in one or more of the table rows. In order to render a table there needs to be the same number of columns in the table header and all of the table rows.`,
-    // );
   }
 
   /**

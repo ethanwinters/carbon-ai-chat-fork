@@ -37,7 +37,10 @@ import {
   SendOptions,
 } from '../../types/instance/ChatInstance';
 import { TypeAndHandler } from '../../types/instance/EventHandlers';
-import { AddMessageOptions } from '../../types/config/MessagingConfig';
+import {
+  AddMessageOptions,
+  RegenerateOptions,
+} from '../../types/config/MessagingConfig';
 import {
   MessageSendSource,
   ViewChangeReason,
@@ -83,14 +86,10 @@ function createChatInstance({
 
     send: async (message: MessageRequest | string, options?: SendOptions) => {
       debugLog('Called instance.send', message, options);
-      if (selectInputIsReadonly(serviceManager.store.getState())) {
-        throw new Error('You are unable to send messages in read only mode.');
-      }
-      return serviceManager.actions.send(
-        message,
-        MessageSendSource.INSTANCE_SEND,
-        options
+      consoleWarn(
+        'instance.send is deprecated. Use instance.messaging.send instead.'
       );
+      return instance.messaging.send(message, options);
     },
 
     doAutoScroll: (options: AutoScrollOptions = {}) => {
@@ -285,6 +284,18 @@ function createChatInstance({
     },
 
     messaging: {
+      send: async (message: MessageRequest | string, options?: SendOptions) => {
+        debugLog('Called instance.messaging.send', message, options);
+        if (selectInputIsReadonly(serviceManager.store.getState())) {
+          throw new Error('You are unable to send messages in read only mode.');
+        }
+        return serviceManager.actions.send(
+          message,
+          MessageSendSource.INSTANCE_SEND,
+          options
+        );
+      },
+
       addMessage: (
         message: MessageResponse,
         options: AddMessageOptions = {}
@@ -344,6 +355,32 @@ function createChatInstance({
       restartConversation: async () => {
         debugLog('Called instance.messaging.restartConversation');
         return serviceManager.actions.restartConversation();
+      },
+
+      getMessagesState: () => {
+        debugLog('Called instance.messaging.getMessagesState');
+        return serviceManager.messagesState.getMessagesState();
+      },
+
+      getMessage: (messageID: string) => {
+        debugLog('Called instance.messaging.getMessage', messageID);
+        return serviceManager.messagesState.getMessage(messageID);
+      },
+
+      stop: async () => {
+        debugLog('Called instance.messaging.stop');
+        return serviceManager.actions.stopStreaming();
+      },
+
+      regenerate: (options?: RegenerateOptions) => {
+        debugLog('Called instance.messaging.regenerate', options);
+        consoleWarn('instance.messaging.regenerate is not implemented yet.');
+        return Promise.resolve();
+      },
+
+      clearError: () => {
+        debugLog('Called instance.messaging.clearError');
+        consoleWarn('instance.messaging.clearError is not implemented yet.');
       },
     },
 

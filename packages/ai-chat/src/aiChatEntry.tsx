@@ -95,6 +95,7 @@ export {
   BusEventHistoryBegin,
   BusEventHistoryEnd,
   BusEventMessageItemCustom,
+  BusEventMessagesStateChange,
   BusEventPreReceive,
   BusEventPreReset,
   BusEventPreSend,
@@ -318,6 +319,12 @@ export type {
 export { HistoryItem } from './types/messaging/History';
 
 export { MessageErrorState } from './types/messaging/LocalMessageItem';
+
+export {
+  MessagesStatus,
+  MessagesError,
+  MessagesState,
+} from './types/messaging/MessagesState';
 
 export {
   LauncherCallToActionConfig,

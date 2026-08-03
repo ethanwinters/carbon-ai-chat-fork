@@ -14,10 +14,20 @@
  * must stay framework-agnostic — see `packages/ai-chat/AGENTS.md`'s "SDK boundary" note.
  */
 
-export { ChatSDK, acquireChatSDK } from './ChatSDK.js';
+export {
+  acquireChatSDK,
+  acquireChatForShell,
+  performInitialViewChange,
+} from './ChatSDK.js';
+export type { AcquiredChatForShell, HeadlessChatInstance } from './ChatSDK.js';
 
 export { attachSlotStateTracking } from './slotStates.js';
 export type { ChatSlotStates } from './slotStates.js';
+
+export { attachMessagesStateTracking } from './messagesState.js';
+export type { MessagesStateReader } from './messagesState.js';
+
+export { toSnapshotMessage } from './toSnapshotMessage.js';
 
 export { createValueStore } from './valueStore.js';
 export type { ReadableValueStore, ValueStore } from './valueStore.js';

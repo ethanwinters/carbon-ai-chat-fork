@@ -365,10 +365,12 @@ export const waitForSetChatConfigApplied = async (
 
 /**
  * Sends a message through the chat instance and waits for the response to render.
- * Uses the public `window.chatInstance.send` API and event listeners for reliable response detection.
+ * Uses the public `window.chatInstance.messaging.send` API and event listeners for reliable response detection.
  */
 export const sendChatMessage = async (page: Page, text: string) => {
-  await page.waitForFunction(() => Boolean(window.chatInstance?.send));
+  await page.waitForFunction(() =>
+    Boolean(window.chatInstance?.messaging?.send)
+  );
 
   // Send message and wait for response using event listener
   await page.evaluate(async (message) => {
@@ -393,7 +395,7 @@ export const sendChatMessage = async (page: Page, text: string) => {
     });
 
     // Send the message
-    await window.chatInstance.send(message);
+    await window.chatInstance.messaging.send(message);
 
     // Wait for the response
     await responseReceived;

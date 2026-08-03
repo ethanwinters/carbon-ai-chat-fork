@@ -53,6 +53,7 @@ const UPDATE_LOCAL_MESSAGE_ITEM = 'UPDATE_LOCAL_MESSAGE_ITEM';
 const SET_APP_STATE_VALUE = 'SET_APP_STATE_VALUE';
 const ADD_IS_LOADING_COUNTER = 'ADD_IS_LOADING_COUNTER';
 const RESET_IS_LOADING_COUNTER = 'RESET_IS_LOADING_COUNTER';
+const ADD_IN_FLIGHT_REQUEST_COUNTER = 'ADD_IN_FLIGHT_REQUEST_COUNTER';
 const ADD_IS_HYDRATING_COUNTER = 'ADD_IS_HYDRATING_COUNTER';
 const RESET_IS_HYDRATING_COUNTER = 'RESET_IS_HYDRATING_COUNTER';
 const SET_VIEW_STATE = 'SET_VIEW_STATE';
@@ -268,6 +269,16 @@ const actions = {
   resetIsLoadingCounter() {
     return {
       type: RESET_IS_LOADING_COUNTER,
+    };
+  },
+
+  /**
+   * Adjusts the count of requests in flight. Pass 1 when a request is queued and -1 once it settles.
+   */
+  addInFlightRequestCounter(addToInFlight: number) {
+    return {
+      type: ADD_IN_FLIGHT_REQUEST_COUNTER,
+      addToInFlight,
     };
   },
 
@@ -712,6 +723,7 @@ export default actions;
 export {
   CHANGE_STATE,
   ADD_IS_LOADING_COUNTER,
+  ADD_IN_FLIGHT_REQUEST_COUNTER,
   RESET_IS_LOADING_COUNTER,
   ADD_IS_HYDRATING_COUNTER,
   RESET_IS_HYDRATING_COUNTER,

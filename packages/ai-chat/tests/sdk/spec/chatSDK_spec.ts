@@ -9,6 +9,7 @@
 
 import * as loadServicesModule from '../../../src/chat/services/loadServices';
 import {
+  acquireChatForShell,
   acquireChatSDK,
   performInitialViewChange,
 } from '../../../src/chat/sdk/ChatSDK';
@@ -77,21 +78,47 @@ describe('acquireChatSDK', () => {
   it('cold boots: initializes the ServiceManager and creates the instance', async () => {
     const publicConfig = mergePublicConfig(createBaseTestProps());
 
-    const { sdk, adopted } = await acquireChatSDK(publicConfig);
+    const { chat, adopted, serviceManager } =
+      await acquireChatForShell(publicConfig);
 
     expect(adopted).toBe(false);
-    expect(sdk).toBeTruthy();
-    expect(sdk.instance).toBeTruthy();
-    expect(sdk.serviceManager.instance).toBe(sdk.instance);
+    expect(chat).toBeTruthy();
+    expect(serviceManager.instance).toBeTruthy();
 
-    // The core does not hold a reference to the facade (that would invert the layering). Instead
-    // cold boot installs a bare teardown hook that routes back through this facade's destroy().
-    expect(typeof sdk.serviceManager.onDestroy).toBe('function');
-    sdk.serviceManager.onDestroy!();
-    expect(sdk.serviceManager.disposed).toBe(true);
+    // The handle delegates to the instance rather than copying it, so core members are the very
+    // same objects reached through either.
+    expect(chat.messaging).toBe(serviceManager.instance.messaging);
+
+    // The core does not hold a reference to the lifecycle layer (that would invert the layering).
+    // Instead cold boot installs a bare teardown hook that routes back through destroyChat().
+    expect(typeof serviceManager.onDestroy).toBe('function');
+    serviceManager.onDestroy!();
+    expect(serviceManager.disposed).toBe(true);
   });
 
-  it('cold-boots once, then adopts the same ChatSDK/instance on a reuse remount', async () => {
+  it('keeps release() off the instance handed to host code', async () => {
+    const publicConfig = mergePublicConfig(createBaseTestProps());
+    const { chat, serviceManager } = await acquireChatForShell(publicConfig);
+
+    // The whole point of the extension: app code holding a plain ChatInstance — from
+    // customSendMessage, an event handler, or the shells' onAttach — cannot grace-release a
+    // manager the acquiring owner is managing.
+    expect(typeof chat.release).toBe('function');
+    expect('release' in serviceManager.instance).toBe(false);
+  });
+
+  it('acquireChatSDK resolves to the handle itself, with no envelope', async () => {
+    const publicConfig = mergePublicConfig(createBaseTestProps());
+
+    const chat = await acquireChatSDK(publicConfig);
+
+    expect(typeof chat.release).toBe('function');
+    expect(typeof chat.messaging.addMessage).toBe('function');
+    expect(chat).not.toHaveProperty('adopted');
+    expect(chat).not.toHaveProperty('chat');
+  });
+
+  it('cold-boots once, then adopts the same handle/instance on a reuse remount', async () => {
     const createSM = jest.spyOn(loadServicesModule, 'createServiceManager');
     const publicConfig: any = {
       ...mergePublicConfig(createBaseTestProps()),
@@ -99,17 +126,22 @@ describe('acquireChatSDK', () => {
       featureFlags: { reuseInstance: true, reuseInstanceGraceMs: 100000 },
     };
 
-    const { sdk: sdk1, adopted: adopted1 } = await acquireChatSDK(publicConfig);
+    const { chat: chat1, adopted: adopted1 } =
+      await acquireChatForShell(publicConfig);
     expect(adopted1).toBe(false);
     expect(createSM).toHaveBeenCalledTimes(1);
 
-    sdk1.release();
+    chat1.release();
 
-    const { sdk: sdk2, adopted: adopted2 } = await acquireChatSDK(publicConfig);
+    const {
+      chat: chat2,
+      adopted: adopted2,
+      serviceManager: manager2,
+    } = await acquireChatForShell(publicConfig);
 
     expect(adopted2).toBe(true);
-    expect(sdk2).toBe(sdk1);
-    expect(sdk2.instance).toBe(sdk1.instance);
+    expect(chat2).toBe(chat1);
+    expect(chat2.messaging).toBe(manager2.instance.messaging);
     expect(createSM).toHaveBeenCalledTimes(1); // no second cold boot
   });
 
@@ -120,8 +152,9 @@ describe('acquireChatSDK', () => {
       featureFlags: { reuseInstance: true, reuseInstanceGraceMs: 100000 },
     };
 
-    const { sdk: sdk1 } = await acquireChatSDK(publicConfig);
-    await sdk1.serviceManager.fire({
+    const { chat: chat1, serviceManager: manager1 } =
+      await acquireChatForShell(publicConfig);
+    await manager1.fire({
       type: BusEventType.USER_DEFINED_RESPONSE,
       data: {
         slot: 's1',
@@ -129,11 +162,12 @@ describe('acquireChatSDK', () => {
         message: { id: 'i1' } as any,
       },
     } as any);
-    sdk1.release();
+    chat1.release();
 
-    const { sdk: sdk2 } = await acquireChatSDK(publicConfig);
+    const { serviceManager: manager2 } =
+      await acquireChatForShell(publicConfig);
 
-    expect(sdk2.slotStates.userDefinedBySlot.get().s1.messageItem).toEqual({
+    expect(manager2.slotStates.userDefinedBySlot.get().s1.messageItem).toEqual({
       id: 'i1',
     });
   });
@@ -146,18 +180,19 @@ describe('acquireChatSDK', () => {
       featureFlags: { reuseInstance: true, reuseInstanceGraceMs: 20 },
     };
 
-    const { sdk: sdk1 } = await acquireChatSDK(publicConfig);
+    const { chat: chat1, serviceManager: manager1 } =
+      await acquireChatForShell(publicConfig);
     expect(createSM).toHaveBeenCalledTimes(1);
 
-    sdk1.release();
+    chat1.release();
     // Wait past the (short) grace window for the registry's disposal timer to fire.
     await new Promise((resolve) => setTimeout(resolve, 60));
-    expect(sdk1.serviceManager.disposed).toBe(true);
+    expect(manager1.disposed).toBe(true);
 
-    const { sdk: sdk2, adopted } = await acquireChatSDK(publicConfig);
+    const { chat: chat2, adopted } = await acquireChatForShell(publicConfig);
 
     expect(adopted).toBe(false);
-    expect(sdk2).not.toBe(sdk1);
+    expect(chat2).not.toBe(chat1);
     expect(createSM).toHaveBeenCalledTimes(2);
   });
 
@@ -168,23 +203,108 @@ describe('acquireChatSDK', () => {
       featureFlags: { reuseInstance: true, reuseInstanceGraceMs: 100000 },
     };
 
-    const { sdk } = await acquireChatSDK(publicConfig);
+    const { chat, serviceManager } = await acquireChatForShell(publicConfig);
 
-    sdk.destroy();
-    expect(sdk.serviceManager.disposed).toBe(true);
+    chat.destroy();
+    expect(serviceManager.disposed).toBe(true);
 
     const createSM = jest.spyOn(loadServicesModule, 'createServiceManager');
-    const { adopted } = await acquireChatSDK(publicConfig);
+    const { adopted } = await acquireChatForShell(publicConfig);
     expect(adopted).toBe(false); // nothing left to adopt; cold-boots fresh
     expect(createSM).toHaveBeenCalledTimes(1);
   });
 
-  it('runInitialViewChange() runs once per cold boot', async () => {
-    const publicConfig = mergePublicConfig(createBaseTestProps());
-    const { sdk } = await acquireChatSDK(publicConfig);
+  it('updateConfig() after destroy() resolves and changes nothing', async () => {
+    // Teardown leaves the store and the human-agent service in place, so without the same
+    // `disposed` guard release()/destroy() carry, a late update would write config and rebuild a
+    // service desk on a chat that can never be torn down again.
+    const publicConfig: any = {
+      ...mergePublicConfig(createBaseTestProps()),
+      namespace: 'update-after-destroy',
+      serviceDeskFactory: jest.fn(),
+    };
 
-    const changeViewSpy = jest.spyOn(sdk.serviceManager.actions, 'changeView');
-    await sdk.runInitialViewChange();
+    const { chat, serviceManager } = await acquireChatForShell(publicConfig);
+    // What a hydrated chat looks like: the rebuild branch gates on this flag.
+    serviceManager.humanAgentService.hasInitialized = true;
+    const humanAgentService = serviceManager.humanAgentService;
+
+    chat.destroy();
+
+    await expect(
+      chat.updateConfig({
+        ...publicConfig,
+        isReadonly: true,
+        serviceDeskFactory: jest.fn(),
+      })
+    ).resolves.toBeUndefined();
+
+    expect(serviceManager.humanAgentService).toBe(humanAgentService);
+    expect(
+      serviceManager.store.getState().config.public.isReadonly
+    ).toBeFalsy();
+  });
+
+  it('an adopted manager whose first mount released mid-boot still owes the boot-once steps', async () => {
+    // The row that motivated `initialViewChangeComplete`: acquire, then release BEFORE the
+    // initial view change ran. `adopted` alone would tell the next mount to skip the boot-once
+    // steps forever, rendering a chat that never opened; the durable store flag does not.
+    const publicConfig: any = {
+      ...mergePublicConfig(createBaseTestProps()),
+      namespace: 'acquire-midboot-release',
+      featureFlags: { reuseInstance: true, reuseInstanceGraceMs: 100000 },
+    };
+
+    const { chat: chat1 } = await acquireChatForShell(publicConfig);
+    chat1.release();
+
+    const { adopted, serviceManager } = await acquireChatForShell(publicConfig);
+
+    expect(adopted).toBe(true);
+    expect(serviceManager.store.getState().initialViewChangeComplete).toBe(
+      false
+    );
+  });
+
+  it('performInitialViewChange runs the view transition once per cold boot', async () => {
+    const publicConfig = mergePublicConfig(createBaseTestProps());
+    const { serviceManager } = await acquireChatForShell(publicConfig);
+
+    const changeViewSpy = jest.spyOn(serviceManager.actions, 'changeView');
+    await performInitialViewChange(serviceManager);
     expect(changeViewSpy).toHaveBeenCalledTimes(1);
+  });
+
+  describe('with featureFlags.reuseInstance off (the default)', () => {
+    // The trap #1906 calls out: with reuse off the two teardown verbs are the same code path, so
+    // a consumer developing without the flag cannot tell which one they meant. Pin both.
+    it('release() disposes immediately — nothing survives to adopt', async () => {
+      const createSM = jest.spyOn(loadServicesModule, 'createServiceManager');
+      const publicConfig: any = {
+        ...mergePublicConfig(createBaseTestProps()),
+        namespace: 'no-reuse-release',
+      };
+
+      const { chat, serviceManager } = await acquireChatForShell(publicConfig);
+      chat.release();
+
+      expect(serviceManager.disposed).toBe(true);
+
+      const { adopted } = await acquireChatForShell(publicConfig);
+      expect(adopted).toBe(false);
+      expect(createSM).toHaveBeenCalledTimes(2);
+    });
+
+    it('destroy() disposes immediately, indistinguishably from release()', async () => {
+      const publicConfig: any = {
+        ...mergePublicConfig(createBaseTestProps()),
+        namespace: 'no-reuse-destroy',
+      };
+
+      const { chat, serviceManager } = await acquireChatForShell(publicConfig);
+      chat.destroy();
+
+      expect(serviceManager.disposed).toBe(true);
+    });
   });
 });

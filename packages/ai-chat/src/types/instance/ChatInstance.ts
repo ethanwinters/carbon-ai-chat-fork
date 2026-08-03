@@ -76,23 +76,24 @@ interface ChatActions {
   requestFocus: () => boolean | void;
 
   /**
-   * Sends the given message to the assistant on the remote server. This will result in a "pre:send" and "send" event
-   * being fired on the event bus. The returned promise will resolve once a response has received and processed and
-   * both the "pre:receive" and "receive" events have fired. It will reject when too many errors have occurred and
-   * the system gives up retrying.
+   * Sends a message to the assistant. Delegates to {@link ChatInstanceMessaging.send}, which
+   * documents the promise contract.
    *
    * @param message The message to send.
    * @param options Options for the message sent.
    *
-   * @example Send a plain-text message and await the response
+   * @example Move an existing call to the messaging namespace
    * ```ts
+   * // Before — still works, logs a deprecation warning.
    * await instance.send("What is the weather today?");
+   *
+   * // After.
+   * await instance.messaging.send("What is the weather today?");
    * ```
    *
-   * @example Send a message to the assistant without showing it in the UI
-   * ```ts
-   * await instance.send("Resync context", { silent: true });
-   * ```
+   * @deprecated Still works — it delegates to {@link ChatInstanceMessaging.send} and behaves
+   * identically, so nothing changes for you in 1.x beyond a console warning. Removed in 2.0.0;
+   * move your calls to `instance.messaging.send` before upgrading.
    */
   send: (
     message: MessageRequest | string,
@@ -184,7 +185,10 @@ interface ChatActions {
    * messages. This will also clear the current assistant session which will force a new session to start on the
    * next message.
    *
-   * @deprecated Use {@link ChatInstanceMessaging.restartConversation} instead.
+   * @deprecated Still works — it delegates to
+   * {@link ChatInstanceMessaging.restartConversation} and behaves identically, so nothing changes
+   * for you in 1.x beyond a console warning. Removed in 2.0.0; move your calls to
+   * `instance.messaging.restartConversation` before upgrading.
    */
   restartConversation: () => Promise<void>;
 
@@ -290,7 +294,9 @@ interface ChatActions {
    * subscriptions, the event bus, the theme watcher, any in-flight message requests, and any
    * active human-agent connection. Call this when the chat is being removed for good. Unlike
    * {@link ChatInstance.destroySession}, which only clears the current conversation, `destroy`
-   * releases the instance itself; the instance must not be used afterward.
+   * releases the instance itself; the instance must not be used afterward. Teardown skips any
+   * reuse grace window, so nothing can adopt this chat afterward — it is the "gone for good"
+   * verb.
    *
    * @example
    * // Tear the chat down completely when your application removes it for good.

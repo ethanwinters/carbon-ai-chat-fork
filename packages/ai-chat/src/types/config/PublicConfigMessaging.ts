@@ -33,6 +33,13 @@ export interface PublicConfigMessaging {
    * to customSendMessage. If set to 0, the chat will never timeout.  This is tied to either {@link ChatInstanceMessaging.addMessage} or
    * {@link ChatInstanceMessaging.addMessageChunk} being called after this message was sent. If neither of those methods
    * are called with in the window defined here, the chat will timeout (unless the value is set to 0).
+   *
+   * @deprecated Still honored — the timeout behaves exactly as described above, and nothing
+   * changes for you in 1.x. Removed in 2.0.0, where Carbon AI Chat stops timing out requests on
+   * your behalf: your `customSendMessage` owns the transport, so it is the only place that knows
+   * how long a request may legitimately take. Before upgrading, run your own timer there, abort
+   * your own request, and fail the turn yourself by rejecting the promise your
+   * `customSendMessage` returns.
    */
   messageTimeoutSecs?: number;
 
@@ -41,6 +48,13 @@ export interface PublicConfigMessaging {
    * the loading indicator on its own. This is tied to either {@link ChatInstanceMessaging.addMessage} or
    * {@link ChatInstanceMessaging.addMessageChunk} being called after this message was sent. If neither of those methods
    * are called with in the window defined here, the loading indicator will be shown.
+   *
+   * @deprecated Still honored — the indicator appears exactly as described above, and nothing
+   * changes for you in 1.x. Removed in 2.0.0, where Carbon AI Chat stops deciding when the
+   * loading indicator appears. Before upgrading, drive it yourself with
+   * {@link ChatInstance.updateIsMessageLoadingCounter}, or read
+   * {@link MessagesStatus.SUBMITTED} from {@link ChatInstanceMessaging.getMessagesState} if you
+   * render your own — that pair is `@experimental` and may still change shape before 2.0.0.
    */
   messageLoadingIndicatorTimeoutSecs?: number;
 

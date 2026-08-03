@@ -27,7 +27,7 @@ Where you go next depends on what you build:
 
 ## Connecting your server
 
-You pass your custom messaging configuration as part of the {@link PublicConfig | config}. You must provide a {@link PublicConfigMessaging.customSendMessage | customSendMessage} function, which the chat calls whenever the user sends a message. It also runs when you call {@link ChatInstance.send | send}.
+You pass your custom messaging configuration as part of the {@link PublicConfig | config}. You must provide a {@link PublicConfigMessaging.customSendMessage | customSendMessage} function, which the chat calls whenever the user sends a message. It also runs when you call {@link ChatInstanceMessaging.send | instance.messaging.send()}.
 
 For more information, see [the examples page](https://github.com/carbon-design-system/carbon-ai-chat/tree/main/examples/react/basic-float/src/customSendMessage.ts).
 
@@ -56,12 +56,13 @@ For the data shape in either flow, see [Message format](./MessageFormat.md).
 
 ## Cancelling request (stop streaming)
 
-While content streams, users can stop the stream in two ways:
+While content streams, the stream can be stopped in three ways:
 
 1. Clicking the "stop streaming" button in the input field
-2. Restarting or clearing the conversation
+2. Calling {@link ChatInstanceMessaging.stop | instance.messaging.stop()} from your own code
+3. Restarting or clearing the conversation
 
-Both actions cancel the request. Cancellation works the same across flows: the same abort signal works whether you deliver responses with {@link ChatInstanceMessaging.addMessageChunk | addMessageChunk} or {@link ChatInstanceMessaging.upsertMessage | upsertMessage}. Only the way you deliver the final state differs.
+All three cancel the request, and all three do so by firing the abort signal — none of them stops your streaming for you. Cancellation works the same across flows: the same abort signal works whether you deliver responses with {@link ChatInstanceMessaging.addMessageChunk | addMessageChunk} or {@link ChatInstanceMessaging.upsertMessage | upsertMessage}. Only the way you deliver the final state differs.
 
 ### 1. Mark your stream as cancellable
 
@@ -91,7 +92,7 @@ With {@link ChatInstanceMessaging.upsertMessage | upsertMessage}, set it on the 
 
 The {@link CustomSendMessageOptions.signal | abort signal} fires when a message request is cancelled. On abort, the signal's `reason` holds one value from the {@link CancellationReason} enum:
 
-- {@link CancellationReason.STOP_STREAMING} (`"Stop streaming"`) - the user clicked the stop streaming button
+- {@link CancellationReason.STOP_STREAMING} (`"Stop streaming"`) - the user clicked the stop streaming button, or your code called {@link ChatInstanceMessaging.stop | instance.messaging.stop()}
 - {@link CancellationReason.CONVERSATION_RESTARTED} (`"Conversation restarted"`) - the user restarted or cleared the conversation
 - {@link CancellationReason.TIMEOUT} (`"Request timeout"`) - the request exceeded the configured timeout
 
@@ -114,7 +115,7 @@ async function customSendMessage(
 
     // Use enum for type-safe comparisons
     if (reason === CancellationReason.STOP_STREAMING) {
-      console.log('User clicked stop streaming');
+      console.log('Streaming stopped by the user or your code');
     } else if (reason === CancellationReason.CONVERSATION_RESTARTED) {
       console.log('Conversation was restarted/cleared');
     } else if (reason === CancellationReason.TIMEOUT) {
@@ -142,7 +143,7 @@ When you detect cancellation, exit your streaming loop and move the message out 
 
 #### With addMessageChunk
 
-Send a {@link FinalResponseChunk | final response chunk}. Optionally send a {@link CompleteItemChunk | complete item chunk} with `stream_stopped: true` first, to trigger the right a11y states:
+Send a {@link FinalResponseChunk | final response chunk}. Optionally send a {@link CompleteItemChunk | complete item chunk} with `stream_stopped: true` first, marking the turn as stopped rather than completed:
 
 ```typescript
 // Optional: mark the item as stopped for a11y messaging.
@@ -178,7 +179,7 @@ await instance.messaging.addMessageChunk({
 
 #### With upsertMessage
 
-Call {@link ChatInstanceMessaging.upsertMessage | upsertMessage} with {@link MessageState.COMPLETE | the complete state}, which moves the message out of streaming and hides the "stop streaming" button. Set `streaming_metadata.stream_stopped: true` on the items to trigger the "Response stopped" a11y announcement:
+Call {@link ChatInstanceMessaging.upsertMessage | upsertMessage} with {@link MessageState.COMPLETE | the complete state}, which moves the message out of streaming and hides the "stop streaming" button. Set `streaming_metadata.stream_stopped: true` on the items to mark the turn as stopped rather than completed:
 
 ```typescript
 await instance.messaging.upsertMessage(
@@ -203,8 +204,8 @@ await instance.messaging.upsertMessage(
 ### Important notes
 
 - The "stop streaming" button appears when a streaming item has `cancellable: true`.
-- Clicking the button fires the abort signal (with reason {@link CancellationReason.STOP_STREAMING}), but it does not stop your streaming on its own.
-- You must listen for the abort signal, stop your streaming logic, and deliver the final state.
+- Clicking the button, or calling {@link ChatInstanceMessaging.stop | instance.messaging.stop()}, fires the abort signal (with reason {@link CancellationReason.STOP_STREAMING}), but it does not stop your streaming on its own.
+- You must listen for the abort signal, stop your streaming logic, and deliver the final state. Until you deliver it, the response stays mid-stream and {@link ChatInstanceMessaging.getMessagesState | getMessagesState().status} does not return to {@link MessagesStatus.READY}. With {@link PublicConfig.debug} enabled, failing to deliver it logs a warning.
 - The abort signal also fires on conversation restarts and clears ({@link CancellationReason.CONVERSATION_RESTARTED}) and on timeouts ({@link CancellationReason.TIMEOUT}).
 - With {@link ChatInstanceMessaging.addMessageChunk | addMessageChunk}, the button stays visible but disabled until a {@link FinalResponseChunk | final response chunk} arrives. With {@link ChatInstanceMessaging.upsertMessage | upsertMessage}, it hides when the message reaches {@link MessageState.COMPLETE | complete} (or {@link MessageState.ERROR | error}). Always deliver the final state, even when cancelled, to clean up UI state.
 - If a {@link CancellationReason.TIMEOUT | timeout} cancels the message, the UI marks it as errored.

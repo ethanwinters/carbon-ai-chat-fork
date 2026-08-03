@@ -235,6 +235,45 @@ describe('reuseInstance adoption (remount survival)', () => {
     );
   });
 
+  it('runs the boot-once steps on the mount that adopts a manager released mid-boot', async () => {
+    const config = reuseConfig('adopt-after-mid-boot', true);
+    const firstBeforeRender = jest.fn();
+    const secondBeforeRender = jest.fn();
+
+    // Unmount synchronously so the acquire resolves into a cancelled boot: the manager is released
+    // to the registry having never run its boot-once steps.
+    const first = render(
+      React.createElement(ChatContainer, {
+        ...config,
+        onBeforeRender: firstBeforeRender,
+      })
+    );
+    first.unmount();
+    await waitFor(() =>
+      expect(peekReuseEntry('adopt-after-mid-boot')?.refCount).toBe(0)
+    );
+    expect(firstBeforeRender).not.toHaveBeenCalled();
+
+    const sm = peekReuseEntry('adopt-after-mid-boot')?.serviceManager;
+    expect(sm.store.getState().initialViewChangeComplete).toBe(false);
+
+    // The adopter owes the steps the released mount never ran. Gating them on the adopt alone
+    // would skip them forever, leaving a chat that renders but never opens.
+    render(
+      React.createElement(ChatContainer, {
+        ...config,
+        onBeforeRender: secondBeforeRender,
+      })
+    );
+    await waitForAcquire('adopt-after-mid-boot');
+    expect(peekReuseEntry('adopt-after-mid-boot')?.serviceManager).toBe(sm);
+
+    await waitFor(() => expect(secondBeforeRender).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(sm.store.getState().initialViewChangeComplete).toBe(true)
+    );
+  });
+
   it('disposes the manager when the host unmounts before boot resolves (reuse off)', async () => {
     const createSM = jest.spyOn(loadServicesModule, 'createServiceManager');
     const config = reuseConfig('unmount-mid-boot-off', false);

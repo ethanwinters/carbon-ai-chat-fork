@@ -27,6 +27,7 @@ import type { AppState } from '../../types/state/AppState';
 import type { SendOptions } from '../../types/instance/ChatInstance';
 import type { MessagesComponentClass } from '../components-legacy/MessagesComponent';
 import type { JSONContent } from '@tiptap/core';
+import { consoleError } from '../utils/miscUtils';
 
 interface UseInputCallbacksProps {
   serviceManager: ServiceManager;
@@ -149,7 +150,7 @@ export function useInputCallbacks({
       }
       // Input focus will be handled by parent component
     } catch (error) {
-      console.error('An error occurred in requestInputFocus', error);
+      consoleError('An error occurred in requestInputFocus', error);
     }
   }, [agentDisplayState, messagesRef]);
 

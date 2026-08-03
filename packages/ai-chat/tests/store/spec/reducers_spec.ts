@@ -426,6 +426,37 @@ describe('Store Reducers', () => {
       ).toBe(false);
     });
 
+    it('should add and subtract the in-flight request counter', () => {
+      const counter = () =>
+        (store.getState() as AppState).assistantMessageState
+          .inFlightRequestCounter;
+
+      expect(counter()).toBe(0);
+
+      store.dispatch(actions.addInFlightRequestCounter(1));
+      store.dispatch(actions.addInFlightRequestCounter(1));
+      expect(counter()).toBe(2);
+
+      store.dispatch(actions.addInFlightRequestCounter(-1));
+      expect(counter()).toBe(1);
+    });
+
+    it('should floor the in-flight request counter at zero', () => {
+      // An unbalanced decrement must not drive it negative, which would make a later increment look
+      // like no request was in flight.
+      store.dispatch(actions.addInFlightRequestCounter(-1));
+      expect(
+        (store.getState() as AppState).assistantMessageState
+          .inFlightRequestCounter
+      ).toBe(0);
+    });
+
+    it('should return the same state when the in-flight counter does not move', () => {
+      const before = store.getState() as AppState;
+      store.dispatch(actions.addInFlightRequestCounter(0));
+      expect(store.getState()).toBe(before);
+    });
+
     it('should handle multiple action types in sequence', () => {
       // Test that multiple different actions work correctly together
       store.dispatch(

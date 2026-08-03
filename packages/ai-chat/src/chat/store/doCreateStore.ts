@@ -9,6 +9,7 @@
 
 import cloneDeep from 'lodash-es/cloneDeep.js';
 import isEqual from 'lodash-es/isEqual.js';
+import merge from 'lodash-es/merge.js';
 import mergeWith from 'lodash-es/mergeWith.js';
 import { ServiceManager } from '../services/ServiceManager';
 import { AppConfig } from '../../types/state/AppConfig';
@@ -76,19 +77,29 @@ function mergeDefaultsDeep<T>(target: Partial<T>, ...sources: Partial<T>[]): T {
  * Creates a complete AppConfig with derived values computed from the public config.
  */
 function createAppConfig(publicConfig: PublicConfig): AppConfig {
+  // Snapshot first and derive everything below from it, so no branch of AppConfig can reach the
+  // caller's object — `validateCustomProperties` returns the very map it is handed. An aliased
+  // config would let a host edit store state with no dispatch, while every reference comparison —
+  // subscribers, `reconcileAppConfigReferences`, the dynamic-update diff — still saw "no change".
+  // `merge` recurses only into plain objects and arrays, so `customSendMessage`,
+  // `serviceDeskFactory`, and other function-valued fields keep the identity that path compares by.
+  const publicSnapshot: PublicConfig = merge({}, publicConfig);
+
   // Create the theme state with defaults applied and corners computed
   const themeWithDefaults: ThemeState = {
     originalCarbonTheme:
-      publicConfig.injectCarbonTheme ?? DEFAULT_THEME_STATE.originalCarbonTheme,
+      publicSnapshot.injectCarbonTheme ??
+      DEFAULT_THEME_STATE.originalCarbonTheme,
     derivedCarbonTheme:
-      publicConfig.injectCarbonTheme ?? DEFAULT_THEME_STATE.derivedCarbonTheme,
-    aiEnabled: publicConfig.aiEnabled ?? DEFAULT_THEME_STATE.aiEnabled,
-    corners: getThemeCornersType(publicConfig),
+      publicSnapshot.injectCarbonTheme ??
+      DEFAULT_THEME_STATE.derivedCarbonTheme,
+    aiEnabled: publicSnapshot.aiEnabled ?? DEFAULT_THEME_STATE.aiEnabled,
+    corners: getThemeCornersType(publicSnapshot),
   };
 
   // Compute CSS variable overrides from theme configuration
   const cssVariableOverrides = validateCustomProperties(
-    publicConfig.layout?.customProperties || {}
+    publicSnapshot.layout?.customProperties || {}
   );
 
   // Build derived config using deep merge that skips undefined
@@ -100,14 +111,14 @@ function createAppConfig(publicConfig: PublicConfig): AppConfig {
       launcher: DEFAULT_LAUNCHER,
     },
     {
-      header: publicConfig.header,
-      layout: publicConfig.layout,
-      launcher: publicConfig.launcher,
+      header: publicSnapshot.header,
+      layout: publicSnapshot.layout,
+      launcher: publicSnapshot.launcher,
     }
   );
 
   return {
-    public: publicConfig,
+    public: publicSnapshot,
     derived: {
       cssVariableOverrides,
       themeWithDefaults,

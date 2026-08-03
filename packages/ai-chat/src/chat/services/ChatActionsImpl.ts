@@ -126,6 +126,12 @@ import { getRawText, textToDoc } from '../utils/promptLineDoc';
 let hasWarnedAboutUpdateRawValueDeprecation = false;
 
 /**
+ * How long after a stop to check whether the host closed out its response before warning. Generous
+ * on purpose: the value only shifts when a debug warning appears, never whether one is correct.
+ */
+const STOPPED_STREAM_DIAGNOSTIC_MS = 2000;
+
+/**
  * Returns true if the given JSONContent doc only contains `paragraph`,
  * `text`, and `hardBreak` nodes, with no marks on any text node. Used to
  * gate the deprecated `updateRawValue` path post-segment-drop: legacy
@@ -246,6 +252,19 @@ class ChatActionsImpl {
    */
   private cachedInputContentSource: JSONContent | undefined = undefined;
   private cachedInputContentClone: JSONContent | undefined = undefined;
+
+  /**
+   * The cancellation in flight, so overlapping `stopStreaming()` callers share one rather than
+   * firing `STOP_STREAMING` reentrantly.
+   */
+  private stopStreamingPromise: Promise<void> | null = null;
+
+  /**
+   * Pending debug diagnostics from `stopStreaming()`, tracked so teardown can clear them.
+   */
+  private stoppedStreamDiagnosticTimeouts = new Set<
+    ReturnType<typeof setTimeout>
+  >();
 
   constructor(serviceManager: ServiceManager) {
     this.serviceManager = serviceManager;
@@ -652,7 +671,7 @@ class ChatActionsImpl {
 
     // Rich editor mounted: apply directly so rich nodes / marks survive.
     if (editor) {
-      ref!.setContent(next);
+      ref.setContent(next);
       return;
     }
 
@@ -838,9 +857,10 @@ class ChatActionsImpl {
 
   /**
    * Sends the given message to the assistant on the remote server. This will result in a "pre:send" and "send" event
-   * being fired on the event bus. The returned promise will resolve once a response has received and processed and
-   * both the "pre:receive" and "receive" events have fired. It will reject when too many errors have occurred and
-   * the system gives up retrying.
+   * being fired on the event bus. The returned promise settles with the host's `customSendMessage`, not with the
+   * arrival of a response.
+   *
+   * @see ChatInstanceMessaging.send
    *
    * @param message The message to send.
    * @param source The source of the message.
@@ -911,9 +931,10 @@ class ChatActionsImpl {
 
   /**
    * Sends the given message to the assistant on the remote server. This will result in a "pre:send" and "send" event
-   * being fired on the event bus. The returned promise will resolve once a response has received and processed and
-   * both the "pre:receive" and "receive" events have fired. It will reject when too many errors have occurred and
-   * the system gives up retrying.
+   * being fired on the event bus. The returned promise settles with the host's `customSendMessage`, not with the
+   * arrival of a response.
+   *
+   * @see ChatInstanceMessaging.send
    *
    * @param message The message to send.
    * @param source The source of the message.
@@ -2173,6 +2194,97 @@ class ChatActionsImpl {
   }
 
   /**
+   * Stops the active turn. Fires `BusEventType.STOP_STREAMING` and then cancels the in-flight
+   * request, which fires the abort signal handed to `customSendMessage`. Resolves immediately and
+   * fires nothing when no turn is active.
+   *
+   * Stopping ends here: firing the abort signal is all the framework does. Closing out the response
+   * is `customSendMessage`'s half of the contract — on abort it emits a final `complete_item` with
+   * the content it actually streamed, and the existing chunk path finalizes the response from it.
+   * That is why cancellation deliberately creates no system message while streaming (see
+   * `MessageService.handleCancellationResolution`) and why nothing is dispatched here: a host value
+   * is always better than a framework guess, and writing one too would race the host's.
+   *
+   * This is the single cancellation path: `instance.messaging.stop()` and the built-in stop button
+   * both call it, so the public API drives the same code the shipped UI does rather than a parallel
+   * one. Deliberately ungated by `stopStreamingButtonState` so it works headlessly.
+   */
+  async stopStreaming() {
+    if (this.stopStreamingPromise) {
+      // Overlapping callers await the same cancellation. Without this the second call passes the
+      // guard below (the trackers are still set while the first is suspended on its event) and
+      // re-fires STOP_STREAMING, which the event bus rejects as reentrant.
+      return this.stopStreamingPromise;
+    }
+
+    const { messageService } = this.serviceManager;
+    if (!messageService.hasActiveMessageRequest()) {
+      return undefined;
+    }
+
+    this.stopStreamingPromise = (async () => {
+      // Best-effort, for the diagnostic only: cancellation clears the streaming tracker, and a
+      // missed id just means no warning.
+      const streamingResponseID =
+        messageService.inboundStreaming.streamingMessageID;
+
+      try {
+        await this.serviceManager.fire({ type: BusEventType.STOP_STREAMING });
+        await messageService.cancelCurrentMessageRequest();
+      } finally {
+        this.stopStreamingPromise = null;
+      }
+
+      this.scheduleStoppedStreamDiagnostic(streamingResponseID);
+    })();
+
+    return this.stopStreamingPromise;
+  }
+
+  /**
+   * Warns, in debug builds only, when a host aborted but never closed out its response — the other
+   * half of the stop contract. Nothing is repaired: the response stays mid-stream, which is what
+   * makes the omission visible rather than silently absorbed.
+   */
+  private scheduleStoppedStreamDiagnostic(responseID: string | null) {
+    if (
+      !responseID ||
+      this.serviceManager.disposed ||
+      !this.serviceManager.store.getState().config.public.debug
+    ) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      this.stoppedStreamDiagnosticTimeouts.delete(timeout);
+
+      const state = this.serviceManager.store.getState();
+      const isStillStreaming = state.assistantMessageState.localMessageIDs.some(
+        (localItemID) => {
+          const item = state.allMessageItemsByID[localItemID];
+          return (
+            item?.fullMessageID === responseID &&
+            item.ui_state.streamingState?.isDone === false
+          );
+        }
+      );
+
+      if (isStillStreaming) {
+        consoleWarn(
+          `The response "${responseID}" is still streaming after instance.messaging.stop(). ` +
+            'Stopping only fires the abort signal — your customSendMessage must react to it and ' +
+            'emit a final chunk with a `complete_item` carrying the content it managed to stream ' +
+            '(set `streaming_metadata.stream_stopped: true` on that item to mark the turn stopped ' +
+            'rather than completed). Until it does, this response stays mid-stream and ' +
+            'instance.messaging.getMessagesState().status will not return to READY. See the ' +
+            'customSendMessage examples for the shape.'
+        );
+      }
+    }, STOPPED_STREAM_DIAGNOSTIC_MS);
+    this.stoppedStreamDiagnosticTimeouts.add(timeout);
+  }
+
+  /**
    * Restarts the conversation with the assistant. This does not make any changes to a conversation with a human agent.
    * This will clear all the current assistant messages from the main assistant view and cancel any outstanding messages.
    * Lastly, this will clear the current assistant session which will force a new session to start on the next message.
@@ -2369,6 +2481,11 @@ class ChatActionsImpl {
       safe(() => controller.abort())
     );
     this.uploadAbortControllers?.clear();
+
+    this.stoppedStreamDiagnosticTimeouts?.forEach((timeout) =>
+      safe(() => clearTimeout(timeout))
+    );
+    this.stoppedStreamDiagnosticTimeouts?.clear();
 
     // Unsubscribe the store listeners registered in loadServices.
     serviceManager.storeUnsubscribers?.forEach((unsubscribe) =>

@@ -37,6 +37,17 @@ interface ChatMessagesState {
   isMessageLoadingCounter: number;
 
   /**
+   * Counter of requests currently in flight — incremented when a request is queued and decremented
+   * when it settles, whether it succeeded, failed, or was cancelled.
+   *
+   * Distinct from {@link isMessageLoadingCounter}, which only rises once the silent-loading delay has
+   * elapsed and therefore describes whether to draw a loading indicator, not whether a request is
+   * outstanding. This counter is the honest answer to the latter, and is what the public
+   * `MessagesStatus.SUBMITTED` derives from.
+   */
+  inFlightRequestCounter: number;
+
+  /**
    * Optional string to display next to the loading indicator.
    */
   isMessageLoadingText?: string;

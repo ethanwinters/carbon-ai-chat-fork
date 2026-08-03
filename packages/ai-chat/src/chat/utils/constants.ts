@@ -12,7 +12,7 @@ import { WriteableElementName } from '../../types/instance/WriteableElements';
 import { CornersType } from '../../types/config/CornersType';
 
 // Prefix used to distinguish console logs omitted from our code
-const WA_CONSOLE_PREFIX = '[Chat]';
+const CHAT_CONSOLE_PREFIX = '[Chat]';
 
 // The right-to-left mark character string which mixes the direction of a string.
 // For more info on right-to-left mark: https://www.w3.org/TR/WCAG20-TECHS/H34.html
@@ -37,7 +37,7 @@ function THROW_ERROR() {
 }
 
 export {
-  WA_CONSOLE_PREFIX,
+  CHAT_CONSOLE_PREFIX,
   RIGHT_TO_LEFT_MARK,
   ENGLISH_US_DATE_FORMAT,
   RESPONSE_TYPE_TIMEOUT_MS,

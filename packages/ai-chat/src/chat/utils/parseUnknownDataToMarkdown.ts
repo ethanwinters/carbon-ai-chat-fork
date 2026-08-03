@@ -7,6 +7,8 @@
  *  @license
  */
 
+import { consoleError } from './miscUtils';
+
 /**
  * Attempts to parse the given value into a markdown string. If the value is an object or a JSON string,
  * it is pretty printed as a code block. Otherwise, string content is returned as-is and other primitives are
@@ -36,7 +38,7 @@ function parseUnknownDataToMarkdown(data: unknown): string | undefined {
 
     return String(data);
   } catch (error) {
-    console.error('Cannot parse step content', error);
+    consoleError('Cannot parse step content', error);
     return undefined;
   }
 }

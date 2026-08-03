@@ -60,13 +60,27 @@ describe('styleUtils', () => {
     });
 
     it('drops $-prefixed tokens whose value is not hexadecimal', () => {
-      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
       const result = validateCustomProperties({
         '$button-primary': 'rebeccapurple',
       });
       expect(result['$button-primary']).toBeUndefined();
-      expect(warn).toHaveBeenCalledTimes(1);
-      warn.mockRestore();
+      expect(error).toHaveBeenCalledTimes(1);
+      error.mockRestore();
+    });
+
+    it('leaves the caller`s object untouched when it drops a token', () => {
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const customProperties = {
+        '$button-primary': 'rebeccapurple',
+        width: '420px',
+      };
+      const result = validateCustomProperties(customProperties);
+
+      expect(result).not.toBe(customProperties);
+      expect(customProperties['$button-primary']).toBe('rebeccapurple');
+      expect(result['$button-primary']).toBeUndefined();
+      error.mockRestore();
     });
 
     it('preserves bare shell tokens with non-color values', () => {

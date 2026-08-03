@@ -14,7 +14,10 @@ import {
   setupBeforeEach,
   setupAfterEach,
 } from '../../test_helpers';
-import { BusEventType } from '../../../src/types/events/eventBusTypes';
+import {
+  BusEventType,
+  MessageSendSource,
+} from '../../../src/types/events/eventBusTypes';
 
 describe('ChatInstance.send', () => {
   beforeEach(setupBeforeEach);
@@ -457,6 +460,131 @@ describe('ChatInstance.send', () => {
           state.assistantInputState.stopStreamingButtonState.isVisible
         ).toBe(false);
       });
+    });
+  });
+});
+
+describe('ChatInstance.messaging.send', () => {
+  beforeEach(setupBeforeEach);
+  afterEach(setupAfterEach);
+
+  it('should have send method available', async () => {
+    const config = createBaseConfig();
+    const instance = await renderChatAndGetInstance(config);
+
+    expect(typeof instance.messaging.send).toBe('function');
+  });
+
+  it('should accept string message', async () => {
+    const config = createBaseConfig();
+    const instance = await renderChatAndGetInstance(config);
+
+    await expect(instance.messaging.send('Hello')).resolves.not.toThrow();
+  });
+
+  it('should accept MessageRequest object', async () => {
+    const config = createBaseConfig();
+    const instance = await renderChatAndGetInstance(config);
+
+    await expect(
+      instance.messaging.send({ input: { text: 'Hello' } })
+    ).resolves.not.toThrow();
+  });
+
+  it('should keep a silent send out of the visible message list', async () => {
+    const config = createBaseConfig();
+    const { instance, store } = await renderChatAndGetInstanceWithStore(config);
+
+    const preSendHandler = jest.fn();
+    instance.on([{ type: BusEventType.PRE_SEND, handler: preSendHandler }]);
+
+    const before =
+      store.getState().assistantMessageState.localMessageIDs.length;
+
+    await instance.messaging.send('Hello', { silent: true });
+
+    expect(store.getState().assistantMessageState.localMessageIDs.length).toBe(
+      before
+    );
+    expect(preSendHandler.mock.calls[0][0].data.history.silent).toBe(true);
+  });
+
+  it('should fire pre:send and send events', async () => {
+    const config = createBaseConfig();
+    const { instance } = await renderChatAndGetInstanceWithStore(config);
+
+    const preSendHandler = jest.fn();
+    const sendHandler = jest.fn();
+
+    instance.on([
+      { type: BusEventType.PRE_SEND, handler: preSendHandler },
+      { type: BusEventType.SEND, handler: sendHandler },
+    ]);
+
+    await instance.messaging.send('Namespaced send');
+
+    expect(preSendHandler).toHaveBeenCalledTimes(1);
+    expect(sendHandler).toHaveBeenCalledTimes(1);
+    expect(sendHandler.mock.calls[0][0].data.input.text).toBe(
+      'Namespaced send'
+    );
+  });
+
+  describe('parity with the deprecated instance.send', () => {
+    it('both entries report the same MessageSendSource', async () => {
+      // Hosts filter on busEventSend.source; moving the canonical entry must not change what
+      // they see.
+      const config = createBaseConfig();
+      const { instance } = await renderChatAndGetInstanceWithStore(config);
+
+      const sendHandler = jest.fn();
+      instance.on([{ type: BusEventType.SEND, handler: sendHandler }]);
+
+      await instance.messaging.send('via messaging');
+      await instance.send('via deprecated');
+
+      expect(sendHandler).toHaveBeenCalledTimes(2);
+      const [namespaced, deprecated] = sendHandler.mock.calls.map(
+        (call) => call[0].source
+      );
+      expect(namespaced).toBe(MessageSendSource.INSTANCE_SEND);
+      expect(deprecated).toBe(namespaced);
+    });
+
+    it('instance.send delegates to messaging.send and warns once per call', async () => {
+      const config = createBaseConfig();
+      const instance = await renderChatAndGetInstance(config);
+
+      const messagingSend = jest.spyOn(instance.messaging, 'send');
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await instance.send('delegated', { silent: true });
+
+      expect(messagingSend).toHaveBeenCalledTimes(1);
+      expect(messagingSend).toHaveBeenCalledWith('delegated', { silent: true });
+      expect(
+        warn.mock.calls.some((call) =>
+          call.some(
+            (arg) => typeof arg === 'string' && arg.includes('instance.send')
+          )
+        )
+      ).toBe(true);
+    });
+
+    it('both entries put the request in the store', async () => {
+      const config = createBaseConfig();
+      const { instance, store } =
+        await renderChatAndGetInstanceWithStore(config);
+
+      await instance.messaging.send('first');
+      await instance.send('second');
+
+      const texts = Object.values(store.getState().allMessagesByID)
+        .map((message: any) => message?.input?.text)
+        .filter(Boolean);
+
+      expect(texts).toContain('first');
+      expect(texts).toContain('second');
     });
   });
 });

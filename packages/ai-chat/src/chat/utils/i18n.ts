@@ -8,6 +8,7 @@
  */
 
 import IntlMessageFormat from 'intl-messageformat';
+import { consoleError, consoleWarn } from './miscUtils';
 
 /**
  * Generic message dictionary type for flexibility in testing and custom implementations.
@@ -121,7 +122,7 @@ export function createIntl({
 
       // Handle missing translations gracefully
       if (!message) {
-        console.warn(`[i18n] Missing translation for key: "${id}"`);
+        consoleWarn(`[i18n] Missing translation for key: "${id}"`);
         return id; // Return the key as fallback
       }
 
@@ -147,7 +148,7 @@ export function createIntl({
 
         return result as string;
       } catch (error) {
-        console.error(`[i18n] Error formatting message "${id}":`, error, {
+        consoleError(`[i18n] Error formatting message "${id}":`, error, {
           message,
           values,
         });
@@ -160,7 +161,7 @@ export function createIntl({
       try {
         return new Intl.DateTimeFormat(locale, options).format(date);
       } catch (error) {
-        console.error('[i18n] Error formatting date:', error);
+        consoleError('[i18n] Error formatting date:', error);
         return date.toLocaleDateString();
       }
     },
@@ -169,7 +170,7 @@ export function createIntl({
       try {
         return new Intl.NumberFormat(locale, options).format(num);
       } catch (error) {
-        console.error('[i18n] Error formatting number:', error);
+        consoleError('[i18n] Error formatting number:', error);
         return num.toString();
       }
     },
@@ -183,7 +184,7 @@ export function createIntl({
         };
         return new Intl.DateTimeFormat(locale, timeOptions).format(date);
       } catch (error) {
-        console.error('[i18n] Error formatting time:', error);
+        consoleError('[i18n] Error formatting time:', error);
         return date.toLocaleTimeString();
       }
     },

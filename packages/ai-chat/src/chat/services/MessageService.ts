@@ -349,31 +349,37 @@ class MessageService {
     const { message } = current;
     current.timeFirstRequest = Date.now();
 
-    if (message.input.message_type === MessageInputType.EVENT) {
-      this.sendToAssistant(current, null);
-      return;
+    try {
+      if (message.input.message_type === MessageInputType.EVENT) {
+        this.sendToAssistant(current, null);
+        return;
+      }
+
+      const { startLoading, originalUserText } =
+        this.prepareCurrentRequest(current);
+
+      if (current.isProcessed) {
+        // This message was cancelled.
+        return;
+      }
+
+      await this.firePreSendEvent(current);
+
+      if (current.isProcessed) {
+        // This message was cancelled.
+        return;
+      }
+
+      this.commitOutgoingMessage(current, originalUserText);
+
+      await this.fireSendEvent(current);
+
+      this.sendToAssistant(current, startLoading);
+    } catch (error) {
+      // Without this, a pre:send/send handler that throws strands the turn: nothing settles its
+      // send promise and the queue never advances past it.
+      await this.outboundCoordinator.processError(current, String(error));
     }
-
-    const { startLoading, originalUserText } =
-      this.prepareCurrentRequest(current);
-
-    if (current.isProcessed) {
-      // This message was cancelled.
-      return;
-    }
-
-    await this.firePreSendEvent(current);
-
-    if (current.isProcessed) {
-      // This message was cancelled.
-      return;
-    }
-
-    this.commitOutgoingMessage(current, originalUserText);
-
-    await this.fireSendEvent(current);
-
-    this.sendToAssistant(current, startLoading);
   }
 
   private prepareCurrentRequest(current: PendingMessageRequest) {
@@ -620,6 +626,15 @@ class MessageService {
     // to the assistant. This gets resolved or rejected in this.processSuccess or this.processError respectively.
     const sendMessagePromise = resolvablePromise<void>();
 
+    // Count this request as in flight for as long as it is. Every settle path — success, error,
+    // timeout, cancellation, a throwing pre:send/send handler, dispose — runs through this promise,
+    // and a promise settles once, so the counter cannot drift.
+    this.serviceManager.store.dispatch(actions.addInFlightRequestCounter(1));
+    const settleInFlight = () => {
+      this.serviceManager.store.dispatch(actions.addInFlightRequestCounter(-1));
+    };
+    sendMessagePromise.then(settleInFlight, settleInFlight);
+
     // Add our new message to the queue and kick off the queue.
     this.addToMessageQueue(
       message,
@@ -717,6 +732,17 @@ class MessageService {
   }
 
   /**
+   * Whether a turn is currently in flight and therefore cancellable. Mirrors the two branches
+   * `cancelCurrentMessageRequest` acts on, so callers can decide whether cancelling would do
+   * anything before announcing it.
+   */
+  public hasActiveMessageRequest(): boolean {
+    return Boolean(
+      this.inboundStreaming.streamingMessageID || this.queue.current
+    );
+  }
+
+  /**
    * Cancels the current message request if one is in progress.
    * Also handles streaming messages that may have been cleared from the queue.
    */
@@ -734,12 +760,13 @@ class MessageService {
     }
 
     if (this.queue.current) {
-      await this.cancelMessageRequestByID(
-        this.queue.current.message.id,
-        false,
-        reason
-      );
-      this.clearCurrentQueueItem();
+      const cancelled = this.queue.current;
+      await this.cancelMessageRequestByID(cancelled.message.id, false, reason);
+      if (this.queue.current === cancelled) {
+        // The cancellation advances the queue itself, so clearing unconditionally would null the
+        // turn it just promoted — leaving it in flight but uncancellable.
+        this.clearCurrentQueueItem();
+      }
     }
   }
 

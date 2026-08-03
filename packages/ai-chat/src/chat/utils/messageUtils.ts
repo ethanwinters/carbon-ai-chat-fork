@@ -540,6 +540,38 @@ function streamItemID(messageID: string, item: DeepPartial<GenericItem>) {
 }
 
 /**
+ * Returns the current visible content of a local message item.
+ *
+ * While an item streams, the reducer seeds `item` from the first chunk only and appends later
+ * chunks to `ui_state.streamingState.chunks` without merging them in — the view joins them at
+ * render time (see `MarkdownWithErrorHandling`). So the accumulated chunk text, not `item.text`, is
+ * what a reader currently sees. Once streaming is done, or for an item whose chunks carry no text,
+ * `item` is already authoritative and is returned unchanged.
+ *
+ * Callers that need to persist the visible content — because the item is about to stop streaming,
+ * or because they are handing it to a consumer — use this rather than reading `item` directly.
+ */
+function materializeStreamedItemContent(
+  localMessageItem: LocalMessageItem
+): LocalMessageItem['item'] {
+  const streamingState = localMessageItem.ui_state.streamingState;
+  if (
+    !streamingState ||
+    streamingState.isDone ||
+    streamingState.chunks.length === 0 ||
+    !streamingState.chunks.some(
+      (chunk) => typeof (chunk as { text?: string }).text === 'string'
+    )
+  ) {
+    return localMessageItem.item;
+  }
+  const text = streamingState.chunks
+    .map((chunk) => (chunk as { text?: string }).text ?? '')
+    .join('');
+  return { ...localMessageItem.item, text };
+}
+
+/**
  * Returns the dimensions info for the given media item.
  */
 function getMediaDimensions(item: MediaItem) {
@@ -692,6 +724,7 @@ export {
   isStreamPartialItem,
   isStreamCompleteItem,
   isStreamFinalResponse,
+  materializeStreamedItemContent,
   streamItemID,
   getMediaDimensions,
   getLastAssistantResponseWithContext,

@@ -14,7 +14,7 @@
 
 import { ThemeState } from '../../types/state/AppState';
 import ObjectMap from '../../types/utilities/ObjectMap';
-import { WA_CONSOLE_PREFIX } from './constants';
+import { consoleError } from './miscUtils';
 import { CarbonTheme } from '../../types/config/CarbonTheme';
 
 enum CarbonThemeClassNames {
@@ -75,17 +75,19 @@ function convertCSSVariablesToString(
 function validateCustomProperties(
   publicVars: ObjectMap<string>
 ): ObjectMap<string> {
-  const result = publicVars || {};
+  const result: ObjectMap<string> = {};
 
-  Object.entries(result).forEach(([key, value]) => {
-    // Variables starting with "$" are carbon theme tokens and should all be colors
+  Object.entries(publicVars || {}).forEach(([key, value]) => {
+    // Variables starting with "$" are carbon theme tokens and should all be colors. Non-hexadecimal
+    // values are dropped rather than passed through, because the methods in ./colors cannot parse
+    // them.
     if (key.startsWith('$') && !value.match(HEXADECIMAL_REGEX)) {
-      console.warn(
-        `${WA_CONSOLE_PREFIX} Invalid value for "layout.customProperties" key "${key}": "${publicVars[key]}". Carbon theme tokens (keys starting with "$") must use hexadecimal color values.`
+      consoleError(
+        `Invalid value for "layout.customProperties" key "${key}": "${value}". Carbon theme tokens (keys starting with "$") must use hexadecimal color values. Dropping it.`
       );
-      // Delete color values that are not in hexadecimal format to ensure we can use them in methods in ./colors.
-      delete result[key];
+      return;
     }
+    result[key] = value;
   });
 
   return result;

@@ -31,6 +31,7 @@ import { BusEvent } from '../../types/events/eventBusTypes';
 import { ChatActionsImpl } from './ChatActionsImpl';
 import { HasRequestFocus } from '../../types/utilities/HasRequestFocus';
 import { ChatSlotStates } from '../sdk/slotStates.js';
+import type { MessagesStateReader } from '../sdk/messagesState.js';
 
 export interface UserDefinedElementRegistryItem {
   slotName: string;
@@ -163,6 +164,14 @@ class ServiceManager {
    * the current value on first `get()`.
    */
   slotStates?: ChatSlotStates;
+
+  /**
+   * Framework-agnostic messages/status/error state backing `instance.messaging.getMessagesState`
+   * and `getMessage`, and driving `BusEventType.MESSAGES_STATE_CHANGE`. Created once via
+   * `attachMessagesStateTracking` during boot; its app-store subscription is captured in
+   * `storeUnsubscribers` so disposal tears it down with the rest.
+   */
+  messagesState?: MessagesStateReader;
 
   /**
    * Teardown hook installed by the lifecycle layer (`sdk/ChatSDK.ts`'s `acquireChatSDK`) during

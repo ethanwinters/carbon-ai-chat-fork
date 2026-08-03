@@ -42,6 +42,7 @@ import {
   ADD_INPUT_FILE,
   ADD_IS_HYDRATING_COUNTER,
   ADD_IS_LOADING_COUNTER,
+  ADD_IN_FLIGHT_REQUEST_COUNTER,
   ADD_LOCAL_MESSAGE_ITEM,
   ADD_MESSAGE,
   ADD_NESTED_MESSAGES,
@@ -689,6 +690,29 @@ const reducers: { [key: string]: ReducerType } = {
           isMessageLoadingCounter > 0 && action.message
             ? action.message
             : undefined,
+      },
+    };
+  },
+
+  [ADD_IN_FLIGHT_REQUEST_COUNTER]: (
+    state: AppState,
+    action: { addToInFlight: number }
+  ): AppState => {
+    const inFlightRequestCounter = Math.max(
+      state.assistantMessageState.inFlightRequestCounter + action.addToInFlight,
+      0
+    );
+    if (
+      inFlightRequestCounter ===
+      state.assistantMessageState.inFlightRequestCounter
+    ) {
+      return state;
+    }
+    return {
+      ...state,
+      assistantMessageState: {
+        ...state.assistantMessageState,
+        inFlightRequestCounter,
       },
     };
   },

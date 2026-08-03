@@ -30,10 +30,16 @@ describe('ChatInstance.messaging', () => {
     const config = createBaseConfig();
     const instance = await renderChatAndGetInstance(config);
 
+    expect(typeof instance.messaging.send).toBe('function');
     expect(typeof instance.messaging.addMessage).toBe('function');
     expect(typeof instance.messaging.addMessageChunk).toBe('function');
+    expect(typeof instance.messaging.upsertMessage).toBe('function');
     expect(typeof instance.messaging.removeMessages).toBe('function');
     expect(typeof instance.messaging.clearConversation).toBe('function');
     expect(typeof instance.messaging.insertHistory).toBe('function');
+    expect(typeof instance.messaging.restartConversation).toBe('function');
+    expect(typeof instance.messaging.getMessagesState).toBe('function');
+    expect(typeof instance.messaging.getMessage).toBe('function');
+    expect(typeof instance.messaging.stop).toBe('function');
   });
 });

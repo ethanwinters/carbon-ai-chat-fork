@@ -15,10 +15,21 @@ import {
   MessageRequest,
   MessageInputType,
 } from '../../../src/types/messaging/Messages';
-import { MessageSendSource } from '../../../src/types/events/eventBusTypes';
+import {
+  BusEventType,
+  MessageSendSource,
+} from '../../../src/types/events/eventBusTypes';
 import { resolvablePromise } from '../../../src/chat/utils/resolvablePromise';
 import { OnErrorType } from '../../../src/types/config/ErrorConfig';
 import { CancellationReason } from '../../../src/types/config/MessagingConfig';
+import { MessagesStatus } from '../../../src/types/messaging/MessagesState';
+import { ADD_IN_FLIGHT_REQUEST_COUNTER } from '../../../src/chat/store/actions';
+import {
+  createBaseConfig,
+  renderChatAndGetInstanceWithStore,
+  setupAfterEach,
+  setupBeforeEach,
+} from '../../test_helpers';
 
 const createMessage = (id: string): MessageRequest<any> => ({
   id,
@@ -109,6 +120,50 @@ describe('MessageService', () => {
     const [, options] = customSendMessage.mock.calls[0];
     expect(options.signal).toBeInstanceOf(AbortSignal);
     expect((messageService as any).queue.current).toBeNull();
+  });
+
+  describe('hasActiveMessageRequest', () => {
+    function createService() {
+      const serviceManager = createServiceManagerStub(jest.fn());
+      return new MessageService(serviceManager, {
+        messaging: {
+          customSendMessage: jest.fn().mockResolvedValue(undefined),
+          messageTimeoutSecs: 0,
+          messageLoadingIndicatorTimeoutSecs: 0,
+        },
+      } as any);
+    }
+
+    it('is false when nothing is queued or streaming', () => {
+      expect(createService().hasActiveMessageRequest()).toBe(false);
+    });
+
+    it('is true while a request occupies the queue', () => {
+      const messageService = createService();
+      (messageService as any).queue.current = { message: createMessage('q-1') };
+
+      expect(messageService.hasActiveMessageRequest()).toBe(true);
+    });
+
+    it('is true while a response is streaming, even with an empty queue', () => {
+      // The queue entry is cleared once streaming starts, so this is the branch that keeps stop()
+      // working mid-stream. Without it, the public stop() would silently no-op.
+      const messageService = createService();
+      (messageService as any).inboundStreaming.streamingMessageID =
+        'streaming-1';
+
+      expect((messageService as any).queue.current).toBeFalsy();
+      expect(messageService.hasActiveMessageRequest()).toBe(true);
+    });
+
+    it('is true when both a queue entry and a stream are present', () => {
+      const messageService = createService();
+      (messageService as any).queue.current = { message: createMessage('q-2') };
+      (messageService as any).inboundStreaming.streamingMessageID =
+        'streaming-2';
+
+      expect(messageService.hasActiveMessageRequest()).toBe(true);
+    });
   });
 
   it('cancels a streaming message by response id and advances the queue', async () => {
@@ -389,6 +444,101 @@ describe('MessageService', () => {
       expect((messageService as any).queue.waiting).toHaveLength(0);
       expect((messageService as any).queue.current).toBeNull();
       expect((messageService as any).messageAbortControllers.size).toBe(0);
+    });
+  });
+
+  describe('a throwing send-lifecycle handler', () => {
+    beforeEach(setupBeforeEach);
+    afterEach(setupAfterEach);
+
+    it('fails the turn, advances the queue, and balances the in-flight counter', async () => {
+      const customSendMessage = jest.fn().mockResolvedValue(undefined);
+      const serviceManager = createServiceManagerStub(customSendMessage);
+      (serviceManager.eventBus.fire as jest.Mock).mockImplementation(
+        async (event: any) => {
+          if (
+            event.type === BusEventType.PRE_SEND &&
+            event.data.id === 'm-throws'
+          ) {
+            throw new Error('handler exploded');
+          }
+        }
+      );
+
+      const messageService = new MessageService(serviceManager, {
+        messaging: {
+          customSendMessage,
+          messageTimeoutSecs: 0,
+          messageLoadingIndicatorTimeoutSecs: 0,
+        },
+      } as any);
+
+      await expect(
+        messageService.send(
+          createMessage('m-throws'),
+          MessageSendSource.MESSAGE_INPUT,
+          'local-throws',
+          { silent: false }
+        )
+      ).rejects.toThrow('handler exploded');
+
+      expect((messageService as any).queue.current).toBeNull();
+
+      await messageService.send(
+        createMessage('m-next'),
+        MessageSendSource.MESSAGE_INPUT,
+        'local-next',
+        { silent: false }
+      );
+
+      // Only the second message reached the network: the throwing turn failed before its send and
+      // released the queue instead of holding it.
+      expect(customSendMessage).toHaveBeenCalledTimes(1);
+
+      const dispatchCalls = (serviceManager.store.dispatch as jest.Mock).mock
+        .calls;
+      const inFlightTotal = dispatchCalls
+        .filter((call: any) => call[0]?.type === ADD_IN_FLIGHT_REQUEST_COUNTER)
+        .reduce((total: number, call: any) => total + call[0].addToInFlight, 0);
+      expect(inFlightTotal).toBe(0);
+    });
+
+    it('fails the turn in the public status instead of pinning it at SUBMITTED', async () => {
+      let shouldThrow = false;
+      const customSendMessage = jest.fn().mockResolvedValue(undefined);
+      const config = createBaseConfig();
+      config.messaging = { customSendMessage };
+
+      const { instance, store } =
+        await renderChatAndGetInstanceWithStore(config);
+      instance.on({
+        type: BusEventType.PRE_SEND,
+        handler: () => {
+          if (shouldThrow) {
+            throw new Error('handler exploded');
+          }
+        },
+      });
+
+      shouldThrow = true;
+      await expect(instance.messaging.send('Hello')).rejects.toThrow(
+        'handler exploded'
+      );
+
+      expect(instance.messaging.getMessagesState().status).toBe(
+        MessagesStatus.ERROR
+      );
+      expect(
+        store.getState().assistantMessageState.inFlightRequestCounter
+      ).toBe(0);
+
+      shouldThrow = false;
+      await expect(
+        instance.messaging.send('And again')
+      ).resolves.toBeUndefined();
+      expect(instance.messaging.getMessagesState().status).toBe(
+        MessagesStatus.READY
+      );
     });
   });
 

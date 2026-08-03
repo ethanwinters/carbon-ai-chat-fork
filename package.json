@@ -217,6 +217,26 @@
             }
           ]
         }
+      },
+      {
+        "files": [
+          "packages/ai-chat/src/**/*.ts",
+          "packages/ai-chat/src/**/*.tsx"
+        ],
+        "excludedFiles": [
+          "packages/ai-chat/src/chat/utils/miscUtils.ts"
+        ],
+        "rules": {
+          "no-console": [
+            "error",
+            {
+              "allow": [
+                "group",
+                "groupEnd"
+              ]
+            }
+          ]
+        }
       }
     ],
     "rules": {
