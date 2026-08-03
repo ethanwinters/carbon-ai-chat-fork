@@ -18,7 +18,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 
-import { MessageFileAttachments } from '../../../src/chat/components/messages/MessageFileAttachments';
+import { MessageFileAttachments } from '../../../src/chat/components/helpers/MessageFileAttachments/MessageFileAttachments';
 import type { MessageFileAttachment } from '../../../src/chat/utils/fileAttachments';
 
 const ATTACHMENTS: MessageFileAttachment[] = [
