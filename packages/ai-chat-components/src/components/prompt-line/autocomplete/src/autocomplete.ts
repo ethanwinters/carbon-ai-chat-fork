@@ -11,10 +11,10 @@ import { css, html, LitElement, unsafeCSS } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import '@carbon/web-components/es/components/icon-button/index.js';
 
-import { carbonElement } from '../../../globals/decorators/carbon-element.js';
-import { isDirectionRTL } from '../../../globals/utils/rtl-utils.js';
-import prefix from '../../../globals/settings.js';
-import { AriaAnnouncerManager } from '../../../globals/utils/aria-announcer-manager.js';
+import { carbonElement } from '../../../../globals/decorators/carbon-element.js';
+import { isDirectionRTL } from '../../../../globals/utils/rtl-utils.js';
+import prefix from '../../../../globals/settings.js';
+import { AriaAnnouncerManager } from '../../../../globals/utils/aria-announcer-manager.js';
 
 import styles from './autocomplete.scss?lit';
 import { iconLoader } from '@carbon/web-components/es/globals/internal/icon-loader.js';
@@ -23,11 +23,11 @@ import SendFilled16 from '@carbon/icons/es/send--filled/16.js';
 import type {
   SuggestionItem,
   SuggestionItemGroup,
-} from '../../prompt-line/src/tiptap/types.js';
+} from '../../src/tiptap/types.js';
 export type {
   SuggestionItem,
   SuggestionItemGroup,
-} from '../../prompt-line/src/tiptap/types.js';
+} from '../../src/tiptap/types.js';
 
 const blockClass = `${prefix}-autocomplete`;
 const itemClass = `${blockClass}-item`;
@@ -164,6 +164,13 @@ class AutocompleteElement extends LitElement {
    */
   @property({ type: Boolean, reflect: true })
   attached = true;
+
+  /**
+   * Optional element that "owns" this list (e.g. the editor). Clicks on the
+   * anchor element are treated as inside-clicks and do not dismiss the list.
+   */
+  @property({ type: Object, attribute: false })
+  anchorElement: Element | null = null;
 
   /**
    * Whether the component is in RTL mode.
@@ -367,9 +374,22 @@ class AutocompleteElement extends LitElement {
   };
 
   private _handleClickOutside = (event: MouseEvent) => {
-    if (!this.contains(event.target as Node)) {
-      this._dismiss();
+    // Use composedPath() instead of event.target so clicks originating inside
+    // a shadow root are visible.
+    const path = event.composedPath();
+    const isNode = (t: EventTarget): t is Node => t instanceof Node;
+    // Check if click is on autocomplete itself
+    if (path.filter(isNode).some((n) => this.contains(n))) {
+      return;
     }
+    // Check if click is on anchor element
+    if (
+      this.anchorElement &&
+      path.filter(isNode).some((n) => this.anchorElement!.contains(n))
+    ) {
+      return;
+    }
+    this._dismiss();
   };
 
   private _scrollActiveItemIntoView(): void {

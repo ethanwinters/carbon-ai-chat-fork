@@ -1,3 +1,4 @@
+/* eslint-disable */
 /*
  *  Copyright IBM Corp. 2026
  *
@@ -6,9 +7,15 @@
  *
  *  @license
  */
-import '../index';
-import { html } from 'lit';
+import React, { useMemo } from 'react';
 import { action } from 'storybook/actions';
+import CDSAIChatAutocomplete from '../../../../react/autocomplete';
+import {
+  Default as DefaultWC,
+  WithHeader as WithHeaderWC,
+  WithCategories as WithCategoriesWC,
+  Detached as DetachedWC,
+} from './autocomplete.stories';
 import {
   BookAvatarIcon,
   ChartLineAvatarIcon,
@@ -16,7 +23,6 @@ import {
   HelpAvatarIcon,
 } from './avatar-icons.js';
 
-// Flat suggestion items (no groups)
 const flatSuggestions = [
   {
     id: 'suggestion-1',
@@ -44,7 +50,6 @@ const flatSuggestions = [
   },
 ];
 
-// Suggestion groups with avatars and descriptions
 const suggestionGroupsWithAvatars = [
   {
     id: 'group-1',
@@ -102,6 +107,10 @@ const suggestionGroupsWithAvatars = [
   },
 ];
 
+const Wrapper = ({ width, children }) => {
+  return <div style={{ width }}>{children}</div>;
+};
+
 /**
  * Filter suggestion items based on query string (case-insensitive).
  * Returns all items if query is empty.
@@ -134,8 +143,7 @@ const filterSuggestionGroups = (groups, query) => {
 };
 
 export default {
-  title: 'Preview/Autocomplete',
-  component: 'cds-aichat-autocomplete',
+  title: 'Preview/Prompt line/Autocomplete',
   argTypes: {
     items: {
       control: false,
@@ -181,84 +189,81 @@ export default {
 };
 
 export const Default = {
-  render: ({ inputText, enableSendButton, attached }) => {
-    const query = inputText || '';
-    const filteredItems = filterSuggestions(flatSuggestions, query);
+  render: (args) => {
+    const query = args.inputText || '';
+    const filteredItems = React.useMemo(
+      () => filterSuggestions(flatSuggestions, query),
+      [query]
+    );
 
-    return html`
-      <div style="width: 320px;">
-        <cds-aichat-autocomplete
-          style="--cds-aichat-autocomplete-max-height: 328px;"
-          .items=${filteredItems}
-          ?attached=${attached}
-          ?enable-send-button=${enableSendButton}
-          input-text=${inputText}
-          @cds-aichat-autocomplete-select=${(e) =>
-            action('cds-aichat-autocomplete-select')(e.detail)}
-          @cds-aichat-autocomplete-send=${(e) =>
-            action('cds-aichat-autocomplete-send')(e.detail)}
-          @cds-aichat-autocomplete-dismiss=${() =>
-            action(
-              'cds-aichat-autocomplete-dismiss'
-            )()}></cds-aichat-autocomplete>
-      </div>
-    `;
+    return (
+      <Wrapper width="320px">
+        <CDSAIChatAutocomplete
+          items={filteredItems}
+          inputText={query}
+          attached={args.attached ?? true}
+          enableSendButton={args.enableSendButton ?? true}
+          style={{ '--cds-aichat-autocomplete-max-height': '328px' }}
+          onSelect={(e) => action('cds-aichat-autocomplete-select')(e.detail)}
+          onSend={(e) => action('cds-aichat-autocomplete-send')(e.detail)}
+          onDismiss={() => action('cds-aichat-autocomplete-dismiss')()}
+        />
+      </Wrapper>
+    );
   },
 };
 
 export const WithHeader = {
-  render: ({ inputText, enableSendButton, attached }) => {
-    const query = inputText || '';
-    const filteredItems = filterSuggestions(flatSuggestions, query);
+  render: (args) => {
+    const query = args.inputText || '';
+    const filteredItems = React.useMemo(
+      () => filterSuggestions(flatSuggestions, query),
+      [query]
+    );
 
-    return html`
-      <div style="width: 320px;">
-        <cds-aichat-autocomplete
-          style="--cds-aichat-autocomplete-max-height: 328px;"
-          .items=${filteredItems}
-          ?attached=${attached}
-          ?enable-send-button=${enableSendButton}
-          .headerConfig=${{ showHeader: true, title: 'Prompt suggestions' }}
-          input-text=${inputText}
-          @cds-aichat-autocomplete-select=${(e) =>
-            action('cds-aichat-autocomplete-select')(e.detail)}
-          @cds-aichat-autocomplete-send=${(e) =>
-            action('cds-aichat-autocomplete-send')(e.detail)}
-          @cds-aichat-autocomplete-dismiss=${() =>
-            action(
-              'cds-aichat-autocomplete-dismiss'
-            )()}></cds-aichat-autocomplete>
-      </div>
-    `;
+    return (
+      <Wrapper width="320px">
+        <CDSAIChatAutocomplete
+          items={filteredItems}
+          headerConfig={{
+            showHeader: true,
+            title: 'Prompt suggestions',
+          }}
+          inputText={query}
+          attached={args.attached ?? true}
+          enableSendButton={args.enableSendButton ?? true}
+          style={{ '--cds-aichat-autocomplete-max-height': '328px' }}
+          onSelect={(e) => action('cds-aichat-autocomplete-select')(e.detail)}
+          onSend={(e) => action('cds-aichat-autocomplete-send')(e.detail)}
+          onDismiss={() => action('cds-aichat-autocomplete-dismiss')()}
+        />
+      </Wrapper>
+    );
   },
 };
 
 export const WithCategories = {
-  render: ({ inputText, enableSendButton, attached }) => {
-    const query = inputText || '';
-    const filteredGroups = filterSuggestionGroups(
-      suggestionGroupsWithAvatars,
-      query
+  render: (args) => {
+    const query = args.inputText || '';
+    const filteredGroups = React.useMemo(
+      () => filterSuggestionGroups(suggestionGroupsWithAvatars, query),
+      [query]
     );
 
-    return html`
-      <div style="width: 320px;">
-        <cds-aichat-autocomplete
-          style="--cds-aichat-autocomplete-max-height: 328px;"
-          .groups=${filteredGroups}
-          ?attached=${attached}
-          ?enable-send-button=${enableSendButton}
-          input-text=${inputText}
-          @cds-aichat-autocomplete-select=${(e) =>
-            action('cds-aichat-autocomplete-select')(e.detail)}
-          @cds-aichat-autocomplete-send=${(e) =>
-            action('cds-aichat-autocomplete-send')(e.detail)}
-          @cds-aichat-autocomplete-dismiss=${() =>
-            action(
-              'cds-aichat-autocomplete-dismiss'
-            )()}></cds-aichat-autocomplete>
-      </div>
-    `;
+    return (
+      <Wrapper width="320px">
+        <CDSAIChatAutocomplete
+          groups={filteredGroups}
+          inputText={query}
+          attached={args.attached ?? true}
+          enableSendButton={args.enableSendButton ?? true}
+          style={{ '--cds-aichat-autocomplete-max-height': '328px' }}
+          onSelect={(e) => action('cds-aichat-autocomplete-select')(e.detail)}
+          onSend={(e) => action('cds-aichat-autocomplete-send')(e.detail)}
+          onDismiss={() => action('cds-aichat-autocomplete-dismiss')()}
+        />
+      </Wrapper>
+    );
   },
 };
 
@@ -266,27 +271,26 @@ export const Detached = {
   args: {
     attached: false,
   },
-  render: ({ inputText, enableSendButton, attached }) => {
-    const query = inputText || '';
-    const filteredItems = filterSuggestions(flatSuggestions, query);
+  render: (args) => {
+    const query = args.inputText || '';
+    const filteredItems = React.useMemo(
+      () => filterSuggestions(flatSuggestions, query),
+      [query]
+    );
 
-    return html`
-      <div style="width: 671px;">
-        <cds-aichat-autocomplete
-          style="--cds-aichat-autocomplete-max-height: 328px;"
-          .items=${filteredItems}
-          ?enable-send-button=${enableSendButton}
-          input-text=${inputText}
-          ?attached=${attached}
-          @cds-aichat-autocomplete-select=${(e) =>
-            action('cds-aichat-autocomplete-select')(e.detail)}
-          @cds-aichat-autocomplete-send=${(e) =>
-            action('cds-aichat-autocomplete-send')(e.detail)}
-          @cds-aichat-autocomplete-dismiss=${() =>
-            action(
-              'cds-aichat-autocomplete-dismiss'
-            )()}></cds-aichat-autocomplete>
-      </div>
-    `;
+    return (
+      <Wrapper width="671px">
+        <CDSAIChatAutocomplete
+          items={filteredItems}
+          inputText={query}
+          attached={args.attached ?? false}
+          enableSendButton={args.enableSendButton ?? true}
+          style={{ '--cds-aichat-autocomplete-max-height': '328px' }}
+          onSelect={(e) => action('cds-aichat-autocomplete-select')(e.detail)}
+          onSend={(e) => action('cds-aichat-autocomplete-send')(e.detail)}
+          onDismiss={() => action('cds-aichat-autocomplete-dismiss')()}
+        />
+      </Wrapper>
+    );
   },
 };
