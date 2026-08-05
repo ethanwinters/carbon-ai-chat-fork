@@ -471,7 +471,8 @@ function collectNestedLocalIDs(
  */
 function rebuildLocalItemsForUpsert(
   state: AppState,
-  message: MessageResponse
+  message: MessageResponse,
+  isStreaming = false
 ): {
   newLocalItemsByID: ObjectMap<LocalMessageItem>;
   newLocalIDsForMessage: string[];
@@ -526,7 +527,20 @@ function rebuildLocalItemsForUpsert(
     let localID: string;
     let localItem: LocalMessageItem;
 
-    if (matchedPrev && isEqual(matchedPrev.item, item)) {
+    // Streaming UI reads `ui_state.streamingState.isDone`. Comparing it alongside the
+    // item keeps the reference-stable path below from swallowing a STREAMING → COMPLETE
+    // transition whose payload happened not to change — which would leave the item
+    // rendering as mid-stream forever.
+    const prevIsStreaming = Boolean(
+      matchedPrev?.ui_state.streamingState &&
+      !matchedPrev.ui_state.streamingState.isDone
+    );
+
+    if (
+      matchedPrev &&
+      prevIsStreaming === isStreaming &&
+      isEqual(matchedPrev.item, item)
+    ) {
       // Reference-stable path: deep-equal to the prior item, keep the exact object so
       // selectors comparing by `===` see no change.
       //
@@ -543,6 +557,10 @@ function rebuildLocalItemsForUpsert(
       localItem = outputItemToLocalItem(item, message, false);
       localItem.ui_state.id = localID;
       localItem.fullMessageID = messageID;
+      // Mirror what the chunk pipeline records, so streaming-aware rendering behaves the
+      // same whichever API delivered the message.
+      localItem.ui_state.isIntermediateStreaming = isStreaming;
+      localItem.ui_state.streamingState = { chunks: [], isDone: !isStreaming };
 
       if (isResponseWithNestedItems(localItem.item)) {
         const nestedLocalItems: LocalMessageItem[] = [];
@@ -554,6 +572,10 @@ function rebuildLocalItemsForUpsert(
           true
         );
         for (const nested of nestedLocalItems) {
+          // Nested items render markdown too, so a table inside a card or grid needs the
+          // same streaming flags as a top-level one.
+          nested.ui_state.isIntermediateStreaming = isStreaming;
+          nested.ui_state.streamingState = { chunks: [], isDone: !isStreaming };
           newLocalItemsByID[nested.ui_state.id] = nested;
         }
       }

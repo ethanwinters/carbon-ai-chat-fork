@@ -98,6 +98,7 @@ import {
   UPDATE_STRUCTURED_DATA,
   UPDATE_MESSAGE,
   UPSERT_MESSAGE,
+  END_MESSAGE_STREAMING,
   UPDATE_PERSISTED_STATE,
   UPDATE_THEME_STATE,
   RESET_IS_HYDRATING_COUNTER,
@@ -489,9 +490,9 @@ const reducers: { [key: string]: ReducerType } = {
 
   [UPSERT_MESSAGE]: (
     state: AppState,
-    action: { message: Message }
+    action: { message: Message; isStreaming?: boolean }
   ): AppState => {
-    const { message } = action;
+    const { message, isStreaming = false } = action;
     const messageID = message.id;
 
     if (!isResponse(message)) {
@@ -501,7 +502,7 @@ const reducers: { [key: string]: ReducerType } = {
     const messageResponse = message;
 
     const { newLocalItemsByID, newLocalIDsForMessage } =
-      rebuildLocalItemsForUpsert(state, messageResponse);
+      rebuildLocalItemsForUpsert(state, messageResponse, isStreaming);
 
     // Splice the new ordered IDs back into localMessageIDs at the same position the
     // existing block occupied. Brand-new messages append.
@@ -548,6 +549,45 @@ const reducers: { [key: string]: ReducerType } = {
         activeResponseId: messageID,
       },
     };
+  },
+
+  [END_MESSAGE_STREAMING]: (
+    state: AppState,
+    action: { messageID: string }
+  ): AppState => {
+    const { messageID } = action;
+
+    let changed = false;
+    const newLocalItems: Record<string, LocalMessageItem> = {
+      ...state.allMessageItemsByID,
+    };
+
+    for (const localID of Object.keys(newLocalItems)) {
+      const localItem = newLocalItems[localID];
+      if (localItem?.fullMessageID !== messageID) {
+        continue;
+      }
+      const { streamingState, isIntermediateStreaming } = localItem.ui_state;
+      if (!isIntermediateStreaming && streamingState?.isDone !== false) {
+        // Already settled — leave the reference alone so subscribers don't re-render.
+        continue;
+      }
+      newLocalItems[localID] = {
+        ...localItem,
+        ui_state: {
+          ...localItem.ui_state,
+          isIntermediateStreaming: false,
+          streamingState: { ...streamingState, chunks: [], isDone: true },
+        },
+      };
+      changed = true;
+    }
+
+    if (!changed) {
+      return state;
+    }
+
+    return { ...state, allMessageItemsByID: newLocalItems };
   },
 
   [ADD_MESSAGE]: (state: AppState, action: { message: Message }): AppState => {

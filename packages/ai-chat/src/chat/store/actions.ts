@@ -78,6 +78,7 @@ const UPDATE_PERSISTED_STATE = 'UPDATE_PERSISTED_STATE';
 const SET_HOME_SCREEN_IS_OPEN = 'SET_HOME_SCREEN_IS_OPEN';
 const UPDATE_MESSAGE = 'UPDATE_MESSAGE';
 const UPSERT_MESSAGE = 'UPSERT_MESSAGE';
+const END_MESSAGE_STREAMING = 'END_MESSAGE_STREAMING';
 const SET_LAUNCHER_MINIMIZED = 'SET_LAUNCHER_MINIMIZED';
 const CLOSE_IFRAME_PANEL = 'CLOSE_IFRAME_PANEL';
 const OPEN_IFRAME_CONTENT = 'OPEN_IFRAME_CONTENT';
@@ -214,8 +215,22 @@ const actions = {
    * existing `LocalMessageItem` references for items deep-equal to their predecessor so
    * components that subscribe to unchanged siblings do not re-render.
    */
-  upsertMessage(message: Message) {
-    return { type: UPSERT_MESSAGE, message };
+  upsertMessage(message: Message, isStreaming = false) {
+    return { type: UPSERT_MESSAGE, message, isStreaming };
+  },
+
+  /**
+   * Marks every local item belonging to `messageID` as no longer streaming.
+   *
+   * Streaming UI (the markdown element's in-progress table treatment, for one) keys off
+   * `ui_state.streamingState.isDone`. Reaching that state used to depend on the host
+   * sending a `complete_item` or `final_response` chunk, so a stream that ended any other
+   * way — the user pressing stop, `customSendMessage` throwing, a timeout — left items
+   * stuck mid-stream forever. Dispatch this wherever a stream terminates so the end state
+   * does not depend on host cooperation.
+   */
+  endMessageStreaming(messageID: string) {
+    return { type: END_MESSAGE_STREAMING, messageID };
   },
 
   messageSetOptionSelected(messageID: string, sentMessage: MessageRequest) {
@@ -736,6 +751,7 @@ export {
   SET_MESSAGE_RESPONSE_HISTORY_PROPERTY,
   UPDATE_MESSAGE,
   UPSERT_MESSAGE,
+  END_MESSAGE_STREAMING,
   SET_LAUNCHER_PROPERTY,
   SET_LAUNCHER_MINIMIZED,
   CLOSE_IFRAME_PANEL,

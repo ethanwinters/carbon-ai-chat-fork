@@ -836,6 +836,16 @@ class MessageService {
       reason
     );
 
+    // A cancelled stream often ends without a `complete_item` or `final_response` — the
+    // host simply breaks out of its loop. Nothing else would settle the items' streaming
+    // flags, which left streaming-aware rendering (an in-progress markdown table, for
+    // one) engaged for the rest of the session.
+    if (streamingEntry) {
+      this.serviceManager.store.dispatch(
+        actions.endMessageStreaming(responseId)
+      );
+    }
+
     if (!pendingRequest && wasStreamingCurrent) {
       this.moveToNextQueueItem();
     }

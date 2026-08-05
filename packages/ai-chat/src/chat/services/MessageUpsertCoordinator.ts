@@ -169,7 +169,9 @@ class MessageUpsertCoordinator {
     }
 
     const refsBefore = this.snapshotLocalItemRefs(messageID);
-    this.serviceManager.store.dispatch(actions.upsertMessage(result));
+    this.serviceManager.store.dispatch(
+      actions.upsertMessage(result, nextState === MessageState.STREAMING)
+    );
     await this.fanOutChangedSlots(messageID, result, nextState, refsBefore);
 
     this.stateByID.set(messageID, nextState);

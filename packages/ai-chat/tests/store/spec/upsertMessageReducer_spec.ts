@@ -309,4 +309,107 @@ describe('[UPSERT_MESSAGE] reducer', () => {
     expect(after.allMessagesByID['m1']).toBe(m1MessageRefBefore);
     expect(after.allMessagesByID['m3']).toBe(m3MessageRefBefore);
   });
+
+  describe('streaming flags', () => {
+    it('marks items as streaming while the message is streaming', () => {
+      store.dispatch(
+        actions.upsertMessage(makeTextResponse('s1', ['partial']), true)
+      );
+
+      const [local] = localItemsForMessage(store.getState() as AppState, 's1');
+      expect(local.ui_state.isIntermediateStreaming).toBe(true);
+      expect(local.ui_state.streamingState?.isDone).toBe(false);
+    });
+
+    it('settles the flags when the message stops streaming', () => {
+      store.dispatch(
+        actions.upsertMessage(makeTextResponse('s2', ['partial']), true)
+      );
+      store.dispatch(
+        actions.upsertMessage(makeTextResponse('s2', ['all of it']), false)
+      );
+
+      const [local] = localItemsForMessage(store.getState() as AppState, 's2');
+      expect(local.ui_state.isIntermediateStreaming).toBe(false);
+      expect(local.ui_state.streamingState?.isDone).toBe(true);
+    });
+
+    it('settles the flags even when the payload did not change', () => {
+      // The reference-stability path would otherwise reuse the streaming item
+      // verbatim and leave it rendering as mid-stream forever.
+      store.dispatch(
+        actions.upsertMessage(makeTextResponse('s3', ['same'], ['1']), true)
+      );
+      store.dispatch(
+        actions.upsertMessage(makeTextResponse('s3', ['same'], ['1']), false)
+      );
+
+      const [local] = localItemsForMessage(store.getState() as AppState, 's3');
+      expect(local.ui_state.streamingState?.isDone).toBe(true);
+    });
+
+    it('applies the flags to nested items too', () => {
+      const card: MessageResponse = {
+        id: 's4',
+        output: {
+          generic: [
+            {
+              response_type: MessageResponseTypes.CARD,
+              body: [
+                { response_type: MessageResponseTypes.TEXT, text: 'in a card' },
+              ],
+            } as CardItem,
+          ],
+        },
+      };
+
+      store.dispatch(actions.upsertMessage(card, true));
+
+      const state = store.getState() as AppState;
+      const nested = Object.values(state.allMessageItemsByID).filter(
+        (item) => item.fullMessageID === 's4'
+      );
+      expect(nested.length).toBeGreaterThan(1);
+      for (const item of nested) {
+        expect(item.ui_state.streamingState?.isDone).toBe(false);
+      }
+    });
+  });
+
+  describe('[END_MESSAGE_STREAMING] reducer', () => {
+    it('settles a streaming message left mid-stream', () => {
+      store.dispatch(
+        actions.upsertMessage(makeTextResponse('e1', ['partial']), true)
+      );
+
+      store.dispatch(actions.endMessageStreaming('e1'));
+
+      const [local] = localItemsForMessage(store.getState() as AppState, 'e1');
+      expect(local.ui_state.isIntermediateStreaming).toBe(false);
+      expect(local.ui_state.streamingState?.isDone).toBe(true);
+    });
+
+    it('leaves other messages alone', () => {
+      store.dispatch(
+        actions.upsertMessage(makeTextResponse('e2', ['a']), true)
+      );
+      store.dispatch(
+        actions.upsertMessage(makeTextResponse('e3', ['b']), true)
+      );
+
+      store.dispatch(actions.endMessageStreaming('e2'));
+
+      const [other] = localItemsForMessage(store.getState() as AppState, 'e3');
+      expect(other.ui_state.streamingState?.isDone).toBe(false);
+    });
+
+    it('returns the same state object when nothing was streaming', () => {
+      store.dispatch(actions.upsertMessage(makeTextResponse('e4', ['done'])));
+      const before = store.getState();
+
+      store.dispatch(actions.endMessageStreaming('e4'));
+
+      expect(store.getState()).toBe(before);
+    });
+  });
 });

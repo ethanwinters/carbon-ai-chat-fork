@@ -1457,6 +1457,13 @@ class ChatActionsImpl {
     await this.receive(finalResponse, options.isLatestWelcomeNode, null);
 
     if (messageID) {
+      // Belt and braces: `receive` normally rebuilds the local items without any
+      // streaming state, but that only holds when the final response carries matching
+      // streaming ids. Settle the flags explicitly so a malformed final response can't
+      // leave items rendering as mid-stream.
+      this.serviceManager.store.dispatch(
+        actions.endMessageStreaming(messageID)
+      );
       this.serviceManager.messageService.finalizeStreamingMessage(messageID);
     }
   }
