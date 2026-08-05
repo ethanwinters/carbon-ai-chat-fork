@@ -270,10 +270,12 @@ function sendWelcome(instance: ChatInstance) {
   // Deliver the static welcome through upsertMessage too: a brand-new COMPLETE
   // insert under a fresh messageID fires `receive` once, matching addMessage.
   // The post-back button kicks off the scenario when clicked.
+  const messageID = crypto.randomUUID();
   return instance.messaging.upsertMessage(
-    crypto.randomUUID(),
+    messageID,
     MessageState.COMPLETE,
     () => ({
+      id: messageID,
       output: {
         generic: [
           {

@@ -57,10 +57,12 @@ async function customSendMessage(
   // scenario. A fresh `messageID` per call keeps repeated welcomes from
   // colliding; COMPLETE makes it a one-shot insert.
   if (request.input.text === '') {
+    const messageID = uuid();
     await instance.messaging.upsertMessage(
-      uuid(),
+      messageID,
       MessageState.COMPLETE,
       () => ({
+        id: messageID,
         output: {
           generic: [
             {

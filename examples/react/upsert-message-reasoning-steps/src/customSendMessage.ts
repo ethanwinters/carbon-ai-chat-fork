@@ -56,10 +56,12 @@ function sendWelcome(instance: ChatInstance) {
   // A fresh `messageID` per call means repeated welcomes never collide; COMPLETE
   // makes this a one-shot insert (the chat assigns the id to the returned
   // message since it has none of its own).
+  const messageID = uuid();
   return instance.messaging.upsertMessage(
-    uuid(),
+    messageID,
     MessageState.COMPLETE,
     () => ({
+      id: messageID,
       output: {
         generic: [
           {
