@@ -228,7 +228,6 @@ type RenderWriteableElementResponse = {
  * headers, rows, and streaming/loading flags.
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownRendererTableData = _MarkdownRendererTableData;
 
@@ -238,7 +237,6 @@ export type MarkdownRendererTableData = _MarkdownRendererTableData;
  * Carries the language, code text, and streaming flag.
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownRendererCodeBlockData = _MarkdownRendererCodeBlockData;
 
@@ -250,7 +248,6 @@ export type MarkdownRendererCodeBlockData = _MarkdownRendererCodeBlockData;
  * stable `slotName` suitable for use as a key.
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownRendererTableArgs = _MarkdownRendererTableArgs;
 
@@ -262,7 +259,6 @@ export type MarkdownRendererTableArgs = _MarkdownRendererTableArgs;
  * a stable `slotName` suitable for use as a key.
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownRendererCodeBlockArgs = _MarkdownRendererCodeBlockArgs;
 
@@ -272,7 +268,6 @@ export type MarkdownRendererCodeBlockArgs = _MarkdownRendererCodeBlockArgs;
  * (href, title, text, attributes) plus the source markdown-it token.
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownRendererLinkArgs = _MarkdownRendererLinkArgs;
 
@@ -283,7 +278,6 @@ export type MarkdownRendererLinkArgs = _MarkdownRendererLinkArgs;
  * entirely. Supply `onClick` to intercept link clicks.
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownRendererLinkResult = _MarkdownRendererLinkResult;
 
@@ -293,7 +287,6 @@ export type MarkdownRendererLinkResult = _MarkdownRendererLinkResult;
  * (src, alt, title, attributes) plus the source markdown-it token.
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownRendererImageArgs = _MarkdownRendererImageArgs;
 
@@ -302,7 +295,6 @@ export type MarkdownRendererImageArgs = _MarkdownRendererImageArgs;
  * `attributes`). Return `null` to keep the defaults.
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownRendererImageResult = _MarkdownRendererImageResult;
 
@@ -311,7 +303,6 @@ export type MarkdownRendererImageResult = _MarkdownRendererImageResult;
  * an optional `getChecked` source-of-truth. See {@link MarkdownRendererChecklist}.
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownRendererChecklist = _MarkdownRendererChecklist;
 
@@ -320,7 +311,6 @@ export type MarkdownRendererChecklist = _MarkdownRendererChecklist;
  * `checklist.getChecked`.
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownRendererChecklistItemArgs =
   _MarkdownRendererChecklistItemArgs;
@@ -330,7 +320,6 @@ export type MarkdownRendererChecklistItemArgs =
  * (item identity + new checked state).
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownRendererChecklistToggleArgs =
   _MarkdownRendererChecklistToggleArgs;
@@ -344,7 +333,6 @@ export type MarkdownRendererChecklistToggleArgs =
  * than this baseline directly.
  *
  * @category Messaging
- * @experimental
  */
 export type MarkdownCustomRenderers = _MarkdownCustomRenderers;
 
@@ -361,7 +349,6 @@ export type MarkdownCustomRenderers = _MarkdownCustomRenderers;
  * row, more code lines), the same `slotName` is reused and the callback is
  * invoked again with the updated payload.
  *
- * @experimental
  * @category React
  */
 interface CustomMarkdownRenderers {
@@ -406,7 +393,6 @@ interface CustomMarkdownRenderers {
  * Callbacks fire once per matching element per render pass; return the same
  * element reference across renders to avoid unnecessary DOM churn.
  *
- * @experimental
  * @category Web component
  */
 interface WCCustomMarkdownRenderers {
@@ -445,7 +431,6 @@ interface WCCustomMarkdownRenderers {
  * React-layer `markdown` config — extends {@link PublicConfigMarkdown} with
  * React renderers.
  *
- * @experimental
  * @category React
  */
 interface ChatContainerPropsMarkdown extends PublicConfigMarkdown {
@@ -453,8 +438,6 @@ interface ChatContainerPropsMarkdown extends PublicConfigMarkdown {
    * Per-element renderer overrides — see {@link CustomMarkdownRenderers}.
    * Pass a stable reference (`useMemo`) — an inline object literal will be a
    * fresh reference each render.
-   *
-   * @experimental
    */
   customRenderers?: CustomMarkdownRenderers;
 }
@@ -463,7 +446,6 @@ interface ChatContainerPropsMarkdown extends PublicConfigMarkdown {
  * Web-component-layer `markdown` config — extends {@link PublicConfigMarkdown}
  * with renderers returning `HTMLElement` (or `null`).
  *
- * @experimental
  * @category Web component
  */
 interface WCMarkdown extends PublicConfigMarkdown {
@@ -471,8 +453,6 @@ interface WCMarkdown extends PublicConfigMarkdown {
    * Per-element renderer overrides — see {@link WCCustomMarkdownRenderers}.
    * Return the same element reference across renders to avoid unnecessary DOM
    * churn.
-   *
-   * @experimental
    */
   customRenderers?: WCCustomMarkdownRenderers;
 }
@@ -492,8 +472,6 @@ interface ChatContainerProps extends Omit<PublicConfig, 'markdown'> {
   /**
    * Markdown rendering customization. Extends the framework-neutral
    * {@link PublicConfigMarkdown} with React-layer custom renderers.
-   *
-   * @experimental
    */
   markdown?: ChatContainerPropsMarkdown;
 
