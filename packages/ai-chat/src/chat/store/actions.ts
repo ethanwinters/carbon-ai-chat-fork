@@ -215,8 +215,24 @@ const actions = {
    * existing `LocalMessageItem` references for items deep-equal to their predecessor so
    * components that subscribe to unchanged siblings do not re-render.
    */
-  upsertMessage(message: Message, isStreaming = false) {
-    return { type: UPSERT_MESSAGE, message, isStreaming };
+  upsertMessage(
+    message: Message,
+    isStreaming = false,
+    streamingDetail?: {
+      /**
+       * SPIKE (chunk facade): the raw delta this snapshot was built from, appended to
+       * the target item's `streamingState.chunks` to keep the chunk contract intact.
+       */
+      chunkItem?: DeepPartial<GenericItem>;
+
+      /**
+       * SPIKE (chunk facade): local item ids (streamItemID form) whose `complete_item`
+       * has arrived — they settle to `isDone: true` while siblings keep streaming.
+       */
+      completedItemIDs?: string[];
+    }
+  ) {
+    return { type: UPSERT_MESSAGE, message, isStreaming, streamingDetail };
   },
 
   /**

@@ -64,6 +64,8 @@ import {
   outputItemToLocalItem,
 } from '../schema/outputItemToLocalItem';
 import { isResponseWithNestedItems, streamItemID } from '../utils/messageUtils';
+import { NO_STREAM_ID_KEY } from '../utils/chunkAccumulator';
+import { DeepPartial } from '../../types/utilities/DeepPartial';
 import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 
 /**
@@ -469,10 +471,23 @@ function collectNestedLocalIDs(
  * Nested CARD/CAROUSEL/GRID/BUTTON local items are rebuilt when their parent changes;
  * orphaned nested items are pruned.
  */
+/**
+ * SPIKE (chunk facade): what an `UPSERT_MESSAGE` dispatch built from a chunk delta
+ * carries beyond the snapshot itself — the raw delta (for `streamingState.chunks`
+ * fidelity) and the items whose `complete_item` has arrived (per-item done-ness, which
+ * message-level `isStreaming` cannot express). Native `upsertMessage` calls omit it and
+ * take exactly the pre-spike paths.
+ */
+interface UpsertStreamingDetail {
+  chunkItem?: DeepPartial<GenericItem>;
+  completedItemIDs?: string[];
+}
+
 function rebuildLocalItemsForUpsert(
   state: AppState,
   message: MessageResponse,
-  isStreaming = false
+  isStreaming = false,
+  streamingDetail?: UpsertStreamingDetail
 ): {
   newLocalItemsByID: ObjectMap<LocalMessageItem>;
   newLocalIDsForMessage: string[];
@@ -481,6 +496,13 @@ function rebuildLocalItemsForUpsert(
   const newLocalItemsByID: ObjectMap<LocalMessageItem> = {
     ...state.allMessageItemsByID,
   };
+
+  // SPIKE (chunk facade): which item this dispatch's raw delta belongs to, and which
+  // items have already received their complete_item. Absent for native upsert calls.
+  const chunkTargetKey = streamingDetail?.chunkItem
+    ? (streamItemID(messageID, streamingDetail.chunkItem) ?? NO_STREAM_ID_KEY)
+    : null;
+  const completedKeys = new Set(streamingDetail?.completedItemIDs ?? []);
 
   // Capture the previous top-level local items for this message in order.
   const prevTopLevelLocalIDs: string[] = [];
@@ -527,6 +549,15 @@ function rebuildLocalItemsForUpsert(
     let localID: string;
     let localItem: LocalMessageItem;
 
+    // SPIKE (chunk facade): streaming state is per item, not per message. The chunk
+    // contract finalizes item X (`complete_item`) while sibling Y keeps streaming, so a
+    // completed item settles even though the message-level dispatch is still STREAMING.
+    // Native upsert calls have no completed set, so every item follows `isStreaming` —
+    // the pre-spike behavior exactly.
+    const itemKey = streamId ?? NO_STREAM_ID_KEY;
+    const itemIsStreaming = isStreaming && !completedKeys.has(itemKey);
+    const isChunkTarget = chunkTargetKey !== null && itemKey === chunkTargetKey;
+
     // Streaming UI reads `ui_state.streamingState.isDone`. Comparing it alongside the
     // item keeps the reference-stable path below from swallowing a STREAMING → COMPLETE
     // transition whose payload happened not to change — which would leave the item
@@ -538,7 +569,8 @@ function rebuildLocalItemsForUpsert(
 
     if (
       matchedPrev &&
-      prevIsStreaming === isStreaming &&
+      prevIsStreaming === itemIsStreaming &&
+      !isChunkTarget &&
       isEqual(matchedPrev.item, item)
     ) {
       // Reference-stable path: deep-equal to the prior item, keep the exact object so
@@ -559,8 +591,20 @@ function rebuildLocalItemsForUpsert(
       localItem.fullMessageID = messageID;
       // Mirror what the chunk pipeline records, so streaming-aware rendering behaves the
       // same whichever API delivered the message.
-      localItem.ui_state.isIntermediateStreaming = isStreaming;
-      localItem.ui_state.streamingState = { chunks: [], isDone: !isStreaming };
+      localItem.ui_state.isIntermediateStreaming = itemIsStreaming;
+      // SPIKE (chunk facade): a chunk-fed item keeps its accumulated delta history —
+      // append the delta while streaming, drop it once the item settles, exactly as
+      // STREAMING_ADD_CHUNK did. Native upserts carry no chunks on either path.
+      const prevChunks = matchedPrev?.ui_state.streamingState?.chunks ?? [];
+      let chunks: typeof prevChunks;
+      if (!itemIsStreaming) {
+        chunks = [];
+      } else if (isChunkTarget) {
+        chunks = [...prevChunks, streamingDetail.chunkItem];
+      } else {
+        chunks = prevChunks;
+      }
+      localItem.ui_state.streamingState = { chunks, isDone: !itemIsStreaming };
 
       if (isResponseWithNestedItems(localItem.item)) {
         const nestedLocalItems: LocalMessageItem[] = [];
@@ -696,3 +740,4 @@ export {
   computeLocalIDInsertionPoint,
   rebuildLocalItemsForUpsert,
 };
+export type { UpsertStreamingDetail };

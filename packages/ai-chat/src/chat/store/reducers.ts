@@ -114,6 +114,7 @@ import {
   applyLocalMessageUIState,
   computeLocalIDInsertionPoint,
   rebuildLocalItemsForUpsert,
+  UpsertStreamingDetail,
   DEFAULT_CITATION_PANEL_STATE,
   DEFAULT_CUSTOM_PANEL_STATE,
   DEFAULT_WORKSPACE_PANEL_STATE,
@@ -490,9 +491,13 @@ const reducers: { [key: string]: ReducerType } = {
 
   [UPSERT_MESSAGE]: (
     state: AppState,
-    action: { message: Message; isStreaming?: boolean }
+    action: {
+      message: Message;
+      isStreaming?: boolean;
+      streamingDetail?: UpsertStreamingDetail;
+    }
   ): AppState => {
-    const { message, isStreaming = false } = action;
+    const { message, isStreaming = false, streamingDetail } = action;
     const messageID = message.id;
 
     if (!isResponse(message)) {
@@ -502,7 +507,12 @@ const reducers: { [key: string]: ReducerType } = {
     const messageResponse = message;
 
     const { newLocalItemsByID, newLocalIDsForMessage } =
-      rebuildLocalItemsForUpsert(state, messageResponse, isStreaming);
+      rebuildLocalItemsForUpsert(
+        state,
+        messageResponse,
+        isStreaming,
+        streamingDetail
+      );
 
     // Splice the new ordered IDs back into localMessageIDs at the same position the
     // existing block occupied. Brand-new messages append.

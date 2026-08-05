@@ -62,6 +62,7 @@ import {
   renderAsUserDefinedMessage,
   streamItemID,
 } from '../utils/messageUtils';
+import { ChunkAccumulator } from '../utils/chunkAccumulator';
 import {
   callOnError,
   consoleError,
@@ -89,7 +90,6 @@ import {
 import {
   chunkHasDisplayableContent,
   FinalResponseChunk,
-  mergePartialResponseOptions,
   resetStopStreamingButton,
   resolveChunkContext,
   shouldShowStopStreaming,
@@ -210,6 +210,14 @@ class ChatActionsImpl {
    * messages that were started before a restart.
    */
   private messageGenerations = new Map<string, number>();
+
+  /**
+   * SPIKE (chunk facade): assembles whole-message snapshots from chunk deltas so the
+   * chunk API drives the same UPSERT_MESSAGE store pipeline as `upsertMessage`. The
+   * chunk-specific surfaces — CHUNK_USER_DEFINED_RESPONSE events, queue effects, the
+   * stop-button policy — are untouched; only the store writes are rerouted.
+   */
+  private chunkAccumulator = new ChunkAccumulator();
 
   /**
    * Tracks which message IDs have had their "streaming start" announced.
@@ -1420,21 +1428,43 @@ class ChatActionsImpl {
     isCompleteItem: boolean
   ) {
     const { store } = this.serviceManager;
-    if (messageID && !store.getState().allMessagesByID[messageID]) {
-      store.dispatch(actions.streamingStart(messageID));
-    }
 
     if (isCompleteItem) {
       this.warnIfMissingCompleteItemStreamingId(messageID, item);
     }
 
-    if (messageID && item) {
-      store.dispatch(
-        actions.streamingAddChunk(messageID, item, isCompleteItem)
-      );
-    }
+    // SPIKE (chunk facade): accumulate the delta into a whole-message snapshot and
+    // dispatch it through the same UPSERT_MESSAGE path `upsertMessage` uses, instead of
+    // the retired STREAMING_START / STREAMING_ADD_CHUNK / STREAMING_MERGE_MESSAGE_OPTIONS
+    // trio. `streamingDetail` carries the delta and per-item done-ness the snapshot
+    // cannot express.
+    if (messageID) {
+      if (chunk.partial_response?.message_options) {
+        this.chunkAccumulator.mergeMessageOptions(
+          messageID,
+          chunk.partial_response.message_options
+        );
+      }
 
-    mergePartialResponseOptions(store, messageID, chunk);
+      let result;
+      if (item) {
+        result = isCompleteItem
+          ? this.chunkAccumulator.applyComplete(messageID, item)
+          : this.chunkAccumulator.applyPartial(messageID, item);
+      } else if (chunk.partial_response?.message_options) {
+        result = this.chunkAccumulator.snapshot(messageID);
+      }
+
+      if (result) {
+        addDefaultsToMessage(result.message);
+        store.dispatch(
+          actions.upsertMessage(result.message, true, {
+            chunkItem: result.chunkItem,
+            completedItemIDs: result.completedItemIDs,
+          })
+        );
+      }
+    }
 
     if (messageID && item) {
       await this.handleUserDefinedResponseItemsChunk(messageID, chunk, item);
@@ -1465,6 +1495,9 @@ class ChatActionsImpl {
         actions.endMessageStreaming(messageID)
       );
       this.serviceManager.messageService.finalizeStreamingMessage(messageID);
+      // SPIKE (chunk facade): the final response is authoritative; the accumulation is
+      // spent.
+      this.chunkAccumulator.clear(messageID);
     }
   }
 
@@ -2241,6 +2274,7 @@ class ChatActionsImpl {
       // Drop any in-flight upsertMessage chains and recorded state so upserts queued
       // before the restart do not resolve against the new session.
       this.serviceManager.messageUpsertCoordinator.clearAll();
+      this.chunkAccumulator.clearAll();
 
       store.dispatch(actions.restartConversation());
       if (!skipHydration) {
@@ -2295,6 +2329,7 @@ class ChatActionsImpl {
     this.serviceManager.messageService.cancelAllMessageRequests();
 
     this.serviceManager.messageUpsertCoordinator.clearAll();
+    this.chunkAccumulator.clearAll();
 
     // When the host owns persistence there is no sessionStorage to clear; the state reset dispatched
     // below flows to its onStateChange callback like any other change.
