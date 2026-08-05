@@ -469,6 +469,72 @@ describe('ChatInstance.messaging.addMessageChunk', () => {
     ).toBeUndefined();
   });
 
+  describe('stop streaming button', () => {
+    const isVisible = (store: { getState: () => any }) =>
+      store.getState().assistantInputState.stopStreamingButtonState.isVisible;
+
+    // The chunk flow has always hidden the button on its own complete_item. Making the
+    // stop button concurrency-aware must not change that, so pin it here.
+    it('hides the button on complete_item when nothing else is streaming', async () => {
+      const config = createBaseConfig();
+      const { instance, store } =
+        await renderChatAndGetInstanceWithStore(config);
+      const responseId = 'chunk-stop-1';
+      const itemId = 'chunk-stop-item-1';
+
+      await instance.messaging.addMessageChunk({
+        streaming_metadata: { response_id: responseId },
+        partial_item: {
+          streaming_metadata: { id: itemId, cancellable: true },
+          response_type: MessageResponseTypes.TEXT,
+          text: 'Partial ',
+        },
+      } as PartialItemChunk);
+
+      expect(isVisible(store)).toBe(true);
+
+      await instance.messaging.addMessageChunk({
+        streaming_metadata: { response_id: responseId },
+        complete_item: {
+          streaming_metadata: { id: itemId },
+          response_type: MessageResponseTypes.TEXT,
+          text: 'Partial complete',
+        },
+      } as CompleteItemChunk);
+
+      expect(isVisible(store)).toBe(false);
+    });
+
+    // A complete_item carrying no streaming_metadata leaves the resolved message id
+    // undefined while the coordinator fell back to the queued request id. Any fix that
+    // compared those two ids would silently stop hiding here.
+    it('hides the button on a complete_item with no streaming metadata', async () => {
+      const config = createBaseConfig();
+      const { instance, store } =
+        await renderChatAndGetInstanceWithStore(config);
+
+      await instance.messaging.addMessageChunk({
+        streaming_metadata: { response_id: 'chunk-stop-2' },
+        partial_item: {
+          streaming_metadata: { id: 'chunk-stop-item-2', cancellable: true },
+          response_type: MessageResponseTypes.TEXT,
+          text: 'Partial ',
+        },
+      } as PartialItemChunk);
+
+      expect(isVisible(store)).toBe(true);
+
+      await instance.messaging.addMessageChunk({
+        complete_item: {
+          response_type: MessageResponseTypes.TEXT,
+          text: 'Done',
+        },
+      } as CompleteItemChunk);
+
+      expect(isVisible(store)).toBe(false);
+    });
+  });
+
   describe('Abort signal behavior during streaming', () => {
     it('should trigger abort signal with STOP_STREAMING reason when stop button is used', async () => {
       const config = createBaseConfig();

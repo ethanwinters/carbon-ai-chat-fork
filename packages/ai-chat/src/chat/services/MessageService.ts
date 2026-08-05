@@ -224,7 +224,8 @@ class MessageService {
       () => this.moveToNextQueueItem(),
       (pendingRequest, received) =>
         this.processSuccess(pendingRequest, received),
-      () => this.serviceManager.store.getState().config.public.messaging || {}
+      () => this.serviceManager.store.getState().config.public.messaging || {},
+      () => this.hideStopStreamingButtonIfIdle()
     );
     this.queue = {
       waiting: [],
@@ -306,12 +307,9 @@ class MessageService {
     // For streaming messages, don't clear the queue yet - wait for FinalResponseChunk to arrive
     // For non-streaming messages (addMessage), clear immediately
     if (!current.isStreaming) {
-      // Hide stop streaming button if it was shown for showStopButtonImmediately
-      // Pass streamingMessageID to keep button visible if there's an active stream
-      resetStopStreamingButton(
-        this.serviceManager.store,
-        this.inboundStreaming.streamingMessageID
-      );
+      // Hide stop streaming button if it was shown for showStopButtonImmediately, unless
+      // some other message is still streaming.
+      this.hideStopStreamingButtonIfIdle();
       this.moveToNextQueueItem();
     }
   }
@@ -675,8 +673,50 @@ class MessageService {
   }
 
   /**
+   * Returns true when any message is still streaming, whichever API is driving it —
+   * `addMessageChunk` (tracked by {@link inboundStreaming}) or `upsertMessage` (tracked
+   * by the upsert coordinator). This is the single source of truth for "is the chat still
+   * producing output", so the stop streaming button does not vanish when one of several
+   * concurrent streams finishes.
+   */
+  public isAnyMessageStreaming(): boolean {
+    if (this.inboundStreaming.streamingMessageID) {
+      return true;
+    }
+    return this.serviceManager.messageUpsertCoordinator.hasStreamingMessages();
+  }
+
+  /**
+   * Hides the stop streaming button unless something is still streaming.
+   */
+  public hideStopStreamingButtonIfIdle() {
+    if (!this.isAnyMessageStreaming()) {
+      resetStopStreamingButton(this.serviceManager.store);
+    }
+  }
+
+  /**
+   * Hides the stop streaming button unless an `upsertMessage` stream is still running.
+   *
+   * The chunk flow has always hidden the button on its own `complete_item`, and that
+   * behavior is deliberately preserved — so these call sites must ignore
+   * {@link inboundStreaming} and ask only whether the *other* flow is live. Consulting the
+   * chunk state here would keep the button up past a `complete_item`, which is a different
+   * change than the one this method exists to make.
+   */
+  public hideStopStreamingButtonIfNoUpsertStreaming() {
+    if (!this.serviceManager.messageUpsertCoordinator.hasStreamingMessages()) {
+      resetStopStreamingButton(this.serviceManager.store);
+    }
+  }
+
+  /**
    * Cancels the current message request if one is in progress.
    * Also handles streaming messages that may have been cleared from the queue.
+   *
+   * TODO(#1816): this only consults `inboundStreaming.streamingMessageID` and
+   * `queue.current`, so it cannot target a stream driven purely by `upsertMessage`.
+   * Routing the stop path through `instance.messaging.stop()` is that issue's scope.
    */
   public async cancelCurrentMessageRequest(
     reason: string = CancellationReason.STOP_STREAMING
@@ -793,7 +833,9 @@ class MessageService {
         pendingRequest.isProcessed = true;
         // Hide and re-enable the stop streaming button now that cancellation has
         // completed; processSuccess/processError will short-circuit on isProcessed.
-        resetStopStreamingButton(this.serviceManager.store);
+        // `clearStreamingResponse` above already dropped this stream, so this only
+        // hides when nothing else is still running.
+        this.hideStopStreamingButtonIfIdle();
         if (pendingRequest === this.queue.current) {
           this.moveToNextQueueItem();
         }

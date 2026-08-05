@@ -57,7 +57,8 @@ class OutboundMessageCoordinator {
       current: PendingMessageRequest,
       received?: MessageResponse
     ) => Promise<void>,
-    private getMessagingConfig: () => PublicConfigMessaging
+    private getMessagingConfig: () => PublicConfigMessaging,
+    private hideStopStreamingButtonIfIdle: () => void
   ) {}
 
   /**
@@ -103,7 +104,10 @@ class OutboundMessageCoordinator {
       otherData: resultText,
     });
 
-    // Hide stop streaming button if visible
+    // Hide stop streaming button if visible. Unconditional on purpose, unlike
+    // `resolveCancelledMessage` below: a `customSendMessage` that throws mid-stream never
+    // drains `inboundStreaming` (the queue advance clears only the queue), so a guarded
+    // hide would leave the button stranded visible with no further chunk to hide it.
     resetStopStreamingButton(this.serviceManager.store);
 
     this.rejectFinalErrorOnMessage(pendingRequest, resultText);
@@ -196,8 +200,9 @@ class OutboundMessageCoordinator {
       this.messageLoadingManager.end();
     }
 
-    // Hide stop streaming button if visible
-    resetStopStreamingButton(this.serviceManager.store);
+    // Hide stop streaming button if visible. This request was not streaming and its
+    // streaming state is already cleared, so only hide when nothing else is running.
+    this.hideStopStreamingButtonIfIdle();
 
     sendMessagePromise.doResolve();
     pendingRequest.isProcessed = true;

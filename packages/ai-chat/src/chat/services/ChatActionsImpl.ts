@@ -1338,7 +1338,7 @@ class ChatActionsImpl {
           (isCompleteItem || isFinalResponse) &&
           stopStreamingState.isVisible
         ) {
-          resetStopStreamingButton(store);
+          this.serviceManager.messageService.hideStopStreamingButtonIfNoUpsertStreaming();
         }
       };
 
@@ -1588,7 +1588,10 @@ class ChatActionsImpl {
     chunk: StreamChunk
   ) {
     if (isCompleteItem || isStreamFinalResponse(chunk)) {
-      resetStopStreamingButton(this.serviceManager.store);
+      // The chunk flow has always hidden on its own `complete_item`, so this asks only
+      // whether an `upsertMessage` stream is still running. Consulting the chunk state
+      // here would keep the button up past `complete_item` — a different change.
+      this.serviceManager.messageService.hideStopStreamingButtonIfNoUpsertStreaming();
     }
   }
 
@@ -1799,14 +1802,11 @@ class ChatActionsImpl {
     store.dispatch(actions.addMessage(fullMessage));
 
     // When addMessage is called with showStopButtonImmediately enabled, hide the stop button
-    // and revert to legacy behavior (button will show on first chunk if streaming)
-    // Pass streamingMessageID to keep button visible if there's an active stream
+    // and revert to legacy behavior (button will show on first chunk if streaming).
+    // Anything still streaming — chunk or upsert — keeps the button visible.
     const messagingConfig = config.public.messaging || {};
     if (messagingConfig.showStopButtonImmediately) {
-      resetStopStreamingButton(
-        store,
-        this.serviceManager.messageService.inboundStreaming.streamingMessageID
-      );
+      this.serviceManager.messageService.hideStopStreamingButtonIfIdle();
     }
 
     // The ID of the previous (visible) message item that was added to the store. When adding new items from the
@@ -2233,7 +2233,9 @@ class ChatActionsImpl {
 
       await this.serviceManager.messageService.cancelAllMessageRequests();
 
-      // Hide the stop streaming button since we've cancelled all streams
+      // Hide the stop streaming button since we've cancelled all streams. Unconditional
+      // on purpose — everything was just cancelled, so there is no other stream to keep
+      // it visible for.
       resetStopStreamingButton(store);
 
       // Drop any in-flight upsertMessage chains and recorded state so upserts queued

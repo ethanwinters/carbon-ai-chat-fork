@@ -160,22 +160,16 @@ function shouldShowStopStreaming(
 /**
  * Hides and re-enables the stop streaming button if currently visible.
  *
+ * This hides unconditionally. Deciding *whether* to hide belongs to `MessageService` —
+ * see its `hideStopStreamingButtonIfIdle` / `hideStopStreamingButtonIfNoUpsertStreaming`,
+ * which own that policy so concurrent streams cannot hide each other's button.
+ *
  * @param store - The store instance
- * @param streamingMessageID - Optional ID of currently streaming message. If provided and not null,
- *                             the button will remain visible (used with showStopButtonImmediately
- *                             to keep button visible during active streaming).
  */
-function resetStopStreamingButton(
-  store: StoreLike,
-  streamingMessageID?: string | null
-) {
+function resetStopStreamingButton(store: StoreLike) {
   const stopStreamingState =
     store.getState().assistantInputState.stopStreamingButtonState;
   if (stopStreamingState.isVisible) {
-    // If there's an active streaming message, keep the button visible
-    if (streamingMessageID) {
-      return;
-    }
     store.dispatch(actions.setStopStreamingButtonDisabled(false));
     store.dispatch(actions.setStopStreamingButtonVisible(false));
   }

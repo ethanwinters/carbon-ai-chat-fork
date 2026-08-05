@@ -25,6 +25,7 @@ import { LocalMessageItem } from '../../types/messaging/LocalMessageItem';
 import actions from '../store/actions';
 import { addDefaultsToMessage, isRequest } from '../utils/messageUtils';
 import { consoleError } from '../utils/miscUtils';
+import { shouldShowStopStreaming } from '../utils/streamingUtils';
 import { ServiceManager } from './ServiceManager';
 
 const VALID_STATES = new Set<MessageState>([
@@ -46,13 +47,29 @@ const noop = () => {
  * - Track the most recent {@link MessageState} for each message ID. `addMessage` and
  *   `addMessageChunk` call {@link markComplete} / {@link markStreaming} so that mixing
  *   those APIs with `upsertMessage` does not double-fire `pre:receive` / `receive`.
+ * - Track which message IDs are currently mid-stream, so the stop streaming button
+ *   survives one concurrent stream finishing while another is still running.
  */
 class MessageUpsertCoordinator {
   private readonly serviceManager: ServiceManager;
 
   private readonly chainByID = new Map<string, Promise<void>>();
 
+  /**
+   * Receive-dedup record, **not** a liveness record. `addMessage` and `addMessageChunk`
+   * write it too, it deliberately retains {@link MessageState.COMPLETE} for the life of
+   * the session, and nothing drains it when a stream is cancelled. Use
+   * {@link streamingIDs} to ask whether a message is still streaming.
+   */
   private readonly stateByID = new Map<string, MessageState>();
+
+  /**
+   * IDs currently mid-stream via `upsertMessage`. Written only by {@link runOne}, which
+   * adds on {@link MessageState.STREAMING} and removes on {@link MessageState.COMPLETE} /
+   * {@link MessageState.ERROR}, so the two operations stay symmetric and the set cannot
+   * leak the way {@link stateByID} does.
+   */
+  private readonly streamingIDs = new Set<string>();
 
   constructor(serviceManager: ServiceManager) {
     this.serviceManager = serviceManager;
@@ -87,23 +104,31 @@ class MessageUpsertCoordinator {
   }
 
   /**
-   * Drops both the in-flight promise chain and recorded state for a single message ID.
-   * Called from `removeMessages` and after `finalizeStreamingMessage` to keep the maps
-   * draining for idle IDs.
+   * Returns true when any message is currently mid-stream via `upsertMessage`.
+   */
+  hasStreamingMessages(): boolean {
+    return this.streamingIDs.size > 0;
+  }
+
+  /**
+   * Drops the in-flight promise chain, the recorded state, and any streaming registration
+   * for a single message ID. Called from `removeMessages`.
    */
   clear(messageID: string) {
     this.stateByID.delete(messageID);
     this.chainByID.delete(messageID);
+    this.streamingIDs.delete(messageID);
   }
 
   /**
-   * Drops every entry from both maps. Called from `restartConversation` and from
-   * {@link ChatInstance#destroy} so a torn-down chat does not carry stale state into a
-   * fresh session.
+   * Drops every entry from all three collections. Called from `restartConversation` and
+   * from {@link ChatInstance#destroy} so a torn-down chat does not carry stale state into
+   * a fresh session.
    */
   clearAll() {
     this.chainByID.clear();
     this.stateByID.clear();
+    this.streamingIDs.clear();
   }
 
   /**
@@ -172,13 +197,64 @@ class MessageUpsertCoordinator {
     this.serviceManager.store.dispatch(
       actions.upsertMessage(result, nextState === MessageState.STREAMING)
     );
+
+    // Settle streaming liveness before the slot fan-out below. `serviceManager.fire` does
+    // not swallow listener exceptions, so a throwing user-defined-response handler would
+    // skip everything after `fanOutChangedSlots` — and a message left registered here
+    // would hold the stop button up for every other message, not just this one.
+    if (nextState === MessageState.STREAMING) {
+      this.streamingIDs.add(messageID);
+    } else {
+      this.streamingIDs.delete(messageID);
+    }
+
     await this.fanOutChangedSlots(messageID, result, nextState, refsBefore);
 
     this.stateByID.set(messageID, nextState);
+    this.syncStopStreamingButton(nextState, result);
 
     if (willFireReceive) {
       await this.firePostReceiveAndFinalize(messageID, result);
     }
+  }
+
+  /**
+   * Drives the stop streaming button from the upsert lifecycle.
+   *
+   * The chunk flow shows the button when a partial item arrives carrying
+   * `cancellable`, and hides it on the completing chunk. This is the same
+   * contract read off the upserted message instead: any item marked
+   * `cancellable` shows the button while the message is
+   * {@link MessageState.STREAMING}, and reaching {@link MessageState.COMPLETE}
+   * or {@link MessageState.ERROR} hides it.
+   *
+   * Unlike the chunk flow this needs no
+   * {@link PublicConfigMessaging.showStopButtonImmediately} opt-in — the first
+   * streaming upsert is already the earliest point the chat knows the message
+   * is cancellable, so the button appears there.
+   */
+  private syncStopStreamingButton(
+    nextState: MessageState,
+    result: MessageResponse
+  ) {
+    const { store } = this.serviceManager;
+
+    if (nextState === MessageState.STREAMING) {
+      const isCancellable = (result.output?.generic ?? []).some(
+        (item) => item?.streaming_metadata?.cancellable
+      );
+      const { isVisible } =
+        store.getState().assistantInputState.stopStreamingButtonState;
+      if (shouldShowStopStreaming({ cancellable: isCancellable }, isVisible)) {
+        store.dispatch(actions.setStopStreamingButtonVisible(true));
+      }
+      return;
+    }
+
+    // COMPLETE and ERROR are both terminal for this message — but the affordance only
+    // goes away once nothing else is streaming. `runOne` already dropped this message
+    // from `streamingIDs` above, so the check below reads "is anything *else* live".
+    this.serviceManager.messageService.hideStopStreamingButtonIfIdle();
   }
 
   /**
