@@ -647,6 +647,8 @@ class MessageService {
       );
       this.clearCurrentQueueItem();
     }
+
+    this.serviceManager.messageUpsertCoordinator.endAllStreaming();
   }
 
   /**
@@ -714,13 +716,34 @@ class MessageService {
    * Cancels the current message request if one is in progress.
    * Also handles streaming messages that may have been cleared from the queue.
    *
-   * TODO(#1816): this only consults `inboundStreaming.streamingMessageID` and
-   * `queue.current`, so it cannot target a stream driven purely by `upsertMessage`.
-   * Routing the stop path through `instance.messaging.stop()` is that issue's scope.
+   * Streaming *state* settles for both flows: the chunk stream through the branches
+   * below, and every `upsertMessage` stream through `endAllStreaming`.
+   *
+   * TODO(#1816): what still doesn't work is *targeted* cancellation of one upsert stream.
+   * Not for want of an id — the host passed one to `upsertMessage` and the coordinator
+   * tracks it. The problem is discovery: the two branches below look up a victim in
+   * `inboundStreaming.streamingMessageID`, which only the chunk pipeline populates, and
+   * in `queue.current.message.id`, which is the outbound *request* id rather than the
+   * response id the host chose. Nothing associates a cancelled request with the upsert
+   * ids created under it, and `upsertMessage` can be called with no request in flight at
+   * all. So the abort fires for the queued request, and `endAllStreaming` settles every
+   * id the coordinator knows about rather than the one that was cancelled. Building that
+   * association, via `instance.messaging.stop()`, is #1816's scope.
    */
   public async cancelCurrentMessageRequest(
     reason: string = CancellationReason.STOP_STREAMING
   ) {
+    // Settle upsert-driven streams up front — the chunk branch below returns early, and
+    // this has to run either way. Neither branch can reach them: an upsert stream is
+    // registered with the coordinator, not with `inboundStreaming` or the send queue,
+    // which is where those branches look. See the TODO above.
+    this.serviceManager.messageUpsertCoordinator.endAllStreaming();
+
+    // A pure-upsert stream reaches neither branch below, so this is the only thing that
+    // takes the button down for it. Guarded, so a chunk stream that is still live keeps
+    // it up and hides it through its own cancellation path.
+    this.hideStopStreamingButtonIfIdle();
+
     // If there's a streaming message, cancel it even if not in queue
     if (this.inboundStreaming.streamingMessageID) {
       await this.cancelMessageRequestByID(

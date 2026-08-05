@@ -78,6 +78,9 @@ const createServiceManagerStub = (
   // "is an upsertMessage stream still running".
   const messageUpsertCoordinator = {
     hasStreamingMessages: jest.fn().mockReturnValue(false),
+    // Cancellation settles every registered upsert stream, since none of them can be
+    // targeted by a chunk response id or a queued request id.
+    endAllStreaming: jest.fn(),
   };
 
   const serviceManager = {

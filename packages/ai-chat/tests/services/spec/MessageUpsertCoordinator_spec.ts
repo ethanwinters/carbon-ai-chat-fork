@@ -421,6 +421,42 @@ describe('MessageUpsertCoordinator', () => {
       expect(coord.hasStreamingMessages()).toBe(false);
     });
 
+    it('endAllStreaming settles every registered id and drains', async () => {
+      const { manager, dispatch } = makeStubManager();
+      const coord = new MessageUpsertCoordinator(manager);
+
+      await coord.upsert('m1', MessageState.STREAMING, () =>
+        textResponse('m1', 'a')
+      );
+      await coord.upsert('m2', MessageState.STREAMING, () =>
+        textResponse('m2', 'b')
+      );
+
+      dispatch.mockClear();
+      coord.endAllStreaming();
+
+      const ended = dispatch.mock.calls
+        .map((call) => call[0] as { type: string; messageID?: string })
+        .filter((action) => action?.type === 'END_MESSAGE_STREAMING')
+        .map((action) => action.messageID);
+      expect(ended.sort()).toEqual(['m1', 'm2']);
+      expect(coord.hasStreamingMessages()).toBe(false);
+    });
+
+    it('endAllStreaming is a no-op when nothing is registered', async () => {
+      const { manager, dispatch } = makeStubManager();
+      const coord = new MessageUpsertCoordinator(manager);
+
+      await coord.upsert('m1', MessageState.COMPLETE, () =>
+        textResponse('m1', 'done')
+      );
+
+      dispatch.mockClear();
+      coord.endAllStreaming();
+
+      expect(dispatch).not.toHaveBeenCalled();
+    });
+
     it('drains on clear and clearAll', async () => {
       const { manager } = makeStubManager();
       const coord = new MessageUpsertCoordinator(manager);

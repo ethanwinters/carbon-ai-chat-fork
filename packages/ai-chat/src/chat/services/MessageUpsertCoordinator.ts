@@ -111,6 +111,30 @@ class MessageUpsertCoordinator {
   }
 
   /**
+   * Settles every message still registered as mid-stream and drops the registrations.
+   *
+   * A cancelled `upsertMessage` stream has no terminal upsert to settle it — the host is
+   * told to stop and simply stops calling. Nothing else drains {@link streamingIDs}, so
+   * without this the stop streaming button stays visible and the items keep rendering
+   * mid-stream for the rest of the session.
+   *
+   * Deliberately settles *every* registered id rather than one. The ids are known — they
+   * are exactly {@link streamingIDs} — but nothing associates them with the request that
+   * was cancelled, so there is no basis for picking a subset (see the `TODO(#1816)` on
+   * {@link MessageService#cancelCurrentMessageRequest}). Settling all of them is right for
+   * both callers, which already mean "stop everything". A host that ignores the abort and
+   * keeps streaming re-registers on its next `STREAMING` upsert.
+   */
+  endAllStreaming() {
+    for (const messageID of this.streamingIDs) {
+      this.serviceManager.store.dispatch(
+        actions.endMessageStreaming(messageID)
+      );
+    }
+    this.streamingIDs.clear();
+  }
+
+  /**
    * Drops the in-flight promise chain, the recorded state, and any streaming registration
    * for a single message ID. Called from `removeMessages`.
    */

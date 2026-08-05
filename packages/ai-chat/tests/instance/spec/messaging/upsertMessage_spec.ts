@@ -572,5 +572,67 @@ describe('ChatInstance.messaging.upsertMessage', () => {
         expect(isVisible(store)).toBe(false);
       });
     });
+
+    describe('cancellation', () => {
+      const itemsFor = (store: { getState: () => any }, messageID: string) =>
+        Object.values(
+          store.getState().allMessageItemsByID as Record<string, any>
+        ).filter((item) => item.fullMessageID === messageID);
+
+      // Cancellation looks for a victim in the chunk registry and the send queue, and an
+      // upsert stream is registered in neither — so it cannot target one individually,
+      // even though the id is known. See the TODO(#1816) on cancelCurrentMessageRequest.
+      // What it can do is settle every registered stream, which is what stops the button
+      // and the items stranding when a cancelled host simply stops calling.
+      it('settles a streaming upsert that never receives a terminal call', async () => {
+        const { instance, store } =
+          await renderChatAndGetInstanceWithStore(createBaseConfig());
+
+        await instance.messaging.upsertMessage(
+          'cancel-1',
+          MessageState.STREAMING,
+          () => cancellableResponse('cancel-1', 'partial')
+        );
+        expect(isVisible(store)).toBe(true);
+
+        const [before] = itemsFor(store, 'cancel-1');
+        expect(before.ui_state.streamingState?.isDone).toBe(false);
+
+        await (
+          instance as any
+        ).serviceManager.messageService.cancelCurrentMessageRequest();
+
+        const [after] = itemsFor(store, 'cancel-1');
+        expect(after.ui_state.streamingState?.isDone).toBe(true);
+        expect(after.ui_state.isIntermediateStreaming).toBe(false);
+        expect(isVisible(store)).toBe(false);
+      });
+
+      it('settles every streaming upsert, not just one', async () => {
+        const { instance, store } =
+          await renderChatAndGetInstanceWithStore(createBaseConfig());
+
+        await instance.messaging.upsertMessage(
+          'cancel-a',
+          MessageState.STREAMING,
+          () => cancellableResponse('cancel-a', 'a')
+        );
+        await instance.messaging.upsertMessage(
+          'cancel-b',
+          MessageState.STREAMING,
+          () => cancellableResponse('cancel-b', 'b')
+        );
+
+        await (
+          instance as any
+        ).serviceManager.messageService.cancelCurrentMessageRequest();
+
+        for (const id of ['cancel-a', 'cancel-b']) {
+          const [item] = itemsFor(store, id);
+          expect(item.ui_state.streamingState?.isDone).toBe(true);
+        }
+        expect(isVisible(store)).toBe(false);
+      });
+    });
   });
 });

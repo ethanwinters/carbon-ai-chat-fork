@@ -469,6 +469,68 @@ describe('ChatInstance.messaging.addMessageChunk', () => {
     ).toBeUndefined();
   });
 
+  // The reported symptom: a stream cancelled mid-flight never receives a complete_item
+  // or final_response, so nothing used to settle its items and the markdown table kept
+  // rendering in its in-progress treatment for the rest of the session. The
+  // stream_stopped test below covers the case where the host *does* send a closing
+  // chunk; this covers the case where it just stops calling.
+  it('settles streaming flags when a stream is cancelled with no closing chunk', async () => {
+    const responseId = 'cancelled-no-close';
+    const itemId = 'item-1';
+    let stopped = false;
+
+    const config = {
+      ...createBaseConfig(),
+      messaging: {
+        ...createBaseConfig().messaging,
+        customSendMessage: async (
+          _request: any,
+          options: any,
+          chatInstance: ChatInstance
+        ) => {
+          options.signal?.addEventListener('abort', () => {
+            stopped = true;
+          });
+
+          await chatInstance.messaging.addMessageChunk({
+            streaming_metadata: { response_id: responseId },
+            partial_item: {
+              streaming_metadata: { id: itemId, cancellable: true },
+              response_type: MessageResponseTypes.TEXT,
+              text: '| a | b |',
+            },
+          } as PartialItemChunk);
+
+          // Break out on abort and send nothing further — the whole point of the case.
+          while (!stopped) {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+        },
+      },
+    };
+
+    const { instance, store } = await renderChatAndGetInstanceWithStore(
+      config as any
+    );
+
+    const sendPromise = instance.send('go');
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    const localItemID = `${responseId}-${itemId}`;
+    const before = store.getState().allMessageItemsByID[localItemID];
+    expect(before.ui_state.streamingState.isDone).toBe(false);
+    expect(before.ui_state.isIntermediateStreaming).toBe(true);
+
+    await (
+      instance as any
+    ).serviceManager.messageService.cancelCurrentMessageRequest();
+    await sendPromise.catch(() => {});
+
+    const after = store.getState().allMessageItemsByID[localItemID];
+    expect(after.ui_state.streamingState.isDone).toBe(true);
+    expect(after.ui_state.isIntermediateStreaming).toBe(false);
+  });
+
   describe('stop streaming button', () => {
     const isVisible = (store: { getState: () => any }) =>
       store.getState().assistantInputState.stopStreamingButtonState.isVisible;
