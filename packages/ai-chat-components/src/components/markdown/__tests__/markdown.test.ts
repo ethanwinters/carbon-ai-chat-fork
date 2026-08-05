@@ -1964,3 +1964,68 @@ describe('cds-aichat-markdown thematic break (hr) rendering', () => {
     ).to.equal('contents');
   });
 });
+
+describe('streaming table loading mode', () => {
+  const TABLE = `| h1 | h2 |\n| --- | --- |\n| a | b |`;
+
+  it('renders the newest content on the tick that leaves loading mode', async () => {
+    // While a trailing table is streaming the element stages each tree instead of
+    // rendering it. On the tick that leaves loading mode it must render the tree it
+    // just parsed — rendering the staged one instead dropped the final chunk, which
+    // stuck permanently when that tick was the last.
+    const el = await fixture<MarkdownElementInstance>(
+      html`<cds-aichat-markdown
+        streaming
+        .markdown=${TABLE}></cds-aichat-markdown>`
+    );
+    await el.updateComplete;
+
+    el.markdown = `${TABLE}\n| c | d |`;
+    await el.updateComplete;
+
+    el.markdown = `${TABLE}\n| c | d |\n\nAfter the table.`;
+    await el.updateComplete;
+
+    // Table cell text lives in the table element's own shadow root, so assert on the
+    // trailing paragraph — it only exists in the tree parsed on this tick.
+    expect(el.shadowRoot?.textContent ?? '').to.contain('After the table.');
+    expect(el.shadowRoot?.querySelector('cds-aichat-table')).to.not.equal(null);
+  });
+
+  it('renders the staged tree when streaming stops without a reparse', async () => {
+    // Leaving loading mode by dropping `streaming` does not reparse, so this tick
+    // renders whatever `previousTreeForDiff` seeds from — the staged tree. It is the
+    // only path that reads `stagedStreamingTokenTree`, so it is what stops that field
+    // from looking like dead state, and it is where a dropped final row would show up.
+    const calls: Array<{ isLoading: boolean; rowCount: number }> = [];
+    const el = await fixture<MarkdownElementInstance>(
+      html`<cds-aichat-markdown
+        streaming
+        .customRenderers=${{
+          table: ({
+            isLoading,
+            rows,
+          }: {
+            isLoading: boolean;
+            rows: unknown[][];
+          }) => {
+            calls.push({ isLoading, rowCount: rows.length });
+            return document.createElement('div');
+          },
+        }}
+        .markdown=${TABLE}></cds-aichat-markdown>`
+    );
+    await el.updateComplete;
+    expect(calls.at(-1)?.isLoading).to.equal(true);
+
+    // Staged, not rendered — the element is holding the table in its loading frame.
+    el.markdown = `${TABLE}\n| c | d |`;
+    await el.updateComplete;
+
+    el.streaming = false;
+    await el.updateComplete;
+
+    expect(calls.at(-1)?.isLoading).to.equal(false);
+    expect(calls.at(-1)?.rowCount).to.equal(2);
+  });
+});

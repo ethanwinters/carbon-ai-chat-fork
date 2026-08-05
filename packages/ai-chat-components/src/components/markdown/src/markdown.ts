@@ -298,8 +298,22 @@ class CDSAIChatMarkdown extends LitElement {
   private renderTask: Promise<void> | null = null;
 
   private hasRenderedStreamingTableLoadingFrame = false;
+  /**
+   * The most recent tree parsed while in streaming table loading mode, held back
+   * from rendering. It seeds `previousTreeForDiff`, so the tick that leaves loading
+   * mode without a reparse still renders the content staged during it.
+   * @internal
+   */
   private stagedStreamingTokenTree: TokenTree | null = null;
+
+  /**
+   * @internal
+   */
   private isStreamingTableLoadingMode = false;
+
+  /**
+   * @internal
+   */
   private hasConnected = false;
 
   /**
@@ -652,16 +666,18 @@ class CDSAIChatMarkdown extends LitElement {
         return;
       }
 
-      const renderTree = this.stagedStreamingTokenTree ?? nextTokenTree;
+      // Never prefer the staged tree here: when nothing was reparsed `nextTokenTree`
+      // *is* the staged tree (see `previousTreeForDiff` above), and when something
+      // was, it came from newer source.
       this.stagedStreamingTokenTree = null;
       this.hasRenderedStreamingTableLoadingFrame = false;
-      if (renderTree !== this.tokenTree) {
-        this.tokenTree = renderTree;
+      if (nextTokenTree !== this.tokenTree) {
+        this.tokenTree = nextTokenTree;
       }
 
       // Next we take that tree and transform it into Lit content to be rendered into the template.
       // this.renderedContent is what is rendered in the template directly.
-      renderAndDispatch(renderTree);
+      renderAndDispatch(nextTokenTree);
     } catch (error) {
       console.error(`${CONSOLE_PREFIX} Failed to parse markdown`, error);
     }
