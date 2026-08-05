@@ -70,9 +70,6 @@ interface RenderUserDefinedState {
    * The current {@link MessageState} of the containing message at the moment the renderer
    * was invoked. Use this to drive in-widget streaming indicators or error treatments
    * without inspecting the message items directly.
-   *
-   * @experimental Field is additive; its presence and semantics may evolve as the
-   * lifecycle model stabilizes.
    */
   state?: MessageState;
 }

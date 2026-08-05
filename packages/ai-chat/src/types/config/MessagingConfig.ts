@@ -19,10 +19,11 @@ import { BusEventSend } from '../events/eventBusTypes';
  * `addMessage`, `addMessageChunk`, and `upsertMessage` may all target the same message
  * id without producing duplicate `pre:receive` / `receive` events — Carbon AI Chat tracks
  * the recorded state per id and fires those events only on the first transition to
- * {@link COMPLETE}.
+ * {@link COMPLETE}. Mixing them for the same message still works, but drive a given
+ * conversation with one of them; see
+ * {@link ChatInstanceMessaging.upsertMessage | upsertMessage}.
  *
  * @category Messaging
- * @experimental
  */
 export enum MessageState {
   /**
@@ -59,7 +60,6 @@ export enum MessageState {
  *   first upsert of a new id.
  * @returns The {@link MessageResponse} to store, optionally as a Promise.
  * @category Messaging
- * @experimental
  */
 export type UpsertMessageUpdater = (
   previous: MessageResponse | undefined
@@ -113,7 +113,13 @@ export interface ChatInstanceMessaging {
    *
    * Calls targeting the same `messageID` are serialized — each call awaits the previous
    * call for that ID before running. Calls targeting different `messageID`s run
-   * independently.
+   * independently, so several messages can stream at once.
+   *
+   * Drive a conversation with either this method or
+   * {@link ChatInstanceMessaging.addMessageChunk | addMessageChunk}, rather than both.
+   * The two are supported together and will not duplicate `pre:receive` / `receive`
+   * events, but they track streaming progress separately, so a single flow is simpler to
+   * reason about.
    *
    * The `state` argument describes the {@link MessageState} the chat records for this
    * message after the upsert completes; it is applied uniformly to every item in the
@@ -135,7 +141,6 @@ export interface ChatInstanceMessaging {
    * @throws `TypeError` when the updater returns `null`/`undefined`, returns a message
    *   whose `id` differs from `messageID`, or returns a non-assistant message (a request
    *   or a human-agent message).
-   * @experimental Upsert semantics and the updater signature may evolve based on consumer feedback.
    */
   upsertMessage: (
     messageID: string,
