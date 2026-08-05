@@ -21,7 +21,6 @@ import type {
   MarkdownRendererLinkResult as _MarkdownRendererLinkResult,
   MarkdownRendererTableArgs as _MarkdownRendererTableArgs,
   MarkdownRendererTableData as _MarkdownRendererTableData,
-  TokenTree as _TokenTree,
 } from '@carbon/ai-chat-components/es/components/markdown/index.js';
 import { type ChatInstance } from '../instance/ChatInstance';
 import { WriteableElements } from '../instance/WriteableElements';
@@ -224,17 +223,6 @@ type RenderWriteableElementResponse = {
 };
 
 /**
- * Markdown-it parser node tree, surfaced on the `node` field of
- * {@link MarkdownRendererTableArgs} and {@link MarkdownRendererCodeBlockArgs}
- * so custom renderers can inspect the parsed token structure when the
- * high-level data payload isn't enough.
- *
- * @category Messaging
- * @experimental
- */
-export type TokenTree = _TokenTree;
-
-/**
  * Parsed table payload extended by {@link MarkdownRendererTableArgs} — the
  * argument shape the table renderer callback actually receives. Carries the
  * headers, rows, and streaming/loading flags.
@@ -258,8 +246,8 @@ export type MarkdownRendererCodeBlockData = _MarkdownRendererCodeBlockData;
  * Argument passed to the markdown table renderer callbacks on
  * {@link CustomMarkdownRenderers.table} and
  * {@link WCCustomMarkdownRenderers.table}. Extends
- * {@link MarkdownRendererTableData} with the source token, full
- * {@link TokenTree} node, and a stable `slotName` suitable for use as a key.
+ * {@link MarkdownRendererTableData} with the source markdown-it token and a
+ * stable `slotName` suitable for use as a key.
  *
  * @category Messaging
  * @experimental
@@ -270,8 +258,8 @@ export type MarkdownRendererTableArgs = _MarkdownRendererTableArgs;
  * Argument passed to the fenced code-block renderer callbacks on
  * {@link CustomMarkdownRenderers.codeBlock} and
  * {@link WCCustomMarkdownRenderers.codeBlock}. Extends
- * {@link MarkdownRendererCodeBlockData} with the source token, full
- * {@link TokenTree} node, and a stable `slotName` suitable for use as a key.
+ * {@link MarkdownRendererCodeBlockData} with the source markdown-it token and
+ * a stable `slotName` suitable for use as a key.
  *
  * @category Messaging
  * @experimental
@@ -281,7 +269,7 @@ export type MarkdownRendererCodeBlockArgs = _MarkdownRendererCodeBlockArgs;
 /**
  * Argument passed to a {@link CustomMarkdownRenderers.link} /
  * {@link WCCustomMarkdownRenderers.link} callback — the parsed link data
- * (href, title, text, attributes) plus the source token and node.
+ * (href, title, text, attributes) plus the source markdown-it token.
  *
  * @category Messaging
  * @experimental
@@ -302,7 +290,7 @@ export type MarkdownRendererLinkResult = _MarkdownRendererLinkResult;
 /**
  * Argument passed to an {@link CustomMarkdownRenderers.image} /
  * {@link WCCustomMarkdownRenderers.image} callback — the parsed image data
- * (src, alt, title, attributes) plus the source token and node.
+ * (src, alt, title, attributes) plus the source markdown-it token.
  *
  * @category Messaging
  * @experimental
