@@ -11,11 +11,15 @@ import {
   ChatInstance,
   IFrameItem,
   MessageResponseTypes,
+  MessageState,
   TextItem,
 } from '@carbon/ai-chat';
+import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 
 function doIFrame(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -43,7 +47,7 @@ function doIFrame(instance: ChatInstance) {
         } as IFrameItem,
       ],
     },
-  });
+  }));
 }
 
 export { doIFrame };

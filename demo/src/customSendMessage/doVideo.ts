@@ -7,10 +7,17 @@
  *  @license
  */
 
-import { ChatInstance, MessageResponseTypes } from '@carbon/ai-chat';
+import {
+  ChatInstance,
+  MessageResponseTypes,
+  MessageState,
+} from '@carbon/ai-chat';
+import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 
 function doVideo(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -38,11 +45,13 @@ function doVideo(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 function doVideoYouTube(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -56,11 +65,13 @@ function doVideoYouTube(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 function doVideoVimeo(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -74,11 +85,13 @@ function doVideoVimeo(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 function doVideoKaltura(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -96,7 +109,7 @@ function doVideoKaltura(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 export { doVideo, doVideoYouTube, doVideoVimeo, doVideoKaltura };

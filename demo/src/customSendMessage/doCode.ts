@@ -11,13 +11,17 @@ import {
   ChatInstance,
   CustomSendMessageOptions,
   MessageResponseTypes,
+  MessageState,
 } from '@carbon/ai-chat';
+import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 
 import { CODE } from './constants';
-import { doTextStreaming } from './doText';
+import { doTextStreamingUpsert } from './doText';
 
 function doCode(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -26,24 +30,17 @@ function doCode(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 function doCodeStreaming(
   instance: ChatInstance,
   requestOptions?: CustomSendMessageOptions
 ) {
-  doTextStreaming(
-    instance,
-    CODE,
-    true,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    requestOptions
-  );
+  doTextStreamingUpsert(instance, {
+    text: CODE,
+    requestOptions,
+  });
 }
 
 export { doCode, doCodeStreaming };

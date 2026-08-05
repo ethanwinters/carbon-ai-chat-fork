@@ -12,6 +12,7 @@ import {
   ExternalFileReference,
   MessageRequest,
   MessageResponseTypes,
+  MessageState,
   StructuredData,
   StructuredField,
 } from '@carbon/ai-chat';
@@ -149,7 +150,9 @@ function doFileUploadResponse(
     lines.push('');
   }
 
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -158,7 +161,7 @@ function doFileUploadResponse(
         },
       ],
     },
-  });
+  }));
 }
 
 export { mockOnFileUpload, doFileUploadResponse };

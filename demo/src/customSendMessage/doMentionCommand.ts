@@ -11,8 +11,10 @@ import {
   ChatInstance,
   MessageRequest,
   MessageResponseTypes,
+  MessageState,
   SuggestionItem,
 } from '@carbon/ai-chat';
+import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 
 /**
  * Mock `InputConfig.mention` / `InputConfig.command` fixtures and callbacks
@@ -147,7 +149,9 @@ function doMentionCommandResponse(
     parts.push(`**Commands:** ${cmds}`);
   }
 
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -156,7 +160,7 @@ function doMentionCommandResponse(
         },
       ],
     },
-  });
+  }));
 }
 
 export {

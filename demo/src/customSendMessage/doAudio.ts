@@ -7,10 +7,17 @@
  *  @license
  */
 
-import { ChatInstance, MessageResponseTypes } from '@carbon/ai-chat';
+import {
+  ChatInstance,
+  MessageResponseTypes,
+  MessageState,
+} from '@carbon/ai-chat';
+import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 
 function doAudio(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -41,11 +48,13 @@ function doAudio(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 function doAudioSoundCloud(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -61,11 +70,13 @@ function doAudioSoundCloud(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 function doAudioMp3(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -89,7 +100,7 @@ function doAudioMp3(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 export { doAudio, doAudioSoundCloud, doAudioMp3 };

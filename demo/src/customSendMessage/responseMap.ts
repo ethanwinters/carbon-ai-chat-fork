@@ -36,6 +36,7 @@ import {
   doTextChainOfThought,
   doTextChainOfThoughtStreaming,
   doTextStreaming,
+  doTextStreamingUpsert,
   doTextStreamingEarlyResolve,
   doTextStreamingWithNonWatsonAssistantProfile,
   doTextWithCustomFooter,
@@ -47,7 +48,11 @@ import {
   doTextWithReasoningTraceStreaming,
   doTextWithWatsonAgentProfile,
 } from './doText';
-import { doUserDefined, doUserDefinedStreaming } from './doUserDefined';
+import {
+  doUserDefined,
+  doUserDefinedStreaming,
+  doUserDefinedStreamingUpsert,
+} from './doUserDefined';
 import { doSystemMessage } from './doSystemMessage';
 import { doVideoYouTube, doVideoVimeo, doVideoKaltura } from './doVideo';
 
@@ -101,6 +106,8 @@ const RESPONSE_MAP: Record<
     doTableStreaming(instance, requestOptions),
   text: (instance) => doText(instance),
   'text (stream)': (instance, requestOptions) =>
+    doTextStreamingUpsert(instance, { requestOptions }),
+  'text (stream) (legacy addMessageChunk API)': (instance, requestOptions) =>
     doTextStreaming(
       instance,
       undefined,
@@ -112,8 +119,10 @@ const RESPONSE_MAP: Record<
       undefined,
       requestOptions
     ),
-  'text (stream early resolve)': (instance, requestOptions) =>
-    doTextStreamingEarlyResolve(instance, requestOptions),
+  'text (stream early resolve) (legacy addMessageChunk API)': (
+    instance,
+    requestOptions
+  ) => doTextStreamingEarlyResolve(instance, requestOptions),
   'text with feedback': (instance) => doTextWithFeedback(instance),
   'text with feedback (stream)': (instance, requestOptions) =>
     doTextWithFeedbackStreaming(instance, requestOptions),
@@ -199,17 +208,7 @@ const RESPONSE_MAP: Record<
         }
         instance.updateIsMessageLoadingCounter('decrease');
         try {
-          await doTextStreaming(
-            instance,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            requestOptions
-          );
+          await doTextStreamingUpsert(instance, { requestOptions });
           resolve();
         } catch (error) {
           reject(error);
@@ -237,18 +236,14 @@ const RESPONSE_MAP: Record<
   },
   html: (instance) => doHTML(instance),
   'html (stream)': (instance, requestOptions) =>
-    doHTMLStreaming(
-      instance,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      requestOptions
-    ),
+    doHTMLStreaming(instance, requestOptions),
   user_defined: (instance) => doUserDefined(instance),
   'user_defined (stream)': (instance, requestOptions) =>
-    doUserDefinedStreaming(instance, requestOptions),
+    doUserDefinedStreamingUpsert(instance, requestOptions),
+  'user_defined (stream) (legacy addMessageChunk API)': (
+    instance,
+    requestOptions
+  ) => doUserDefinedStreaming(instance, requestOptions),
   'video - youtube': (instance) => doVideoYouTube(instance),
   'video - vimeo': (instance) => doVideoVimeo(instance),
   'video - kaltura': (instance) => doVideoKaltura(instance),

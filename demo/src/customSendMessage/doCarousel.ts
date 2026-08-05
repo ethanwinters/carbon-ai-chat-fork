@@ -11,11 +11,15 @@ import {
   ChatInstance,
   GenericItem,
   MessageResponseTypes,
+  MessageState,
   TextItem,
 } from '@carbon/ai-chat';
+import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 
 function doCarousel(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -125,7 +129,7 @@ function doCarousel(instance: ChatInstance) {
         } as unknown as GenericItem,
       ],
     },
-  });
+  }));
 }
 
 export { doCarousel };

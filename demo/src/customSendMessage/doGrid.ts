@@ -10,11 +10,15 @@
 import {
   ChatInstance,
   MessageResponseTypes,
+  MessageState,
   WidthOptions,
 } from '@carbon/ai-chat';
+import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 
 function doGrid(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -485,7 +489,7 @@ function doGrid(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 export { doGrid };

@@ -11,6 +11,7 @@ import {
   ChatInstance,
   CustomSendMessageOptions,
   MessageResponseTypes,
+  MessageState,
   StreamChunk,
 } from '@carbon/ai-chat';
 import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
@@ -24,7 +25,9 @@ async function sleep(milliseconds: number) {
 const FAKE_DATA = `Some text that came from the server inside the user_defined object. Bacon ipsum dolor amet salami capicola chislic, meatball tail beef ham hock brisket cow ground round chuck. Turkey pork loin pastrami, ribeye jerky meatball drumstick kielbasa corned beef shankle picanha. Spare ribs leberkas hamburger strip steak beef ribs sirloin brisket capicola, sausage meatball drumstick ham swine alcatra. Pastrami filet mignon salami, flank short loin t-bone tenderloin ribeye brisket.`;
 
 function doUserDefined(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -44,7 +47,7 @@ function doUserDefined(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 async function doUserDefinedStreaming(
@@ -136,4 +139,71 @@ async function doUserDefinedStreaming(
   }
 }
 
-export { doUserDefined, doUserDefinedStreaming };
+/**
+ * The same streaming `user_defined` response as
+ * {@link doUserDefinedStreaming}, driven by `upsertMessage`.
+ *
+ * With chunks you send each word as a delta and the chat concatenates them —
+ * which is why the renderer has to reassemble partial JSON. Here you keep the
+ * accumulated text in app state and hand back the whole item every time, so
+ * the renderer always receives a complete `user_defined` payload.
+ */
+async function doUserDefinedStreamingUpsert(
+  instance: ChatInstance,
+  requestOptions?: CustomSendMessageOptions
+) {
+  const signal = requestOptions?.signal;
+  const WORD_DELAY = 50;
+  const messageID = uuid();
+  const words = FAKE_DATA.split(' ');
+
+  let streamedText = '';
+  let isCanceled = signal?.aborted ?? false;
+
+  const abortHandler = () => {
+    isCanceled = true;
+  };
+  signal?.addEventListener('abort', abortHandler);
+
+  const apply = (state: MessageState) =>
+    instance.messaging.upsertMessage(messageID, state, () => ({
+      id: messageID,
+      output: {
+        generic: [
+          {
+            response_type: MessageResponseTypes.USER_DEFINED,
+            user_defined: {
+              user_defined_type: 'green',
+              text: streamedText,
+            },
+            streaming_metadata: {
+              id: '1',
+              cancellable: true,
+              stream_stopped: state === MessageState.COMPLETE && isCanceled,
+            },
+          },
+        ],
+      },
+    }));
+
+  try {
+    for (let index = 0; index < words.length && !isCanceled; index++) {
+      await sleep(WORD_DELAY);
+      if (isCanceled) {
+        break;
+      }
+      streamedText += `${words[index]},`;
+      await apply(MessageState.STREAMING);
+    }
+
+    // On a clean run, settle on the authoritative full text.
+    if (!isCanceled) {
+      streamedText = FAKE_DATA;
+    }
+    await apply(MessageState.COMPLETE);
+  } finally {
+    signal?.removeEventListener('abort', abortHandler);
+  }
+}
+
+export { doUserDefined, doUserDefinedStreaming, doUserDefinedStreamingUpsert };

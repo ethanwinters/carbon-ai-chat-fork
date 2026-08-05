@@ -11,14 +11,18 @@ import {
   ButtonItemType,
   ChatInstance,
   MessageResponseTypes,
+  MessageState,
 } from '@carbon/ai-chat';
+import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 import {
   CHAT_BUTTON_KIND,
   CHAT_BUTTON_SIZE,
 } from '@carbon/ai-chat-components/es/react/chat-button.js';
 
 function doButton(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -84,7 +88,7 @@ function doButton(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 export { doButton };

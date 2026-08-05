@@ -7,7 +7,11 @@
  *  @license
  */
 
-import { ChatInstance, MessageResponseTypes } from '@carbon/ai-chat';
+import {
+  ChatInstance,
+  MessageResponseTypes,
+  MessageState,
+} from '@carbon/ai-chat';
 import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 
 function doPreviewCard(
@@ -16,7 +20,9 @@ function doPreviewCard(
 ) {
   const workspaceId = uuid();
 
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -37,7 +43,7 @@ function doPreviewCard(
         },
       ],
     },
-  });
+  }));
 }
 
 export { doPreviewCard };

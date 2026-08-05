@@ -15,9 +15,10 @@ import {
   GenericItemMessageFeedbackOptions,
   MessageResponse,
   MessageResponseTypes,
+  MessageState,
   ReasoningStep,
-  ReasoningSteps,
   ReasoningStepOpenState,
+  ReasoningSteps,
   ResponseUserProfile,
   StreamChunk,
   UserType,
@@ -547,12 +548,231 @@ async function doTextStreaming(
   }
 }
 
+/**
+ * Options for {@link doTextStreamingUpsert}. An object rather than the positional
+ * list `doTextStreaming` takes, so callers name only what they need.
+ */
+interface TextStreamingOptions {
+  text?: string;
+  cancellable?: boolean;
+  wordDelay?: number;
+  userProfile?: ResponseUserProfile;
+  chainOfThought?: ChainOfThoughtStep[];
+  reasoning?: ReasoningSteps;
+  feedback?: GenericItemMessageFeedbackOptions;
+  requestOptions?: CustomSendMessageOptions;
+}
+
+/**
+ * The same streaming response as {@link doTextStreaming}, driven by
+ * `upsertMessage` instead of `addMessageChunk`.
+ *
+ * The difference is where the accumulated state lives. With chunks, you send
+ * deltas and the chat concatenates them. Here you keep the state in your own
+ * app — `streamedText`, `reasoningPayload`, `chainOfThoughtSteps` below — and
+ * hand back the whole message on every update. There is no chunk-shape
+ * contract to satisfy, and the same call inserts, updates, and finishes.
+ */
+async function doTextStreamingUpsert(
+  instance: ChatInstance,
+  options: TextStreamingOptions = {}
+) {
+  const {
+    text = MARKDOWN,
+    cancellable = true,
+    wordDelay = WORD_DELAY,
+    userProfile,
+    chainOfThought,
+    reasoning,
+    feedback,
+    requestOptions,
+  } = options;
+
+  const signal = requestOptions?.signal;
+  const messageID = uuid();
+  const words = text.split(' ');
+
+  // All of the response state lives here, in app code.
+  let streamedText = '';
+  let reasoningPayload: ReasoningSteps | undefined;
+  let chainOfThoughtSteps: ChainOfThoughtStep[] | undefined;
+  let isCanceled = signal?.aborted ?? false;
+
+  // Build the entire message from the current state. Called on every update.
+  const buildMessage = (isComplete: boolean): MessageResponse => ({
+    id: messageID,
+    output: {
+      generic: [
+        {
+          response_type: MessageResponseTypes.TEXT,
+          text: streamedText,
+          streaming_metadata: {
+            id: '1',
+            cancellable,
+            stream_stopped: isComplete && isCanceled,
+          },
+          ...(isComplete && feedback
+            ? { message_item_options: { feedback } }
+            : {}),
+        },
+      ],
+    },
+    message_options: {
+      response_user_profile: userProfile,
+      chain_of_thought: chainOfThoughtSteps,
+      reasoning: reasoningPayload,
+    },
+  });
+
+  const apply = (state: MessageState) =>
+    instance.messaging.upsertMessage(messageID, state, () =>
+      buildMessage(state === MessageState.COMPLETE)
+    );
+
+  const abortHandler = () => {
+    isCanceled = true;
+  };
+  signal?.addEventListener('abort', abortHandler);
+
+  try {
+    // 1. Reasoning steps reveal one at a time, each typing in its content.
+    const reasoningSteps = reasoning?.steps;
+    const reasoningContent = reasoning?.content;
+    const reasoningOpenState = reasoning?.open_state;
+
+    if (reasoningSteps?.length) {
+      const displaySteps = reasoningSteps.map((step) => ({
+        ...step,
+        content: step.content ? '' : step.content,
+      }));
+
+      for (let index = 0; index < displaySteps.length && !isCanceled; index++) {
+        await sleep(wordDelay);
+        if (isCanceled) {
+          break;
+        }
+        reasoningPayload = buildReasoningPayload(
+          displaySteps,
+          index + 1,
+          false,
+          reasoningOpenState
+        );
+        await apply(MessageState.STREAMING);
+
+        const fullContent = reasoningSteps[index].content;
+        if (!fullContent) {
+          continue;
+        }
+
+        let partial = '';
+        for (const token of fullContent.match(/\S+\s*/g) ?? [fullContent]) {
+          if (isCanceled) {
+            break;
+          }
+          partial += token;
+          displaySteps[index].content = partial;
+          await sleep(wordDelay);
+          reasoningPayload = buildReasoningPayload(
+            displaySteps,
+            index + 1,
+            false,
+            reasoningOpenState
+          );
+          await apply(MessageState.STREAMING);
+        }
+        displaySteps[index].content = fullContent;
+      }
+    }
+
+    // 2. A single reasoning trace types in the same way.
+    if (typeof reasoningContent === 'string' && !isCanceled) {
+      let partial = '';
+      for (const token of reasoningContent.match(/\S+\s*/g) ?? [
+        reasoningContent,
+      ]) {
+        if (isCanceled) {
+          break;
+        }
+        partial += token;
+        await sleep(wordDelay);
+        reasoningPayload = buildReasoningPayload(
+          undefined,
+          0,
+          false,
+          reasoningOpenState,
+          partial
+        );
+        await apply(MessageState.STREAMING);
+      }
+    }
+
+    // 3. The answer streams in a word at a time. Chain-of-thought steps flip to
+    // processing, then success, at fixed word offsets — the same schedule
+    // `doTextStreaming` uses so both entries look identical on screen.
+    const chainOfThoughtByWord: Record<number, ChainOfThoughtStep[]> = {};
+    if (chainOfThought) {
+      const stepWordAmount = Math.floor(
+        words.length / (chainOfThought.length * 2)
+      );
+      for (let i = 0; i < chainOfThought.length - 1; i++) {
+        const word = Math.max(stepWordAmount * 2 * i, 1);
+        chainOfThoughtByWord[word] = returnChainOfStepByStatus(
+          chainOfThought,
+          i,
+          ChainOfThoughtStepStatus.PROCESSING
+        );
+        chainOfThoughtByWord[word + stepWordAmount] = returnChainOfStepByStatus(
+          chainOfThought,
+          i,
+          ChainOfThoughtStepStatus.SUCCESS
+        );
+      }
+    }
+
+    for (let index = 0; index < words.length && !isCanceled; index++) {
+      await sleep(wordDelay);
+      if (isCanceled) {
+        break;
+      }
+      streamedText += `${words[index]} `;
+
+      if (chainOfThoughtByWord[index]) {
+        chainOfThoughtSteps = chainOfThoughtByWord[index];
+      }
+
+      await apply(MessageState.STREAMING);
+    }
+
+    // 4. Settle on the final shape. On cancel, keep what streamed; otherwise
+    // swap in the authoritative full text.
+    if (!isCanceled) {
+      streamedText = text;
+      chainOfThoughtSteps = chainOfThought;
+    }
+    if (reasoningSteps?.length || typeof reasoningContent === 'string') {
+      reasoningPayload = buildReasoningPayload(
+        reasoningSteps,
+        reasoningSteps?.length ?? 0,
+        true,
+        reasoningOpenState,
+        reasoningContent
+      );
+    }
+
+    await apply(MessageState.COMPLETE);
+  } finally {
+    signal?.removeEventListener('abort', abortHandler);
+  }
+}
+
 function doWelcomeText(instance: ChatInstance) {
   const options = Object.keys(RESPONSE_MAP).map((key) => ({
     label: key,
     value: { input: { text: key } },
   }));
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -566,7 +786,7 @@ function doWelcomeText(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 function doText(
@@ -647,7 +867,11 @@ function doText(
     };
   }
 
-  instance.messaging.addMessage(message);
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    ...message,
+    id: messageID,
+  }));
 }
 
 function doTextWithHumanProfile(
@@ -681,17 +905,12 @@ async function doTextStreamingWithNonWatsonAssistantProfile(
   userProfile: ResponseUserProfile = defaultAlternativeAssistantProfile,
   requestOptions?: CustomSendMessageOptions
 ) {
-  return doTextStreaming(
-    instance,
+  return doTextStreamingUpsert(instance, {
     text,
     cancellable,
-    WORD_DELAY,
     userProfile,
-    undefined,
-    undefined,
-    undefined,
-    requestOptions
-  );
+    requestOptions,
+  });
 }
 
 async function doTextChainOfThoughtStreaming(
@@ -702,17 +921,14 @@ async function doTextChainOfThoughtStreaming(
   chainOfThought: ChainOfThoughtStep[] = fullChainOfThought,
   requestOptions?: CustomSendMessageOptions
 ) {
-  doTextStreaming(
-    instance,
+  doTextStreamingUpsert(instance, {
     text,
     cancellable,
-    300,
+    wordDelay: 300,
     userProfile,
     chainOfThought,
-    undefined,
-    undefined,
-    requestOptions
-  );
+    requestOptions,
+  });
 }
 
 function doTextChainOfThought(
@@ -728,38 +944,20 @@ async function doTextWithReasoningStepsStreaming(
   instance: ChatInstance,
   requestOptions?: CustomSendMessageOptions
 ) {
-  await doTextStreaming(
-    instance,
-    MARKDOWN,
-    true,
-    WORD_DELAY,
-    undefined,
-    undefined,
-    {
-      steps: defaultReasoningSteps,
-    },
-    undefined,
-    requestOptions
-  );
+  await doTextStreamingUpsert(instance, {
+    reasoning: { steps: defaultReasoningSteps },
+    requestOptions,
+  });
 }
 
 async function doTextWithReasoningTraceStreaming(
   instance: ChatInstance,
   requestOptions?: CustomSendMessageOptions
 ) {
-  await doTextStreaming(
-    instance,
-    MARKDOWN,
-    true,
-    WORD_DELAY,
-    undefined,
-    undefined,
-    {
-      content: defaultReasoningTraceContent,
-    },
-    undefined,
-    requestOptions
-  );
+  await doTextStreamingUpsert(instance, {
+    reasoning: { content: defaultReasoningTraceContent },
+    requestOptions,
+  });
 }
 
 function doHTML(
@@ -775,24 +973,9 @@ function doHTML(
 
 async function doHTMLStreaming(
   instance: ChatInstance,
-  text: string = HTML,
-  cancellable = true,
-  wordDelay = WORD_DELAY,
-  userProfile?: ResponseUserProfile,
-  chainOfThought?: ChainOfThoughtStep[],
   requestOptions?: CustomSendMessageOptions
 ) {
-  await doTextStreaming(
-    instance,
-    text,
-    cancellable,
-    wordDelay,
-    userProfile,
-    chainOfThought,
-    undefined,
-    undefined,
-    requestOptions
-  );
+  await doTextStreamingUpsert(instance, { text: HTML, requestOptions });
 }
 
 function doTextWithFeedback(instance: ChatInstance) {
@@ -833,21 +1016,17 @@ async function doTextWithFeedbackStreaming(
     },
   };
 
-  await doTextStreaming(
-    instance,
-    feedbackText,
-    true,
-    WORD_DELAY,
-    undefined,
-    undefined,
-    undefined,
+  await doTextStreamingUpsert(instance, {
+    text: feedbackText,
     feedback,
-    requestOptions
-  );
+    requestOptions,
+  });
 }
 
 function doTextWithCustomFooter(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -870,7 +1049,7 @@ function doTextWithCustomFooter(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 /**
  * Tests the edge case where customSendMessage resolves early but streaming continues.
@@ -981,6 +1160,7 @@ export {
   doTextChainOfThoughtStreaming,
   doTextChainOfThought,
   doTextStreaming,
+  doTextStreamingUpsert,
   doTextStreamingEarlyResolve,
   doTextWithReasoningStepsStreaming,
   doTextWithReasoningTraceStreaming,

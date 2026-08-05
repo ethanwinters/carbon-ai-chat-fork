@@ -7,10 +7,17 @@
  *  @license
  */
 
-import { ChatInstance, MessageResponseTypes } from '@carbon/ai-chat';
+import {
+  ChatInstance,
+  MessageResponseTypes,
+  MessageState,
+} from '@carbon/ai-chat';
+import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 
 function doDate(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -18,7 +25,7 @@ function doDate(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 export { doDate };

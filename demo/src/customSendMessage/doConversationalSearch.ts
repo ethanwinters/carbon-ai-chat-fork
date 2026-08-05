@@ -9,10 +9,10 @@
 
 import {
   ChatInstance,
-  CustomSendMessageOptions,
   ConversationalSearchItem,
+  CustomSendMessageOptions,
   MessageResponseTypes,
-  StreamChunk,
+  MessageState,
 } from '@carbon/ai-chat';
 
 import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
@@ -70,11 +70,13 @@ function doConversationalSearch(instance: ChatInstance) {
     ...META,
   };
 
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [response],
     },
-  });
+  }));
 }
 
 async function doConversationalSearchStreaming(
@@ -83,84 +85,56 @@ async function doConversationalSearchStreaming(
   requestOptions?: CustomSendMessageOptions
 ) {
   const signal = requestOptions?.signal;
-  const responseID = uuid();
+  const messageID = uuid();
   const words = text.split(' ');
-  let isCanceled = false;
-  let lastWordIndex = 0;
 
-  // Listen to abort signal (handles both stop button and restart/clear)
+  // The accumulated answer lives here rather than being sent as deltas.
+  let streamedText = '';
+  let isCanceled = signal?.aborted ?? false;
+
   const abortHandler = () => {
     isCanceled = true;
   };
   signal?.addEventListener('abort', abortHandler);
 
+  // Search citations only make sense once the answer is whole, so they attach
+  // on the completing update rather than on every tick.
+  const apply = (state: MessageState) =>
+    instance.messaging.upsertMessage(messageID, state, () => {
+      const isComplete = state === MessageState.COMPLETE;
+      return {
+        id: messageID,
+        output: {
+          generic: [
+            {
+              response_type: MessageResponseTypes.CONVERSATIONAL_SEARCH,
+              text: streamedText,
+              streaming_metadata: {
+                id: '1',
+                cancellable: true,
+                stream_stopped: isComplete && isCanceled,
+              },
+              ...(isComplete && !isCanceled ? META : {}),
+            },
+          ],
+        },
+      };
+    });
+
   try {
     for (let index = 0; index < words.length && !isCanceled; index++) {
-      const word = words[index];
-      lastWordIndex = index;
-
       await sleep(WORD_DELAY);
-      // Each time you get a chunk back, you can call `addMessageChunk`.
-      instance.messaging.addMessageChunk({
-        partial_item: {
-          response_type: MessageResponseTypes.CONVERSATIONAL_SEARCH,
-          // The next chunk, the chat component will deal with appending these chunks.
-          text: `${word} `,
-          streaming_metadata: {
-            // This is the id of the item inside the response. If you have multiple items in this message they will be
-            // ordered in the view in the order of the first message chunk received. If you want message item 1 to
-            // appear above message item 2, be sure to seed it with a chunk first, even if its empty to start.
-            id: '1',
-            cancellable: true,
-          },
-        },
-        streaming_metadata: {
-          // This is the id of the entire message response.
-          response_id: responseID,
-        },
-      });
+      if (isCanceled) {
+        break;
+      }
+      streamedText += `${words[index]} `;
+      await apply(MessageState.STREAMING);
     }
-
-    // When you are done streaming this item in the response, you should call the complete item.
-    // This requires ALL the concatenated final text. If you want to append text, run a post processing safety check, or anything
-    // else that mutates the data, you can do so here.
-    let completeItem = {
-      response_type: MessageResponseTypes.CONVERSATIONAL_SEARCH,
-      text: isCanceled ? words.splice(0, lastWordIndex).join(' ') : text,
-      streaming_metadata: {
-        // This is the id of the item inside the response.
-        id: '1',
-        stream_stopped: isCanceled,
-      },
-    };
 
     if (!isCanceled) {
-      completeItem = {
-        ...completeItem,
-        ...META,
-      };
-      instance.messaging.addMessageChunk({
-        complete_item: completeItem,
-        streaming_metadata: {
-          // This is the id of the entire message response.
-          response_id: responseID,
-        },
-      } as StreamChunk);
+      streamedText = text;
     }
-
-    // When all and any chunks are complete, you send a final response.
-    // You can rearrange or re-write everything here, but what you send here is what the chat will display when streaming
-    // has been completed.
-    const finalResponse = {
-      id: responseID,
-      output: {
-        generic: [completeItem],
-      },
-    };
-
-    await instance.messaging.addMessageChunk({
-      final_response: finalResponse,
-    } as StreamChunk);
+    await apply(MessageState.COMPLETE);
   } finally {
     signal?.removeEventListener('abort', abortHandler);
   }

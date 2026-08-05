@@ -11,10 +11,14 @@ import {
   ButtonItemType,
   ChatInstance,
   MessageResponseTypes,
+  MessageState,
 } from '@carbon/ai-chat';
+import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 import { BUTTON_KIND } from '@carbon/web-components/es/components/button/defs.js';
 function doImage(instance: ChatInstance) {
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -111,7 +115,7 @@ function doImage(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 export { doImage };

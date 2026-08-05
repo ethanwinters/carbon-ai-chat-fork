@@ -10,7 +10,7 @@
 import { ChatInstance, CustomSendMessageOptions } from '@carbon/ai-chat';
 
 import { TABLE } from './constants';
-import { doText, doTextStreaming } from './doText';
+import { doText, doTextStreamingUpsert } from './doText';
 
 function doTable(instance: ChatInstance) {
   doText(instance, `A periodic table in markdown format.\n\n${TABLE}`);
@@ -20,17 +20,10 @@ async function doTableStreaming(
   instance: ChatInstance,
   requestOptions?: CustomSendMessageOptions
 ) {
-  await doTextStreaming(
-    instance,
-    `A periodic table in markdown format.\n\n${TABLE}`,
-    true,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    requestOptions
-  );
+  await doTextStreamingUpsert(instance, {
+    text: `A periodic table in markdown format.\n\n${TABLE}`,
+    requestOptions,
+  });
 }
 
 export { doTable, doTableStreaming };

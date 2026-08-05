@@ -7,7 +7,12 @@
  *  @license
  */
 
-import { ChatInstance, MessageResponseTypes } from '@carbon/ai-chat';
+import {
+  ChatInstance,
+  MessageResponseTypes,
+  MessageState,
+} from '@carbon/ai-chat';
+import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
 
 import { RESPONSE_MAP } from './responseMap';
 
@@ -16,7 +21,9 @@ function doOption(instance: ChatInstance) {
     label: key,
     value: { input: { text: key } },
   }));
-  instance.messaging.addMessage({
+  const messageID = uuid();
+  instance.messaging.upsertMessage(messageID, MessageState.COMPLETE, () => ({
+    id: messageID,
     output: {
       generic: [
         {
@@ -34,7 +41,7 @@ function doOption(instance: ChatInstance) {
         },
       ],
     },
-  });
+  }));
 }
 
 export { doOption };
