@@ -305,7 +305,15 @@ class CDSAIChatMarkdown extends LitElement {
    * @internal
    */
   private stagedStreamingTokenTree: TokenTree | null = null;
+
+  /**
+   * @internal
+   */
   private isStreamingTableLoadingMode = false;
+
+  /**
+   * @internal
+   */
   private hasConnected = false;
 
   /**
