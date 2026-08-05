@@ -45,8 +45,8 @@ const response: MessageResponse = {
 
 The shapes above describe a complete message. To build a response piece by piece, wrap items in chunk envelopes and apply them one at a time. You can deliver a response two ways:
 
+- [Adding messages](./UpsertMessage.md) — the forward-thinking flow. You accumulate state in your app code and apply each update with one call, which sidesteps the chunk-shape contract.
 - [Adding messages (legacy)](./AddMessageChunk.md) — the current flow. It documents the full chunk reference: {@link StreamChunk}, {@link PartialItemChunk}, {@link CompleteItemChunk}, and {@link FinalResponseChunk}.
-- [Adding messages (experimental)](./UpsertMessage.md) — the forward-thinking flow. You accumulate state in your app code and apply each update with one call, which sidesteps the chunk-shape contract.
 
 Both render the same {@link MessageResponse | response} shape shown above.
 
@@ -54,6 +54,6 @@ Both render the same {@link MessageResponse | response} shape shown above.
 
 - [Server communication](./CustomServer.md) — wire the chat to your server.
 - [Structured data](./StructuredData.md) — send typed fields and uploaded files on the request.
+- [Adding messages](./UpsertMessage.md) — accumulate state and apply each update with one call.
 - [Adding messages (legacy)](./AddMessageChunk.md) — deliver a response piece by piece.
-- [Adding messages (experimental)](./UpsertMessage.md) — accumulate state and apply each update with one call.
 - [Conversation history](./CustomHistory.md) — persist and replay responses.

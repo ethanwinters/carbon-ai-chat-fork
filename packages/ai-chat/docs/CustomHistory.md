@@ -232,5 +232,5 @@ instance.on({
 - [Slots](./WriteableElements.md) — render your own content into the history panel slot.
 - [Message format](./MessageFormat.md) — the request/response shapes history items wrap.
 - [Session state persistence](./StatePersistence.md) — own where the chat stores its session and UI state (views, disclaimer, human-agent connection), apart from conversation messages.
+- [Adding messages](./UpsertMessage.md) — revising a message after it renders.
 - [Adding messages (legacy)](./AddMessageChunk.md) — getting live responses onscreen.
-- [Adding messages (experimental)](./UpsertMessage.md) — revising a message after it renders.

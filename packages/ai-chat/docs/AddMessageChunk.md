@@ -10,9 +10,9 @@ Stream a response onto the screen as your assistant produces it with {@link Chat
 - **Complete item chunks** — finalize one item while others keep streaming.
 - **Final response chunks** — the authoritative final state for the whole message.
 
-For a one-shot, non-streaming insert, use {@link ChatInstanceMessaging.addMessage | addMessage} instead; your assistant can return either format and switch between them. To build up state in your app and apply it with one call per update, see [Adding messages (experimental)](./UpsertMessage.md). It also covers regenerate and optimistic updates.
+For a one-shot, non-streaming insert, use {@link ChatInstanceMessaging.addMessage | addMessage} instead; your assistant can return either format and switch between them. To build up state in your app and apply it with one call per update, see [Adding messages](./UpsertMessage.md). It also covers regenerate and optimistic updates.
 
-> **Note:** Before you build on `addMessageChunk`, look at {@link ChatInstanceMessaging.upsertMessage | upsertMessage}. A single method inserts or updates a message by ID through an updater function, covering streaming, regenerate, post-stream corrections, and optimistic updates. It's the recommended path for new code, but experimental — its semantics and updater signature may still change. See [Adding messages (experimental)](./UpsertMessage.md).
+> **Note:** Before you build on `addMessageChunk`, look at {@link ChatInstanceMessaging.upsertMessage | upsertMessage}. A single method inserts or updates a message by ID through an updater function, covering streaming, regenerate, post-stream corrections, and optimistic updates. It's the recommended path for new code. See [Adding messages](./UpsertMessage.md).
 
 [Message format](./MessageFormat.md) documents the item and response shapes used below.
 
@@ -135,6 +135,6 @@ The "stop streaming" button appears when a partial item chunk sets `streaming_me
 
 ## Related
 
-- [Adding messages (experimental)](./UpsertMessage.md) — build up state in your app and apply one update per call.
+- [Adding messages](./UpsertMessage.md) — build up state in your app and apply one update per call.
 - [Message format](./MessageFormat.md) — the item and response shapes used here.
 - [Server communication](./CustomServer.md#cancelling-request-stop-streaming) — the shared cancellation pattern.

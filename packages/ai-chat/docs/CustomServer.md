@@ -19,8 +19,8 @@ Connect the Carbon AI Chat to your own server. It supports streaming results, no
 Where you go next depends on what you build:
 
 - [Message format](./MessageFormat.md) — the shape of the requests you receive and responses you return (for server / API authors).
+- [Adding messages](./UpsertMessage.md) — the preferred insert-or-update-by-ID flow.
 - [Adding messages (legacy)](./AddMessageChunk.md) — the stable chunk-based streaming flow.
-- [Adding messages (experimental)](./UpsertMessage.md) — the preferred, experimental insert-or-update-by-ID flow.
 - [Structured data](./StructuredData.md) — send typed fields and uploaded files alongside the user's text.
 - [Conversation history](./CustomHistory.md) — load and restore past conversations.
 - [Session state persistence](./StatePersistence.md) — own where the chat's session and UI state is stored.
@@ -49,8 +49,8 @@ If you do not return a promise, the chat does not queue your messages, and it sk
 
 When you have a response, or part of one, push it to the screen through {@link ChatInstanceMessaging | messaging}. You have two flows, and your assistant can return either format and switch between them:
 
-- **Stable flow** — use {@link ChatInstanceMessaging.addMessage | addMessage} for one-shot, non-streaming inserts, and {@link ChatInstanceMessaging.addMessageChunk | addMessageChunk} for chunked streaming. Both are fully supported, with no deprecation. See [Adding messages (legacy)](./AddMessageChunk.md).
-- **Preferred flow (experimental)** — {@link ChatInstanceMessaging.upsertMessage | upsertMessage} inserts or updates a message by ID through an updater function, covering streaming, regenerate, post-stream fixes, and optimistic updates with one method. It is the recommended path for new code, but experimental: its semantics and updater signature may still change. See [Adding messages (experimental)](./UpsertMessage.md).
+- **Chunk flow** — use {@link ChatInstanceMessaging.addMessage | addMessage} for one-shot, non-streaming inserts, and {@link ChatInstanceMessaging.addMessageChunk | addMessageChunk} for chunked streaming. Both are fully supported, with no deprecation. See [Adding messages (legacy)](./AddMessageChunk.md).
+- **Preferred flow** — {@link ChatInstanceMessaging.upsertMessage | upsertMessage} inserts or updates a message by ID through an updater function, covering streaming, regenerate, post-stream fixes, and optimistic updates with one method. It is the recommended path for new code. See [Adding messages](./UpsertMessage.md).
 
 For the data shape in either flow, see [Message format](./MessageFormat.md).
 
@@ -222,7 +222,7 @@ By default, the chat shows a loading indicator if no chunk or message arrives be
 ## Related
 
 - [Message format](./MessageFormat.md) — the shape of the requests you receive and responses you return.
+- [Adding messages](./UpsertMessage.md) — insert or update a message by ID.
 - [Adding messages (legacy)](./AddMessageChunk.md) — the chunk-based streaming flow.
-- [Adding messages (experimental)](./UpsertMessage.md) — insert or update a message by ID.
 - [Structured data](./StructuredData.md) — send typed fields and uploaded files alongside the user's text.
 - [Conversation history](./CustomHistory.md) — load and restore past conversations.
