@@ -9,6 +9,7 @@
 
 import {
   chunkHasDisplayableContent,
+  deriveStreamingItemText,
   mergePartialResponseOptions,
   messageHasDisplayableContent,
   resetStopStreamingButton,
@@ -29,6 +30,55 @@ describe('streamingUtils', () => {
       }),
     };
   };
+
+  describe('deriveStreamingItemText', () => {
+    // The chunk flow accumulates text in `chunks` — the item's own text holds only the
+    // first chunk, so the join must win while chunks exist.
+    it('joins chunks for a chunk-delivered item mid-stream', () => {
+      expect(
+        deriveStreamingItemText('Hello ', {
+          isDone: false,
+          chunks: [{ text: 'Hello ' }, { text: 'world' }],
+        })
+      ).toBe('Hello world');
+    });
+
+    // The upsert flow streams whole-message snapshots: `chunks` is always empty and the
+    // item's text is complete on every update. Joining the empty array rendered
+    // upsert-streamed text as blank until COMPLETE — the regression this pins.
+    it('falls back to the item text for a snapshot-delivered item mid-stream', () => {
+      expect(
+        deriveStreamingItemText('Hello world so far', {
+          isDone: false,
+          chunks: [],
+        })
+      ).toBe('Hello world so far');
+    });
+
+    it('uses the item text once streaming is done', () => {
+      expect(
+        deriveStreamingItemText('The final text', {
+          isDone: true,
+          chunks: [{ text: 'stale ' }, { text: 'chunks' }],
+        })
+      ).toBe('The final text');
+    });
+
+    it('uses the item text when there is no streaming state', () => {
+      expect(deriveStreamingItemText('Plain text', undefined)).toBe(
+        'Plain text'
+      );
+    });
+
+    it('treats chunks with missing text as empty rather than "undefined"', () => {
+      expect(
+        deriveStreamingItemText('', {
+          isDone: false,
+          chunks: [{ text: 'a' }, {}, { text: 'b' }],
+        })
+      ).toBe('ab');
+    });
+  });
 
   describe('resolveChunkContext', () => {
     it('extracts metadata for partial chunks', () => {

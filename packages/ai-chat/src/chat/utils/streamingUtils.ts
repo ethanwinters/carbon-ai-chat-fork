@@ -10,6 +10,7 @@
 import actions from '../store/actions';
 import {
   CompleteItemChunk,
+  ConversationalSearchItem,
   FinalResponseChunk,
   GenericItem,
   MessageResponseTypes,
@@ -20,7 +21,10 @@ import {
   UserDefinedItem,
 } from '../../types/messaging/Messages';
 import { DeepPartial } from '../../types/utilities/DeepPartial';
-import { LocalMessageItem } from '../../types/messaging/LocalMessageItem';
+import {
+  LocalMessageItem,
+  LocalMessageItemStreamingState,
+} from '../../types/messaging/LocalMessageItem';
 import {
   isStreamCompleteItem,
   isStreamFinalResponse,
@@ -176,6 +180,32 @@ function resetStopStreamingButton(store: StoreLike) {
 }
 
 /**
+ * The text a streaming-aware renderer should display for a text-bearing item.
+ *
+ * The two delivery flows store mid-stream text differently. The chunk flow streams
+ * deltas: the accumulated text lives in `streamingState.chunks` (the item's own `text`
+ * holds only the first chunk). The upsert flow streams snapshots: the item's `text` is
+ * complete on every update and `chunks` stays empty. Joining chunks unconditionally
+ * rendered upsert-streamed text as blank until COMPLETE, so the chunks win only when
+ * there are any.
+ */
+function deriveStreamingItemText(
+  text: string,
+  streamingState:
+    | LocalMessageItemStreamingState<TextItem | ConversationalSearchItem>
+    | undefined
+): string {
+  if (
+    streamingState &&
+    !streamingState.isDone &&
+    streamingState.chunks.length
+  ) {
+    return streamingState.chunks.map((chunk) => chunk.text ?? '').join('');
+  }
+  return text;
+}
+
+/**
  * Merge message options only, ignoring unexpected partial_response fields.
  */
 function mergePartialResponseOptions(
@@ -281,6 +311,7 @@ function messageHasDisplayableContent(
 
 export {
   chunkHasDisplayableContent,
+  deriveStreamingItemText,
   FinalResponseChunk,
   mergePartialResponseOptions,
   messageHasDisplayableContent,
