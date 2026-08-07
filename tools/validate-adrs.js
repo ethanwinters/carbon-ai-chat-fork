@@ -257,33 +257,25 @@ function validateLinks(file, content) {
   }
 }
 
-// The index is generated, not written. Status lives in frontmatter, and a
-// hand-copied second home for it drifts the first time someone flips one
-// without touching the table.
+// The index is generated, not written. Only `proposed` records appear — an
+// accepted or rejected ADR is decided and no longer needs to surface as open.
+// Status lives in frontmatter, and a hand-copied second home for it drifts the
+// first time someone flips one without touching the table.
 function renderIndex(records) {
-  const cell = (record) => {
-    const status = record.frontmatter.status || '';
-    const label = status ? status[0].toUpperCase() + status.slice(1) : '—';
-    const replacement = record.frontmatter['superseded-by'];
-    if (status !== 'superseded' || !replacement) {
-      return label;
-    }
-    const target = records.find(
-      (r) => r.number === String(replacement).match(/(\d{4})/)?.[1]
-    );
-    return target ? `Superseded by [${target.number}](${target.name})` : label;
-  };
+  const proposed = records.filter(
+    (r) => (r.frontmatter.status || '') === 'proposed'
+  );
 
   // Blank lines around the table are what prettier produces for a fenced-off
   // region. Emitting them here keeps `sync:adrs` output already-formatted, so
   // regenerating the index never leaves `npm run format` failing.
   return [
     '',
-    '| ADR | Title | Status |',
-    '| --- | --- | --- |',
-    ...records.map(
+    '| ADR | Title |',
+    '| --- | --- |',
+    ...proposed.map(
       (record) =>
-        `| [${record.number}](${record.name}) | ${record.title || '—'} | ${cell(record)} |`
+        `| [${record.number}](${record.name}) | ${record.title || '—'} |`
     ),
     '',
   ].join('\n');
