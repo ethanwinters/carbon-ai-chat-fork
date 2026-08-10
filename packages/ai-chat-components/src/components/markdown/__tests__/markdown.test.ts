@@ -1525,6 +1525,14 @@ HTTP: http://example.com
 
           if (!forwarderOwners.has(detail.slotName)) {
             forwarderOwners.set(detail.slotName, owner);
+            // Both attributes carry weight, and both mirror what the real
+            // containers render (`<slot name=${slot} slot=${slot}>`). `name`
+            // makes the forwarder gather the hoisted host back out of the
+            // harness light DOM; `slot` assigns the forwarder itself into the
+            // markdown element's own shadow slot, which is the second hop the
+            // `assignedElements({ flatten: true })` assertion below resolves
+            // through. Without `slot`, nothing is assigned to that shadow slot
+            // and `flatten` yields its fallback content instead of the host.
             const forwarder = document.createElement('slot');
             forwarder.setAttribute('name', detail.slotName);
             forwarder.setAttribute('slot', detail.slotName);

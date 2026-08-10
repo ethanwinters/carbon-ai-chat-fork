@@ -23,8 +23,8 @@ export const MARKDOWN_SLOT_PREFIX = 'cds-aichat-markdown-renderer';
  * Key the per-page instance sequence is parked under. It lives on `globalThis`
  * rather than in a module-scoped `let` so every copy of this module loaded on
  * the page advances one sequence — the `es` and `es-custom` builds are separate
- * module scopes with separate class definitions, and would otherwise each start
- * counting from zero.
+ * module scopes with separate class definitions. Without `globalThis`, each
+ * build would start counting from zero.
  *
  * The name is deliberately underscore-prefixed and camelCase: the `es-custom`
  * build rewrites the bare tokens `cds` and `cds-aichat` in every emitted file
@@ -42,6 +42,11 @@ const INSTANCE_SEQUENCE_KEY = '__cdsAIChatMarkdownInstanceSequence';
  * A page-global sequence rather than a random id: uniqueness comes from the
  * shared counter, and short deterministic names stay readable in DevTools and
  * in test output.
+ *
+ * The count is base-36, not decimal, so the sequence reads `e1`, `e2`, … `e9`,
+ * `ea`, … `ez`, `e10`. The `e` keeps the suffix from being read as one more of
+ * the numeric position segments the base name already ends in
+ * (`…-codeBlock-0-0-e3`, not `…-codeBlock-0-0-3`).
  *
  * @internal
  */
