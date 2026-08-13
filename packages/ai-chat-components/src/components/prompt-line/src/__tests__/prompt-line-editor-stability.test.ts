@@ -174,6 +174,48 @@ describe('<cds-aichat-prompt-line> editor stability across config updates', func
     expect(events).to.have.lengthOf(1);
   });
 
+  it('defers a recreate until an IME composition commits', async () => {
+    const el = await makeRichPromptLine(
+      buildCarbonExtensions({ mention: { trigger: '@', items: PEOPLE } })
+    );
+    const editor = el.getEditor();
+    const host = el.querySelector('[slot="editor"]') as HTMLElement;
+
+    host.dispatchEvent(new CompositionEvent('compositionstart'));
+    await setExtensions(
+      el,
+      buildCarbonExtensions({ mention: { trigger: '#', items: PEOPLE } })
+    );
+    // Tearing the editor down here would strand the IME's pending candidate.
+    expect(el.getEditor()).to.equal(editor);
+
+    host.dispatchEvent(new CompositionEvent('compositionend'));
+    await Promise.resolve();
+
+    expect(el.getEditor()).to.not.equal(editor);
+    const triggers = el
+      .getEditor()!
+      .extensionManager.extensions.filter((ext) => ext.name === 'mention');
+    expect(triggers[0].options.suggestion.char).to.equal('#');
+  });
+
+  it('applies a placeholder change to the live editor', async () => {
+    // Placeholder used to reach the editor only via a recreate; with recreates
+    // gone it has to be written through.
+    const el = await makeRichPromptLine();
+    const editor = el.getEditor();
+
+    el.placeholder = 'Ask anything';
+    await el.updateComplete;
+    await Promise.resolve();
+
+    expect(el.getEditor()).to.equal(editor);
+    const paragraph = editor!.view.dom.querySelector('p');
+    expect(paragraph?.getAttribute('data-placeholder')).to.equal(
+      'Ask anything'
+    );
+  });
+
   it('does not emit a change event for the mount-time content seed', async () => {
     // `content` present before the first update is the mount seed, already
     // applied by the controller's init — re-applying it in `updated()` would

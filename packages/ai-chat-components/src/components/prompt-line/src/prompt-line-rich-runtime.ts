@@ -81,6 +81,9 @@ class RichController implements PromptLineController {
   private _testId = '';
   private _disabled = false;
   private _focusFromMouse = false;
+  private _isComposing = false;
+  /** Set when a recreate is withheld during an IME composition. */
+  private _pendingRecreate = false;
 
   mount(host: HTMLElement, init: PromptLineControllerInit): void {
     this._host = host;
@@ -103,6 +106,11 @@ class RichController implements PromptLineController {
     host.addEventListener('mousedown', this._setMouseFlag);
     host.addEventListener('touchstart', this._setMouseFlag);
 
+    // Destroying the editor mid-composition would strand the IME's in-flight
+    // candidate, so a recreate waits for the composition to commit.
+    host.addEventListener('compositionstart', this._onCompositionStart);
+    host.addEventListener('compositionend', this._onCompositionEnd);
+
     ensureKeyboardFocusRule();
 
     // Prefer a structured `content` seed (mentions / custom nodes); otherwise
@@ -121,7 +129,11 @@ class RichController implements PromptLineController {
       host.removeEventListener('pointerdown', this._setMouseFlag);
       host.removeEventListener('mousedown', this._setMouseFlag);
       host.removeEventListener('touchstart', this._setMouseFlag);
+      host.removeEventListener('compositionstart', this._onCompositionStart);
+      host.removeEventListener('compositionend', this._onCompositionEnd);
     }
+    this._isComposing = false;
+    this._pendingRecreate = false;
     this._editor?.destroy();
     this._editor = null;
     this._host = null;
@@ -215,9 +227,14 @@ class RichController implements PromptLineController {
   }
 
   setPlaceholder(placeholder: string): void {
-    // Placeholder is fixed at editor creation (matches the pre-split element);
-    // record it so a later extension-driven recreate keeps the latest value.
     this._placeholder = placeholder;
+    // The Placeholder extension reads this back through the resolver installed
+    // in `_createEditor`; the empty transaction repaints the decoration so the
+    // new text shows without waiting for the next edit.
+    const editor = this._editor;
+    if (editor) {
+      editor.view.dispatch(editor.state.tr);
+    }
   }
 
   setAriaLabel(ariaLabel: string): void {
@@ -299,6 +316,19 @@ class RichController implements PromptLineController {
     this._focusFromMouse = true;
   };
 
+  private _onCompositionStart = (): void => {
+    this._isComposing = true;
+  };
+
+  private _onCompositionEnd = (): void => {
+    this._isComposing = false;
+    if (this._pendingRecreate) {
+      // Rebuild against whatever the host last supplied, not the set that was
+      // pending when the composition began.
+      this._recreateEditor();
+    }
+  };
+
   private _createEditor(
     element: HTMLElement,
     content: JSONContent | string | undefined
@@ -309,7 +339,10 @@ class RichController implements PromptLineController {
       TextNode as unknown as Extension,
       HardBreakNode as unknown as Extension,
       UndoRedo.configure({ ...HISTORY_DEFAULTS }),
-      Placeholder.configure({ placeholder: this._placeholder }),
+      // Resolved per decoration build rather than captured, so `setPlaceholder`
+      // lands on the live editor. Tiptap snapshots an extension's options when
+      // it builds plugins, so a value here could never be updated in place.
+      Placeholder.configure({ placeholder: () => this._placeholder }),
       PlainTextPaste,
       Keymap,
       // Plain Enter sends (non-empty); empty Enter falls through to a newline.
@@ -353,6 +386,11 @@ class RichController implements PromptLineController {
     if (!host) {
       return;
     }
+    if (this._isComposing) {
+      this._pendingRecreate = true;
+      return;
+    }
+    this._pendingRecreate = false;
     const previousJson = this._editor?.getJSON();
     const previousSelection = this._editor
       ? {
