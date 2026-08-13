@@ -66,6 +66,11 @@ async function setExtensions(
   await Promise.resolve();
 }
 
+/** Let the deferred teardown scheduled by `disconnectedCallback` run. */
+async function flushTeardown(): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 function starterStorage(el: PromptLineElement): StarterTriggerStorage {
   return (el.getEditor()!.storage as unknown as Record<string, unknown>)
     .carbonStarterTrigger as StarterTriggerStorage;
@@ -214,6 +219,76 @@ describe('<cds-aichat-prompt-line> editor stability across config updates', func
     expect(paragraph?.getAttribute('data-placeholder')).to.equal(
       'Ask anything'
     );
+  });
+
+  it('keeps the editor across a same-frame detach and reattach', async () => {
+    // A host reparenting the node (or a framework remounting it for one frame)
+    // must not cost the user their editor or its history.
+    const el = await makeRichPromptLine();
+    const editor = el.getEditor();
+    const parent = el.parentElement!;
+    type(el, 'still here');
+
+    parent.removeChild(el);
+    parent.appendChild(el);
+    await flushTeardown();
+
+    expect(el.getEditor()).to.equal(editor);
+    expect(el.getEditor()!.getText()).to.equal('still here');
+    type(el, ' and typing');
+    expect(el.getEditor()!.getText()).to.equal('still here and typing');
+    while (el.undo()) {
+      /* drain the history stack */
+    }
+    expect(el.getEditor()!.getText()).to.equal('');
+  });
+
+  it('keeps a pending ensureEditor() alive across a same-frame remount', async () => {
+    const el = await fixture<PromptLineElement>(html`
+      <cds-aichat-prompt-line aria-label="test prompt"></cds-aichat-prompt-line>
+    `);
+    const pending = el.ensureEditor();
+    const parent = el.parentElement!;
+
+    parent.removeChild(el);
+    parent.appendChild(el);
+    await flushTeardown();
+
+    const editor = await pending;
+    expect(editor).to.equal(el.getEditor());
+  });
+
+  it('recovers a working surface when reattached after teardown', async () => {
+    // `firstUpdated` never runs twice, so without an explicit re-init the
+    // element used to come back with no controller and ignore every prop.
+    const el = await makeRichPromptLine();
+    const parent = el.parentElement!;
+
+    parent.removeChild(el);
+    await flushTeardown();
+    expect(el.getEditor()).to.equal(null);
+
+    parent.appendChild(el);
+    await waitForRich(el);
+
+    expect(el.getEditor()).to.not.equal(null);
+    type(el, 'back in business');
+    expect(el.getEditor()!.getText()).to.equal('back in business');
+    el.placeholder = 'still wired';
+    await el.updateComplete;
+    await Promise.resolve();
+    expect(el.getEditor()!.view.dom.isConnected).to.equal(true);
+  });
+
+  it('destroys the editor when the element is really unmounted', async () => {
+    const el = await makeRichPromptLine();
+    const editor = el.getEditor()!;
+    el.parentElement!.removeChild(el);
+
+    await flushTeardown();
+
+    expect(el.getEditor()).to.equal(null);
+    expect(editor.isDestroyed).to.equal(true);
   });
 
   it('does not emit a change event for the mount-time content seed', async () => {

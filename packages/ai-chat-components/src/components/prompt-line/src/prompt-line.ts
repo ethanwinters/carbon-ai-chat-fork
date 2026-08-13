@@ -122,6 +122,8 @@ class PromptLineElement extends LitElement {
   private _lastExtensionsRef: Extension[] | null = null;
   /** Guards the mount-time `content` seed from being applied a second time. */
   private _initialUpdateDone = false;
+  /** Pending deferred teardown, cancelled if the element is reattached. */
+  private _pendingTeardown: ReturnType<typeof setTimeout> | null = null;
   /** Sticky latch — once rich is wanted it never reverts. */
   private _richLatched = false;
   private _upgrading = false;
@@ -141,29 +143,27 @@ class PromptLineElement extends LitElement {
   // ---------------------------------------------------------------------------
 
   override firstUpdated(): void {
-    const host = this._mountEditorHost();
-    this._lastExtensionsRef = this.extensions;
-    this._richLatched = this._wantsRich();
+    this._initializeSurface();
+  }
 
-    const warmRuntime = this._richLatched ? getRichRuntimeIfLoaded() : null;
-    if (warmRuntime) {
-      // Runtime already loaded (e.g. preloaded at boot) — mount rich directly,
-      // no textarea flash.
-      this._mode = 'rich';
-      this._controller = warmRuntime.createRichController();
-      this._controller.mount(host, this._makeInit());
-    } else {
-      this._mode = 'textarea';
-      this._controller = new TextareaController();
-      this._controller.mount(host, this._makeInit());
-      if (this._richLatched) {
-        void this._upgradeToRich();
+  override connectedCallback(): void {
+    super.connectedCallback();
+    if (this._pendingTeardown !== null) {
+      // Reattached before the deferred teardown ran — a move, not an unmount.
+      // The controller and its editor host travelled with the element, so the
+      // Tiptap instance (and its undo history) survives untouched.
+      clearTimeout(this._pendingTeardown);
+      this._pendingTeardown = null;
+      const root = this._editorHost?.getRootNode();
+      if (root instanceof ShadowRoot || root instanceof Document) {
+        adoptOnRoot(root);
       }
+      return;
     }
-
-    if (this.autofocus) {
-      // Defer so consumer listeners are attached first.
-      Promise.resolve().then(() => this._controller?.focus());
+    // Reattached after a real teardown. `firstUpdated` is a one-shot, so
+    // without this the element would come back permanently inert.
+    if (this.hasUpdated && !this._controller) {
+      this._initializeSurface();
     }
   }
 
@@ -213,12 +213,57 @@ class PromptLineElement extends LitElement {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
+    if (!this._controller || this._pendingTeardown !== null) {
+      return;
+    }
+    // Deferred by a task so a reparent — remove and re-append in the same
+    // frame — keeps the live editor instead of destroying and rebuilding it.
+    // A macrotask rather than a microtask because the reconnect can be
+    // scheduled separately from the removal, and rather than a frame callback
+    // because those never fire in a background tab, which would leak the
+    // editor of a chat that really was unmounted.
+    this._pendingTeardown = setTimeout(() => {
+      this._pendingTeardown = null;
+      this._teardownSurface();
+    }, 0);
+  }
+
+  /** Destroy the editing surface. Deferred from `disconnectedCallback`. */
+  private _teardownSurface(): void {
     this._failRichReady(new Error('Input is not currently rendered'));
     this._controller?.destroy();
     this._controller = null;
     this._editorHost?.remove();
     this._editorHost = null;
     this._lastExtensionsRef = null;
+  }
+
+  /** Mount the editing surface. Runs on first render and on a late reconnect. */
+  private _initializeSurface(): void {
+    const host = this._mountEditorHost();
+    this._lastExtensionsRef = this.extensions;
+    this._richLatched = this._wantsRich();
+
+    const warmRuntime = this._richLatched ? getRichRuntimeIfLoaded() : null;
+    if (warmRuntime) {
+      // Runtime already loaded (e.g. preloaded at boot) — mount rich directly,
+      // no textarea flash.
+      this._mode = 'rich';
+      this._controller = warmRuntime.createRichController();
+      this._controller.mount(host, this._makeInit());
+    } else {
+      this._mode = 'textarea';
+      this._controller = new TextareaController();
+      this._controller.mount(host, this._makeInit());
+      if (this._richLatched) {
+        void this._upgradeToRich();
+      }
+    }
+
+    if (this.autofocus) {
+      // Defer so consumer listeners are attached first.
+      Promise.resolve().then(() => this._controller?.focus());
+    }
   }
 
   override render() {
