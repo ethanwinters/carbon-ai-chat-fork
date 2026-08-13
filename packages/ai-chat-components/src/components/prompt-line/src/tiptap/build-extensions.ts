@@ -26,6 +26,7 @@ import type { Extension } from '@tiptap/core';
 import { carbonAutocomplete } from './carbon-autocomplete.js';
 import { carbonCommand, carbonMention } from './carbon-mention.js';
 import { carbonStarterTrigger } from './carbon-starter-trigger.js';
+import { tagExtensionSource } from './extension-equivalence.js';
 import type {
   AutocompleteConfig,
   StartersConfig,
@@ -42,19 +43,46 @@ export interface BuildCarbonExtensionsConfig {
 export function buildCarbonExtensions(
   configs: BuildCarbonExtensionsConfig
 ): Extension[] {
+  // Each entry is tagged with the config it was built from so the rich runtime
+  // can tell a genuinely different extension set from a rebuilt-but-identical
+  // one without recreating the editor. See ./extension-equivalence.ts.
   const out: Extension[] = [];
   if (configs.mention) {
-    out.push(carbonMention(configs.mention) as unknown as Extension);
+    out.push(
+      tagExtensionSource(
+        carbonMention(configs.mention) as unknown as Extension,
+        {
+          kind: 'mention',
+          config: configs.mention,
+        }
+      )
+    );
   }
   if (configs.command) {
-    out.push(carbonCommand(configs.command) as unknown as Extension);
+    out.push(
+      tagExtensionSource(
+        carbonCommand(configs.command) as unknown as Extension,
+        {
+          kind: 'command',
+          config: configs.command,
+        }
+      )
+    );
   }
   if (configs.autocomplete) {
-    out.push(carbonAutocomplete(configs.autocomplete));
+    out.push(
+      tagExtensionSource(carbonAutocomplete(configs.autocomplete), {
+        kind: 'autocomplete',
+        config: configs.autocomplete,
+      })
+    );
   }
   if (configs.starters?.items.length) {
     out.push(
-      carbonStarterTrigger(configs.starters.items, configs.starters.isOn)
+      tagExtensionSource(
+        carbonStarterTrigger(configs.starters.items, configs.starters.isOn),
+        { kind: 'starters', config: configs.starters }
+      )
     );
   }
   return out;

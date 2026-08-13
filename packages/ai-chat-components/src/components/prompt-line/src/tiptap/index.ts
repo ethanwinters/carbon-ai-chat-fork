@@ -25,6 +25,15 @@ export {
   type BuildCarbonExtensionsConfig,
 } from './build-extensions.js';
 export {
+  areExtensionSetsEquivalent,
+  getExtensionSource,
+  tagExtensionSource,
+} from './extension-equivalence.js';
+export type {
+  ExtensionSourceDescriptor,
+  ExtensionSourceKind,
+} from './extension-equivalence.js';
+export {
   removeNodesByType,
   mapNodes,
   findNodesByType,

@@ -100,8 +100,10 @@ export interface PromptLineController {
   setAriaLabel(ariaLabel: string): void;
   setTestId(testId: string): void;
   /**
-   * Apply a new host-extension list. Rich mode recreates the editor preserving
-   * content/selection/focus; textarea mode ignores it.
+   * Apply a new extension list. Rich mode compares it by value against the
+   * installed set: an equivalent set is a no-op (keeping the editor and its
+   * undo history), a genuinely different one recreates the editor preserving
+   * content/selection/focus. Textarea mode ignores it.
    */
   setExtensions(extensions: Extension[]): void;
 
