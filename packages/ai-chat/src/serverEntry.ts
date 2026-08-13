@@ -150,6 +150,7 @@ export type {
   BaseSuggestionConfig,
   TriggerSuggestionConfig,
   AutocompleteConfig,
+  StartersConfig,
   SuggestionItem,
   CustomListProps,
 } from './types/config/InputConfig';
