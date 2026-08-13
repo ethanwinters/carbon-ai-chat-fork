@@ -176,9 +176,11 @@ export interface InputConfig {
     /**
      * Host-supplied Tiptap extensions appended after the curated bundle.
      * Use to add custom marks, nodes, keymaps, paste rules, input rules,
-     * or any other Tiptap extension. Reference equality on the array
-     * short-circuits — memoize so the editor doesn't recreate on every
-     * render.
+     * or any other Tiptap extension. These are compared by reference, so
+     * memoize them — a fresh array of new instances each render reads as a
+     * genuinely different editor and replaces the live one, losing its undo
+     * history. The Carbon-curated configs above carry no such requirement;
+     * they are compared by value.
      */
     extensions?: Extension[];
   };
