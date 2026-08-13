@@ -58,33 +58,46 @@ function storedInput(instance: ChatInstance) {
   return instance.serviceManager.store.getState().config.public.input;
 }
 
+/** Render the chat and wait for the instance the chat hands back. */
+async function renderChat(
+  config: PublicConfig
+): Promise<{ chat: ChatInstance; rerender: (config: PublicConfig) => void }> {
+  let captured: ChatInstance | null = null;
+  const onBeforeRender = jest.fn((next: ChatInstance) => {
+    captured = next;
+  });
+
+  const result = render(
+    <ChatContainer {...config} onBeforeRender={onBeforeRender} />
+  );
+  await waitFor(() => expect(captured).not.toBeNull(), { timeout: 5000 });
+
+  return {
+    chat: captured as unknown as ChatInstance,
+    rerender: (next: PublicConfig) =>
+      result.rerender(
+        <ChatContainer {...next} onBeforeRender={onBeforeRender} />
+      ),
+  };
+}
+
 describe('prompt-line editor stability across runtime config updates', () => {
   beforeEach(setupBeforeEach);
   afterEach(setupAfterEach);
 
   it('keeps the live editor and its undo history when the host config changes', async () => {
-    let instance: ChatInstance | null = null;
-    const onBeforeRender = jest.fn((next: ChatInstance) => {
-      instance = next;
-    });
+    const { chat, rerender } = await renderChat(buildConfig(false));
 
-    const { rerender } = render(
-      <ChatContainer {...buildConfig(false)} onBeforeRender={onBeforeRender} />
-    );
-    await waitFor(() => expect(instance).not.toBeNull(), { timeout: 5000 });
-
-    const editor = await instance!.input.getEditor();
+    const editor = await chat.input.getEditor();
     editor.view.dispatch(editor.state.tr.insertText('hello'));
 
-    rerender(
-      <ChatContainer {...buildConfig(true)} onBeforeRender={onBeforeRender} />
-    );
+    rerender(buildConfig(true));
     await waitFor(() =>
-      expect(storedInput(instance!).actions[0].disabled).toBe(true)
+      expect(storedInput(chat).actions[0].disabled).toBe(true)
     );
 
     // Same editor instance — the config update no longer tears it down.
-    const afterUpdate = await instance!.input.getEditor();
+    const afterUpdate = await chat.input.getEditor();
     expect(afterUpdate).toBe(editor);
     expect(afterUpdate.isDestroyed).toBe(false);
 
@@ -100,33 +113,21 @@ describe('prompt-line editor stability across runtime config updates', () => {
   });
 
   it('keeps the editor when the starters list is toggled', async () => {
-    let instance: ChatInstance | null = null;
-    const onBeforeRender = jest.fn((next: ChatInstance) => {
-      instance = next;
-    });
-
     const base = buildConfig(false);
-    const { rerender } = render(
-      <ChatContainer {...base} onBeforeRender={onBeforeRender} />
-    );
-    await waitFor(() => expect(instance).not.toBeNull(), { timeout: 5000 });
+    const { chat, rerender } = await renderChat(base);
 
-    const editor = await instance!.input.getEditor();
-    const toggled = {
+    const editor = await chat.input.getEditor();
+    rerender({
       ...base,
       input: {
         ...base.input,
         starters: { items: STARTER_ITEMS, isOn: false },
       },
-    } as PublicConfig;
-
-    rerender(<ChatContainer {...toggled} onBeforeRender={onBeforeRender} />);
-    await waitFor(() =>
-      expect(storedInput(instance!).starters.isOn).toBe(false)
-    );
+    } as PublicConfig);
+    await waitFor(() => expect(storedInput(chat).starters.isOn).toBe(false));
 
     // Toggling the list applies to extension storage in place; it is not a
     // reason to rebuild the editor.
-    expect(await instance!.input.getEditor()).toBe(editor);
+    expect(await chat.input.getEditor()).toBe(editor);
   });
 });
