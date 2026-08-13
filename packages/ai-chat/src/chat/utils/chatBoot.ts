@@ -10,7 +10,6 @@
 import dayjs from 'dayjs';
 import type React from 'react';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat.js';
-import merge from 'lodash-es/merge.js';
 import isEqual from 'lodash-es/isEqual.js';
 
 import { setVarsForSelector } from '@carbon/ai-chat-components/es/components/shared/dynamic-css-var-sheet.js';
@@ -76,11 +75,46 @@ export const DEFAULT_PUBLIC_CONFIG: Partial<PublicConfig> = {
 };
 
 /**
+ * Shallow overlay that ignores `undefined` overrides, so an explicitly-absent
+ * field still falls back to its default.
+ */
+function overlayDefined<T extends object>(base: T, override?: Partial<T>): T {
+  const result: Record<string, unknown> = {
+    ...(base as Record<string, unknown>),
+  };
+  if (override) {
+    for (const [key, value] of Object.entries(override)) {
+      if (value !== undefined) {
+        result[key] = value;
+      }
+    }
+  }
+  return result as T;
+}
+
+/**
  * Merges a user-supplied partial config with {@link DEFAULT_PUBLIC_CONFIG} to
  * produce a complete `PublicConfig` used throughout the app.
+ *
+ * Every sub-object the caller supplies passes through **by reference**. Only
+ * the three keys carrying object-valued defaults are rebuilt, and only one
+ * level deep. A deep merge here would clone the whole tree on every config
+ * update, handing memoized consumers a fresh `input.starters.items` (and so on)
+ * even when the caller held them as constants — which is what tore down and
+ * rebuilt the live prompt-line editor mid-typing.
+ *
+ * The config is treated as immutable: callers must supply a new object rather
+ * than mutating one already handed over.
  */
 export function mergePublicConfig(config: Partial<PublicConfig>): PublicConfig {
-  return merge({}, DEFAULT_PUBLIC_CONFIG, config) as PublicConfig;
+  const merged = overlayDefined(DEFAULT_PUBLIC_CONFIG, config) as PublicConfig;
+  merged.serviceDesk = { ...config?.serviceDesk };
+  merged.messaging = { ...config?.messaging };
+  merged.launcher = overlayDefined(
+    DEFAULT_PUBLIC_CONFIG.launcher,
+    config?.launcher
+  );
+  return merged;
 }
 
 /**
