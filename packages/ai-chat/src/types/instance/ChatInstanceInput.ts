@@ -174,10 +174,11 @@ export interface ChatInstanceInput {
    *
    * 2. **Memoize `tiptap.extensions`.** The chat-domain configs are compared
    *    by value, so rebuilding an equivalent one costs nothing beyond the
-   *    comparison. Extensions you construct yourself are compared by
-   *    reference — a fresh array of new instances every render reads as a
-   *    real change and replaces the editor mid-edit, losing selection and
-   *    undo history.
+   *    comparison — as long as the callbacks inside it hold their identity,
+   *    since those compare by reference. Extensions you construct yourself
+   *    are compared by reference — a fresh array of new instances every
+   *    render reads as a real change and replaces the editor mid-edit, losing
+   *    selection and undo history.
    *
    * @experimental
    */

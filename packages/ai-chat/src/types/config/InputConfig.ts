@@ -179,8 +179,12 @@ export interface InputConfig {
      * or any other Tiptap extension. These are compared by reference, so
      * memoize them — a fresh array of new instances each render reads as a
      * genuinely different editor and replaces the live one, losing its undo
-     * history. The Carbon-curated configs above carry no such requirement;
-     * they are compared by value.
+     * history. The Carbon-curated configs above are compared by value, so
+     * rebuilding an equivalent one is free. Callbacks inside them still
+     * compare by reference, so on {@link InputConfig.mention},
+     * {@link InputConfig.command}, and {@link InputConfig.autocomplete} keep
+     * `onSelect`, `onRemove`, `renderCustomList`, `renderCustomToken`, and a
+     * function-valued `items` stable across renders.
      */
     extensions?: Extension[];
   };
