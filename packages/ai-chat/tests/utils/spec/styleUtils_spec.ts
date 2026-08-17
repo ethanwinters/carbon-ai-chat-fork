@@ -77,5 +77,18 @@ describe('styleUtils', () => {
       expect(result.width).toBe('420px');
       expect(result['launcher-color-background']).toBe('#1a1a2e');
     });
+
+    it('drops the invalid token without mutating the map it was given', () => {
+      // `mergePublicConfig` hands `layout.customProperties` through by reference, so
+      // the map here belongs to the host. Deleting from it strips keys from their config.
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const hostProperties = { '$button-primary': 'rebeccapurple' };
+
+      const result = validateCustomProperties(hostProperties);
+
+      expect(result['$button-primary']).toBeUndefined();
+      expect(hostProperties['$button-primary']).toBe('rebeccapurple');
+      warn.mockRestore();
+    });
   });
 });
