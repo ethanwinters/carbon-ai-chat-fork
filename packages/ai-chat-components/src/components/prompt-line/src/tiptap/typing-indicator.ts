@@ -17,10 +17,7 @@
  * - Emits `isTyping = false` after 5 seconds of inactivity.
  * - Skips host-origin transactions (`tr.setMeta("aichatOrigin", "host")`).
  *   Origin is recorded in storage by `appendTransaction` and read by the
- *   view's `update` hook (mirrors the `value-sync` extension pattern).
- *
- * The storage `reset()` controller lets the prompt-line / shell wipe typing
- * state immediately on send.
+ *   view's `update` hook.
  */
 
 import { Extension } from '@tiptap/core';
@@ -31,7 +28,6 @@ import { isHostOrigin } from './origin-meta.js';
 const TYPING_TIMEOUT_MS = 5000;
 
 export interface TypingIndicatorStorage {
-  reset(): void;
   /** True iff the most recent doc-changing batch was entirely host-origin. */
   lastTransactionIsHost: boolean;
 }
@@ -43,7 +39,7 @@ export const TypingIndicator = Extension.create<
   name: 'carbonTypingIndicator',
 
   addStorage() {
-    return { reset: () => {}, lastTransactionIsHost: false };
+    return { lastTransactionIsHost: false };
   },
 
   addProseMirrorPlugins() {
@@ -71,13 +67,6 @@ export const TypingIndicator = Extension.create<
         timeoutId = null;
       }
     }
-
-    storage.reset = () => {
-      clearTimer();
-      if (isTyping) {
-        emit(false);
-      }
-    };
 
     return [
       new Plugin({

@@ -14,7 +14,7 @@ import ParagraphNode from '@tiptap/extension-paragraph';
 import TextNode from '@tiptap/extension-text';
 
 import { setHostOriginMeta } from '../origin-meta.js';
-import { ValueSync, type ValueSyncStorage } from '../value-sync.js';
+import { ValueSync } from '../value-sync.js';
 
 function makeEditor() {
   const mount = document.createElement('div');
@@ -49,26 +49,19 @@ describe('tiptap/value-sync', function () {
     cleanup();
   });
 
-  it('flips storage.lastTransactionIsHost when the dispatched tr carries host-origin meta', () => {
+  it('emits for host-origin transactions too', () => {
     const { editor, cleanup } = makeEditor();
-    const storage = editor.extensionStorage.carbonValueSync as ValueSyncStorage;
-    expect(storage.lastTransactionIsHost).to.equal(false);
+    let received: { rawValue: string } | null = null;
+    editor.view.dom.addEventListener('cds-aichat-prompt-change', (e) => {
+      received = (e as CustomEvent).detail;
+    });
 
     const tr = editor.state.tr.insertText('x');
     setHostOriginMeta(tr);
     editor.view.dispatch(tr);
 
-    expect(storage.lastTransactionIsHost).to.equal(true);
-    cleanup();
-  });
-
-  it('keeps lastTransactionIsHost false for plain user transactions', () => {
-    const { editor, cleanup } = makeEditor();
-    const storage = editor.extensionStorage.carbonValueSync as ValueSyncStorage;
-
-    editor.commands.insertContent('x');
-
-    expect(storage.lastTransactionIsHost).to.equal(false);
+    expect(received).to.not.equal(null);
+    expect(received!.rawValue).to.equal('x');
     cleanup();
   });
 });

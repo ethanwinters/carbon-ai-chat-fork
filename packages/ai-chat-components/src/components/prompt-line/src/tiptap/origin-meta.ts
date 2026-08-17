@@ -10,11 +10,14 @@
 import type { Transaction } from '@tiptap/pm/state';
 
 /**
- * Tag a transaction as host-originated so the value-sync extension (and any
- * other origin-aware reader) can suppress its own change-event emission for
- * the round-trip. Replaces the legacy `external-update-flag.ts` WeakMap; the
- * meta key is shared with consumer code that dispatches transactions via
- * `getEditor()?.view.dispatch(tr)` and wants to opt out of the change loop.
+ * Tag a transaction as host-originated so origin-aware readers can treat it
+ * as programmatic rather than a user edit. Replaces the legacy
+ * `external-update-flag.ts` WeakMap; the meta key is shared with consumer
+ * code that dispatches transactions via `getEditor()?.view.dispatch(tr)`.
+ *
+ * Batch semantics are each reader's own choice: typing-indicator skips a
+ * batch only when every transaction is host-origin, the mention-removal
+ * plugin when any is. A new reader must pick one deliberately.
  */
 const HOST_ORIGIN_META_KEY = 'aichatOrigin';
 const HOST_ORIGIN_VALUE = 'host';

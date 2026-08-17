@@ -12,8 +12,10 @@
  * editable state and emits `cds-aichat-trigger-change` with `type: "starter"`
  * via the shared `dispatchTriggerChange` helper.
  *
- * Items are stored on `extension.storage.items` so the prompt-line / shell
- * can swap the list at runtime without recreating the editor.
+ * `items` and `isOn` live on `extension.storage` so an equivalent-set config
+ * update can write them in place instead of recreating the editor (see
+ * `RichController._syncStarterStorage`, which also uses `items` as its dedup
+ * key). The overlay resolves its visible list from config, not this storage.
  */
 
 import { Extension, type Editor } from '@tiptap/core';

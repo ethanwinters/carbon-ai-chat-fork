@@ -72,7 +72,6 @@ export type {
 // Helper extensions are exposed for advanced hosts wanting to compose their
 // own prompt-line equivalent. The prompt-line itself bundles them internally.
 export { ValueSync } from './value-sync.js';
-export type { ValueSyncStorage } from './value-sync.js';
 export { TypingIndicator } from './typing-indicator.js';
 export type { TypingIndicatorStorage } from './typing-indicator.js';
 export { PlainTextPaste } from './plain-text-paste.js';
