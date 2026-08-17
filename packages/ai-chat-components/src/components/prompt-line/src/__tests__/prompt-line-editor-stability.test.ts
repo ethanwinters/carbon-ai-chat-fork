@@ -371,6 +371,28 @@ describe('<cds-aichat-prompt-line> editor stability across config updates', func
     expect(el.getEditor()!.view.dom.isConnected).to.equal(true);
   });
 
+  it('clears in-flight composition state on a real teardown', async () => {
+    // The old host div (with its composition listeners) is discarded at
+    // teardown, so its `compositionend` can never arrive. Stale flags would
+    // park the first upgrade after a reattach forever.
+    const el = await fixture<PromptLineElement>(html`
+      <cds-aichat-prompt-line aria-label="test prompt"></cds-aichat-prompt-line>
+    `);
+    await el.updateComplete;
+    const host = el.querySelector<HTMLElement>('[data-aichat-editor-host]')!;
+    host.dispatchEvent(
+      new CompositionEvent('compositionstart', { bubbles: true })
+    );
+    const parent = el.parentElement!;
+
+    parent.removeChild(el);
+    await flushTeardown();
+    parent.appendChild(el);
+
+    const editor = await el.ensureEditor();
+    expect(editor).to.equal(el.getEditor());
+  });
+
   it('destroys the editor when the element is really unmounted', async () => {
     const el = await makeRichPromptLine();
     const editor = el.getEditor()!;

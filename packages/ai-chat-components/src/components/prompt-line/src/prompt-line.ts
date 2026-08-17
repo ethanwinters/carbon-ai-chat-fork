@@ -236,6 +236,11 @@ class PromptLineElement extends LitElement {
     this._editorHost?.remove();
     this._editorHost = null;
     this._lastExtensionsRef = null;
+    // The host div (and its composition listeners) is gone, so a composition
+    // that was in flight can never fire its `compositionend`. Left set, these
+    // would park the first upgrade after a reattach forever.
+    this._isComposing = false;
+    this._pendingUpgrade = false;
   }
 
   /** Mount the editing surface. Runs on first render and on a late reconnect. */
