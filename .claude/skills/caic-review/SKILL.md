@@ -120,6 +120,7 @@ Skip the split when a single reading holds the whole diff in view. Splitting a h
 ### Test coverage
 
 - Identify which changed behavior is currently untested.
+- Check whether any existing proof got weaker, which a passing run will not tell you. A loosened assertion, a deleted case, a case newly skipped, or a regenerated snapshot all turn the light green while the criterion still reads as written — **Blocker** when the weakened proof covers behavior this diff changed, **Important** otherwise. Regenerating is allowed and sometimes correct ([testing.md](../../../packages/ai-chat-components/references/testing.md) asks for the diff to be read before committing); what the review demands is the reason, not the command's absence.
 - Recommend the test style appropriate to the package:
   - `@carbon/ai-chat` — Jest, specs under `packages/ai-chat/tests/<area>/spec/**/*_spec.ts(x)` ([tests.md](../../../packages/ai-chat/references/tests.md)).
   - `@carbon/ai-chat-components` — `@web/test-runner` for Lit components (colocated `__tests__/*.test.ts`) and Jest for the React wrappers.
