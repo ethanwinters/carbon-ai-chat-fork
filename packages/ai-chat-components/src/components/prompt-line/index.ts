@@ -57,6 +57,7 @@ export {
 
 export type {
   BaseSuggestionConfig,
+  BuildCarbonExtensionsConfig,
   TriggerSuggestionConfig,
   AutocompleteConfig,
   StartersConfig,
