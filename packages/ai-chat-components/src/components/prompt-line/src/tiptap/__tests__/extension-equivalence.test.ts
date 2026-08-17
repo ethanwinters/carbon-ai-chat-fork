@@ -10,7 +10,10 @@
 import { expect } from '@open-wc/testing';
 import { Extension } from '@tiptap/core';
 
-import { buildCarbonExtensions } from '../build-extensions.js';
+import {
+  buildCarbonExtensions,
+  type BuildCarbonExtensionsConfig,
+} from '../build-extensions.js';
 import {
   areExtensionSetsEquivalent,
   getExtensionSource,
@@ -66,6 +69,45 @@ describe('areExtensionSetsEquivalent', function () {
     });
     const next = buildCarbonExtensions({
       mention: { trigger: '@', items: PEOPLE, onSelect: () => {} },
+    });
+    expect(areExtensionSetsEquivalent(previous, next)).to.equal(false);
+  });
+
+  it('treats a rebuild as equivalent for every carbon kind', () => {
+    // One case per factory branch. A branch that stops tagging its output still
+    // passes the mention-only cases above while recreating the editor for that
+    // host on every config rebuild.
+    const configs: BuildCarbonExtensionsConfig[] = [
+      { mention: { trigger: '@', items: PEOPLE } },
+      { command: { trigger: '/', items: PEOPLE } },
+      { autocomplete: { items: PEOPLE } },
+      { starters: { items: STARTERS } },
+    ];
+    configs.forEach((config) => {
+      expect(
+        areExtensionSetsEquivalent(
+          buildCarbonExtensions(config),
+          buildCarbonExtensions(config)
+        ),
+        JSON.stringify(config)
+      ).to.equal(true);
+    });
+  });
+
+  it('detects a changed command trigger', () => {
+    const previous = buildCarbonExtensions({
+      command: { trigger: '/', items: PEOPLE },
+    });
+    const next = buildCarbonExtensions({
+      command: { trigger: '!', items: PEOPLE },
+    });
+    expect(areExtensionSetsEquivalent(previous, next)).to.equal(false);
+  });
+
+  it('detects a changed autocomplete item list', () => {
+    const previous = buildCarbonExtensions({ autocomplete: { items: PEOPLE } });
+    const next = buildCarbonExtensions({
+      autocomplete: { items: [{ id: 'u2', label: 'Bob' }] },
     });
     expect(areExtensionSetsEquivalent(previous, next)).to.equal(false);
   });
@@ -150,14 +192,30 @@ describe('areExtensionSetsEquivalent', function () {
 
 describe('extension source descriptors', function () {
   it('tags every carbon factory output with its source config', () => {
+    // All four branches, or an untagged one falls through to `!prevSource` in
+    // `isExtensionEquivalent` and recreates the editor on every rebuild.
     const mention = { trigger: '@', items: PEOPLE };
+    const command = { trigger: '/', items: PEOPLE };
+    const autocomplete = { items: PEOPLE };
     const starters = { items: STARTERS };
-    const built = buildCarbonExtensions({ mention, starters });
+    const built = buildCarbonExtensions({
+      mention,
+      command,
+      autocomplete,
+      starters,
+    });
     const kinds = built.map((ext) => getExtensionSource(ext)?.kind);
-    expect(kinds).to.deep.equal(['mention', 'starters']);
+    expect(kinds).to.deep.equal([
+      'mention',
+      'command',
+      'autocomplete',
+      'starters',
+    ]);
     // The config is held by reference, not copied.
     expect(getExtensionSource(built[0])?.config).to.equal(mention);
-    expect(getExtensionSource(built[1])?.config).to.equal(starters);
+    expect(getExtensionSource(built[1])?.config).to.equal(command);
+    expect(getExtensionSource(built[2])?.config).to.equal(autocomplete);
+    expect(getExtensionSource(built[3])?.config).to.equal(starters);
   });
 
   it('leaves host extensions untagged', () => {
