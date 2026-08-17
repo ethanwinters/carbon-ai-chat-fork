@@ -101,6 +101,7 @@ The draft file goes inert once the PR exists — later edits need `gh pr edit <n
 
 - `.github/pr-drafts/` is git-ignored; never commit a draft.
 - The PR title is the eventual squash commit, so it follows conventional-commit format — see [conventions.md](../../../references/conventions.md).
+- The PR description is the durable record: commit bodies die at the squash, so anything a post-merge reader needs lives here, not in a branch commit body ([commit bodies](../../../references/conventions.md#commit-bodies)).
 
 ## Related guidance
 
