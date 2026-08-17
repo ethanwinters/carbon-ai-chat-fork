@@ -9,6 +9,10 @@
 
 import { StructuredData } from '../messaging/Messages';
 import type { Editor, JSONContent } from '@tiptap/core';
+// UndoRedo declaration-merges `undo`/`redo` onto Commands, which getEditor's
+// docs below promise. tsc elides a bindingless type import, so this compiles
+// our own program but does not carry the augmentation into dist/types.
+import type {} from '@tiptap/extensions';
 
 /**
  * Methods for controlling the input field.
