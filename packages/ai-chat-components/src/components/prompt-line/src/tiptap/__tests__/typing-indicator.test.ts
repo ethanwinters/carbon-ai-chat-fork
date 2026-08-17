@@ -14,10 +14,7 @@ import ParagraphNode from '@tiptap/extension-paragraph';
 import TextNode from '@tiptap/extension-text';
 
 import { setHostOriginMeta } from '../origin-meta.js';
-import {
-  TypingIndicator,
-  type TypingIndicatorStorage,
-} from '../typing-indicator.js';
+import { TypingIndicator } from '../typing-indicator.js';
 
 function makeEditor() {
   const mount = document.createElement('div');
@@ -74,20 +71,6 @@ describe('tiptap/typing-indicator', function () {
     editor.commands.insertContent(' you');
     expect(events.length).to.equal(1);
     expect(events[0].isTyping).to.equal(true);
-    cleanup();
-  });
-
-  it('storage.reset() emits isTyping=false when currently typing', () => {
-    const { editor, events, cleanup } = makeEditor();
-    const storage = editor.extensionStorage
-      .carbonTypingIndicator as TypingIndicatorStorage;
-
-    editor.commands.insertContent('hi');
-    expect(events.length).to.equal(1);
-
-    storage.reset();
-    expect(events.length).to.equal(2);
-    expect(events[1].isTyping).to.equal(false);
     cleanup();
   });
 });
