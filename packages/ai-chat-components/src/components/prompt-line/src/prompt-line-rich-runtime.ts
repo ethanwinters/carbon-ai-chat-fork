@@ -77,6 +77,13 @@ class RichController implements PromptLineController {
   private _editor: Editor | null = null;
   private _host: HTMLElement | null = null;
   private _extensions: Extension[] = [];
+  /**
+   * The set the live editor was built from. `_extensions` runs ahead of it
+   * whenever a supplied set is adopted without a rebuild, so the two are
+   * usually equivalent but rarely identical. Only the composition-end guard
+   * needs the distinction, where the two can differ in substance.
+   */
+  private _installedExtensions: Extension[] = [];
   private _placeholder = '';
   private _testId = '';
   private _disabled = false;
@@ -322,11 +329,20 @@ class RichController implements PromptLineController {
 
   private _onCompositionEnd = (): void => {
     this._isComposing = false;
-    if (this._pendingRecreate) {
-      // Rebuild against whatever the host last supplied, not the set that was
-      // pending when the composition began.
-      this._recreateEditor();
+    if (!this._pendingRecreate) {
+      return;
     }
+    // Compare against what is installed, not the set that was pending when the
+    // composition began: a host that changed the config and changed it back has
+    // nothing left to rebuild, and rebuilding anyway would drop undo history.
+    if (
+      areExtensionSetsEquivalent(this._installedExtensions, this._extensions)
+    ) {
+      this._pendingRecreate = false;
+      this._syncStarterStorage();
+      return;
+    }
+    this._recreateEditor();
   };
 
   private _createEditor(
@@ -352,6 +368,7 @@ class RichController implements PromptLineController {
       ValueSync,
       TypingIndicator,
     ];
+    this._installedExtensions = this._extensions;
     return new Editor({
       element,
       extensions: [...baseExtensions, ...this._extensions],
