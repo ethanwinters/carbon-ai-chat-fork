@@ -43,7 +43,7 @@ Each box is one observable outcome plus the proof it holds. Write the outcome, t
 - **No spec-dump box.** A single `Specs cover: a, b, c…` box is unfalsifiable, and in practice it restates criteria already written above it. Attach each case to the criterion it proves. The cases left over with nowhere to attach are the criteria you forgot to write — promote them.
 - **Name the proof.** A spec path, a command, or demo steps. Reuse the spec that already owns the area; for new surface, name the spec that will own it — see the package testing guides ([ai-chat](../../../packages/ai-chat/references/tests.md), [ai-chat-components](../../../packages/ai-chat-components/references/testing.md)).
 - **One box carries the gate.** The last criterion is the definition-of-done gate for every area this touches, as the commands that must exit 0. Link [definition-of-done.md](../../../references/definition-of-done.md) rather than restating it — the rows change, and its ordering rule and watcher precondition are load-bearing. Don't settle for "tests pass".
-- **Nothing new here.** Every criterion projects the Goal or an epic outcome — see [the spine](../caic-plan/SKILL.md#the-spine). A criterion with no parent is scope nobody agreed to.
+- **Nothing new here.** Every criterion projects a parent one level up — an epic outcome, a plan's Done when item, or the Goal on a standalone issue. The rule is [the spine](../caic-plan/SKILL.md#the-spine).
 
 When implementation proves a criterion wrong, say so in a **comment** on the issue — what the code does instead, and why the original was wrong. Never rewrite the criterion in the body; the original reasoning has to stay readable beside the correction. An amendment takes the same approval gate as filing.
 
