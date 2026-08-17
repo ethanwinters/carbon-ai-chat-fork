@@ -29,7 +29,9 @@ import { Editor, type Extension, type JSONContent } from '@tiptap/core';
 import DocumentNode from '@tiptap/extension-document';
 import HardBreakNode from '@tiptap/extension-hard-break';
 import ParagraphNode from '@tiptap/extension-paragraph';
+import Placeholder from '@tiptap/extension-placeholder';
 import TextNode from '@tiptap/extension-text';
+import { UndoRedo } from '@tiptap/extensions';
 
 import { IS_PHONE } from '../../../globals/utils/browser-utils.js';
 import { setVarsForSelector } from '../../shared/dynamic-css-var-sheet.js';
@@ -44,16 +46,11 @@ import {
   areExtensionSetsEquivalent,
   getExtensionSource,
 } from './tiptap/extension-equivalence.js';
-import {
-  carbonChatEnter,
-  HISTORY_DEFAULTS,
-  Keymap,
-  PlainTextPaste,
-  Placeholder,
-  TypingIndicator,
-  UndoRedo,
-  ValueSync,
-} from './tiptap/index.js';
+import { carbonChatEnter } from './tiptap/chat-enter.js';
+import { Keymap } from './tiptap/keymap.js';
+import { PlainTextPaste } from './tiptap/plain-text-paste.js';
+import { TypingIndicator } from './tiptap/typing-indicator.js';
+import { ValueSync } from './tiptap/value-sync.js';
 import type { StartersConfig } from './tiptap/types.js';
 import { textToDoc } from './tiptap/json-utils.js';
 import { setHostOriginMeta } from './tiptap/origin-meta.js';
@@ -354,7 +351,7 @@ class RichController implements PromptLineController {
       ParagraphNode as unknown as Extension,
       TextNode as unknown as Extension,
       HardBreakNode as unknown as Extension,
-      UndoRedo.configure({ ...HISTORY_DEFAULTS }),
+      UndoRedo.configure({ depth: 100, newGroupDelay: 500 }),
       // Resolved per decoration build rather than captured, so `setPlaceholder`
       // lands on the live editor. Tiptap snapshots an extension's options when
       // it builds plugins, so a value here could never be updated in place.

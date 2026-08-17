@@ -8,10 +8,11 @@
  */
 
 /**
- * Public barrel for the carbon Tiptap factories and helpers. Imported by the
- * `<cds-aichat-prompt-line>` element and re-exported from
- * [../../index.ts] so consumers can do
+ * Public barrel for the prompt-line's Tiptap layer — exactly the names
+ * [../../index.ts] re-exports, so everything here is importable as
  * `import { carbonMention, ... } from "@carbon/ai-chat-components"`.
+ * Internal modules deep-import their siblings instead of going through this
+ * barrel.
  */
 
 export { carbonMention, carbonCommand } from './carbon-mention.js';
@@ -24,15 +25,6 @@ export {
   buildCarbonExtensions,
   type BuildCarbonExtensionsConfig,
 } from './build-extensions.js';
-export {
-  areExtensionSetsEquivalent,
-  getExtensionSource,
-  tagExtensionSource,
-} from './extension-equivalence.js';
-export type {
-  ExtensionSourceDescriptor,
-  ExtensionSourceKind,
-} from './extension-equivalence.js';
 export {
   removeNodesByType,
   mapNodes,
@@ -52,8 +44,6 @@ export type {
   TriggerChangeEventDetail,
 } from './types.js';
 
-export { CarbonTokenNodeView } from './token-node-view.js';
-export type { CarbonTokenNodeViewOptions } from './token-node-view.js';
 export { renderTokenChip } from './render-token-chip.js';
 export type {
   RenderTokenChipArgs,
@@ -68,15 +58,3 @@ export type {
   RenderInLightDomResult,
   LightDomPortalEventDetail,
 } from './render-in-light-dom.js';
-
-// Helper extensions are exposed for advanced hosts wanting to compose their
-// own prompt-line equivalent. The prompt-line itself bundles them internally.
-export { ValueSync } from './value-sync.js';
-export { TypingIndicator } from './typing-indicator.js';
-export type { TypingIndicatorStorage } from './typing-indicator.js';
-export { PlainTextPaste } from './plain-text-paste.js';
-export { Keymap } from './keymap.js';
-export { default as Placeholder } from '@tiptap/extension-placeholder';
-export { UndoRedo } from '@tiptap/extensions';
-export const HISTORY_DEFAULTS = { depth: 100, newGroupDelay: 500 } as const;
-export type { StarterTriggerStorage } from './carbon-starter-trigger.js';
