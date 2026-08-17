@@ -13,7 +13,7 @@
  * its undo history mid-typing.
  */
 
-import { expect, fixture, html } from '@open-wc/testing';
+import { expect, fixture, html, nextFrame } from '@open-wc/testing';
 import { Extension } from '@tiptap/core';
 
 import '../prompt-line.js';
@@ -24,6 +24,8 @@ import type { SuggestionItem } from '../tiptap/types.js';
 
 const PEOPLE: SuggestionItem[] = [{ id: 'u1', label: 'Alice' }];
 const STARTERS: SuggestionItem[] = [{ id: 's1', label: 'Summarize this' }];
+/** Mirrors the private constant in prompt-line-rich-runtime.ts. */
+const KEYBOARD_FOCUS_CLASS = 'cds-aichat--input-pm-content--keyboard-focus';
 
 async function makeRichPromptLine(
   extensions: Extension[] = []
@@ -202,6 +204,95 @@ describe('<cds-aichat-prompt-line> editor stability across config updates', func
       .getEditor()!
       .extensionManager.extensions.filter((ext) => ext.name === 'mention');
     expect(triggers[0].options.suggestion.char).to.equal('#');
+  });
+
+  it('keeps the keyboard-focus ring across a recreate', async () => {
+    // The class lives on `view.dom`, which a recreate replaces, so it has to be
+    // read off the outgoing editor before the swap.
+    const el = await makeRichPromptLine(
+      buildCarbonExtensions({ mention: { trigger: '@', items: PEOPLE } })
+    );
+    // Focus the editable node directly, the way tabbing in does. `el.focus()`
+    // would set the mouse-focus flag and suppress the ring by design.
+    el.getEditor()!.view.dom.focus();
+    await nextFrame();
+    expect(
+      el.getEditor()!.view.dom.classList.contains(KEYBOARD_FOCUS_CLASS)
+    ).to.equal(true);
+
+    await setExtensions(
+      el,
+      buildCarbonExtensions({ mention: { trigger: '#', items: PEOPLE } })
+    );
+    await nextFrame();
+
+    expect(el.getEditor()!.isFocused).to.equal(true);
+    expect(
+      el.getEditor()!.view.dom.classList.contains(KEYBOARD_FOCUS_CLASS)
+    ).to.equal(true);
+  });
+
+  it('drops a deferred recreate the host reverted during composition', async () => {
+    // A→B→A while composing: the pending rebuild is latched against B, but by
+    // the time the composition commits nothing differs from what is installed.
+    // Rebuilding anyway would cost the undo history for no change.
+    const configs = { mention: { trigger: '@', items: PEOPLE } };
+    const el = await makeRichPromptLine(buildCarbonExtensions(configs));
+    const editor = el.getEditor();
+    type(el, 'composing');
+    const host = el.querySelector('[slot="editor"]') as HTMLElement;
+
+    host.dispatchEvent(new CompositionEvent('compositionstart'));
+    await setExtensions(
+      el,
+      buildCarbonExtensions({ mention: { trigger: '#', items: PEOPLE } })
+    );
+    await setExtensions(el, buildCarbonExtensions(configs));
+
+    host.dispatchEvent(new CompositionEvent('compositionend'));
+    await Promise.resolve();
+
+    expect(el.getEditor()).to.equal(editor);
+    while (el.undo()) {
+      /* drain the history stack */
+    }
+    expect(el.getEditor()!.getText()).to.equal('');
+  });
+
+  it('applies a starters change carried by a dropped rebuild', async () => {
+    // Same drop branch as above, but the reverted set also carries a starters
+    // change. Nothing rebuilds, so the drop has to write it through to storage
+    // or the toggle is lost with no recreate left to reinstall it.
+    const el = await makeRichPromptLine(
+      buildCarbonExtensions({
+        mention: { trigger: '@', items: PEOPLE },
+        starters: { items: STARTERS, isOn: true },
+      })
+    );
+    const editor = el.getEditor();
+    const host = el.querySelector('[slot="editor"]') as HTMLElement;
+
+    host.dispatchEvent(new CompositionEvent('compositionstart'));
+    await setExtensions(
+      el,
+      buildCarbonExtensions({
+        mention: { trigger: '#', items: PEOPLE },
+        starters: { items: STARTERS, isOn: true },
+      })
+    );
+    await setExtensions(
+      el,
+      buildCarbonExtensions({
+        mention: { trigger: '@', items: PEOPLE },
+        starters: { items: STARTERS, isOn: false },
+      })
+    );
+
+    host.dispatchEvent(new CompositionEvent('compositionend'));
+    await Promise.resolve();
+
+    expect(el.getEditor()).to.equal(editor);
+    expect(starterStorage(el).isOn).to.equal(false);
   });
 
   it('applies a placeholder change to the live editor', async () => {
