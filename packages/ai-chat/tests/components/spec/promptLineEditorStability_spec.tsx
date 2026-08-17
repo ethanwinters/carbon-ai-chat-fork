@@ -17,6 +17,7 @@
 
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
+import type { Editor } from '@tiptap/core';
 
 import { ChatContainer } from '../../../src/react/ChatContainer';
 import {
@@ -56,6 +57,12 @@ function buildConfig(inputHasText: boolean): PublicConfig {
 /** The input config as it landed in the store, past all the reconciliation. */
 function storedInput(instance: ChatInstance) {
   return instance.serviceManager.store.getState().config.public.input;
+}
+
+/** The starter trigger's live storage on the mounted editor. */
+function starterStorage(editor: Editor): { items: unknown[]; isOn: boolean } {
+  return (editor.storage as unknown as Record<string, unknown>)
+    .carbonStarterTrigger as { items: unknown[]; isOn: boolean };
 }
 
 /** Render the chat and wait for the instance the chat hands back. */
@@ -117,6 +124,8 @@ describe('prompt-line editor stability across runtime config updates', () => {
     const { chat, rerender } = await renderChat(base);
 
     const editor = await chat.input.getEditor();
+    expect(starterStorage(editor).isOn).toBe(true);
+
     rerender({
       ...base,
       input: {
@@ -129,5 +138,11 @@ describe('prompt-line editor stability across runtime config updates', () => {
     // Toggling the list applies to extension storage in place; it is not a
     // reason to rebuild the editor.
     expect(await chat.input.getEditor()).toBe(editor);
+
+    // The toggle has to reach the live extension, not just the store. Editor
+    // identity alone holds even when the extension set never rebuilds, so
+    // without this the `starters?.isOn` memo dep in useInputExtensions is
+    // unpinned and the list would keep opening after the host turned it off.
+    await waitFor(() => expect(starterStorage(editor).isOn).toBe(false));
   });
 });
