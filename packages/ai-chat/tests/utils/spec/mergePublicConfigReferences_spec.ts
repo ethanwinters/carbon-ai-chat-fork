@@ -14,8 +14,13 @@
  * the caller supplied. Consumers memoize on those references, so the clone
  * rebuilt the prompt-line's extension set on every config update and recreated
  * the live editor mid-typing (issue #2152).
+ *
+ * Passing sub-objects through by reference means the boot pipeline now holds the
+ * host's own objects, so the other half of the contract is that nothing
+ * downstream writes through them.
  */
 
+import { createAppConfig } from '../../../src/chat/store/doCreateStore';
 import {
   DEFAULT_PUBLIC_CONFIG,
   mergePublicConfig,
@@ -98,6 +103,25 @@ describe('mergePublicConfig reference preservation', () => {
     expect(config.launcher).toBeUndefined();
     expect(config.serviceDesk).toBeUndefined();
     expect(DEFAULT_PUBLIC_CONFIG.launcher).toEqual(launcherDefault);
+  });
+
+  it('leaves the host layout untouched when boot rejects a Carbon token', () => {
+    // `validateCustomProperties` drops a `$` token whose value is not a hex color.
+    // It used to delete from a clone; with `layout` passed through by reference the
+    // map it edits is the host's own, so it has to copy first.
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const customProperties = { '$button-primary': 'var(--brand)' };
+    const config = {
+      layout: { customProperties },
+    } as Partial<PublicConfig>;
+
+    const appConfig = createAppConfig(mergePublicConfig(config));
+
+    expect(appConfig.derived.cssVariableOverrides['$button-primary']).toBe(
+      undefined
+    );
+    expect(customProperties['$button-primary']).toBe('var(--brand)');
+    warn.mockRestore();
   });
 
   it('lets an explicitly-undefined field fall back to its default', () => {
