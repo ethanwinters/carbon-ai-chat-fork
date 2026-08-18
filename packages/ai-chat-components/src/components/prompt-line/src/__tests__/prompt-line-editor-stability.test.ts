@@ -68,6 +68,16 @@ async function setExtensions(
   await Promise.resolve();
 }
 
+/**
+ * Let the recreate withheld for a composition run. It is deferred by a
+ * macrotask so ProseMirror's own post-`compositionend` flush lands first.
+ */
+async function flushComposition(): Promise<void> {
+  await new Promise((resolve) => {
+    setTimeout(resolve);
+  });
+}
+
 /** Let the deferred teardown scheduled by `disconnectedCallback` run. */
 async function flushTeardown(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
@@ -197,13 +207,70 @@ describe('<cds-aichat-prompt-line> editor stability across config updates', func
     expect(el.getEditor()).to.equal(editor);
 
     host.dispatchEvent(new CompositionEvent('compositionend'));
-    await Promise.resolve();
+    await flushComposition();
 
     expect(el.getEditor()).to.not.equal(editor);
     const triggers = el
       .getEditor()!
       .extensionManager.extensions.filter((ext) => ext.name === 'mention');
     expect(triggers[0].options.suggestion.char).to.equal('#');
+  });
+
+  it('keeps a segment committed after compositionend', async () => {
+    // ProseMirror commits the last composed segment in a microtask after
+    // compositionend (`compositionPendingChanges` → `domObserver.flush()`).
+    // Rebuilding inside that window snapshots the doc without it. Synthetic
+    // events never reach PM's own handlers, so the microtask below stands in
+    // for that flush, dispatched against the editor PM would still be holding.
+    const el = await makeRichPromptLine(
+      buildCarbonExtensions({ mention: { trigger: '@', items: PEOPLE } })
+    );
+    const live = el.getEditor()!;
+    const host = el.querySelector('[slot="editor"]') as HTMLElement;
+    type(el, 'hi ');
+
+    host.dispatchEvent(new CompositionEvent('compositionstart'));
+    await setExtensions(
+      el,
+      buildCarbonExtensions({ mention: { trigger: '#', items: PEOPLE } })
+    );
+
+    host.dispatchEvent(new CompositionEvent('compositionend'));
+    void Promise.resolve().then(() => {
+      // A synchronous rebuild has already destroyed it by now, and the
+      // committed segment is lost with it.
+      if (!live.isDestroyed) {
+        live.view.dispatch(live.state.tr.insertText('X'));
+      }
+    });
+    await flushComposition();
+
+    expect(el.getEditor()).to.not.equal(live);
+    expect(el.getEditor()!.getText()).to.equal('hi X');
+  });
+
+  it('re-defers when a fresh composition opens before the flush', async () => {
+    const el = await makeRichPromptLine(
+      buildCarbonExtensions({ mention: { trigger: '@', items: PEOPLE } })
+    );
+    const editor = el.getEditor();
+    const host = el.querySelector('[slot="editor"]') as HTMLElement;
+
+    host.dispatchEvent(new CompositionEvent('compositionstart'));
+    await setExtensions(
+      el,
+      buildCarbonExtensions({ mention: { trigger: '#', items: PEOPLE } })
+    );
+
+    host.dispatchEvent(new CompositionEvent('compositionend'));
+    host.dispatchEvent(new CompositionEvent('compositionstart'));
+    await flushComposition();
+    // The second composition owns the editor now; rebuilding would strand it.
+    expect(el.getEditor()).to.equal(editor);
+
+    host.dispatchEvent(new CompositionEvent('compositionend'));
+    await flushComposition();
+    expect(el.getEditor()).to.not.equal(editor);
   });
 
   it('keeps the keyboard-focus ring across a recreate', async () => {
@@ -250,7 +317,7 @@ describe('<cds-aichat-prompt-line> editor stability across config updates', func
     await setExtensions(el, buildCarbonExtensions(configs));
 
     host.dispatchEvent(new CompositionEvent('compositionend'));
-    await Promise.resolve();
+    await flushComposition();
 
     expect(el.getEditor()).to.equal(editor);
     while (el.undo()) {
@@ -289,7 +356,7 @@ describe('<cds-aichat-prompt-line> editor stability across config updates', func
     );
 
     host.dispatchEvent(new CompositionEvent('compositionend'));
-    await Promise.resolve();
+    await flushComposition();
 
     expect(el.getEditor()).to.equal(editor);
     expect(starterStorage(el).isOn).to.equal(false);

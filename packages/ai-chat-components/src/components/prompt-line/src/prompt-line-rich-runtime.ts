@@ -29,7 +29,9 @@ import { Editor, type Extension, type JSONContent } from '@tiptap/core';
 import DocumentNode from '@tiptap/extension-document';
 import HardBreakNode from '@tiptap/extension-hard-break';
 import ParagraphNode from '@tiptap/extension-paragraph';
+import Placeholder from '@tiptap/extension-placeholder';
 import TextNode from '@tiptap/extension-text';
+import { UndoRedo } from '@tiptap/extensions';
 
 import { IS_PHONE } from '../../../globals/utils/browser-utils.js';
 import { setVarsForSelector } from '../../shared/dynamic-css-var-sheet.js';
@@ -44,16 +46,11 @@ import {
   areExtensionSetsEquivalent,
   getExtensionSource,
 } from './tiptap/extension-equivalence.js';
-import {
-  carbonChatEnter,
-  HISTORY_DEFAULTS,
-  Keymap,
-  PlainTextPaste,
-  Placeholder,
-  TypingIndicator,
-  UndoRedo,
-  ValueSync,
-} from './tiptap/index.js';
+import { carbonChatEnter } from './tiptap/chat-enter.js';
+import { Keymap } from './tiptap/keymap.js';
+import { PlainTextPaste } from './tiptap/plain-text-paste.js';
+import { TypingIndicator } from './tiptap/typing-indicator.js';
+import { ValueSync } from './tiptap/value-sync.js';
 import type { StartersConfig } from './tiptap/types.js';
 import { textToDoc } from './tiptap/json-utils.js';
 import { setHostOriginMeta } from './tiptap/origin-meta.js';
@@ -91,6 +88,7 @@ class RichController implements PromptLineController {
   private _isComposing = false;
   /** Set when a recreate is withheld during an IME composition. */
   private _pendingRecreate = false;
+  private _pendingRecreateTimer: ReturnType<typeof setTimeout> | null = null;
 
   mount(host: HTMLElement, init: PromptLineControllerInit): void {
     this._host = host;
@@ -138,6 +136,10 @@ class RichController implements PromptLineController {
       host.removeEventListener('touchstart', this._setMouseFlag);
       host.removeEventListener('compositionstart', this._onCompositionStart);
       host.removeEventListener('compositionend', this._onCompositionEnd);
+    }
+    if (this._pendingRecreateTimer) {
+      clearTimeout(this._pendingRecreateTimer);
+      this._pendingRecreateTimer = null;
     }
     this._isComposing = false;
     this._pendingRecreate = false;
@@ -329,7 +331,29 @@ class RichController implements PromptLineController {
 
   private _onCompositionEnd = (): void => {
     this._isComposing = false;
-    if (!this._pendingRecreate) {
+    if (!this._pendingRecreate || this._pendingRecreateTimer) {
+      return;
+    }
+    // ProseMirror defers the last composed segment to a microtask after
+    // compositionend, so recreating here would snapshot the doc without it and
+    // lose the character the user just committed. A macrotask runs after that
+    // flush.
+    this._pendingRecreateTimer = setTimeout(() => {
+      this._pendingRecreateTimer = null;
+      this._flushPendingRecreate();
+    });
+  };
+
+  private _flushPendingRecreate(): void {
+    // A fresh composition may have started while the flush was queued; its own
+    // compositionend re-queues this. A detached host means the element's own
+    // deferred teardown is already pending, so rebuilding would raise an editor
+    // only to destroy it a task later.
+    if (
+      !this._host?.isConnected ||
+      !this._pendingRecreate ||
+      this._isComposing
+    ) {
       return;
     }
     // Compare against what is installed, not the set that was pending when the
@@ -343,7 +367,7 @@ class RichController implements PromptLineController {
       return;
     }
     this._recreateEditor();
-  };
+  }
 
   private _createEditor(
     element: HTMLElement,
@@ -354,7 +378,7 @@ class RichController implements PromptLineController {
       ParagraphNode as unknown as Extension,
       TextNode as unknown as Extension,
       HardBreakNode as unknown as Extension,
-      UndoRedo.configure({ ...HISTORY_DEFAULTS }),
+      UndoRedo.configure({ depth: 100, newGroupDelay: 500 }),
       // Resolved per decoration build rather than captured, so `setPlaceholder`
       // lands on the live editor. Tiptap snapshots an extension's options when
       // it builds plugins, so a value here could never be updated in place.
@@ -444,8 +468,8 @@ class RichController implements PromptLineController {
       return;
     }
     // Chain a no-op command that meta-tags the accumulator tr as host-origin,
-    // then setContent on the same tr so downstream readers (typing-indicator,
-    // value-sync's storage flag) recognize the update.
+    // then setContent on the same tr so downstream readers (typing-indicator)
+    // recognize the update.
     editor
       .chain()
       .command(({ tr }) => {
