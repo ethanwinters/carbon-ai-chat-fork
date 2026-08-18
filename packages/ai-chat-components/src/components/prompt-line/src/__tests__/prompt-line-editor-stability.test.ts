@@ -430,12 +430,21 @@ describe('<cds-aichat-prompt-line> editor stability across config updates', func
     await waitForRich(el);
 
     expect(el.getEditor()).to.not.equal(null);
-    type(el, 'back in business');
-    expect(el.getEditor()!.getText()).to.equal('back in business');
+
+    // Props used to be ignored after a reattach, so assert one actually lands.
+    // Placeholder decorations only render on an empty doc, hence before typing.
     el.placeholder = 'still wired';
     await el.updateComplete;
     await Promise.resolve();
-    expect(el.getEditor()!.view.dom.isConnected).to.equal(true);
+    expect(
+      el
+        .getEditor()!
+        .view.dom.querySelector('p')
+        ?.getAttribute('data-placeholder')
+    ).to.equal('still wired');
+
+    type(el, 'back in business');
+    expect(el.getEditor()!.getText()).to.equal('back in business');
   });
 
   it('clears in-flight composition state on a real teardown', async () => {
