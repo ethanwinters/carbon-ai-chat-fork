@@ -476,6 +476,40 @@ describe('cds-aichat-autocomplete', () => {
 
       expect(dismissEventFired).to.be.true;
     });
+
+    it('should not emit dismiss event when anchor element inside a shadow root is clicked', async () => {
+      const el = await fixture<AutocompleteElement>(html`
+        <cds-aichat-autocomplete
+          .items="${mockItems}"></cds-aichat-autocomplete>
+      `);
+
+      const host = document.createElement('div');
+      document.body.appendChild(host);
+      const root = host.attachShadow({ mode: 'open' });
+      const anchor = document.createElement('div');
+      anchor.innerHTML = '<span id="deep">editor text</span>';
+      root.appendChild(anchor);
+      el.anchorElement = anchor;
+
+      let dismissEventFired = false;
+      el.addEventListener('cds-aichat-autocomplete-dismiss', () => {
+        dismissEventFired = true;
+      });
+
+      root
+        .querySelector('#deep')!
+        .dispatchEvent(
+          new MouseEvent('click', { bubbles: true, composed: true })
+        );
+
+      anchor.dispatchEvent(
+        new MouseEvent('click', { bubbles: true, composed: true })
+      );
+
+      await el.updateComplete;
+
+      expect(dismissEventFired).to.be.false;
+    });
   });
 
   describe('keyboard navigation', () => {
