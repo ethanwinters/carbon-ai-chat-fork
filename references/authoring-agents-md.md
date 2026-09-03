@@ -20,9 +20,10 @@ Task procedures are **skills**, not `references/` docs. The dividing line is whe
 
 Rules for authoring them:
 
-- **The command surface maps to moments in the dev cycle, not to files.** Five skills cover decision records, planning, issue filing, PR description, and diff review. Don't add a skill per document — a procedure that only makes sense inside another one ships as a supporting file in that skill's own `references/` folder.
+- **The command surface maps to moments in the dev cycle, not to files.** Six skills cover decision records, planning, issue filing, PR description, diff review, and writing the copy itself. Don't add a skill per document — a procedure that only makes sense inside another one ships as a supporting file in that skill's own `references/` folder. [caic-copy-writer](../.bob/skills/caic-copy-writer/SKILL.md) is not the exception it looks like. It is the one skill that owns a cross-cutting concern rather than a procedure: thirteen copy surfaces, each with a rules file under its own `references/`, and every other skill points there for wording instead of restating it.
+- **Guidance about writing splits by cadence.** The test is _does this change depending on which copy type you are writing?_ If yes it belongs to [caic-copy-writer](../.bob/skills/caic-copy-writer/SKILL.md); if no, to [tone.md](tone.md), which stays always-on because voice binds every edit. A workflow skill never carries its own wording rules — it links the copy type it produces, or the rules drift against the twelve others.
 - **Name them `caic-` + a short task name.** An unprefixed skill silently overrides the harness built-in of the same name, and `/code-review` and `/review` are real built-ins.
-- **Frontmatter is `name` and `description` only.** `name` must match the directory. Everything else is ignored by one harness or the other. Write the description as one sentence of what it does plus concrete "Use when the user asks…" phrasing — that text is what both harnesses match against.
+- **Frontmatter is `name` and `description` only.** `name` must match the directory. Everything else is ignored by one harness or the other. Write the description as one sentence of what it does plus concrete "Use when the user asks…" phrasing — that text is what both harnesses match against. When the skill also covers work an agent does unprompted, name that trigger too — a description built only from user requests never fires on a task the user did not word.
 - **Move the content, don't point at it.** A skill that just says "read this other file" reintroduces the hop that made docs skippable in the first place.
 - **Same ~200-line budget**, with supporting files for progressive disclosure.
 - **Keep skills out of the root `AGENTS.md`.** They advertise themselves to any assistant that loads them, so a router row is redundant — the pointers live in [.github/copilot-instructions.md](../.github/copilot-instructions.md) instead, for tooling that has no skills support. A new skill needs a row there, and `npm run validate:skills` fails without one.
@@ -32,5 +33,5 @@ Rules for authoring them:
 ## Related guidance
 
 - [Root AGENTS.md](../AGENTS.md) — the router these rules produce
-- [tone.md](tone.md) — voice & word economy for developer-facing copy
+- [tone.md](tone.md) — voice & quick rules for developer-facing copy
 - [.bob/skills/README.md](../.bob/skills/README.md) — the skill collection and its sync rules

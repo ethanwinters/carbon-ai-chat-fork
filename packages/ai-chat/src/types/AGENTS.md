@@ -64,7 +64,7 @@ Symbols scheduled for removal. Include the replacement and target major: `@depre
 - **State purpose, not shape.** The signature shows the shape; JSDoc explains what it _means_ and when to use it.
 - **Document units and semantics of primitives.** `timeout: number` is useless without "milliseconds". `id: string` is useless without "must be unique across X".
 - **Complete sentences, ending in periods.** No note-form, no internal jargon, no ticket refs, no TODOs.
-- **Match the tone of existing types** ([messaging/Messages.ts](messaging/Messages.ts), [instance/ChatInstance.ts](instance/ChatInstance.ts)). JSDoc is product copy — follow [../../../../references/tone.md](../../../../references/tone.md) for voice and word economy.
+- **Match the tone of existing types** ([messaging/Messages.ts](messaging/Messages.ts), [instance/ChatInstance.ts](instance/ChatInstance.ts)). JSDoc is product copy — follow [../../../../references/tone.md](../../../../references/tone.md) for voice and quick rules.
 
 ## Cross-linking
 
@@ -122,7 +122,8 @@ When you change anything under [.](.) (or a type in `@carbon/ai-chat-components`
 ## Related Guidance
 
 - **Parent guidance**: [packages/ai-chat/AGENTS.md](../../AGENTS.md)
-- **Voice and tone**: [tone.md](../../../../references/tone.md) - Voice and word economy for all public copy
+- **Voice and tone**: [tone.md](../../../../references/tone.md) - Voice and quick rules for all public copy
+- **Copy rules**: [public-jsdoc.md](../../../../.bob/skills/caic-copy-writer/references/public-jsdoc.md) - What a JSDoc block owes a reader who never opens the source (type 1)
 - **Store patterns**: [../chat/store/AGENTS.md](../chat/store/AGENTS.md) - For action/state types
 - **Cross-package types**: [cross-package-types.md](references/cross-package-types.md) - Re-declaring `@carbon/ai-chat-components` types
 - **Worked examples**: [jsdoc-examples.md](references/jsdoc-examples.md) - Good and bad JSDoc, side by side

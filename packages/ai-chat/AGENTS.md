@@ -37,7 +37,7 @@ Load only what you need:
   - `events/` — typed pub/sub for the public event API. Event names and payloads are part of the public contract.
   - `schema/` — runtime message/config schema. Keep in sync with types in [src/types/](src/types/).
   - `hocs/`, `hooks/`, `contexts/`, `providers/` — React glue. Hooks reading the store use `useSelector` from the local store, not bespoke subscriptions.
-  - `languages/` — `intl-messageformat` string bundles. Adding a key means adding it to every locale file in the same PR; English is the source of truth.
+  - `languages/` — `intl-messageformat` string bundles. There is one locale file, and [LanguagePack.ts](src/types/config/LanguagePack.ts) declares the public `LanguagePack` type over it, so adding a key widens public API and renaming or removing one breaks it. Hosts translate through `PublicConfig.strings`. How to word a string: [ui-strings.md](../../.bob/skills/caic-copy-writer/references/ui-strings.md).
   - `components/` vs `components-legacy/` — **always author new UI in `components/`**. `components-legacy/` is closed to new components; bug fixes and refactoring transitions out are welcome. Lift to `@carbon/ai-chat-components` when a component has no chat-specific state.
   - `ai-chat-components/` — React bindings (`@lit/react`) around the sibling package's Lit components.
 - [src/react/](src/react/) — public React wrapper components re-exported from the package root.

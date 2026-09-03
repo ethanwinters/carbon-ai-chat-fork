@@ -11,5 +11,6 @@ Recurring task workflows are packaged as agent skills, which Copilot does not lo
 | Filing a GitHub issue or sub-issue | [caic-issue](../.bob/skills/caic-issue/SKILL.md) |
 | Writing a PR description | [caic-pr](../.bob/skills/caic-pr/SKILL.md) |
 | Reviewing a diff or a pull request | [caic-review](../.bob/skills/caic-review/SKILL.md) |
+| Writing copy — JSDoc, a docs page, a README, a UI string, a thrown error, or the body of a commit, PR, issue, or ADR | [caic-copy-writer](../.bob/skills/caic-copy-writer/SKILL.md) |
 
 `.claude/skills/` holds a generated copy of the same files; read either.

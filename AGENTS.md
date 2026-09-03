@@ -48,7 +48,7 @@ Read that package's `AGENTS.md` before your first edit. Each one routes onward t
 | Commits, branches, PR titles, license headers | [conventions.md](references/conventions.md) |
 | Building, testing, linting, using prettier, or running a single example/test | [commands.md](references/commands.md) |
 | Knowing which gate to run before shipping, and how to report that you ran it | [definition-of-done.md](references/definition-of-done.md) |
-| Writing developer-facing copy (README/JSDoc/MDX) | [tone.md](references/tone.md) |
+| Writing copy of any kind — how the words sound | [tone.md](references/tone.md) |
 | Editing an `AGENTS.md`, `references/`, or skill file | [authoring-agents-md.md](references/authoring-agents-md.md) |
 
 Working drafts are git-ignored and never committed: plans in `.github/plan-drafts/{name}/`, PR descriptions in `.github/pr-drafts/`, issue bodies in `.github/issue-drafts/`, ADR drafts in `.github/adr-drafts/`. An ADR draft is the one that graduates — it moves into [docs/adr/](docs/adr/README.md) and is committed.
