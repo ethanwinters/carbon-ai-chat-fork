@@ -21,6 +21,7 @@ import ParagraphNode from '@tiptap/extension-paragraph';
 import TextNode from '@tiptap/extension-text';
 
 import { AutocompleteController } from '../autocomplete-controller.js';
+import { carbonMention } from '../tiptap/carbon-mention.js';
 import { carbonStarterTrigger } from '../tiptap/carbon-starter-trigger.js';
 import {
   dispatchTriggerChange,
@@ -1033,6 +1034,87 @@ describe('extension factories leave resolution to the controller', () => {
         true
       );
       expect(callCount).to.equal(0);
+    } finally {
+      editor?.destroy();
+      mount.remove();
+    }
+  });
+});
+
+describe('select() → onRemove custom-field round-trip', () => {
+  it('a chip inserted via controller.select() carries custom fields back through onRemove', async () => {
+    // Real Tiptap editor so the ProseMirror removal plugin fires.
+    const mount = document.createElement('div');
+    document.body.appendChild(mount);
+
+    let editor: Editor | null = null;
+    try {
+      const removed: SuggestionItem[] = [];
+      const itemWithCustomField = {
+        id: 'u1',
+        label: 'Alice',
+        value: '@alice',
+        team: 'design', // custom field — must survive the round-trip
+      } as SuggestionItem & { team: string };
+
+      editor = new Editor({
+        element: mount,
+        extensions: [
+          DocumentNode,
+          ParagraphNode,
+          TextNode,
+          carbonMention({
+            trigger: '@',
+            items: [itemWithCustomField],
+            onRemove: (item) => removed.push(item),
+          }),
+        ],
+        content: '',
+      });
+
+      const promptLine = { getEditor: () => editor };
+      const controller = new AutocompleteController({
+        mention: {
+          trigger: '@',
+          items: [itemWithCustomField],
+        },
+        onChange: () => {},
+      });
+      controller.setPromptLine(promptLine as any);
+
+      // triggerOffset: 1 — first valid inline position in an empty doc
+      controller.handleTriggerChange({
+        type: 'mention',
+        query: '',
+        triggerOffset: 1,
+      });
+      await flush();
+
+      // select() inserts the chip via the controller path (not the extension command).
+      controller.select(itemWithCustomField);
+
+      // Re-query the live state after select() — chain().focus().insertContentAt().run()
+      // is synchronous, so the state reflects the insertion immediately.
+      const positions: number[] = [];
+      editor.state.doc.descendants((node, pos) => {
+        if (node.type.name === 'mention') {
+          positions.push(pos);
+        }
+      });
+      expect(positions).to.have.lengthOf(1);
+      expect(editor.state.doc.nodeAt(positions[0])?.attrs.data).to.deep.include(
+        {
+          team: 'design',
+        }
+      );
+
+      editor
+        .chain()
+        .deleteRange({ from: positions[0], to: positions[0] + 1 })
+        .run();
+
+      expect(removed).to.have.lengthOf(1);
+      expect((removed[0] as any).team).to.equal('design');
     } finally {
       editor?.destroy();
       mount.remove();
