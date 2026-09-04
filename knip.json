@@ -1,0 +1,52 @@
+{
+  "$schema": "https://unpkg.com/knip@5/overview/configuration-schema.json",
+  "rules": {
+    "dependencies": "off",
+    "devDependencies": "off",
+    "unlisted": "off",
+    "binaries": "off",
+    "unresolved": "off",
+    "exports": "off",
+    "types": "off",
+    "files": "error"
+  },
+  "workspaces": {
+    "packages/ai-chat": {
+      "entry": [
+        "src/aiChatEntry.tsx",
+        "src/serverEntry.ts",
+        "src/web-components/**/index.ts",
+        "tasks/rollup.aichat.js",
+        "tests/**/*.{ts,tsx}"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
+      "ignore": [
+        "**/*.d.ts",
+        "src/chat/hooks/useCallbackOnChange.tsx",
+        "src/chat/hooks/useDispatch.tsx"
+      ]
+    },
+    "packages/ai-chat-components": {
+      "entry": [
+        "src/react/*.ts",
+        "src/react/*.tsx",
+        "src/react/history/index.ts",
+        "src/react/hooks/useChatAutocomplete.tsx",
+        "src/react/utils/transformSuggestionConfig.ts",
+        "src/components/**/index.ts",
+        "src/components/**/src/*.ts",
+        "src/globals/**/index.ts",
+        "src/globals/**/*.ts",
+        "src/components/**/__stories__/*.{js,jsx,ts,tsx}",
+        "src/components/**/__tests__/*.test.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignore": [
+        "**/*.d.ts",
+        "src/testing/**",
+        "src/globals/utils/dom-utils.ts",
+        "src/components/markdown/src/markdown.template.ts"
+      ]
+    }
+  }
+}
