@@ -19,6 +19,7 @@ import {
   resolveShowTriggerInChip,
   stripPresentationFields,
 } from './tiptap/carbon-mention.js';
+import { resolveConfigItems } from './tiptap/resolve-config-items.js';
 import { projectRawValue } from './tiptap/json-utils.js';
 import { resetTriggerChangeState } from './tiptap/trigger-utils.js';
 import type PromptLineElement from './prompt-line.js';
@@ -554,35 +555,6 @@ function findPromptLineFromTarget(
     }
   }
   return null;
-}
-
-/**
- * Resolve a `BaseSuggestionConfig`'s `items` field (array or async resolver)
- * to a flat list, applying `minQueryLength` filtering.
- */
-async function resolveConfigItems(
-  config: {
-    items:
-      | SuggestionItem[]
-      | ((query: string) => Promise<SuggestionItem[]> | SuggestionItem[]);
-    minQueryLength?: number;
-  },
-  query: string
-): Promise<SuggestionItem[]> {
-  const minQueryLength = config.minQueryLength ?? 0;
-  if (query.length < minQueryLength) {
-    return [];
-  }
-  if (typeof config.items === 'function') {
-    return await Promise.resolve(config.items(query));
-  }
-  if (!query) {
-    return config.items;
-  }
-  const lower = query.toLowerCase();
-  return config.items.filter((item) =>
-    item.label.toLowerCase().includes(lower)
-  );
 }
 
 /**
