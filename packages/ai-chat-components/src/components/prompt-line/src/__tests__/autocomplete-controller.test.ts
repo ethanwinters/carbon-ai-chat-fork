@@ -993,3 +993,49 @@ describe('AutocompleteController', () => {
     expect(callCount).to.equal(2);
   });
 });
+
+describe('extension factories leave resolution to the controller', () => {
+  it('carbonMention never calls the host items() resolver on its own', async () => {
+    const mount = document.createElement('div');
+    document.body.appendChild(mount);
+
+    let editor: Editor | null = null;
+    try {
+      let callCount = 0;
+      const details: (TriggerChangeEventDetail | null)[] = [];
+
+      editor = new Editor({
+        element: mount,
+        extensions: [
+          DocumentNode,
+          ParagraphNode,
+          TextNode,
+          carbonMention({
+            trigger: '@',
+            items: () => {
+              callCount += 1;
+              return USERS;
+            },
+          }),
+        ],
+        content: '',
+      });
+
+      editor.view.dom.addEventListener('cds-aichat-trigger-change', (event) => {
+        details.push((event as CustomEvent).detail);
+      });
+
+      editor.commands.insertContent('@al');
+      await flush();
+
+      // Without an active trigger, callCount === 0 would prove nothing.
+      expect(details.some((detail) => detail?.type === 'mention')).to.equal(
+        true
+      );
+      expect(callCount).to.equal(0);
+    } finally {
+      editor?.destroy();
+      mount.remove();
+    }
+  });
+});
