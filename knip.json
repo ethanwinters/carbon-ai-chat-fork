@@ -6,8 +6,8 @@
     "unlisted": "off",
     "binaries": "off",
     "unresolved": "off",
-    "exports": "off",
-    "types": "off",
+    "exports": "error",
+    "types": "error",
     "files": "error"
   },
   "workspaces": {
@@ -19,34 +19,19 @@
         "tasks/rollup.aichat.js",
         "tests/**/*.{ts,tsx}"
       ],
-      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
-      "ignore": [
-        "**/*.d.ts",
-        "src/chat/hooks/useCallbackOnChange.tsx",
-        "src/chat/hooks/useDispatch.tsx"
-      ]
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"]
     },
     "packages/ai-chat-components": {
       "entry": [
-        "src/react/*.ts",
-        "src/react/*.tsx",
-        "src/react/history/index.ts",
-        "src/react/hooks/useChatAutocomplete.tsx",
-        "src/react/utils/transformSuggestionConfig.ts",
+        "src/react/**/*.{ts,tsx}",
         "src/components/**/index.ts",
         "src/components/**/src/*.ts",
-        "src/globals/**/index.ts",
         "src/globals/**/*.ts",
         "src/components/**/__stories__/*.{js,jsx,ts,tsx}",
-        "src/components/**/__tests__/*.test.ts"
+        "src/components/**/__tests__/*.test.ts",
+        "src/testing/**/*.ts"
       ],
-      "project": ["src/**/*.{ts,tsx}"],
-      "ignore": [
-        "**/*.d.ts",
-        "src/testing/**",
-        "src/globals/utils/dom-utils.ts",
-        "src/components/markdown/src/markdown.template.ts"
-      ]
+      "project": ["src/**/*.{ts,tsx}"]
     }
   }
 }
