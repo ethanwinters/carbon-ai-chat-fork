@@ -963,4 +963,33 @@ describe('AutocompleteController', () => {
       expect(storage.carbonStarterTrigger.isOn).to.equal(false);
     });
   });
+
+  it('calls items() exactly once per query change, not twice', async () => {
+    let callCount = 0;
+    const controller = new AutocompleteController({
+      mention: {
+        trigger: '@',
+        items: async (query: string) => {
+          callCount++;
+          return USERS.filter((u) => u.label.toLowerCase().includes(query));
+        },
+      } as TriggerSuggestionConfig,
+      onChange: () => {},
+    });
+
+    controller.handleTriggerChange({
+      type: 'mention',
+      query: 'al',
+      triggerOffset: 0,
+    });
+    await flush();
+    controller.handleTriggerChange({
+      type: 'mention',
+      query: 'ali',
+      triggerOffset: 0,
+    });
+    await flush();
+
+    expect(callCount).to.equal(2);
+  });
 });
