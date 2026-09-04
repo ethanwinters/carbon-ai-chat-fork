@@ -9,6 +9,7 @@ Conventional-commits, enforced by commitlint.
 - **Types**: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`.
 - **Header** ≤ 72 chars (commitlint-enforced); body lines have no enforced limit.
 - **Subject**: imperative present tense, lowercase, no trailing period.
+- **Attribution**: the person running the session is the sole author. An agent never lists itself as author or co-author — no `Co-Authored-By` trailer, no "generated with" footer.
 
 ### Commit bodies
 

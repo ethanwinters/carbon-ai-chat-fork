@@ -19,20 +19,20 @@ Skills exist because always-on guidance and task guidance need different deliver
 
 `carbon-builder` also lives here. It is a vendored Carbon Design System skill from upstream, not a repo workflow — the sync and mirror rules below apply to it, but its content is not ours to edit.
 
-## Two copies, one source of truth
+## Three copies, one source of truth
 
-Each assistant looks for skills in its own directory: IBM Bob reads `.bob/skills/`, Claude Code reads `.claude/skills/`. Neither reads a shared location, so the tree is stored twice — and **this one is canonical**, since most contributors here work in Bob. `.claude/skills/` is generated from it:
+Each assistant looks for skills in its own directory: IBM Bob reads `.bob/skills/`, Claude Code reads `.claude/skills/`, Codex reads `.agents/skills/`, and Copilot reads the last two. None of them reads a shared location, so the tree is stored three times — and **this one is canonical**, since most contributors here work in Bob. The other two are generated from it:
 
 ```bash
-npm run sync:skills      # regenerate .claude/skills/ from here
-npm run validate:skills  # check the mirror, frontmatter, and links
+npm run sync:skills      # regenerate the mirrors from here
+npm run validate:skills  # check the mirrors, frontmatter, and links
 ```
 
-Both are committed, because an assistant has to find its skills in a fresh clone. They sit at the same directory depth, so relative links inside a skill resolve identically in either.
+All three are committed, because an assistant has to find its skills in a fresh clone. They sit at the same directory depth, so relative links inside a skill resolve identically in any of them.
 
-Edit this copy and sync — never edit `.claude/skills/`, it gets overwritten. `validate:skills` runs in `ci-check` and in CI, and fails on drift between the trees, a `SKILL.md` whose frontmatter `name` doesn't match its directory, a frontmatter value YAML would silently truncate, or a broken link inside a `caic-*` skill.
+Edit this copy and sync — never edit a mirror, it gets overwritten. `validate:skills` runs in `ci-check` and in CI, and fails on drift between the trees, a `SKILL.md` whose frontmatter `name` doesn't match its directory, a frontmatter value YAML would silently truncate, or a broken link inside a `caic-*` skill.
 
-Both assistants expose each skill as a slash command, so the same six skills are available as `/caic-adr`, `/caic-plan`, `/caic-issue`, `/caic-pr`, `/caic-review`, and `/caic-copy-writer` either way.
+Bob and Claude Code expose each skill as a slash command — `/caic-adr`, `/caic-plan`, `/caic-issue`, `/caic-pr`, `/caic-review`, `/caic-copy-writer`. Codex lists the same six under `$`.
 
 ## Authoring
 

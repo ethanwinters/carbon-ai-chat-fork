@@ -9,7 +9,7 @@ Structural owner: [types/AGENTS.md](../../../../packages/ai-chat/src/types/AGENT
 - **Complete sentences that end in periods.** No note form, no internal jargon, no ticket refs, no TODOs ([types/AGENTS.md](../../../../packages/ai-chat/src/types/AGENTS.md#comment-content-bar)).
 - **State purpose, not shape.** The signature already shows the shape. Give a primitive its units and its constraint — `timeout: number` means nothing without "milliseconds".
 - **Every public property and enum member gets its own JSDoc.** A `?` is not an explanation.
-- **`{@link Target}` over backticks** whenever the target is public — the reader gets a clickable jump, the MCP index gets a resolvable symbol, and the scorer strips it for free. Third-party symbols stay in backticks; `{@link}` cannot resolve them and the build fails ([Cross-linking](../../../../packages/ai-chat/src/types/AGENTS.md#cross-linking)).
+- **`{@link Target}` over backticks** whenever the target is public — the reader gets a clickable jump, the MCP index gets a resolvable symbol, and the scorer strips it for free. Third-party symbols stay in backticks; `{@link}` cannot resolve them and the build fails ([Cross-linking](../../../../packages/ai-chat/src/types/references/cross-linking.md#external-third-party-types)).
 - **Keep the qualifiers.** "May return null", "only after the chat mounts" — here the hedge *is* the contract, so nothing in this skill licenses cutting it.
 
 This is the type where [revision-pass.md](revision-pass.md) is softest, for that reason.
