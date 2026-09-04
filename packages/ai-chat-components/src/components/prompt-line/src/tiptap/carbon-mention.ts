@@ -126,37 +126,6 @@ function buildTriggerExtension(
       char: config.trigger,
       pluginKey,
       startOfLine: config.triggerPosition === 'start',
-      items: ({ query }) => resolveItems(config, query),
-      command: ({ editor, range, props }) => {
-        const item = props as SuggestionItem;
-        // Insert the mention/command node with our extended attrs.
-        editor
-          .chain()
-          .focus()
-          .insertContentAt(range, [
-            {
-              type: name,
-              attrs: {
-                id: item.id,
-                label: item.label,
-                value: item.value ?? item.label,
-                // Item overrides config overrides the command/mention
-                // default (see resolveShowTriggerInChip).
-                trigger: resolveShowTriggerInChip(
-                  item,
-                  config,
-                  build.defaultName === 'command'
-                )
-                  ? config.trigger
-                  : null,
-                data: stripPresentationFields(item),
-              },
-            },
-            { type: 'text', text: ' ' },
-          ])
-          .run();
-        config.onSelect?.(item);
-      },
       render: () => {
         let lastQuery: string | null = null;
         return {
@@ -259,26 +228,6 @@ function diffRemovedTokens(
     }
   }
   return removed;
-}
-
-async function resolveItems(
-  config: TriggerSuggestionConfig,
-  query: string
-): Promise<SuggestionItem[]> {
-  const minQueryLength = config.minQueryLength ?? 0;
-  if (query.length < minQueryLength) {
-    return [];
-  }
-  if (typeof config.items === 'function') {
-    return Promise.resolve(config.items(query));
-  }
-  if (!query) {
-    return config.items;
-  }
-  const lower = query.toLowerCase();
-  return config.items.filter((item) =>
-    item.label.toLowerCase().includes(lower)
-  );
 }
 
 /**
