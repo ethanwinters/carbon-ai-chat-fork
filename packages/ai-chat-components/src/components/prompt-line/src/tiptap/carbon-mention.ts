@@ -245,29 +245,6 @@ export function resolveShowTriggerInChip(
   return item.showTriggerInChip ?? config.showTriggerInChip ?? isCommand;
 }
 
-export function stripPresentationFields(
-  item: SuggestionItem
-): Record<string, unknown> {
-  const {
-    id: _id,
-    label: _label,
-    value: _value,
-    avatar: _avatar,
-    description: _description,
-    disabled: _disabled,
-    showTriggerInChip: _showTriggerInChip,
-    ...rest
-  } = item;
-  void _id;
-  void _label;
-  void _value;
-  void _avatar;
-  void _description;
-  void _disabled;
-  void _showTriggerInChip;
-  return rest;
-}
-
 export function carbonMention(config: TriggerSuggestionConfig) {
   return buildTriggerExtension(config, {
     defaultName: 'mention',
