@@ -63,7 +63,10 @@ function buildTriggerExtension(
         ...parent,
         mentionSuggestionChar: { default: config.trigger },
         value: { default: null },
-        data: { default: null },
+        // Host custom fields, held in editor state only. Tiptap's default
+        // attribute rendering would stringify the object into the HTML as
+        // "[object Object]" and parse it back as that string.
+        data: { default: null, renderHTML: () => ({}) },
         trigger: { default: null },
       };
     },
@@ -293,7 +296,7 @@ export function resolveShowTriggerInChip(
   return item.showTriggerInChip ?? config.showTriggerInChip ?? isCommand;
 }
 
-function stripPresentationFields(
+export function stripPresentationFields(
   item: SuggestionItem
 ): Record<string, unknown> {
   const {

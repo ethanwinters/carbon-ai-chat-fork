@@ -15,7 +15,10 @@ import prefix from '../../../globals/settings.js';
 
 import '../autocomplete/src/autocomplete.js';
 import { writeStarterStorage } from './tiptap/carbon-starter-trigger.js';
-import { resolveShowTriggerInChip } from './tiptap/carbon-mention.js';
+import {
+  resolveShowTriggerInChip,
+  stripPresentationFields,
+} from './tiptap/carbon-mention.js';
 import { projectRawValue } from './tiptap/json-utils.js';
 import { resetTriggerChangeState } from './tiptap/trigger-utils.js';
 import type PromptLineElement from './prompt-line.js';
@@ -329,6 +332,7 @@ export class AutocompleteController {
               )
                 ? config?.trigger
                 : null,
+              data: stripPresentationFields(item),
             },
           },
           { type: 'text', text: ' ' },
