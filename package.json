@@ -34,7 +34,7 @@
     "format:write": "prettier --cache --write '**/*.{js,md,scss,ts,tsx}' '!**/*.snap.js' '!**/{build,es,lib,.storybook,ts,umd,storybook-static}/**'",
     "format:staged": "prettier --list-different '**/*.{js,md,scss,ts,tsx}' '!**/*.snap.js' '!**/{build,es,lib,.storybook,ts,umd,storybook-static}/**'",
     "lint": "eslint packages --ext .js,.ts,.tsx",
-    "lint:dead": "knip --workspace packages/ai-chat,packages/ai-chat-components",
+    "lint:dead": "knip -W packages/ai-chat -W packages/ai-chat-components",
     "lint:license": "tools/check-license.js -a",
     "lint:license:staged": "tools/check-license.js -w",
     "lint:styles": "stylelint '**/*.scss' --report-needless-disables --report-invalid-scope-disables",
