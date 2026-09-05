@@ -1499,30 +1499,31 @@ HTTP: http://example.com
   // weren't, two messages whose code block both started on line 0 minted the
   // same name: the first element's slot gathered both hosts and the second
   // gathered none. See issue #2099.
+  // Minimal inline plugin whose output goes through the plugin-fallback slot
+  // path (the same page-level hoisting, a separate slot-name mint site). Shared
+  // by the two describes below; both need a plugin-fallback descriptor.
+  function tagPlugin(md: any) {
+    md.inline.ruler.before(
+      'text',
+      'cds_test_tag',
+      (state: any, silent: boolean) => {
+        if (!state.src.slice(state.pos).startsWith(':tag:')) {
+          return false;
+        }
+        if (!silent) {
+          state.push('cds_test_tag', '', 0);
+        }
+        state.pos += ':tag:'.length;
+        return true;
+      }
+    );
+    md.renderer.rules.cds_test_tag = () =>
+      `<span class="cds-test-tag">tag</span>`;
+  }
+
   describe('slot names across markdown elements', () => {
     const HARNESS_TAG = 'cds-test-markdown-relocation-host';
     const codeMarkdown = '```json\n{ "name": "Alice" }\n```';
-
-    // Minimal inline plugin whose output goes through the plugin-fallback slot
-    // path (the same page-level hoisting, a separate slot-name mint site).
-    function tagPlugin(md: any) {
-      md.inline.ruler.before(
-        'text',
-        'cds_test_tag',
-        (state: any, silent: boolean) => {
-          if (!state.src.slice(state.pos).startsWith(':tag:')) {
-            return false;
-          }
-          if (!silent) {
-            state.push('cds_test_tag', '', 0);
-          }
-          state.pos += ':tag:'.length;
-          return true;
-        }
-      );
-      md.renderer.rules.cds_test_tag = () =>
-        `<span class="cds-test-tag">tag</span>`;
-    }
 
     if (!customElements.get(HARNESS_TAG)) {
       customElements.define(
@@ -1874,6 +1875,406 @@ HTTP: http://example.com
         el.shadowRoot?.querySelector('cds-aichat-table'),
         'default cds-aichat-table should appear after callback returns null'
       ).to.not.equal(null);
+    });
+  });
+
+  // ── Late-subscriber handshake (#2271) ──────────────────────────────────
+  // `createRelocationHarness` above does the container's job and the React
+  // wrapper's job in one listener, so it can never miss its own event. The
+  // real React path splits those jobs across two listeners that start at
+  // different times, and the mount event fires only once per slot name
+  // (markdown.ts, `reconcileCustomRendererHosts`) — every later pass fires
+  // `plugin-host-update` instead, which no forwarder listens for. These cases
+  // model the split.
+  describe('plugin-host handshake with a late subscriber', () => {
+    const LATE_HARNESS_TAG = 'cds-test-markdown-late-subscriber-host';
+    const tableMarkdown = `| h1 | h2 |\n| --- | --- |\n| a | b |\n\nTrailer`;
+
+    if (!customElements.get(LATE_HARNESS_TAG)) {
+      customElements.define(
+        LATE_HARNESS_TAG,
+        class extends HTMLElement {
+          connectedCallback() {
+            if (!this.shadowRoot) {
+              this.attachShadow({ mode: 'open' });
+            }
+          }
+        }
+      );
+    }
+
+    /** What the markdown element's own shadow slot resolves to, flattened. */
+    function projected(el: MarkdownElementInstance, slotName: string) {
+      const slot = el.shadowRoot?.querySelector(
+        `slot[name="${slotName}"]`
+      ) as HTMLSlotElement | null;
+      return slot?.assignedElements({ flatten: true }) ?? [];
+    }
+
+    /**
+     * Splits `createRelocationHarness`'s single listener in two, the way the
+     * React path splits it:
+     *
+     * - the **container** half hoists the host and claims the slot. It is
+     *   attached before any markdown element exists, mirroring
+     *   `ChatContainer.tsx`, which subscribes when the chat mounts.
+     * - the **forwarder** half renders `<slot name=X slot=X>` into the
+     *   element's light DOM. It is attached only when a test calls
+     *   `subscribeForwarder`, mirroring the React `Markdown` wrapper, which
+     *   subscribes in a `useEffect` after the element's first render.
+     *
+     * Nothing here is late by accident — `subscribeForwarder` is what the
+     * tests move around.
+     */
+    async function createSplitHarness() {
+      const harness = await fixture<HTMLElement>(
+        html`<cds-test-markdown-late-subscriber-host></cds-test-markdown-late-subscriber-host>`
+      );
+      const pluginHosts = new Map<string, HTMLElement>();
+
+      harness.addEventListener(
+        'cds-aichat-markdown-plugin-host-mount',
+        (event) => {
+          const detail = (
+            event as CustomEvent<{
+              slotName: string;
+              html?: string;
+              element?: HTMLElement;
+              isInline: boolean;
+            }>
+          ).detail;
+          // Custom-renderer hosts carry a live element the markdown element
+          // manages itself — never hoisted, never claimed. Matches all three
+          // real containers.
+          if (detail.element) {
+            return;
+          }
+          event.preventDefault();
+          const host =
+            pluginHosts.get(detail.slotName) ??
+            document.createElement(detail.isInline ? 'span' : 'div');
+          host.innerHTML = detail.html ?? '';
+          host.setAttribute('slot', detail.slotName);
+          pluginHosts.set(detail.slotName, host);
+          if (host.parentElement !== harness) {
+            harness.appendChild(host);
+          }
+        }
+      );
+      harness.addEventListener(
+        'cds-aichat-markdown-plugin-host-update',
+        (event) => {
+          const detail = (
+            event as CustomEvent<{ slotName: string; html: string }>
+          ).detail;
+          const host = pluginHosts.get(detail.slotName);
+          if (host && host.innerHTML !== detail.html) {
+            host.innerHTML = detail.html;
+          }
+        }
+      );
+      harness.addEventListener(
+        'cds-aichat-markdown-plugin-host-unmount',
+        (event) => {
+          const { slotName } = (event as CustomEvent<{ slotName: string }>)
+            .detail;
+          pluginHosts.get(slotName)?.remove();
+          pluginHosts.delete(slotName);
+        }
+      );
+
+      async function addMarkdown(
+        markdown: string,
+        props: Partial<MarkdownElementInstance> = {}
+      ) {
+        const el = document.createElement(
+          MARKDOWN_ELEMENT_TAG
+        ) as MarkdownElementInstance;
+        Object.assign(el, props, { markdown });
+        harness.shadowRoot?.appendChild(el);
+        await el.updateComplete;
+        return el;
+      }
+
+      /**
+       * The forwarder half. Mirrors the React wrapper's effect, including its
+       * order: subscribe FIRST, then seed from the element. Seeding first
+       * would reopen the same gap between the read and the subscription.
+       */
+      function subscribeForwarder(el: MarkdownElementInstance) {
+        const forwarders = new Map<string, HTMLSlotElement>();
+        // Every name this forwarder was *told* about, seeds and events alike,
+        // recorded before the dedupe guard below. The guard mirrors the
+        // wrapper's own `prev.includes(...)` check, so counting rendered
+        // forwarders would only ever measure the guard; counting notifications
+        // measures the element.
+        const announced: string[] = [];
+        const addForwarder = (slotName: string) => {
+          announced.push(slotName);
+          if (forwarders.has(slotName)) {
+            return;
+          }
+          const forwarder = document.createElement('slot');
+          forwarder.setAttribute('name', slotName);
+          forwarder.setAttribute('slot', slotName);
+          forwarders.set(slotName, forwarder);
+          el.appendChild(forwarder);
+        };
+        el.addEventListener(
+          'cds-aichat-markdown-plugin-host-mount',
+          (event) => {
+            const detail = (
+              event as CustomEvent<{ slotName: string; element?: HTMLElement }>
+            ).detail;
+            if (detail.element) {
+              return;
+            }
+            addForwarder(detail.slotName);
+          }
+        );
+        el.addEventListener(
+          'cds-aichat-markdown-plugin-host-unmount',
+          (event) => {
+            const { slotName } = (event as CustomEvent<{ slotName: string }>)
+              .detail;
+            forwarders.get(slotName)?.remove();
+            forwarders.delete(slotName);
+          }
+        );
+        for (const slotName of el.delegatedPluginSlotNames) {
+          addForwarder(slotName);
+        }
+        return { forwarders, announced };
+      }
+
+      return { harness, pluginHosts, addMarkdown, subscribeForwarder };
+    }
+
+    it('projects plugin output when the forwarder subscribes after the first reconcile', async () => {
+      const { pluginHosts, addMarkdown, subscribeForwarder } =
+        await createSplitHarness();
+
+      const el = await addMarkdown('Hi :tag:', {
+        markdownItPlugins: [tagPlugin],
+      } as Partial<MarkdownElementInstance>);
+
+      const [slotName] = [...pluginHosts.keys()];
+      expect(
+        slotName,
+        'the container should have claimed one plugin slot'
+      ).to.be.a('string');
+
+      // The stranded state: the container owns the host, so the element
+      // skipped its own local fallback, and no forwarder exists yet.
+      expect(
+        projected(el, slotName).length,
+        'nothing should project before a forwarder exists'
+      ).to.equal(0);
+
+      // The wrapper subscribes now — long after the one mount event fired.
+      subscribeForwarder(el);
+      await el.updateComplete;
+
+      const assigned = projected(el, slotName);
+      expect(
+        assigned.length,
+        'the hoisted host must still reach the slot, subscribed late'
+      ).to.equal(1);
+      expect(assigned[0], 'and it must be the container-owned host').to.equal(
+        pluginHosts.get(slotName)
+      );
+      expect(assigned[0].textContent).to.contain('tag');
+    });
+
+    it('reports delegated slot names as a snapshot, and retires them with their content', async () => {
+      const { pluginHosts, addMarkdown } = await createSplitHarness();
+
+      const el = await addMarkdown('Hi :tag:', {
+        markdownItPlugins: [tagPlugin],
+      } as Partial<MarkdownElementInstance>);
+      const [slotName] = [...pluginHosts.keys()];
+
+      expect(el.delegatedPluginSlotNames).to.deep.equal([slotName]);
+
+      // A snapshot, not a live view — a caller cannot mutate the element's
+      // own bookkeeping through it.
+      el.delegatedPluginSlotNames.push('cds-test-bogus');
+      expect(el.delegatedPluginSlotNames).to.deep.equal([slotName]);
+
+      // Content that no longer mints the slot retires it, so a forwarder
+      // seeded from the getter later never resurrects a dead name.
+      el.markdown = 'Hi';
+      await el.updateComplete;
+      expect(el.delegatedPluginSlotNames).to.deep.equal([]);
+    });
+
+    it('produces exactly one host and one forwarder per slot name across streaming reconciles', async () => {
+      const { pluginHosts, addMarkdown, subscribeForwarder } =
+        await createSplitHarness();
+
+      const el = await addMarkdown('Hi :tag:', {
+        markdownItPlugins: [tagPlugin],
+        streaming: true,
+      } as Partial<MarkdownElementInstance>);
+      const { announced } = subscribeForwarder(el);
+      await el.updateComplete;
+
+      const [slotName] = [...pluginHosts.keys()];
+      for (const chunk of ['Hi :tag: a', 'Hi :tag: ab', 'Hi :tag: abc']) {
+        el.markdown = chunk;
+        await el.updateComplete;
+      }
+
+      expect(pluginHosts.size, 'one host, not one per tick').to.equal(1);
+      expect(
+        el.delegatedPluginSlotNames,
+        'the element should own exactly one delegated slot at the end'
+      ).to.deep.equal([slotName]);
+      // Counted from `announced`, which records before the harness dedupes, so
+      // this measures the element rather than the guard: a live host is
+      // announced once and never re-announced, which is exactly what makes a
+      // missed mount unrecoverable and this whole fix necessary.
+      expect(
+        announced.filter((name) => name === slotName).length,
+        'the live host should be announced once, not once per tick'
+      ).to.equal(1);
+      expect(
+        el.querySelectorAll(`slot[name="${slotName}"]`).length,
+        'and exactly one forwarder exists for it'
+      ).to.equal(1);
+      expect(
+        projected(el, slotName).length,
+        'and it still resolves to exactly one host'
+      ).to.equal(1);
+      expect(el.delegatedPluginSlotNames).to.deep.equal([slotName]);
+    });
+
+    // Re-aimed from #2271's criterion 2, which asserted a *timing* failure on
+    // this path. #2222 removed the timing: all three containers and the React
+    // wrapper now ignore mount events carrying `detail.element`, so a
+    // custom-renderer host is never delegated and never needs a forwarder.
+    // What is worth pinning is that those early-returns keep holding — losing
+    // one strands the consumer's table behind the default Carbon one.
+    it('leaves a customRenderers host alone regardless of when the forwarder subscribes', async () => {
+      const { addMarkdown, subscribeForwarder } = await createSplitHarness();
+
+      const el = await addMarkdown(tableMarkdown, {
+        customRenderers: {
+          table: () => {
+            const div = document.createElement('div');
+            div.className = 'cds-test-late-table';
+            return div;
+          },
+        },
+      } as Partial<MarkdownElementInstance>);
+
+      const slotEl = el.shadowRoot?.querySelector(
+        'slot[name*="cds-aichat-markdown-renderer-table"]'
+      ) as HTMLSlotElement | null;
+      expect(slotEl, 'the table slot should exist').to.not.equal(null);
+      const slotName = slotEl?.getAttribute('name') as string;
+
+      expect(
+        el.delegatedPluginSlotNames,
+        'a custom-renderer host is never delegated, so it never seeds a forwarder'
+      ).to.not.include(slotName);
+
+      const host = projected(el, slotName)[0];
+      expect(host, 'the host projects with no forwarder at all').to.not.equal(
+        undefined
+      );
+      expect(host.parentElement, 'and it stays owned by the element').to.equal(
+        el
+      );
+
+      subscribeForwarder(el);
+      await el.updateComplete;
+
+      expect(
+        projected(el, slotName).length,
+        'subscribing late must not add a second hop'
+      ).to.equal(1);
+      expect(projected(el, slotName)[0]).to.equal(host);
+
+      // A stale forwarder would keep the named slot occupied and suppress the
+      // fallback, so the default table would never come back.
+      el.customRenderers = { table: () => null };
+      await el.updateComplete;
+      expect(
+        el.shadowRoot?.querySelector('cds-aichat-table'),
+        'returning null must restore the default Carbon table'
+      ).to.not.equal(null);
+    });
+
+    it('reports no delegated slots when nothing claims them', async () => {
+      const el = await fixture<MarkdownElementInstance>(
+        html`<cds-aichat-markdown
+          .markdownItPlugins=${[tagPlugin]}
+          .markdown=${'Hi :tag:'}></cds-aichat-markdown>`
+      );
+      await el.updateComplete;
+
+      // Standalone: no listener cancels the mount event, so the element hosts
+      // the plugin output itself and has nothing to hand a forwarder.
+      expect(el.delegatedPluginSlotNames).to.deep.equal([]);
+      expect(
+        el.querySelector('[slot^="cds-aichat-markdown-renderer-"]'),
+        'the element should have adopted its own local host instead'
+      ).to.not.equal(null);
+    });
+
+    // The two dispatch sites hand over different things, and only one of them
+    // wants a forwarder. No container in this repo cancels the live-element
+    // mount, but the event is cancelable on both paths, so a third-party
+    // container may — and seeding a forwarder for it would hold the named slot
+    // occupied and suppress the fallback, the regression pinned by
+    // 'restores default table when callback returns null' above.
+    it('excludes a claimed customRenderers host from the delegated slot names', async () => {
+      const claimed: string[] = [];
+      const harness = await fixture<HTMLElement>(
+        html`<cds-test-markdown-late-subscriber-host></cds-test-markdown-late-subscriber-host>`
+      );
+      harness.addEventListener(
+        'cds-aichat-markdown-plugin-host-mount',
+        (event) => {
+          const detail = (
+            event as CustomEvent<{ slotName: string; element?: HTMLElement }>
+          ).detail;
+          // Claims everything, live elements included — the case the in-repo
+          // containers decline.
+          event.preventDefault();
+          claimed.push(detail.slotName);
+          if (detail.element) {
+            harness.appendChild(detail.element);
+          }
+        }
+      );
+
+      const el = document.createElement(
+        MARKDOWN_ELEMENT_TAG
+      ) as MarkdownElementInstance;
+      Object.assign(el, {
+        customRenderers: {
+          table: () => {
+            const div = document.createElement('div');
+            div.className = 'cds-test-claimed-table';
+            return div;
+          },
+        },
+        markdown: tableMarkdown,
+      });
+      harness.shadowRoot?.appendChild(el);
+      await el.updateComplete;
+
+      const tableSlot = claimed.find((name) => name.includes('-table-'));
+      expect(
+        tableSlot,
+        'the container should have claimed the table slot'
+      ).to.be.a('string');
+      expect(
+        el.delegatedPluginSlotNames,
+        'a claimed live-element host must not be offered as a forwarder seed'
+      ).to.not.include(tableSlot);
     });
   });
 

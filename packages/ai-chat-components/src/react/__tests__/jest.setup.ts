@@ -7,6 +7,12 @@
  *  @license
  */
 
+// React 19 only suppresses its "not configured to support act(...)" warning
+// when the environment declares itself. Set for the whole React suite, since
+// every wrapper spec drives renders through `act`.
+(globalThis as unknown as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT =
+  true;
+
 beforeEach(() => {
   // Mock DOMParser for icon transformation tests
   if (typeof DOMParser === 'undefined') {

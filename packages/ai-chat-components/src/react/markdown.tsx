@@ -205,6 +205,21 @@ const Markdown = forwardRef<CDSAIChatMarkdown, MarkdownProps>(function Markdown(
       'cds-aichat-markdown-plugin-host-unmount',
       handleUnmount
     );
+    // Then catch up on anything claimed before this effect ran. The mount
+    // event fires once per live host and is never replayed for one, and this
+    // effect is passive — it runs after the commit that created the element,
+    // by which time Lit has already flushed its first update in a microtask.
+    // A plugin token present in that first render therefore dispatches its
+    // one mount event before `handleMount` exists: the container claims the
+    // host, the element skips its own local fallback, and without this seed
+    // no forwarder is ever rendered for it. Seeding after subscribing, not
+    // before, is what leaves no gap between the read and the subscription.
+    setPluginSlotNames((prev) => {
+      const missed = node.delegatedPluginSlotNames.filter(
+        (slotName) => !prev.includes(slotName)
+      );
+      return missed.length ? [...prev, ...missed] : prev;
+    });
     return () => {
       node.removeEventListener(
         'cds-aichat-markdown-plugin-host-mount',

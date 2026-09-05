@@ -285,12 +285,48 @@ class CDSAIChatMarkdown extends LitElement {
 
   /**
    * Slot names whose host was created by an outer listener (a chat container
-   * that called `preventDefault()` on the host-mount event). We track these
-   * so we can fire matching unmount events without trying to remove a host we
-   * never appended.
+   * that called `preventDefault()` on the host-mount event), mapped to which
+   * of the two dispatch sites claimed them. We track these so we can fire
+   * matching unmount events without trying to remove a host we never
+   * appended.
+   *
+   * The kind exists so {@link delegatedPluginSlotNames} can offer only the
+   * claims that want a forwarder; see there for why the two differ.
    * @internal
    */
-  private delegatedPluginSlots: Set<string> = new Set();
+  private delegatedPluginSlots: Map<
+    string,
+    'pluginFallback' | 'customRenderer'
+  > = new Map();
+
+  /**
+   * Plugin-fallback slot names an outer listener has claimed by calling
+   * `preventDefault()` on `cds-aichat-markdown-plugin-host-mount`.
+   *
+   * Read this when hosting plugin output on behalf of this element. The mount
+   * event fires once per live host and is never replayed for one — later
+   * passes fire `cds-aichat-markdown-plugin-host-update` instead — so a
+   * listener that subscribes after a slot was claimed cannot learn its name
+   * from the event alone. It seeds from here instead, after subscribing, and
+   * hears about later slots on the event. Subscribing first and reading second
+   * is the order that leaves no gap.
+   *
+   * Plugin-fallback claims only. A claim on a mount event carrying
+   * `detail.element` is a `customRenderers` host, whose content this element
+   * keeps writing to — forwarding one would hold the named slot occupied and
+   * suppress its fallback when the callback later returns `null`. Those names
+   * are tracked for their unmount events but never offered here.
+   *
+   * A snapshot, not a live view: mutating the returned array changes nothing,
+   * and it goes stale as content changes, so re-read rather than cache. Empty
+   * when no listener has claimed a plugin-fallback slot — including standalone
+   * usage, where this element hosts plugin output in its own light DOM.
+   */
+  get delegatedPluginSlotNames(): string[] {
+    return [...this.delegatedPluginSlots]
+      .filter(([, kind]) => kind === 'pluginFallback')
+      .map(([slotName]) => slotName);
+  }
 
   /**
    * The markdown-it instance produced by the most recent parse. Forwarded into
@@ -387,7 +423,7 @@ class CDSAIChatMarkdown extends LitElement {
     }
     this.slotHosts.clear();
     // Ask any delegating chat container to drop its hosts too.
-    for (const slotName of this.delegatedPluginSlots) {
+    for (const slotName of this.delegatedPluginSlots.keys()) {
       this.dispatchEvent(
         new CustomEvent('cds-aichat-markdown-plugin-host-unmount', {
           bubbles: true,
@@ -814,7 +850,10 @@ class CDSAIChatMarkdown extends LitElement {
           );
           this.dispatchEvent(mountEvent);
           if (mountEvent.defaultPrevented) {
-            this.delegatedPluginSlots.add(descriptor.slotName);
+            this.delegatedPluginSlots.set(
+              descriptor.slotName,
+              'pluginFallback'
+            );
           }
         } else if (alreadyDelegated) {
           // The chain owns this slot; push HTML updates through a second
@@ -914,7 +953,7 @@ class CDSAIChatMarkdown extends LitElement {
         );
         this.dispatchEvent(mountEvent);
         if (mountEvent.defaultPrevented) {
-          this.delegatedPluginSlots.add(descriptor.slotName);
+          this.delegatedPluginSlots.set(descriptor.slotName, 'customRenderer');
         } else {
           this.appendChild(host);
         }
@@ -933,7 +972,7 @@ class CDSAIChatMarkdown extends LitElement {
 
     // Tell any delegating chat container to drop hosts whose descriptor
     // disappeared (e.g. a streaming chunk removed a math node).
-    for (const slotName of this.delegatedPluginSlots) {
+    for (const slotName of this.delegatedPluginSlots.keys()) {
       if (!wanted.has(slotName)) {
         this.dispatchEvent(
           new CustomEvent('cds-aichat-markdown-plugin-host-unmount', {
