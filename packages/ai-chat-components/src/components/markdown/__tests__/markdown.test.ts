@@ -1568,18 +1568,30 @@ HTTP: http://example.com
             }>
           ).detail;
           const owner = event.composedPath()[0] as Element;
+
+          // Custom-renderer hosts (table/codeBlock) carry a live element that
+          // the markdown element manages directly. Do not preventDefault or
+          // hoist — the markdown element will call appendChild itself, keeping
+          // the shadow slot occupied. A stale forwarder or a missing host
+          // causes the slot to fall back to the default component, which
+          // triggers heavy async work (e.g. CodeMirror) that hangs updateComplete.
+          if (detail.element) {
+            mounted.push({
+              owner,
+              slotName: detail.slotName,
+              host: detail.element,
+            });
+            return;
+          }
+
           event.preventDefault();
 
-          // Custom renderers forward a live element; plugin fallbacks forward
-          // an HTML string the container hosts itself, keyed by slot name.
-          let host = detail.element;
-          if (!host) {
-            host =
-              pluginHosts.get(detail.slotName) ??
-              document.createElement(detail.isInline ? 'span' : 'div');
-            host.innerHTML = detail.html ?? '';
-            pluginHosts.set(detail.slotName, host);
-          }
+          // Plugin fallbacks forward an HTML string; the container hosts it.
+          const host =
+            pluginHosts.get(detail.slotName) ??
+            document.createElement(detail.isInline ? 'span' : 'div');
+          host.innerHTML = detail.html ?? '';
+          pluginHosts.set(detail.slotName, host);
           host.setAttribute('slot', detail.slotName);
           if (host.parentElement !== harness) {
             harness.appendChild(host);
@@ -1675,14 +1687,13 @@ HTTP: http://example.com
       expect(secondName).to.match(/^cds-aichat-markdown-renderer-table-/);
     });
 
-    it('projects exactly one hoisted host into each markdown element', async () => {
-      const { harness, mounted, forwarderOwners, addMarkdown } =
-        await createRelocationHarness();
+    it('projects exactly one host into each markdown element', async () => {
+      const { mounted, addMarkdown } = await createRelocationHarness();
 
-      await addMarkdown(codeMarkdown, {
+      const elA = await addMarkdown(codeMarkdown, {
         customRenderers: { codeBlock: taggedCodeBlockRenderer('a') },
       } as Partial<MarkdownElementInstance>);
-      await addMarkdown(codeMarkdown, {
+      const elB = await addMarkdown(codeMarkdown, {
         customRenderers: { codeBlock: taggedCodeBlockRenderer('b') },
       } as Partial<MarkdownElementInstance>);
 
@@ -1690,22 +1701,22 @@ HTTP: http://example.com
       const [a, b] = mounted;
       expect(a.slotName).to.not.equal(b.slotName);
 
-      // The name-keyed forwarder dedupe must never starve the second element.
-      expect(forwarderOwners.get(a.slotName)).to.equal(a.owner);
-      expect(forwarderOwners.get(b.slotName)).to.equal(b.owner);
-
-      for (const { owner, slotName, host } of [a, b]) {
+      // custom-renderer hosts: markdown element adopts the host directly
+      // (no hoist to harness, no forwarder). Each element owns its own host.
+      for (const [{ slotName, host }, el] of [
+        [a, elA],
+        [b, elB],
+      ] as Array<[{ slotName: string; host: HTMLElement }, HTMLElement]>) {
         expect(
-          harness.querySelectorAll(`[slot="${slotName}"]`).length,
-          'exactly one hoisted host per slot name'
-        ).to.equal(1);
-        const slot = owner.shadowRoot?.querySelector(
+          host.parentElement,
+          'host should be a direct child of the markdown element'
+        ).to.equal(el);
+        const slot = el.shadowRoot?.querySelector(
           `slot[name="${slotName}"]`
         ) as HTMLSlotElement | null;
-        expect(
-          slot,
-          'the element should render a placeholder slot'
-        ).to.not.equal(null);
+        expect(slot, 'the element should render a named slot').to.not.equal(
+          null
+        );
         // Compared by identity rather than `deep.equal`: deep-comparing DOM
         // nodes walks the whole node graph on failure.
         const assigned = slot?.assignedElements({ flatten: true }) ?? [];
@@ -1772,6 +1783,97 @@ HTTP: http://example.com
         slotNames[slotNames.length - 1],
         'the namespace is minted at construction, so it survives a move'
       ).to.equal(before);
+    });
+
+    // ── customRenderers.table — container topology ──────────────────────────
+    // These tests use createRelocationHarness so the mount event is seen by a
+    // container-like ancestor. custom-renderer hosts carry detail.element —
+    // the container does NOT call preventDefault or hoist. The markdown element
+    // adopts the host as its own light-DOM child and the shadow slot projects
+    // it directly (single hop, no forwarder needed).
+
+    const tableMarkdown = `| h1 | h2 |\n| --- | --- |\n| a | b |\n\nTrailer`;
+
+    it('customRenderers.table: host is a direct child of the markdown element', async () => {
+      const { mounted, addMarkdown } = await createRelocationHarness();
+
+      const el = await addMarkdown(tableMarkdown, {
+        customRenderers: {
+          table: () => {
+            const div = document.createElement('div');
+            div.className = 'cds-test-table-host';
+            return div;
+          },
+        },
+      } as Partial<MarkdownElementInstance>);
+
+      expect(
+        mounted.length,
+        'container should receive one mount event'
+      ).to.equal(1);
+      const { host, slotName } = mounted[0];
+
+      // Host is owned by the markdown element directly (no hoist to container).
+      expect(
+        host.parentElement,
+        'host should be a direct child of the markdown element'
+      ).to.equal(el);
+      expect(
+        host.getAttribute('slot'),
+        'host should carry the slot name attribute'
+      ).to.equal(slotName);
+
+      // Shadow slot projects the host directly — no two-hop forwarder needed.
+      const slotEl = el.shadowRoot?.querySelector(
+        `slot[name="${slotName}"]`
+      ) as HTMLSlotElement | null;
+      expect(slotEl, 'named slot should exist in shadow DOM').to.not.equal(
+        null
+      );
+      const assigned = slotEl?.assignedElements({ flatten: true }) ?? [];
+      expect(
+        assigned.length,
+        'slot should project exactly one element'
+      ).to.be.greaterThan(0);
+    });
+
+    it('customRenderers.table: restores default table when callback returns null (container topology)', async () => {
+      const { addMarkdown } = await createRelocationHarness();
+
+      const el = await addMarkdown(tableMarkdown, {
+        customRenderers: {
+          table: () => {
+            const div = document.createElement('div');
+            div.className = 'cds-test-table-toggle';
+            return div;
+          },
+        },
+      } as Partial<MarkdownElementInstance>);
+
+      // First render: custom element should be visible through the slot.
+      const slotEl = el.shadowRoot?.querySelector(
+        'slot[name*="cds-aichat-markdown-renderer-table"]'
+      ) as HTMLSlotElement | null;
+      expect(slotEl, 'named slot should exist on first render').to.not.equal(
+        null
+      );
+      expect(
+        slotEl?.assignedElements({ flatten: true }).length ?? 0,
+        'custom host should be projected on first render'
+      ).to.be.greaterThan(0);
+
+      // Switch to null — the slot host is removed and the slot's fallback
+      // (default cds-aichat-table) should render instead. This is the exact
+      // regression: in the broken version, markdown.tsx added a stale <slot>
+      // forwarder that kept the named slot occupied even after the host was
+      // removed, so the fallback never appeared.
+      el.customRenderers = { table: () => null };
+      await el.updateComplete;
+
+      expect(
+        el.shadowRoot?.querySelector('cds-aichat-table'),
+        'default cds-aichat-table should appear after callback returns null'
+      ).to.not.equal(null);
     });
   });
 
@@ -2372,5 +2474,96 @@ describe('streaming table loading mode', () => {
 
     expect(calls.at(-1)?.isLoading).to.equal(false);
     expect(calls.at(-1)?.rowCount).to.equal(2);
+  });
+});
+
+describe('cds-aichat-markdown hard/soft line break rendering', () => {
+  it('renders a hard line break (two trailing spaces + newline) as a <br>', async () => {
+    const el = await fixture<MarkdownElementInstance>(
+      html`<cds-aichat-markdown
+        .markdown=${'**Summary**  \nNext line'}></cds-aichat-markdown>`
+    );
+    await el.updateComplete;
+    const br = el.shadowRoot?.querySelector('br');
+    expect(br, '<br> should be present for a hard line break').to.not.equal(
+      null
+    );
+  });
+
+  it('renders a soft line break (single newline) as a <br> when breaks mode is active', async () => {
+    // The markdown-it instance uses `breaks: true`, so a bare newline inside a
+    // paragraph produces a softbreak token that must render as <br>.
+    const el = await fixture<MarkdownElementInstance>(
+      html`<cds-aichat-markdown
+        .markdown=${'line one\nline two'}></cds-aichat-markdown>`
+    );
+    await el.updateComplete;
+    const brs = el.shadowRoot?.querySelectorAll('br');
+    expect(
+      brs?.length ?? 0,
+      '<br> should be present for a soft line break (breaks mode)'
+    ).to.be.greaterThan(0);
+  });
+
+  it('does not route hardbreak or softbreak through the plugin-fallback slot system', async () => {
+    // plugin-fallback slots create <slot name="..."> elements in the shadow DOM;
+    // a break token should never produce one.
+    const el = await fixture<MarkdownElementInstance>(
+      html`<cds-aichat-markdown
+        .markdown=${'line one  \nline two\nline three'}></cds-aichat-markdown>`
+    );
+    await el.updateComplete;
+    const pluginSlots = el.shadowRoot?.querySelectorAll(
+      'slot[name*="pluginFallback"]'
+    );
+    expect(
+      pluginSlots?.length ?? 0,
+      'break tokens must not produce plugin-fallback slots'
+    ).to.equal(0);
+  });
+});
+
+describe('renderTokenTree — softbreak with breaks: false', () => {
+  // The component always uses breaks: true, but renderTokenTree is exported and
+  // may be called directly by consumers. When a caller passes an md instance with
+  // breaks: false, a softbreak token must render as a literal newline character,
+  // not a <br>, to match markdown-it's own behaviour for that setting.
+  it('emits a newline character (not <br>) for softbreak when breaks is false', async () => {
+    const { renderTokenTree } = await import('../src/markdown-renderer.js');
+    const MarkdownIt = (await import('markdown-it')).default;
+
+    const md = new MarkdownIt({ breaks: false });
+    const node = {
+      key: 'softbreak-0',
+      token: {
+        type: 'softbreak',
+        tag: '',
+        nesting: 0 as const,
+        level: 0,
+        content: '',
+        attrs: null,
+        children: null,
+        markup: '',
+        block: false,
+        hidden: false,
+        map: null,
+        info: '',
+        meta: null,
+      },
+      children: [],
+    };
+
+    const { render } = await import('lit');
+    const container = document.createElement('div');
+    render(renderTokenTree(node, { sanitize: false, md }), container);
+
+    expect(
+      container.innerHTML,
+      'softbreak with breaks:false should not contain <br>'
+    ).to.not.include('<br');
+    expect(
+      container.innerHTML,
+      'softbreak with breaks:false should contain a newline'
+    ).to.include('\n');
   });
 });
