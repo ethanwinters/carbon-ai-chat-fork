@@ -22,6 +22,10 @@ import { createPortal, flushSync } from 'react-dom';
 
 // Export the actual class for the component that will *directly* be wrapped with React.
 import CDSAIChatMarkdown from '../components/markdown/src/markdown.js';
+import {
+  type MarkdownPluginHostMountDetailInput,
+  resolveMarkdownPluginHostMountDetail,
+} from '../components/markdown/src/utils/plugin-host-container.js';
 import type {
   MarkdownCustomRenderers,
   MarkdownRendererCodeBlockArgs,
@@ -167,17 +171,18 @@ const Markdown = forwardRef<CDSAIChatMarkdown, MarkdownProps>(function Markdown(
       return undefined;
     }
     const handleMount = (event: Event) => {
-      const detail = (
-        event as CustomEvent<{ slotName: string; element?: HTMLElement }>
+      const raw = (
+        event as CustomEvent<MarkdownPluginHostMountDetailInput | undefined>
       ).detail;
-      if (!detail?.slotName) {
+      if (!raw?.slotName) {
         return;
       }
-      // Consumer-renderer hosts (table/codeBlock) forward a live element that
+      const detail = resolveMarkdownPluginHostMountDetail(raw);
+      // Consumer-renderer hosts (table/codeBlock) carry a live element that
       // is adopted directly by the markdown element's own reconcile. They do
       // not need a <slot> forwarder here — adding one would suppress the
       // slot's fallback content if the callback later returns null.
-      if (detail.element) {
+      if (detail.kind !== 'pluginFallback') {
         return;
       }
       setPluginSlotNames((prev) =>

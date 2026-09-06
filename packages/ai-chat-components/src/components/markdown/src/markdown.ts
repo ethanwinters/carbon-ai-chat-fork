@@ -23,6 +23,10 @@ import {
   type MarkdownItPlugin,
   type TokenTree,
 } from './markdown-token-tree.js';
+import type {
+  MarkdownCustomRendererMountDetail,
+  MarkdownPluginFallbackMountDetail,
+} from './utils/plugin-host-container.js';
 import {
   renderMarkdownTree,
   type MarkdownCustomRenderers,
@@ -311,11 +315,11 @@ class CDSAIChatMarkdown extends LitElement {
    * hears about later slots on the event. Subscribing first and reading second
    * is the order that leaves no gap.
    *
-   * Plugin-fallback claims only. A claim on a mount event carrying
-   * `detail.element` is a `customRenderers` host, whose content this element
-   * keeps writing to — forwarding one would hold the named slot occupied and
-   * suppress its fallback when the callback later returns `null`. Those names
-   * are tracked for their unmount events but never offered here.
+   * Plugin-fallback claims only. A claim on a mount event whose detail is
+   * `kind: 'customRenderer'` is a `customRenderers` host, whose content this
+   * element keeps writing to — forwarding one would hold the named slot
+   * occupied and suppress its fallback when the callback later returns `null`.
+   * Those names are tracked for their unmount events but never offered here.
    *
    * A snapshot, not a live view: mutating the returned array changes nothing,
    * and it goes stale as content changes, so re-read rather than cache. Empty
@@ -842,10 +846,11 @@ class CDSAIChatMarkdown extends LitElement {
               composed: true,
               cancelable: true,
               detail: {
+                kind: 'pluginFallback',
                 slotName: descriptor.slotName,
                 html: descriptor.html,
                 isInline: descriptor.isInline,
-              },
+              } satisfies MarkdownPluginFallbackMountDetail,
             }
           );
           this.dispatchEvent(mountEvent);
@@ -945,10 +950,11 @@ class CDSAIChatMarkdown extends LitElement {
             composed: true,
             cancelable: true,
             detail: {
+              kind: 'customRenderer',
               slotName: descriptor.slotName,
               element: host,
               isInline: false,
-            },
+            } satisfies MarkdownCustomRendererMountDetail,
           }
         );
         this.dispatchEvent(mountEvent);
