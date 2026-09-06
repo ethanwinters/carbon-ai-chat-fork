@@ -2574,81 +2574,96 @@ describe('cds-aichat-markdown line breaks inside merged inline-HTML runs', () =>
   // `serializeInlineToken`. Before the fix, both softbreak and hardbreak
   // returned token.content (the empty string) and the break was deleted.
 
-  async function renderMarkdown(
-    markdown: string,
-    opts: { sanitize?: boolean; removeHtml?: boolean } = {}
-  ) {
-    if (opts.removeHtml) {
-      const el = await fixture<MarkdownElementInstance>(
-        html`<cds-aichat-markdown
-          remove-html
-          .markdown=${markdown}></cds-aichat-markdown>`
-      );
-      await el.updateComplete;
-      return el;
-    }
-    if (opts.sanitize === false) {
-      const el = await fixture<MarkdownElementInstance>(
-        html`<cds-aichat-markdown .markdown=${markdown}></cds-aichat-markdown>`
-      );
-      await el.updateComplete;
-      return el;
-    }
+  type RenderOptions = { sanitize?: boolean; removeHtml?: boolean };
+
+  async function renderMarkdown(markdown: string, opts: RenderOptions = {}) {
     const el = await fixture<MarkdownElementInstance>(
       html`<cds-aichat-markdown
-        sanitize-html
+        ?sanitize-html=${opts.sanitize ?? false}
+        ?remove-html=${opts.removeHtml ?? false}
         .markdown=${markdown}></cds-aichat-markdown>`
     );
     await el.updateComplete;
     return el;
   }
 
-  it('renders a soft break inside a merged inline-HTML run as one <br> (sanitize-html)', async () => {
-    // <span>one\ntwo</span> — the newline becomes a softbreak token that
-    // combineConsecutiveHtmlInline merges into the span's html_container.
-    const el = await renderMarkdown('<span>one\ntwo</span>', {
-      sanitize: true,
-    });
-    const span = el.shadowRoot?.querySelector('span');
-    expect(span, '<span> should be in the shadow root').to.not.equal(null);
-    const br = span?.querySelector('br');
-    expect(br, 'soft break inside span should produce a <br>').to.not.equal(
-      null
+  // Lit brackets each rendered part with comment markers, so what landed either
+  // side of the break has to be read past them.
+  function contentNodes(parent: Element) {
+    return Array.from(parent.childNodes).filter(
+      (node) => node.nodeType !== Node.COMMENT_NODE
     );
-    // Text content must be "onetwo" — no stray whitespace node.
-    expect(span?.textContent, 'text content should be "onetwo"').to.equal(
-      'onetwo'
-    );
-  });
+  }
 
-  it('renders a hard break inside a merged inline-HTML run as one <br> (sanitize-html)', async () => {
-    // Two trailing spaces + newline produce a hardbreak token.
-    const el = await renderMarkdown('<span>one  \ntwo</span>', {
-      sanitize: true,
-    });
-    const span = el.shadowRoot?.querySelector('span');
-    expect(span, '<span> should be in the shadow root').to.not.equal(null);
-    const br = span?.querySelector('br');
-    expect(br, 'hard break inside span should produce a <br>').to.not.equal(
-      null
-    );
-    expect(span?.textContent, 'text content should be "onetwo"').to.equal(
-      'onetwo'
-    );
-  });
+  const BREAK_CASES = [
+    { label: 'soft break', markdown: '<span>one\ntwo</span>' },
+    { label: 'hard break', markdown: '<span>one  \ntwo</span>' },
+  ];
 
-  it('renders a soft break inside a merged inline-HTML run with remove-html set', async () => {
-    // With remove-html the span tag is stripped; the text content and break
-    // still need to survive.
-    const el = await renderMarkdown('<span>one\ntwo</span>', {
-      removeHtml: true,
+  // Default mode — neither flag — is the one that hands the serialized run to
+  // unsafeHTML with nothing filtering it in between.
+  const MERGING_MODES: Array<{ label: string; opts: RenderOptions }> = [
+    { label: 'default', opts: {} },
+    { label: 'sanitize-html', opts: { sanitize: true } },
+  ];
+
+  for (const { label, markdown } of BREAK_CASES) {
+    for (const mode of MERGING_MODES) {
+      it(`renders a ${label} inside a merged inline-HTML run as one <br> (${mode.label})`, async () => {
+        const el = await renderMarkdown(markdown, mode.opts);
+        const span = el.shadowRoot?.querySelector('span');
+        expect(span, '<span> should be in the shadow root').to.not.equal(null);
+        expect(
+          span?.querySelectorAll('br').length,
+          `${label} inside span should produce exactly one <br>`
+        ).to.equal(1);
+        expect(span?.textContent, 'text content should be "onetwo"').to.equal(
+          'onetwo'
+        );
+      });
+    }
+
+    // remove-html parses with `html: false`, so `<span>` is never tokenized as
+    // html_inline and the run is never merged — the serializer does not run
+    // here at all. What this mode still owes is narrower: the tag stays inert
+    // text and the break splits it.
+    it(`renders a ${label} with remove-html set, keeping the tag as inert text`, async () => {
+      const el = await renderMarkdown(markdown, { removeHtml: true });
+      expect(
+        el.shadowRoot?.querySelector('span'),
+        'remove-html must not produce a live <span>'
+      ).to.equal(null);
+
+      const paragraph = el.shadowRoot?.querySelector('p');
+      if (!paragraph) {
+        throw new Error('Expected a <p> in the shadow root');
+      }
+
+      const nodes = contentNodes(paragraph);
+      const breaks = nodes.filter(
+        (node) => node.nodeName.toLowerCase() === 'br'
+      );
+      expect(
+        breaks.length,
+        `${label} should produce exactly one <br>`
+      ).to.equal(1);
+
+      const textAround = (from: number, to: number) =>
+        nodes
+          .slice(from, to)
+          .map((node) => node.textContent)
+          .join('');
+      const breakIndex = nodes.indexOf(breaks[0]);
+      expect(
+        textAround(0, breakIndex),
+        'the escaped opening tag should survive'
+      ).to.equal('<span>one');
+      expect(
+        textAround(breakIndex + 1, nodes.length),
+        'the escaped closing tag should survive'
+      ).to.equal('two</span>');
     });
-    const br = el.shadowRoot?.querySelector('br');
-    expect(
-      br,
-      'soft break should produce a <br> even when the wrapping tag is removed'
-    ).to.not.equal(null);
-  });
+  }
 
   it('the <br> node has no adjacent stray whitespace text node', async () => {
     const el = await renderMarkdown('<span>one\ntwo</span>', {
