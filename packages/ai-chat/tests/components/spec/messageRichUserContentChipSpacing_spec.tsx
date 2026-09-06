@@ -240,14 +240,13 @@ describe('MessageRichUserContent chip spacing (issue #2155)', () => {
     expect(renderedText(content)).toBe('run deploy now');
   });
 
-  it('a Shift+Enter in a chip paragraph renders a <br>, same as in a plain paragraph (issue #2272)', () => {
+  it('a Shift+Enter renders a <br> with a chip and keeps its newline without one (issue #2272)', () => {
     // A `hardBreak` TipTap node encodes Shift+Enter. The chip-bearing path
-    // routes through renderInlineMarkdown (inline walker); the all-textual path
-    // goes through MarkdownWithDefaults (mocked here as a passthrough).
-    // Both should produce a <br> so the same message renders identically
-    // regardless of whether it contains a chip.
-
-    // Chip path: text → hardBreak → text, with a chip before the text.
+    // routes through renderInlineMarkdown and emits the <br> itself. The
+    // all-textual path flattens to a string for MarkdownWithDefaults, which
+    // is mocked to a passthrough here, so all this side can pin is that the
+    // newline reaches the element intact; rendering it as a <br> belongs to
+    // the element and is covered in @carbon/ai-chat-components.
     const withChip: JSONContent = {
       type: 'doc',
       content: [
@@ -262,11 +261,30 @@ describe('MessageRichUserContent chip spacing (issue #2155)', () => {
         },
       ],
     };
-
-    // No-chip path (all-textual): same text content, no chip.
-    // MarkdownWithDefaults is mocked to a passthrough, so we check br count
-    // on the chip path only — that is the path this fix touches.
     expect(brCount(withChip)).toBe(1);
+
+    const noChip: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'line one' },
+            { type: 'hardBreak' },
+            { type: 'text', text: 'line two' },
+          ],
+        },
+      ],
+    };
+    const { getByTestId } = render(
+      <StoreProvider store={makeStore()}>
+        <MessageRichUserContent
+          content={noChip}
+          message={messageWith(noChip)}
+        />
+      </StoreProvider>
+    );
+    expect(getByTestId('markdown').textContent).toBe('line one\nline two');
   });
 
   it('a Shift+Enter immediately before a chip renders a <br> (issue #2272)', () => {
