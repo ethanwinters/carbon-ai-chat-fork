@@ -268,4 +268,46 @@ describe('MessageRichUserContent chip spacing (issue #2155)', () => {
     // on the chip path only — that is the path this fix touches.
     expect(brCount(withChip)).toBe(1);
   });
+
+  it('a Shift+Enter immediately before a chip renders a <br> (issue #2272)', () => {
+    // `carbon-mention` appends a text node after every inserted chip, so
+    // typing "line one" Shift+Enter "@Alice" "tail" flushes a run whose
+    // newline sits at the trailing boundary rather than inside the run.
+    const content: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'line one' },
+            { type: 'hardBreak' },
+            { type: 'mention', attrs: { id: 'u1', label: 'Alice' } },
+            { type: 'text', text: ' tail' },
+          ],
+        },
+      ],
+    };
+    expect(brCount(content)).toBe(1);
+    expect(renderedText(content)).toBe('line oneAlice tail');
+  });
+
+  it('a Shift+Enter immediately after a chip renders a <br> (issue #2272)', () => {
+    // Mirror of the case above: the newline opens the run instead of closing
+    // it, so it lands at the leading boundary.
+    const content: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'mention', attrs: { id: 'u1', label: 'Alice' } },
+            { type: 'hardBreak' },
+            { type: 'text', text: 'x' },
+          ],
+        },
+      ],
+    };
+    expect(brCount(content)).toBe(1);
+    expect(renderedText(content)).toBe('Alicex');
+  });
 });

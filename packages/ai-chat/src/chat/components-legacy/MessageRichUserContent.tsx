@@ -180,9 +180,7 @@ function renderParagraphInline(
       afterLeading.length - trailing.length
     );
     if (leading) {
-      out.push(
-        <React.Fragment key={`${key}-ws-pre`}>{leading}</React.Fragment>
-      );
+      out.push(...renderBoundaryWhitespace(leading, `${key}-ws-pre`));
     }
     if (trimmed) {
       out.push(
@@ -192,9 +190,7 @@ function renderParagraphInline(
       );
     }
     if (trailing) {
-      out.push(
-        <React.Fragment key={`${key}-ws-post`}>{trailing}</React.Fragment>
-      );
+      out.push(...renderBoundaryWhitespace(trailing, `${key}-ws-post`));
     }
     textRun = '';
   };
@@ -223,6 +219,30 @@ function renderParagraphInline(
 
   flushTextRun(`${messageId}::${blockIndex}.tail`);
 
+  return out;
+}
+
+/**
+ * A `hardBreak` contributes a `\n` to the run, so a break adjacent to a chip is
+ * captured as boundary whitespace and never reaches the inline token walker
+ * that turns breaks into `<br>`. Emit it here instead; the spaces around it
+ * stay plain text so the boundary-whitespace behavior is unchanged.
+ */
+function renderBoundaryWhitespace(
+  whitespace: string,
+  keyPrefix: string
+): React.ReactNode[] {
+  const out: React.ReactNode[] = [];
+  whitespace.split('\n').forEach((segment, index) => {
+    if (index > 0) {
+      out.push(<br key={`${keyPrefix}-br-${index}`} />);
+    }
+    if (segment) {
+      out.push(
+        <React.Fragment key={`${keyPrefix}-${index}`}>{segment}</React.Fragment>
+      );
+    }
+  });
   return out;
 }
 
