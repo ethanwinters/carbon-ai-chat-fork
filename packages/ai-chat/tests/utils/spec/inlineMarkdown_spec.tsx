@@ -64,16 +64,16 @@ describe('renderInlineMarkdown', () => {
   it('renders a soft break (single newline) as <br>', () => {
     const { container } = renderInline('one\ntwo');
     const root = container.querySelector('[data-testid=root]');
-    expect(root?.querySelector('br')).not.toBeNull();
-    // textContent collapses inline; just verify both words survive.
-    expect(root?.textContent).toContain('one');
-    expect(root?.textContent).toContain('two');
+    expect(root?.querySelectorAll('br')).toHaveLength(1);
+    // Exact text, not `toContain`: a half-fix that emitted the <br> and kept
+    // the old space Fragment would render the same two lines and still pass.
+    expect(root?.textContent).toBe('onetwo');
   });
 
   it('renders a hard break (two trailing spaces + newline) as <br>', () => {
     const { container } = renderInline('one  \ntwo');
     const root = container.querySelector('[data-testid=root]');
-    expect(root?.querySelector('br')).not.toBeNull();
+    expect(root?.querySelectorAll('br')).toHaveLength(1);
   });
 
   it('strips raw HTML (removeHTML=true at tokenize time)', () => {
