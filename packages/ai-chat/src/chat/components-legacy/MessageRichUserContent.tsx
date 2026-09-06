@@ -219,6 +219,18 @@ function renderParagraphInline(
 
   flushTextRun(`${messageId}::${blockIndex}.tail`);
 
+  // The block parser drops a break at the very start or end of a paragraph, so
+  // the chip path drops it too. Without this a chip-bearing paragraph renders a
+  // blank first or last line that the same text without a chip does not.
+  const isBreak = (node: React.ReactNode) =>
+    React.isValidElement(node) && node.type === 'br';
+  while (out.length && isBreak(out[0])) {
+    out.shift();
+  }
+  while (out.length && isBreak(out[out.length - 1])) {
+    out.pop();
+  }
+
   return out;
 }
 

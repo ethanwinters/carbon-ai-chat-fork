@@ -352,10 +352,9 @@ function serializeInlineToken(tokenTree: TokenTree): string {
   // Break tokens carry no content — return the HTML void element directly so
   // the merged node renders a visible line break instead of the empty string.
   // Not `'<br />\n'` — the trailing newline would add a stray whitespace text
-  // node as the run's sibling. The merged node keeps `type: 'html_container'`
-  // and still routes through sanitizeHtmlContent → unsafeHTML; DOMPurify's
-  // default allow-list keeps <br>, so the element survives both sanitize-html
-  // and remove-html modes.
+  // node as the run's sibling. The merged node keeps `type: 'html_inline'` and
+  // still routes through sanitizeHtmlContent → unsafeHTML; DOMPurify's default
+  // allow-list keeps <br>, so the element survives sanitize-html.
   if (type === 'softbreak' || type === 'hardbreak') {
     return '<br />';
   }

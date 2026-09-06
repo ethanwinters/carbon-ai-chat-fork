@@ -328,4 +328,43 @@ describe('MessageRichUserContent chip spacing (issue #2155)', () => {
     expect(brCount(content)).toBe(1);
     expect(renderedText(content)).toBe('Alicex');
   });
+
+  it('drops a break that opens the paragraph, as the block parser does', () => {
+    // markdown-it trims a leading newline, so the chip path has to as well —
+    // otherwise the same message renders a blank first line only when it
+    // carries a chip, which is the divergence #2272 exists to remove.
+    const content: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'hardBreak' },
+            { type: 'mention', attrs: { id: 'u1', label: 'Alice' } },
+          ],
+        },
+      ],
+    };
+    expect(brCount(content)).toBe(0);
+  });
+
+  it('drops a break that closes the paragraph, as the block parser does', () => {
+    // The shape `carbon-mention` produces when Shift+Enter follows a chip: the
+    // appended text node plus the newline are both trailing boundary
+    // whitespace, so the break would land last.
+    const content: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'mention', attrs: { id: 'u1', label: 'Alice' } },
+            { type: 'text', text: ' ' },
+            { type: 'hardBreak' },
+          ],
+        },
+      ],
+    };
+    expect(brCount(content)).toBe(0);
+  });
 });
