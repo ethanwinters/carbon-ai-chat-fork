@@ -1964,6 +1964,145 @@ HTTP: http://example.com
     });
   });
 
+  // ── Slot-name stability across render commits ─────────────────────────
+  // A plugin-fallback slot name ends in a positional index minted by a counter
+  // that `renderMarkdownTree` resets once per call. But `renderFallback` runs
+  // inside a lit-html `repeat()` callback, so it evaluates when lit-html
+  // *commits*, and one render result can be committed more than once. These
+  // cases pin the name to the token rather than to the commit count.
+  describe('plugin-fallback slot names across render commits', () => {
+    const COMMIT_HARNESS_TAG = 'cds-test-markdown-commit-host';
+
+    if (!customElements.get(COMMIT_HARNESS_TAG)) {
+      customElements.define(
+        COMMIT_HARNESS_TAG,
+        class extends HTMLElement {
+          connectedCallback() {
+            if (!this.shadowRoot) {
+              this.attachShadow({ mode: 'open' });
+            }
+          }
+        }
+      );
+    }
+
+    /** A delegating container that also records every offer and retirement. */
+    async function createCommitRecorder() {
+      const harness = await fixture<HTMLElement>(
+        html`<cds-test-markdown-commit-host></cds-test-markdown-commit-host>`
+      );
+      const mounts: string[] = [];
+      const unmounts: string[] = [];
+
+      const controller = createMarkdownPluginHostController(harness);
+      controller.connect();
+      harness.addEventListener(
+        'cds-aichat-markdown-plugin-host-mount',
+        (event) => {
+          const detail = resolveMarkdownPluginHostMountDetail(
+            (event as CustomEvent<MarkdownPluginHostMountDetailInput>).detail
+          );
+          if (detail.kind === 'pluginFallback') {
+            mounts.push(detail.slotName);
+          }
+        }
+      );
+      harness.addEventListener(
+        'cds-aichat-markdown-plugin-host-unmount',
+        (event) => {
+          unmounts.push(
+            (event as CustomEvent<{ slotName: string }>).detail.slotName
+          );
+        }
+      );
+
+      async function addMarkdown(markdown: string) {
+        const el = document.createElement(
+          MARKDOWN_ELEMENT_TAG
+        ) as MarkdownElementInstance;
+        Object.assign(el, {
+          markdownItPlugins: [tagPlugin],
+          markdown,
+        } as Partial<MarkdownElementInstance>);
+        harness.shadowRoot?.appendChild(el);
+        await el.updateComplete;
+        return el;
+      }
+
+      return { harness, mounts, unmounts, addMarkdown };
+    }
+
+    /** Names of the plugin-fallback slots the element currently renders. */
+    function fallbackSlotNames(el: MarkdownElementInstance) {
+      return [...(el.shadowRoot?.querySelectorAll('slot') ?? [])]
+        .map((slot) => slot.getAttribute('name') ?? '')
+        .filter((name) => name.includes('pluginFallback'));
+    }
+
+    it('keeps one slot when the markdown changes around the token', async () => {
+      const { mounts, unmounts, addMarkdown } = await createCommitRecorder();
+
+      const el = await addMarkdown('Hi :tag:');
+      const [first] = fallbackSlotNames(el);
+
+      el.markdown = 'Hi :tag: there';
+      await el.updateComplete;
+
+      expect(mounts, 'one offer per token, not per commit').to.deep.equal([
+        first,
+      ]);
+      expect(unmounts, 'nothing should need retiring').to.deep.equal([]);
+      expect(fallbackSlotNames(el)).to.deep.equal([first]);
+    });
+
+    it('keeps the same slot name across a re-render that changes nothing', async () => {
+      const { mounts, addMarkdown } = await createCommitRecorder();
+
+      const el = await addMarkdown('Hi :tag:');
+      const [first] = fallbackSlotNames(el);
+
+      el.requestUpdate();
+      await el.updateComplete;
+
+      expect(fallbackSlotNames(el)).to.deep.equal([first]);
+      expect(mounts).to.deep.equal([first]);
+    });
+
+    it('mints one slot per token over a streaming run, not one per chunk', async () => {
+      const { mounts, unmounts, addMarkdown } = await createCommitRecorder();
+
+      const el = await addMarkdown('');
+      el.streaming = true;
+      for (const chunk of [
+        'Hi',
+        'Hi :',
+        'Hi :tag:',
+        'Hi :tag: a',
+        'Hi :tag: ab',
+      ]) {
+        el.markdown = chunk;
+        await el.updateComplete;
+      }
+
+      expect(mounts.length, 'one host for the one plugin token').to.equal(1);
+      expect(unmounts).to.deep.equal([]);
+    });
+
+    it('gives two plugin tokens distinct names that survive a re-render', async () => {
+      const { addMarkdown } = await createCommitRecorder();
+
+      const el = await addMarkdown('a :tag: b :tag: c');
+      const before = fallbackSlotNames(el);
+      expect(before.length, 'one slot per token').to.equal(2);
+      expect(before[0], 'names must not collide').to.not.equal(before[1]);
+
+      el.requestUpdate();
+      await el.updateComplete;
+
+      expect(fallbackSlotNames(el)).to.deep.equal(before);
+    });
+  });
+
   // ── Late-subscriber handshake (#2271) ──────────────────────────────────
   // `createRelocationHarness` above does the container's job and the React
   // wrapper's job in one listener, so it can never miss its own event. The
