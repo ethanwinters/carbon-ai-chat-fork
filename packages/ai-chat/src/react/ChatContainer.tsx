@@ -23,6 +23,8 @@ import ChatAppEntry from '../chat/ChatAppEntry';
 import { carbonElement } from '@carbon/ai-chat-components/es/globals/decorators/index.js';
 import { ChatContainerProps } from '../types/component/ChatContainer';
 import { createMarkdownPluginHostController } from '@carbon/ai-chat-components/es/components/markdown/src/utils/plugin-host-container.js';
+import '@carbon/web-components/es/components/feature-flags/index.js';
+
 import { ChatInstance } from '../types/instance/ChatInstance';
 import { BusEventType } from '../types/events/eventBusTypes';
 import {
@@ -270,30 +272,45 @@ function ChatContainer(
   }
 
   return (
-    <>
-      <ReactChatContainer
-        ref={wrapperRef}
-        {...(domProps as HTMLAttributes<HTMLElement>)}
-      />
-      {container &&
-        createPortal(
-          <ChatAppEntry
-            key="stable-chat-instance"
-            config={config}
-            renderUserDefinedResponse={renderUserDefinedResponse}
-            renderUserDefinedInputNode={renderUserDefinedInputNode}
-            renderCustomMessageFooter={renderCustomMessageFooter}
-            renderWriteableElements={renderWriteableElements}
-            onBeforeRender={onBeforeRenderOverride}
-            onAfterRender={onAfterRender}
-            container={container}
-            setParentInstance={setCurrentInstance}
-            element={element}
-            chatWrapper={wrapper}
-          />,
-          container
-        )}
-    </>
+    /*
+     * Preview Carbon v12 behavior while still on the Carbon 11 packages.
+     *
+     * The scope has to sit *outside* the host, not inside its shadow root.
+     * Carbon resolves a flag by walking up from the component, hopping
+     * `ShadowRoot -> host`, so a scope above the host covers both trees the
+     * chat renders into: the React app inside the shadow root, and the
+     * user_defined/slotted content projected into the host's light DOM. A
+     * scope placed inside the shadow root misses that second tree entirely —
+     * including every overflow menu in the history panel.
+     */
+    React.createElement(
+      'feature-flags',
+      { 'enable-v12-release': '', style: { display: 'contents' } },
+      <>
+        <ReactChatContainer
+          ref={wrapperRef}
+          {...(domProps as HTMLAttributes<HTMLElement>)}
+        />
+        {container &&
+          createPortal(
+            <ChatAppEntry
+              key="stable-chat-instance"
+              config={config}
+              renderUserDefinedResponse={renderUserDefinedResponse}
+              renderUserDefinedInputNode={renderUserDefinedInputNode}
+              renderCustomMessageFooter={renderCustomMessageFooter}
+              renderWriteableElements={renderWriteableElements}
+              onBeforeRender={onBeforeRenderOverride}
+              onAfterRender={onAfterRender}
+              container={container}
+              setParentInstance={setCurrentInstance}
+              element={element}
+              chatWrapper={wrapper}
+            />,
+            container
+          )}
+      </>
+    )
   );
 }
 

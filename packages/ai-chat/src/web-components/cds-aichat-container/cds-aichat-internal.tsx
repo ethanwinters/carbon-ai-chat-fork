@@ -18,6 +18,8 @@ import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import isEqual from 'lodash-es/isEqual.js';
 
+import '@carbon/web-components/es/components/feature-flags/index.js';
+
 import ChatAppEntry from '../../chat/ChatAppEntry';
 import { carbonElement } from '@carbon/ai-chat-components/es/globals/decorators/index.js';
 import { PublicConfig } from '../../types/config/PublicConfig';
@@ -44,6 +46,14 @@ class ChatContainerInternal extends LitElement {
       height: 100%;
       box-sizing: border-box;
       z-index: var(--cds-aichat-z-index, auto);
+    }
+
+    /*
+     * The <feature-flags> wrapper is a scope provider, not a box. Take it out of
+     * the layout so wrapping the app in it changes nothing about how it sizes.
+     */
+    feature-flags {
+      display: contents;
     }
   `;
 
@@ -133,7 +143,18 @@ class ChatContainerInternal extends LitElement {
     if (!this.reactContainer) {
       const container = document.createElement('div');
       container.classList.add('cds-aichat--react-app');
-      this.shadowRoot.appendChild(container);
+
+      // Preview Carbon v12 behavior while still on the Carbon 11 packages.
+      // This wrapper has to sit inside our shadow root rather than around the
+      // chat: Carbon resolves render-time flags by walking up from the
+      // component through shadow hosts, so a host-side wrapper would reach
+      // those, but it cannot reach anything Carbon styles via a flag attribute
+      // (that sync is a light-DOM querySelectorAll and stops at our boundary).
+      const featureFlags = document.createElement('feature-flags');
+      featureFlags.setAttribute('enable-v12-release', '');
+      featureFlags.appendChild(container);
+      this.shadowRoot.appendChild(featureFlags);
+
       this.reactContainer = container;
     }
 

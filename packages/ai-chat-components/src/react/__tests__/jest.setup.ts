@@ -7,7 +7,26 @@
  *  @license
  */
 
+import '@carbon/web-components/es/components/feature-flags/index.js';
+
 beforeEach(() => {
+  // Run the suite under Carbon's v12 behavior.
+  //
+  // Carbon resolves a render-time flag by walking up to the nearest
+  // `<feature-flags>` ancestor, so a component only sees the flag when it is
+  // mounted inside one. Testing Library appends its container straight to
+  // `document.body`, which would make it a sibling of the scope rather than a
+  // descendant. Redirect those appends into the scope.
+  const scope = document.createElement('feature-flags');
+  scope.setAttribute('enable-v12-release', '');
+  const appendToBody = document.body.appendChild.bind(document.body);
+  const removeFromBody = document.body.removeChild.bind(document.body);
+  appendToBody(scope);
+  document.body.appendChild = (node: any) =>
+    node === scope ? appendToBody(node) : scope.appendChild(node);
+  document.body.removeChild = (node: any) =>
+    node.parentNode === scope ? scope.removeChild(node) : removeFromBody(node);
+
   // Mock DOMParser for icon transformation tests
   if (typeof DOMParser === 'undefined') {
     (global as any).DOMParser = class DOMParser {

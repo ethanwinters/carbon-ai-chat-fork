@@ -28,6 +28,41 @@ const featureFlags = `$feature-flags: (
 );`;
 const tsconfigFile = path.resolve(__dirname, 'tsconfig.json');
 
+/*
+ * Run the suite under Carbon's v12 behavior.
+ *
+ * The chat is moving to Carbon 12. Until those packages exist, `enable-v12-release`
+ * is how we get there, and this scope is what turns it on for every fixture.
+ *
+ * Carbon resolves a render-time flag by walking up from the component to the
+ * nearest `feature-flags` ancestor, so a component only sees the flag when it is
+ * mounted inside one. `fixture()` appends its wrapper straight to `document.body`,
+ * which would make every fixture a sibling of the scope rather than a descendant —
+ * so redirect body insertions into the scope, and send the matching removals back
+ * to whichever parent the node actually has.
+ *
+ * `CARBON_V12_SCOPE=0` drops the scope, which is how the chat will run once Carbon
+ * 12 ships and the flag is deleted. Keeping that path green is the goal: a failure
+ * with the scope dropped means something has taken a dependency on the flag still
+ * being here, and would break on the day it is removed.
+ */
+const v12FlagScope =
+  process.env.CARBON_V12_SCOPE === '0'
+    ? ''
+    : `<script type="module">
+          import '@carbon/web-components/es/components/feature-flags/index.js';
+
+          const scope = document.createElement('feature-flags');
+          scope.setAttribute('enable-v12-release', '');
+          const appendToBody = document.body.appendChild.bind(document.body);
+          const removeFromBody = document.body.removeChild.bind(document.body);
+          appendToBody(scope);
+          document.body.appendChild = (node) =>
+            node === scope ? appendToBody(node) : scope.appendChild(node);
+          document.body.removeChild = (node) =>
+            node.parentNode === scope ? scope.removeChild(node) : removeFromBody(node);
+        </script>`;
+
 export default {
   files: ['src/**/*.test.ts'],
   // The default 120s per-file session budget is too tight under full parallel
@@ -56,6 +91,7 @@ export default {
     <html>
       <body>
         <script>window.process = { env: { NODE_ENV: "development" } }</script>
+        ${v12FlagScope}
         <script type="module" src="${testFramework}"></script>
       </body>
     </html>`,
