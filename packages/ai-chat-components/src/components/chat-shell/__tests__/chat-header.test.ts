@@ -278,6 +278,41 @@ describe('cds-aichat-chat-header', function () {
       expect(overflowMenu).to.exist;
     });
 
+    it('composes the overflow menu the way the v12 structure expects', async () => {
+      const items = [
+        { text: 'Settings', onClick: () => {} },
+        { text: 'Delete', danger: true, divider: true, onClick: () => {} },
+      ];
+      const el = await fixture<CdsAiChatHeader>(html`
+        <cds-aichat-chat-header
+          navigation-type="overflow"
+          .navigationOverflowItems=${items}></cds-aichat-chat-header>
+      `);
+      const overflowMenu = el.shadowRoot!.querySelector(
+        'cds-overflow-menu'
+      ) as HTMLElement;
+
+      // Under the v12 flag the menu only opens off a direct `cds-menu` child.
+      // Anything else leaves it dead and only warns in development.
+      const menu = overflowMenu.querySelector(':scope > cds-menu');
+      expect(menu, 'cds-menu must be a direct child of cds-overflow-menu').to
+        .exist;
+      expect(overflowMenu.querySelector('cds-overflow-menu-body')).to.not.exist;
+
+      // `menu-alignment` has its own vocabulary. The trigger's left/right would
+      // put the menu beside the button instead of under it.
+      expect(overflowMenu.getAttribute('menu-alignment')).to.equal(
+        'bottom-end'
+      );
+
+      const menuItems = Array.from(menu!.querySelectorAll('cds-menu-item'));
+      expect(menuItems.map((item) => item.getAttribute('label'))).to.deep.equal(
+        ['Settings', 'Delete']
+      );
+      expect(menuItems[1].getAttribute('kind')).to.equal('danger');
+      expect(menu!.querySelector('cds-menu-item-divider')).to.exist;
+    });
+
     it('should use custom navigation slot when provided', async () => {
       const el = await fixture<CdsAiChatHeader>(
         html`<cds-aichat-chat-header navigation-type="back">

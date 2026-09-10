@@ -73,10 +73,12 @@ export default {
         </div>`,
         'custom 1': html` <div slot="navigation" data-rounded="top-left">
           <cds-overflow-menu
+            enable-v12-overflowmenu
             size="md"
             index="1"
             kind="ghost"
             align="bottom-start"
+            menu-alignment="bottom-start"
             enter-delay-ms="0"
             leave-delay-ms="0">
             ${iconLoader(OverflowMenuVertical16, {
@@ -84,20 +86,17 @@ export default {
               slot: 'icon',
             })}
             <span slot="tooltip-content"> Menu </span>
-            <cds-overflow-menu-body>
-              <cds-overflow-menu-item>Stop app</cds-overflow-menu-item>
-              <cds-overflow-menu-item>Restart app</cds-overflow-menu-item>
-              <cds-overflow-menu-item>Rename app</cds-overflow-menu-item>
-              <cds-overflow-menu-item disabled=""
-                >Clone and move app</cds-overflow-menu-item
-              >
-              <cds-overflow-menu-item
-                >Edit routes and access</cds-overflow-menu-item
-              >
-              <cds-overflow-menu-item divider="" danger=""
-                >Delete app</cds-overflow-menu-item
-              >
-            </cds-overflow-menu-body>
+            <cds-menu>
+              <cds-menu-item label="Stop app"></cds-menu-item>
+              <cds-menu-item label="Restart app"></cds-menu-item>
+              <cds-menu-item label="Rename app"></cds-menu-item>
+              <cds-menu-item
+                label="Clone and move app"
+                disabled></cds-menu-item>
+              <cds-menu-item label="Edit routes and access"></cds-menu-item>
+              <cds-menu-item-divider></cds-menu-item-divider>
+              <cds-menu-item label="Delete app" kind="danger"></cds-menu-item>
+            </cds-menu>
           </cds-overflow-menu>
         </div>`,
         'custom 2': html` <div slot="navigation" data-rounded="top-left">

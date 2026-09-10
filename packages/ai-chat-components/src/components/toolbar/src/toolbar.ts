@@ -12,6 +12,7 @@ import { property, state, query } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import '@carbon/web-components/es/components/button/index.js';
 import '@carbon/web-components/es/components/overflow-menu/index.js';
+import '@carbon/web-components/es/components/menu/index.js';
 import { OVERFLOW_MENU_SIZE } from '@carbon/web-components/es/components/overflow-menu/defs.js';
 import OverflowMenuVertical16 from '@carbon/icons/es/overflow-menu--vertical/16.js';
 import { iconLoader } from '@carbon/web-components/es/globals/internal/icon-loader.js';
@@ -22,6 +23,7 @@ import { CarbonIcon } from '@carbon/web-components/es/globals/internal/icon-load
 import { carbonElement } from '../../../globals/decorators/index.js';
 import '../../truncated-text/index.js';
 import { BaseOverflowMenuItem } from '../../../typings/overflow-menu.js';
+import { activateOverflowMenuItem } from '../../../globals/utils/menu-item-activation.js';
 import { PageObjectId } from '../../../testing/PageObjectId.js';
 
 const blockClass = `${prefix}-toolbar`;
@@ -104,15 +106,9 @@ class CDSAIChatToolbar extends LitElement {
 
   private static readonly OVERFLOW_MENU_LABEL = 'Options';
 
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.addEventListener('keydown', this._handleToolbarKeydown);
-  }
-
   disconnectedCallback() {
     this.resizeObserver?.disconnect();
     this.resizeObserver = undefined;
-    this.removeEventListener('keydown', this._handleToolbarKeydown);
     super.disconnectedCallback();
   }
 
@@ -196,60 +192,6 @@ class CDSAIChatToolbar extends LitElement {
   }
 
   /**
-   * Returns the focused overflow menu item (if exists) by traversing shadow DOM
-   */
-  private findFocusedOverflowMenuItem(activeElem: Element): Element | null {
-    if (activeElem.tagName.toLowerCase() === 'cds-overflow-menu-item') {
-      return activeElem;
-    }
-
-    if (activeElem?.shadowRoot?.activeElement) {
-      return this.findFocusedOverflowMenuItem(
-        activeElem.shadowRoot.activeElement
-      );
-    }
-
-    return null;
-  }
-
-  private _handleToolbarKeydown = (event: KeyboardEvent) => {
-    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') {
-      return;
-    }
-
-    let focusedMenuItem: Element | null = null;
-
-    if (document.activeElement) {
-      focusedMenuItem = this.findFocusedOverflowMenuItem(
-        document.activeElement
-      );
-    }
-
-    if (focusedMenuItem) {
-      event.preventDefault();
-      const menuBody = focusedMenuItem.closest('cds-overflow-menu-body');
-
-      if (!menuBody) {
-        return;
-      }
-
-      const items = Array.from(
-        menuBody.querySelectorAll('cds-overflow-menu-item:not([disabled])')
-      ) as HTMLElement[];
-
-      const currentIndex = items.indexOf(focusedMenuItem as HTMLElement);
-      if (currentIndex === -1) {
-        return;
-      }
-
-      const direction = event.key === 'ArrowDown' ? 1 : -1;
-      const nextIndex =
-        (currentIndex + direction + items.length) % items.length;
-      items[nextIndex]?.focus();
-    }
-  };
-
-  /**
    * Renders an action as an icon button.
    * Note: Some Action properties only apply when rendered in overflow menu:
    * - danger/dangerDescription: cds-icon-button doesn't support danger variant
@@ -297,6 +239,11 @@ class CDSAIChatToolbar extends LitElement {
     const showInitialActions =
       rawVisibleActions.length === 0 && rawHiddenActions.length === 0;
 
+    // `enable-v12-overflowmenu` is set per element rather than left to the
+    // feature-flag scope. The scope does reach here, but it only exists on the
+    // chat's own mount paths -- Storybook and anything consuming this package
+    // directly render with none. The markup below is unconditionally v12, so
+    // the composition path has to be too.
     return html`
       <div data-rounded="top" class=${blockClass}>
         <div data-fixed class="${blockClass}__start">
@@ -358,8 +305,10 @@ class CDSAIChatToolbar extends LitElement {
               showOverflowMenu
                 ? html`
                     <cds-overflow-menu
+                      enable-v12-overflowmenu
                       size=${this.getOverflowMenuSize()}
                       align=${this.isRTL ? 'bottom-start' : 'bottom-end'}
+                      menu-alignment=${this.isRTL ? 'bottom-start' : 'bottom-end'}
                       data-offset
                       ?data-hidden=${hiddenActions.length === 0}
                       kind="ghost"
@@ -373,29 +322,29 @@ class CDSAIChatToolbar extends LitElement {
                       <span slot="tooltip-content"
                         >${CDSAIChatToolbar.OVERFLOW_MENU_LABEL}</span
                       >
-                      <cds-overflow-menu-body ?flipped=${!this.isRTL}>
+                      <cds-menu>
                         ${repeat(
                           hiddenActions,
                           (item) => item.text,
                           (item) => html`
-                            <cds-overflow-menu-item
-                              @click=${item.onClick}
-                              href=${item.href || nothing}
-                              target=${
-                                item.href ? item.target || '_self' : nothing
-                              }
-                              ?disabled=${item.disabled}
-                              ?danger=${item.danger}
+                            ${
+                              item.divider
+                                ? html`<cds-menu-item-divider></cds-menu-item-divider>`
+                                : nothing
+                            }
+                            <cds-menu-item
+                              label=${item.text}
+                              kind=${item.danger ? 'danger' : 'default'}
                               danger-description=${
                                 item.dangerDescription || nothing
                               }
-                              ?divider=${item.divider}
-                              data-testid=${item.testId || nothing}>
-                              ${item.text}
-                            </cds-overflow-menu-item>
+                              ?disabled=${item.disabled}
+                              data-testid=${item.testId || nothing}
+                              @click=${() => activateOverflowMenuItem(item)}>
+                            </cds-menu-item>
                           `
                         )}
-                      </cds-overflow-menu-body>
+                      </cds-menu>
                     </cds-overflow-menu>
                   `
                 : nothing

@@ -98,22 +98,8 @@ describe('history delete focus restore', () => {
   });
 });
 
-describe('history panel item overflow menu positioning', () => {
-  it('flips the overflow menu body upward when there is not enough space below', async () => {
-    const createRect = (rect: Partial<DOMRect>): DOMRect =>
-      ({
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0,
-        toJSON: () => rect,
-        ...rect,
-      }) as DOMRect;
-
+describe('history panel item overflow menu', () => {
+  it('renders its actions through a cds-menu child, as the v12 overflow menu expects', async () => {
     const host = await fixture(html`
       <cds-aichat-history-content>
         <cds-aichat-history-panel-item
@@ -126,33 +112,67 @@ describe('history panel item overflow menu positioning', () => {
     ) as HTMLElement & {
       actions: unknown[];
       updateComplete: Promise<boolean>;
-      _adjustMenuPosition: () => void;
     };
-    item.actions = [{ text: 'Delete' }, { text: 'Rename' }];
+    item.actions = [{ text: 'Rename' }, { text: 'Delete', delete: true }];
     await item.updateComplete;
 
     const overflowMenu = item.shadowRoot?.querySelector(
       'cds-overflow-menu'
     ) as HTMLElement;
-    const overflowMenuBody = item.shadowRoot?.querySelector(
-      'cds-overflow-menu-body'
-    ) as HTMLElement;
-    const flippedClass = 'cds-aichat--history-overflow-menu-body--flipped';
+    expect(overflowMenu).to.exist;
 
-    host.getBoundingClientRect = () => createRect({ top: 0, bottom: 120 });
-    overflowMenu.getBoundingClientRect = () =>
-      createRect({ top: 80, bottom: 112 });
-    overflowMenuBody.getBoundingClientRect = () => createRect({ height: 80 });
+    // The v12 overflow menu drives a direct `cds-menu` child. Anything else
+    // leaves the menu unopenable and only warns in development.
+    const menu = overflowMenu.querySelector(':scope > cds-menu');
+    expect(menu, 'cds-menu must be a direct child of cds-overflow-menu').to
+      .exist;
+    expect(overflowMenu.querySelector('cds-overflow-menu-body')).to.not.exist;
 
-    item._adjustMenuPosition();
+    // Carbon flips the menu itself when it is set to autoalign, which is what
+    // replaced the hand-rolled positioning this component used to carry.
+    expect(overflowMenu.hasAttribute('autoalign')).to.be.true;
+    expect(overflowMenu.getAttribute('menu-alignment')).to.equal('top-end');
 
-    expect(overflowMenuBody.classList.contains(flippedClass)).to.be.true;
+    const items = Array.from(menu!.querySelectorAll('cds-menu-item'));
+    expect(items.map((el) => el.getAttribute('label'))).to.deep.equal([
+      'Rename',
+      'Delete',
+    ]);
+    expect(items[1].getAttribute('kind')).to.equal('danger');
+  });
 
-    host.getBoundingClientRect = () => createRect({ top: 0, bottom: 240 });
+  it('opens the menu when the trigger is opened', async () => {
+    const host = await fixture(html`
+      <cds-aichat-history-content>
+        <cds-aichat-history-panel-item
+          id="with-menu"
+          name="With menu"></cds-aichat-history-panel-item>
+      </cds-aichat-history-content>
+    `);
+    const item = host.querySelector(
+      'cds-aichat-history-panel-item'
+    ) as HTMLElement & {
+      actions: unknown[];
+      updateComplete: Promise<boolean>;
+    };
+    item.actions = [{ text: 'Rename' }];
+    await item.updateComplete;
 
-    item._adjustMenuPosition();
+    const overflowMenu = item.shadowRoot?.querySelector(
+      'cds-overflow-menu'
+    ) as HTMLElement & { open: boolean; updateComplete: Promise<boolean> };
+    const menu = overflowMenu.querySelector(
+      ':scope > cds-menu'
+    ) as HTMLElement & { open: boolean };
 
-    expect(overflowMenuBody.classList.contains(flippedClass)).to.be.false;
+    expect(menu.open).to.not.be.true;
+
+    // The whole failure mode this guards against is silent: the trigger opens,
+    // the menu does not follow, and nothing throws.
+    overflowMenu.open = true;
+    await overflowMenu.updateComplete;
+
+    expect(menu.open, 'cds-menu must follow the trigger open state').to.be.true;
   });
 });
 

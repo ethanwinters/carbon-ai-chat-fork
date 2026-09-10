@@ -65,4 +65,37 @@ describe('toolbar', function () {
     const titleDiv = el.shadowRoot!.querySelector('.cds-aichat-toolbar__title');
     expect(titleDiv).to.exist;
   });
+
+  it('composes its overflow menu the way the v12 structure expects', async () => {
+    // The menu only renders once actions actually overflow, and the overflow
+    // measurement only runs when `overflow` is set, so squeeze a toolbar that
+    // has it until the actions spill.
+    const wrapper = await fixture<HTMLDivElement>(
+      html`<div style="width: 120px;">
+        <cds-aichat-toolbar
+          overflow
+          .actions=${actionLists['Advanced list'] as Action[]}></cds-aichat-toolbar>
+      </div>`
+    );
+    const el = wrapper.querySelector('cds-aichat-toolbar') as Toolbar;
+    await el.updateComplete;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await el.updateComplete;
+
+    const overflowMenu = el.shadowRoot!.querySelector(
+      'cds-overflow-menu'
+    ) as HTMLElement;
+    expect(overflowMenu, 'actions should have overflowed into a menu').to.exist;
+
+    // Under the v12 flag the menu only opens off a direct `cds-menu` child.
+    // Anything else leaves it dead and only warns in development.
+    expect(
+      overflowMenu.querySelector(':scope > cds-menu'),
+      'cds-menu must be a direct child of cds-overflow-menu'
+    ).to.exist;
+    expect(overflowMenu.querySelector('cds-overflow-menu-body')).to.not.exist;
+    expect(overflowMenu.hasAttribute('enable-v12-overflowmenu')).to.be.true;
+    expect(overflowMenu.getAttribute('menu-alignment')).to.equal('bottom-end');
+  });
 });

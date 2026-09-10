@@ -7,7 +7,7 @@
  *  @license
  */
 
-import { LitElement, html } from 'lit';
+import { LitElement, html, nothing } from 'lit';
 import { property, query } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { classMap } from 'lit/directives/class-map.js';
@@ -22,11 +22,8 @@ import { CarbonIcon } from '@carbon/web-components/es/globals/internal/icon-load
 import OverflowMenuVertical16 from '@carbon/icons/es/overflow-menu--vertical/16.js';
 import { iconLoader } from '@carbon/web-components/es/globals/internal/icon-loader.js';
 import '@carbon/web-components/es/components/overflow-menu/index.js';
+import '@carbon/web-components/es/components/menu/index.js';
 import '@carbon/web-components/es/components/icon-button/index.js';
-import {
-  adoptOnRoot,
-  setVarsForSelector,
-} from '../../shared/dynamic-css-var-sheet.js';
 
 import styles from './chat-history.scss?lit';
 
@@ -123,28 +120,6 @@ class CDSAIChatHistoryPanelItem extends HostListenerMixin(
 
   @query(`${prefix}-history-panel-item-input`) input!: HTMLElement;
 
-  @query('cds-overflow-menu') overflowMenu!: HTMLElement;
-  @query('cds-overflow-menu-body') overflowMenuBody!: HTMLElement;
-
-  private _overflowMenuBodyElement?: HTMLElement;
-  private _overflowMenuBodyFlippedClass = `${prefix}--history-overflow-menu-body--flipped`;
-  private _overflowMenuBodyFlippedSelector = `cds-overflow-menu-body.${this._overflowMenuBodyFlippedClass}`;
-
-  private _adoptOverflowMenuBodyStyles(overflowMenuBody: HTMLElement) {
-    const root = overflowMenuBody.getRootNode();
-    if (root instanceof Document || root instanceof ShadowRoot) {
-      adoptOnRoot(root);
-    }
-  }
-
-  private _adoptOverflowMenuBodyStylesAfterPortal(
-    overflowMenuBody: HTMLElement
-  ) {
-    requestAnimationFrame(() => {
-      this._adoptOverflowMenuBodyStyles(overflowMenuBody);
-    });
-  }
-
   /**
    * MutationObserver to watch for changes to parent panel's always-show-actions attribute
    */
@@ -159,60 +134,6 @@ class CDSAIChatHistoryPanelItem extends HostListenerMixin(
    * Reference to parent menu element
    */
   private _parentMenu?: HTMLElement;
-
-  /**
-   *
-   * The current cds-overflow-menu doesn't support opening the menu body in different
-   * directions (top / bottom). This method detects if there's enough space below
-   * the menu trigger to show the menu body, and if not, it flips the menu to open upward
-   * by setting the `transform` style on the menu body; This is a workaround until the
-   * Carbon core team adds support for this.
-   *
-   */
-  private _adjustMenuPosition() {
-    if (!this.overflowMenu || !this.overflowMenuBody) {
-      return;
-    }
-    const overflowMenuBody = this.overflowMenuBody;
-    this._overflowMenuBodyElement = overflowMenuBody;
-    this._adoptOverflowMenuBodyStyles(overflowMenuBody);
-
-    const menuRect = this.overflowMenu.getBoundingClientRect();
-    const menuTriggerHeight = menuRect.height;
-    setVarsForSelector(this._overflowMenuBodyFlippedSelector, {
-      transform: `translateY(calc(-100% - ${menuTriggerHeight}px))`,
-    });
-    const menuBodyRect = overflowMenuBody.getBoundingClientRect();
-    const actualMenuHeight = menuBodyRect.height || this.actions.length * 40; // fallback
-
-    const parentContainer = this.closest(`${prefix}-history-content`);
-    if (!parentContainer) {
-      return;
-    }
-
-    const containerRect = parentContainer.getBoundingClientRect();
-    const spaceBelow = containerRect.bottom - menuRect.bottom;
-    const spaceAbove = menuRect.top - containerRect.top;
-
-    // Class-based flip so a strict CSP can drop style-src-attr 'unsafe-inline'.
-    const flipUp = spaceBelow < actualMenuHeight && spaceAbove > spaceBelow;
-    overflowMenuBody.classList.toggle(
-      this._overflowMenuBodyFlippedClass,
-      flipUp
-    );
-    this._adoptOverflowMenuBodyStylesAfterPortal(overflowMenuBody);
-  }
-
-  /**
-   * Handler for overflow menu trigger keydown event
-   *
-   * * @param event The event.
-   */
-  private _handleMenuTriggerKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      this._adjustMenuPosition();
-    }
-  };
 
   /**
    * Handle menu item clicks
@@ -236,70 +157,6 @@ class CDSAIChatHistoryPanelItem extends HostListenerMixin(
     this.dispatchEvent(itemActionEvent);
   };
 
-  /**
-   * Handler for menu item keydown event
-   *
-   * * @param event The event.
-   */
-  private _handleMenuItemKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      this._handleMenuItemClick(event);
-      // Close the overflow menu after handling the action
-      if (this.overflowMenu) {
-        (this.overflowMenu as any).open = false;
-      }
-      return;
-    }
-
-    // Handle arrow keys
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const direction = event.key === 'ArrowDown' ? 1 : -1;
-
-      // Find the menu body - the event target is the menu item
-      const target = event.target as HTMLElement;
-      const menuBody = target.closest('cds-overflow-menu-body');
-
-      if (!menuBody) {
-        return;
-      }
-
-      const menuItems = Array.from(
-        menuBody.querySelectorAll('cds-overflow-menu-item:not([disabled])')
-      ) as HTMLElement[];
-
-      if (menuItems.length === 0) {
-        return;
-      }
-
-      const currentIndex = menuItems.findIndex(
-        (item) =>
-          item.contains(document.activeElement) ||
-          item === document.activeElement ||
-          item.matches(':focus-within')
-      );
-
-      let nextIndex: number;
-      if (currentIndex === -1) {
-        // No item focused, focus first or last
-        nextIndex = direction === 1 ? 0 : menuItems.length - 1;
-      } else {
-        // Navigate to next/previous with wrapping
-        nextIndex = currentIndex + direction;
-        if (nextIndex < 0) {
-          nextIndex = menuItems.length - 1;
-        } else if (nextIndex >= menuItems.length) {
-          nextIndex = 0;
-        }
-      }
-
-      menuItems[nextIndex]?.focus();
-    }
-  };
-
   @HostListener('click')
   // @ts-ignore: The decorator refers to this method but TS thinks this method is not referred to
   private _handleClick(event: Event) {
@@ -312,9 +169,9 @@ class CDSAIChatHistoryPanelItem extends HostListenerMixin(
         const tagName = element.tagName?.toLowerCase();
         return (
           tagName?.includes('overflow-menu') ||
-          tagName === 'cds-overflow-menu' ||
-          tagName === 'cds-overflow-menu-body' ||
-          tagName === 'cds-overflow-menu-item'
+          tagName === 'cds-menu' ||
+          tagName === 'cds-menu-item' ||
+          tagName === 'cds-menu-item-divider'
         );
       }
       return false;
@@ -385,10 +242,6 @@ class CDSAIChatHistoryPanelItem extends HostListenerMixin(
   }
 
   disconnectedCallback() {
-    this._overflowMenuBodyElement?.classList.remove(
-      this._overflowMenuBodyFlippedClass
-    );
-
     super.disconnectedCallback();
     this._parentObserver?.disconnect();
 
@@ -438,15 +291,17 @@ class CDSAIChatHistoryPanelItem extends HostListenerMixin(
       actions,
       rename,
       overflowMenuLabel,
-      _adjustMenuPosition: adjustMenuPosition,
-      _handleMenuTriggerKeyDown: handleMenuTriggerKeyDown,
       _handleMenuItemClick: handleMenuItemClick,
-      _handleMenuItemKeyDown: handleMenuItemKeyDown,
     } = this;
     const classes = classMap({
       [`cds--side-nav__link`]: true,
       [`cds--side-nav__link--current`]: selected,
     });
+    // `enable-v12-overflowmenu` is set per element rather than left to the
+    // feature-flag scope. The scope does reach here, but it only exists on the
+    // chat's own mount paths -- Storybook and anything consuming this package
+    // directly render with none. The markup below is unconditionally v12, so
+    // the composition path has to be too.
     return html`
       ${
         !rename
@@ -456,29 +311,36 @@ class CDSAIChatHistoryPanelItem extends HostListenerMixin(
               </span>
               <slot name="actions">
                 <cds-overflow-menu
+                  enable-v12-overflowmenu
                   align="top-right"
-                  size="sm"
-                  @click=${adjustMenuPosition}
-                  @keydown=${handleMenuTriggerKeyDown}>
+                  menu-alignment="top-end"
+                  autoalign
+                  size="sm">
                   ${iconLoader(OverflowMenuVertical16, {
                     class: `${prefix}--overflow-menu__icon`,
                     slot: 'icon',
                   })}
                   <span slot="tooltip-content">${overflowMenuLabel}</span>
-                  <cds-overflow-menu-body flipped>
+                  <cds-menu>
                     ${repeat(
                       actions,
                       (action) => action.text,
-                      (action) =>
-                        html`<cds-overflow-menu-item
-                          ?danger=${action.delete}
-                          ?divider=${action.divider}
-                          @click=${handleMenuItemClick}
-                          @keydown=${handleMenuItemKeyDown}
-                          >${action.text}${action.icon}</cds-overflow-menu-item
-                        >`
+                      (action) => html`
+                        ${
+                          action.divider
+                            ? html`<cds-menu-item-divider></cds-menu-item-divider>`
+                            : nothing
+                        }
+                        <cds-menu-item
+                          label=${action.text}
+                          data-action-text=${action.text}
+                          kind=${action.delete ? 'danger' : 'default'}
+                          @click=${handleMenuItemClick}>
+                          <span slot="render-icon">${action.icon}</span>
+                        </cds-menu-item>
+                      `
                     )}
-                  </cds-overflow-menu-body>
+                  </cds-menu>
                 </cds-overflow-menu>
               </slot>
             </button>`
