@@ -25,13 +25,13 @@ Line comments beat a wall of prose: they land next to the code they're about. Bu
 {
   "commit_id": "<headRefOid from gh pr view>",
   "event": "COMMENT",
-  "body": "Fix blockers before merge. <assessment, highest-severity concerns, anything dropped>",
+  "body": "Fix blockers before merge. <highest-severity concerns, anything dropped, then any assessment>",
   "comments": [
     {
       "path": "packages/ai-chat/src/foo.ts",
       "line": 42,
       "side": "RIGHT",
-      "body": "**Blocker** — the early return skips teardown, so the listener leaks on every close. Call `dispose()` before returning."
+      "body": "**Context:** this early return is the already-closed guard, and the listener it skips past was registered a few lines above.\n\n**Blocker** — the early return skips teardown, so the listener leaks on every close. Call `dispose()` before returning."
     }
   ]
 }
@@ -42,7 +42,7 @@ gh api --method POST repos/<owner>/<repo>/pulls/<pr>/reviews --input .github/pr-
 ```
 
 - **`event`** is `COMMENT` (feedback only), `APPROVE`, or `REQUEST_CHANGES`. Ask the user which — the review event is theirs, not yours. The verdict line still opens the body, per [Output expectations](../SKILL.md#output-expectations). GitHub rejects `APPROVE` and `REQUEST_CHANGES` on your own PR, so a self-authored PR can only take `COMMENT`.
-- **`line`** is the line number in the file as of `commit_id`, and it must fall inside the diff. `side: "RIGHT"` is the post-change file; use `"LEFT"` for a removed line. For a range, add `start_line` (and `start_side`). These fields carry the citation, so drop `file:line` from the comment body and keep the rest of the finding's order.
+- **`line`** is the line number in the file as of `commit_id`, and it must fall inside the diff. `side: "RIGHT"` is the post-change file; use `"LEFT"` for a removed line. For a range, add `start_line` (and `start_side`). These fields carry the citation, so drop `file:line` from the comment body and keep the rest of the finding's order — the orientation line still comes first, since a notification shows the body long before the code ([review-comments.md](../../caic-copy-writer/references/review-comments.md)).
 - A comment outside the diff hunks returns 422. Put that finding in the summary `body` rather than forcing a line onto it.
 - A fix that replaces a line range ships as a fenced `suggestion` block in the comment body, so the author commits it from the PR page. The block replaces exactly the commented range — set `start_line` to match. A fix spanning files stays prose.
 
