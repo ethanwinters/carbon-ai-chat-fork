@@ -16,7 +16,7 @@ A few things hold everywhere, regardless of what you touch:
 
 ## Repository layout
 
-- `examples/react/*` and `examples/web-components/*` — webpack dev-server examples; default port 3000 (override with `PORT=`).
+- `examples/react/*` and `examples/web-components/*` — Vite examples; default port 3000 (override with `PORT=`). Exceptions that are not Vite: `frameworks-next/` (Next.js), `tests-jest-*` (Jest only).
 - `docs/` — developer handbook, peer-dep history, architecture decision records. Not the consumer-facing site (that lives in `packages/ai-chat/docs/`).
 
 ## Which package am I editing?

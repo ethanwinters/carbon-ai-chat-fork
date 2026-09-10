@@ -94,7 +94,7 @@ npm run aiChat:start
 
 ### Running an example alongside the development environment
 
-Each example in `examples/react/` and `examples/web-components/` has its own webpack dev server. To develop against a live package build, run `aiChat:start` in one terminal and the example in a second:
+Each example in `examples/react/` and `examples/web-components/` has its own Vite dev server. To develop against a live package build, run `aiChat:start` in one terminal and the example in a second:
 
 ```bash
 # Terminal 1
@@ -104,7 +104,7 @@ npm run aiChat:start
 npm run start --workspace=@carbon/ai-chat-examples-react-basic-custom-element-fullscreen
 ```
 
-When `aiChat:start` rebuilds a package, the example's webpack dev server will detect the changed files in `dist/es/` and hot-reload the browser automatically.
+When `aiChat:start` rebuilds a package, the example's Vite dev server will detect the changed files in `dist/es/` and hot-reload the browser automatically. Each example's `vite.config.ts` lists `@carbon/ai-chat` and `@carbon/ai-chat-components` under `optimizeDeps.exclude` so those rebuilds are not frozen in Vite's pre-bundle.
 
 All examples default to port 3000. If you need to run more than one example at the same time, override the port with the `PORT` environment variable:
 
