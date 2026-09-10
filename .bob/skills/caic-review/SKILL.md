@@ -26,7 +26,7 @@ Two jobs share this rubric. Settle which one you're doing before reading any cod
   - **Important** — should fix: unclear naming, missing test for changed behavior, unhandled edge case, scope creep.
   - **Nit** — optional, and it still has to earn its place: a concrete one-edit fix a later reader benefits from. Everything else is noise — see [What isn't a finding](#what-isnt-a-finding).
 - Read enough to be sure before you call something a **Blocker**. A false Blocker costs the author as much as a missed one. If you have only read the happy path, file it as **Important** and say what you did not read.
-- When you can run commands, run the read-only gates for what changed before you write anything — `lint`, `lint:dead`, `lint:license`, `lint:styles`, `validate:*`, `format`. A failure you watched outranks one you inferred. Never start a build or a test run yourself: the rows in [definition-of-done.md](../../../references/definition-of-done.md) all build, and a build races the watcher a developer probably has running. Report an unrun build as a stated gap.
+- When you can run commands, run the read-only gates for what changed before you write anything — `lint`, `lint:dead`, `lint:license`, `lint:styles`, `validate:*`, `format`. A failure you watched outranks one you inferred. Never start a build or a test run yourself unless the user asks for one: the rows in [definition-of-done.md](../../../references/definition-of-done.md) all build, and a build races the watcher a developer probably has running. Testing a suggestion before you post it is the one case where the user may well ask, and [reviewing-a-pr.md](references/reviewing-a-pr.md) carries that ask. Report an unrun build as a stated gap.
 
 ## How to write a finding
 
@@ -40,7 +40,7 @@ One shape, one order — orientation, then severity, the defect, what it costs, 
 
 **The orientation line is what makes a finding readable a day later**, in a notification, with none of the code open — which is how the author reads it. [review-comments.md](../caic-copy-writer/references/review-comments.md) owns its wording and lists the four labels that work.
 
-Cite a range when the defect spans lines, and show the fix as a snippet when words alone won't carry it. Never post the objection without the fix. When you genuinely can't name one, name the gap instead — "this drops the second update; whether that's a bug depends on whether the queue is ordered, and I didn't trace it." An objection with a stated gap is workable. An invented fix the author implements is not.
+Cite a range when the defect spans lines, and show the fix as a snippet when words alone won't carry it. On a PR, a fix that replaces a line range ships as a `suggestion` block the author accepts in one click — [reviewing-a-pr.md](references/reviewing-a-pr.md). Never post the objection without the fix. When you genuinely can't name one, name the gap instead — "this drops the second update; whether that's a bug depends on whether the queue is ordered, and I didn't trace it." An objection with a stated gap is workable. An invented fix the author implements is not.
 
 The consequence names the input or path that reaches the defect — "on every close", "when the list is empty" — not the category. A defect you can't trigger is a guess: drop it, or say what you didn't check.
 
@@ -115,7 +115,7 @@ Skip the split when a single reading holds the whole diff in view. Splitting a h
 
 ### If the diff contains code changes
 
-- **Favor simplicity** — run `npm run measure -- --changed <base>` before reading, and read its size row before any function row: a new file twice the size of its neighbours is the finding no per-function score can show. A bare score is not a finding either — it selects which function to read, and a clean run proves shape only, never that the change was worth making. The bands and the blind spots are in [measuring.md](../../../references/measuring.md#measuring-complexity), the rungs in the [laziness ladder](../../../references/code-patterns.md#writing-the-least-code-laziness-ladder). Flag over-built code, large multi-job functions, hidden side effects, deep nesting, shared mutable state, single-caller abstractions (YAGNI), cleverness over a plain version, dead code or unused flexibility, logic expressible in fewer lines, and JS re-creating what CSS or a native element or browser API already does. Run `npm run lint:dead` to verify no unreferenced source files were introduced or left behind. This check is removable complexity only — correctness and security are the bullets below.
+- **Favor simplicity** — hold the diff to the least-code discipline in [code-patterns.md](../../../references/code-patterns.md#writing-the-least-code-laziness-ladder). Flag over-built code, large multi-job functions, hidden side effects, deep nesting, shared mutable state, single-caller abstractions (YAGNI), cleverness over a plain version, dead code or unused flexibility, logic expressible in fewer lines, and JS re-creating what CSS or a native element or browser API already does. This check is removable complexity only — correctness and security are the bullets below.
 - Analyze logic for bugs, inefficiencies, and security risks (OWASP-style: injection, XSS, unsafe deserialization, secrets in code).
 - Check variable names, function structure, and error handling for clarity and correctness.
 - Confirm edge-case handling — empty/null inputs, error paths, concurrency, cancellation, large inputs.
@@ -162,11 +162,10 @@ For context on conventions being enforced:
 - **Copy by type**: [caic-copy-writer](../caic-copy-writer/SKILL.md) — which of the fourteen rule sets applies to the copy in the diff, since JSDoc and internal comments carry opposite ones
 - **Your own words**: [review-comments.md](../caic-copy-writer/references/review-comments.md) — type 14 of those rule sets, and the one you are writing: who reads a finding, what it opens with, and where the summary puts the defects
 - **Code-level patterns**: [code-patterns.md](../../../references/code-patterns.md) — the laziness ladder & simplicity principles, prefix discipline, SCSS, RTL, framework-agnostic logic, component placement, comments
-- **Measurements**: [measuring.md](../../../references/measuring.md) — `npm run measure`, the bands, and what each tool cannot see
 - **Process conventions**: [conventions.md](../../../references/conventions.md) — commits, branches, license headers, hooks
 - **General overview**: [AGENTS.md](../../../AGENTS.md) — monorepo pointer index
 - **Package-specific rules**: see `AGENTS.md` in each package directory
-- **Reviewing a PR**: [reviewing-a-pr.md](references/reviewing-a-pr.md) — base branch, the review payload, and the `gh` call
+- **Reviewing a PR**: [reviewing-a-pr.md](references/reviewing-a-pr.md) — base branch, fixes shipped as acceptable suggestions, the review payload, and the `gh` call
 - **Large diffs**: [large-diffs.md](references/large-diffs.md) — ranking files by risk when the diff is too big to read evenly
 - **PR workflow**: [caic-pr](../caic-pr/SKILL.md) — drafting PR descriptions
 - **Plan-phase analog**: [plan-review.md](../caic-plan/references/plan-review.md) — the same discipline applied before code exists
