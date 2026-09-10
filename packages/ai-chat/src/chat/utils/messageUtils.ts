@@ -304,6 +304,9 @@ function createMessageRequestForButtonItemOption(
   }
 
   messageRequest.history = { related_message_id: relatedResponseID };
+  if (buttonItem.label) {
+    messageRequest.history.label = buttonItem.label;
+  }
   if (buttonItem.silent) {
     messageRequest.history.silent = true;
   }

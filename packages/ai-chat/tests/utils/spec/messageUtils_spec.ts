@@ -95,13 +95,48 @@ describe('messageUtils', () => {
       { label: 'L', value: { input: { text: 't' } } } as any,
       'resp-1'
     );
+    expect(choiceReq.input.text).toBe('t');
+    expect(choiceReq.history.label).toBe('L');
     expect(choiceReq.history.related_message_id).toBe('resp-1');
     const buttonReq = createMessageRequestForButtonItemOption(
-      { label: 'lbl' } as any,
+      { label: 'Return a card', value: { input: { text: 'card' } } } as any,
       'resp-2'
     );
-    expect(buttonReq.input.text).toBe('lbl');
+    expect(buttonReq.input.text).toBe('card');
+    expect(buttonReq.history.label).toBe('Return a card');
     expect(buttonReq.history.related_message_id).toBe('resp-2');
+  });
+
+  it('creates a button item request with no label', () => {
+    const buttonReq = createMessageRequestForButtonItemOption(
+      { value: { input: { text: 'card' } } } as any,
+      'resp-3'
+    );
+    expect(buttonReq.input.text).toBe('card');
+    expect(buttonReq.history).not.toHaveProperty('label');
+  });
+
+  it('creates a button item request with no value input text', () => {
+    const buttonReq = createMessageRequestForButtonItemOption(
+      { label: 'Return a card' } as any,
+      'resp-4'
+    );
+    expect(buttonReq.input.text).toBe('Return a card');
+    expect(buttonReq.history.label).toBe('Return a card');
+  });
+
+  it('creates a silent button item request that still carries its label', () => {
+    const buttonReq = createMessageRequestForButtonItemOption(
+      {
+        label: 'Return a card',
+        value: { input: { text: 'card' } },
+        silent: true,
+      } as any,
+      'resp-5'
+    );
+    expect(buttonReq.input.text).toBe('card');
+    expect(buttonReq.history.label).toBe('Return a card');
+    expect(buttonReq.history.silent).toBe(true);
   });
 
   it('creates message requests for text/file', () => {
