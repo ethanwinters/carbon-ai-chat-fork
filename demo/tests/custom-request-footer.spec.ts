@@ -275,3 +275,114 @@ test.describe('web component', () => {
     });
   });
 });
+
+const insertHistory = async (page: import('@playwright/test').Page) => {
+  await page.evaluate(async () => {
+    const now = new Date().toISOString();
+    await window.chatInstance?.messaging.insertHistory([
+      {
+        message: {
+          id: 'history-request-1',
+          input: { message_type: 'text', text: 'a restored question' },
+        },
+        time: now,
+      },
+      {
+        message: {
+          id: 'history-response-1',
+          output: {
+            generic: [
+              {
+                response_type: 'text',
+                text: 'a restored answer',
+                message_item_options: {
+                  custom_footer_slot: {
+                    is_on: true,
+                    slot_name: 'history-footer-1',
+                    additional_data: { allow_copy: true },
+                  },
+                },
+              },
+            ],
+          },
+        },
+        time: now,
+      },
+    ] as never);
+  });
+};
+
+/**
+ * The three restore assertions, run once per framework. React portals its content into the slot; the web-component
+ * container appends the callback's element to its own light DOM instead, so the replay has to be proven on both.
+ */
+const restoreCases = () => {
+  test('renders a footer on a restored user message', async ({ page }) => {
+    await insertHistory(page);
+
+    await expect(page.locator(REQUEST_FOOTER_SLOT)).toHaveCount(1, {
+      timeout: 10000,
+    });
+    await expect(page.locator(FILLED_REQUEST_FOOTER).first()).toBeVisible();
+  });
+
+  test('renders a footer on a restored assistant message', async ({ page }) => {
+    await insertHistory(page);
+
+    const host = page.locator('div[slot="history-footer-1"]').first();
+    await expect(host).toBeAttached({ timeout: 10000 });
+
+    // Assert a child element rather than text: the web-component demo fills the
+    // slot with a custom element whose content lives in its own shadow root, so
+    // the host's light-DOM text is empty on that path even when it is filled.
+    await expect
+      .poll(async () => host.evaluate((node) => node.children.length), {
+        timeout: 10000,
+      })
+      .toBeGreaterThan(0);
+  });
+
+  test('restored and live messages both get footers', async ({ page }) => {
+    await insertHistory(page);
+    await expect(page.locator(REQUEST_FOOTER_SLOT)).toHaveCount(1, {
+      timeout: 10000,
+    });
+
+    await sendChatMessage(page, 'a live question');
+
+    await expect(page.locator(REQUEST_FOOTER_SLOT)).toHaveCount(2, {
+      timeout: 10000,
+    });
+  });
+};
+
+test.describe('history', () => {
+  restoreCases();
+});
+
+// Same restore assertions against the web-component container, which fills the
+// slot on its own path rather than through a React portal.
+test.describe('history (web component)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(
+      `/?settings=${encodeURIComponent(
+        JSON.stringify({
+          framework: 'web-component',
+          layout: 'float',
+          ...SHOW_SLOTS,
+        })
+      )}`
+    );
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForFunction(() => Boolean(window.chatInstance), {
+      timeout: 15000,
+    });
+    await openChatViaLauncher(page);
+    await openChatWindow(page);
+    await expect(page.getByTestId(PageObjectId.MAIN_PANEL)).toBeVisible({
+      timeout: 15000,
+    });
+  });
+
+  restoreCases();
+});

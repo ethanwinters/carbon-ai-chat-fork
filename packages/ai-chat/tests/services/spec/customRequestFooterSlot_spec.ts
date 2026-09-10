@@ -313,3 +313,171 @@ describe('custom request footer slot', () => {
     expect(footerEventsIn(firedEvents)).toHaveLength(0);
   });
 });
+
+describe('footer replay from history', () => {
+  const restoredRequest = (id: string, text: string) => ({
+    localMessage: {
+      item: { response_type: 'text', text },
+      ui_state: { id: `local-${id}`, originalUserText: text },
+      fullMessageID: id,
+    },
+    message: {
+      id,
+      input: { message_type: MessageInputType.TEXT, text },
+      history: { timestamp: 0 },
+    },
+  });
+
+  const restoredResponse = (
+    id: string,
+    slotName: string,
+    isOn: boolean | undefined
+  ) => ({
+    localMessage: {
+      item: {
+        response_type: 'text',
+        text: 'a reply',
+        message_item_options: {
+          custom_footer_slot: { slot_name: slotName, is_on: isOn },
+        },
+      },
+      ui_state: { id: `local-${id}` },
+      fullMessageID: id,
+    },
+    message: { id, output: { generic: [] as unknown[] } },
+  });
+
+  /**
+   * Hydration puts the nested items of a grid or carousel in `allMessageItemsByID` but not in `localMessageIDs`,
+   * which holds the top-level items the renderer walks. `nested` models that half.
+   */
+  const historyFrom = (entries: any[], nested: any[] = []) => ({
+    allMessageItemsByID: Object.fromEntries(
+      [...entries, ...nested].map((e) => [
+        e.localMessage.ui_state.id,
+        e.localMessage,
+      ])
+    ),
+    allMessagesByID: Object.fromEntries(
+      entries.map((e) => [e.message.id, e.message])
+    ),
+    assistantMessageState: {
+      messageIDs: [] as string[],
+      localMessageIDs: entries.map((e) => e.localMessage.ui_state.id),
+    },
+  });
+
+  it('fires for restored user messages', async () => {
+    const { serviceManager, firedEvents } = createServiceManagerStub();
+    const chatActions = new ChatActionsImpl(serviceManager);
+
+    await chatActions.replayFooterSlots(
+      historyFrom([restoredRequest('m1', 'restored text')]) as never
+    );
+
+    const footerEvents = footerEventsIn(firedEvents);
+    expect(footerEvents).toHaveLength(1);
+    expect(footerEvents[0].data.slotName).toBe('request-footer-local-m1');
+    expect(footerEvents[0].data.message.input.text).toBe('restored text');
+  });
+
+  it('fires for restored assistant messages', async () => {
+    const { serviceManager, firedEvents } = createServiceManagerStub();
+    const chatActions = new ChatActionsImpl(serviceManager);
+
+    await chatActions.replayFooterSlots(
+      historyFrom([restoredResponse('m1', 'backend-slot', true)]) as never
+    );
+
+    const incoming = firedEvents.filter(
+      (event) => event.type === BusEventType.CUSTOM_FOOTER_SLOT
+    );
+    expect(incoming).toHaveLength(1);
+    expect((incoming[0] as any).data.slotName).toBe('backend-slot');
+  });
+
+  it('replays both directions in one pass', async () => {
+    const { serviceManager, firedEvents } = createServiceManagerStub();
+    const chatActions = new ChatActionsImpl(serviceManager);
+
+    await chatActions.replayFooterSlots(
+      historyFrom([
+        restoredRequest('m1', 'what the user asked'),
+        restoredResponse('m2', 'backend-slot', true),
+      ]) as never
+    );
+
+    expect(footerEventsIn(firedEvents)).toHaveLength(1);
+    expect(
+      firedEvents.filter(
+        (event) => event.type === BusEventType.CUSTOM_FOOTER_SLOT
+      )
+    ).toHaveLength(1);
+  });
+
+  it('honors the documented is_on default', async () => {
+    const { serviceManager, firedEvents } = createServiceManagerStub();
+    const chatActions = new ChatActionsImpl(serviceManager);
+
+    // `is_on` is documented as defaulting to true, so an unset one still gets a
+    // footer. This used to require an explicit true and left the slot empty.
+    await chatActions.replayFooterSlots(
+      historyFrom([restoredResponse('m1', 'backend-slot', undefined)]) as never
+    );
+
+    expect(
+      firedEvents.filter(
+        (event) => event.type === BusEventType.CUSTOM_FOOTER_SLOT
+      )
+    ).toHaveLength(1);
+  });
+
+  it('skips the nested items of a restored grid', async () => {
+    const { serviceManager, firedEvents } = createServiceManagerStub();
+    const chatActions = new ChatActionsImpl(serviceManager);
+
+    // A nested item renders no footer, so firing for one would name a slot that never reaches the DOM.
+    const nestedItem = restoredResponse('m1', 'nested-slot', true);
+    nestedItem.localMessage.ui_state.id = 'local-m1-nested';
+
+    await chatActions.replayFooterSlots(
+      historyFrom(
+        [restoredResponse('m1', 'backend-slot', true)],
+        [nestedItem]
+      ) as never
+    );
+
+    const incoming = firedEvents.filter(
+      (event) => event.type === BusEventType.CUSTOM_FOOTER_SLOT
+    );
+    expect(incoming).toHaveLength(1);
+    expect((incoming[0] as any).data.slotName).toBe('backend-slot');
+  });
+
+  it('skips an assistant footer switched off', async () => {
+    const { serviceManager, firedEvents } = createServiceManagerStub();
+    const chatActions = new ChatActionsImpl(serviceManager);
+
+    await chatActions.replayFooterSlots(
+      historyFrom([restoredResponse('m1', 'backend-slot', false)]) as never
+    );
+
+    expect(
+      firedEvents.filter(
+        (event) => event.type === BusEventType.CUSTOM_FOOTER_SLOT
+      )
+    ).toHaveLength(0);
+  });
+
+  it('fires nothing for a restored human-agent message', async () => {
+    const { serviceManager, firedEvents } = createServiceManagerStub();
+    const chatActions = new ChatActionsImpl(serviceManager);
+    const entry = restoredRequest('m1', 'to the agent');
+    (entry.localMessage.item as any).agent_message_type =
+      HumanAgentMessageType.FROM_USER;
+
+    await chatActions.replayFooterSlots(historyFrom([entry]) as never);
+
+    expect(footerEventsIn(firedEvents)).toHaveLength(0);
+  });
+});
