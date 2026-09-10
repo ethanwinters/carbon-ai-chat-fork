@@ -20,7 +20,10 @@ import DocumentNode from '@tiptap/extension-document';
 import ParagraphNode from '@tiptap/extension-paragraph';
 import TextNode from '@tiptap/extension-text';
 
-import { AutocompleteController } from '../autocomplete-controller.js';
+import {
+  AutocompleteController,
+  type AutocompleteControllerState,
+} from '../autocomplete-controller.js';
 import { carbonAutocomplete } from '../tiptap/carbon-autocomplete.js';
 import { carbonMention } from '../tiptap/carbon-mention.js';
 import { carbonStarterTrigger } from '../tiptap/carbon-starter-trigger.js';
@@ -775,6 +778,78 @@ describe('AutocompleteController', () => {
 
       expect(storage.carbonStarterTrigger.isOn).to.equal(true);
       expect(getDispatchCount()).to.equal(1);
+    });
+  });
+
+  describe('disableDirectSend derivation', () => {
+    async function emitFor(
+      options: ConstructorParameters<typeof AutocompleteController>[0],
+      type: string
+    ) {
+      let last: AutocompleteControllerState | null = null;
+      const controller = new AutocompleteController({
+        ...options,
+        onChange: (state) => {
+          last = state;
+        },
+      });
+      controller.handleTriggerChange({ type, query: '', triggerOffset: 0 });
+      await flush();
+      return last!;
+    }
+
+    it('is always true for mention and command, whatever the config says', async () => {
+      // TriggerSuggestionConfig omits the field: a chip insertion is never a
+      // send, so a host cannot opt out of it.
+      const mention = await emitFor(
+        { mention: { trigger: '@', items: USERS } },
+        'mention'
+      );
+      const command = await emitFor(
+        { command: { trigger: '/', items: USERS } },
+        'command'
+      );
+      expect(mention.disableDirectSend).to.equal(true);
+      expect(command.disableDirectSend).to.equal(true);
+    });
+
+    it("forwards the starters config's value for a starter trigger", async () => {
+      const on = await emitFor(
+        { starters: { ...STARTERS, disableDirectSend: true } },
+        'starter'
+      );
+      const off = await emitFor(
+        { starters: { ...STARTERS, disableDirectSend: false } },
+        'starter'
+      );
+      expect(on.disableDirectSend).to.equal(true);
+      expect(off.disableDirectSend).to.equal(false);
+    });
+
+    it("forwards the autocomplete config's value for an autocomplete trigger", async () => {
+      const on = await emitFor(
+        { autocomplete: { items: USERS, disableDirectSend: true } },
+        'autocomplete'
+      );
+      const off = await emitFor(
+        { autocomplete: { items: USERS, disableDirectSend: false } },
+        'autocomplete'
+      );
+      expect(on.disableDirectSend).to.equal(true);
+      expect(off.disableDirectSend).to.equal(false);
+    });
+
+    it("does not read one trigger type's config for another", async () => {
+      // The lookup is keyed on the active trigger type, so an autocomplete
+      // config cannot colour a starter trigger's answer.
+      const state = await emitFor(
+        {
+          starters: STARTERS,
+          autocomplete: { items: USERS, disableDirectSend: true },
+        },
+        'starter'
+      );
+      expect(state.disableDirectSend).to.equal(undefined);
     });
   });
 
