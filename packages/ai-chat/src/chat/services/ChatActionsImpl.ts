@@ -51,7 +51,9 @@ import {
   createMessageRequestForText,
   createMessageResponseForText,
   createWelcomeRequest,
+  getRequestFooterSlotName,
   getSpeakerName,
+  hasRequestFooter,
   hasServiceDesk,
   isConnectToHumanAgent,
   isPause,
@@ -102,6 +104,7 @@ import {
 import {
   BusEventChunkUserDefinedResponse,
   BusEventCustomFooterSlot,
+  BusEventCustomRequestFooterSlot,
   BusEventPreReceive,
   BusEventType,
   BusEventUserDefinedResponse,
@@ -250,6 +253,13 @@ class ChatActionsImpl {
    */
   private cachedInputContentSource: JSONContent | undefined = undefined;
   private cachedInputContentClone: JSONContent | undefined = undefined;
+
+  /**
+   * Serializes the outbound footer events. `EventBus.fire` refuses to start an event whose type is already running,
+   * and this one fires on every send, so a host that sends several messages without awaiting each one would
+   * otherwise make the second send throw.
+   */
+  private requestFooterFireChain: Promise<unknown> = Promise.resolve();
 
   constructor(serviceManager: ServiceManager) {
     this.serviceManager = serviceManager;
@@ -972,6 +982,15 @@ class ChatActionsImpl {
     // sent (which may happen later if other messages are in the queue). We'll have to replace our store object once
     // that happens.
     deepFreeze(message);
+
+    // Fired after the dispatch above so the slot element exists by the time a host reacts, and after the freeze so
+    // the host gets a read-only object rather than a live store reference.
+    //
+    // Deliberately not awaited: the send does not depend on the footer's content, and awaiting would let a host
+    // handler that throws, never settles, or sends a message of its own take the send down with it.
+    this.handleCustomRequestFooterSlot(localMessage, message).catch((error) => {
+      consoleError('A customRequestFooterSlot handler failed.', error);
+    });
 
     await this.serviceManager.messageService.send(
       cloneDeep(message),
@@ -1761,6 +1780,36 @@ class ChatActionsImpl {
 
       await this.serviceManager.fire(customFooterSlotEvent);
     }
+  }
+
+  /**
+   * Fires the {@link BusEventType.CUSTOM_REQUEST_FOOTER_SLOT} event for a user message so that listeners can attach
+   * whatever they want below it. Unlike the assistant side there are no options on the message to read, so the chat
+   * mints the slot name itself.
+   */
+  async handleCustomRequestFooterSlot(
+    localMessage: LocalMessageItem,
+    originalMessage: MessageRequest
+  ) {
+    if (
+      originalMessage.history?.silent ||
+      !hasRequestFooter(localMessage, originalMessage)
+    ) {
+      return;
+    }
+
+    const customRequestFooterSlotEvent: BusEventCustomRequestFooterSlot = {
+      type: BusEventType.CUSTOM_REQUEST_FOOTER_SLOT,
+      data: {
+        slotName: getRequestFooterSlotName(localMessage),
+        message: originalMessage,
+      },
+    };
+
+    const fire = () => this.serviceManager.fire(customRequestFooterSlotEvent);
+    this.requestFooterFireChain = this.requestFooterFireChain.then(fire, fire);
+
+    await this.requestFooterFireChain;
   }
 
   /**
