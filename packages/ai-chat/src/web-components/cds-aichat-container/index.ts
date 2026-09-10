@@ -12,8 +12,9 @@
  */
 
 import './cds-aichat-internal';
+import '@carbon/web-components/es/components/feature-flags/index.js';
 
-import { html } from 'lit';
+import { css, html } from 'lit';
 import { property, state } from 'lit/decorators.js';
 
 import { carbonElement } from '@carbon/ai-chat-components/es/globals/decorators/index.js';
@@ -47,6 +48,16 @@ import { adaptWCRenderUserDefinedInputNode } from './adapt-wc-input-node-rendere
  */
 @carbonElement('cds-aichat-container')
 class ChatContainer extends FlattenedConfigElement {
+  static styles = css`
+    /*
+     * The <feature-flags> wrapper is a scope provider, not a box. Take it out
+     * of the layout so wrapping the chat in it changes nothing about sizing.
+     */
+    feature-flags {
+      display: contents;
+    }
+  `;
+
   /**
    * The element to render to instead of the default float element.
    *
@@ -573,31 +584,45 @@ class ChatContainer extends FlattenedConfigElement {
       ? this._inputNodeReactRendererFor(this.renderUserDefinedInputNode)
       : undefined;
 
-    return html`<cds-aichat-internal
-      .config=${this.resolvedConfig}
-      .onAfterRender=${this.onAfterRender}
-      .onBeforeRender=${this.onBeforeRenderOverride}
-      .element=${this.element}
-      .renderUserDefinedInputNode=${inputNodeReactRenderer}>
-      ${this._writeableElementSlots.map(
-        (slot) => html`<slot name=${slot} slot=${slot}></slot>`
-      )}
-      ${this._userDefinedSlotNames.map(
-        (slot) => html`<slot name=${slot} slot=${slot}></slot>`
-      )}
-      ${
-        this.renderCustomMessageFooter
-          ? this._customFooterSlotNames.map(
-              (slot) => html`<slot name=${slot} slot=${slot}></slot>`
-            )
-          : this._customFooterSlotNames.map(
-              (slot) => html`<div slot=${slot}><slot name=${slot}></slot></div>`
-            )
-      }
-      ${this._pluginSlotNames.map(
-        (slot) => html`<slot name=${slot} slot=${slot}></slot>`
-      )}
-    </cds-aichat-internal>`;
+    /*
+     * Preview Carbon v12 behavior while still on the Carbon 11 packages.
+     *
+     * Carbon resolves a flag by walking up `parentNode`, hopping
+     * `ShadowRoot -> host`. Scoping here rather than inside
+     * `cds-aichat-internal`'s shadow root is what puts the chat's own
+     * light-DOM portals -- every user_defined response and writeable element,
+     * appended to `cds-aichat-internal` itself -- underneath the scope. Markup
+     * a consumer slots into this element stays in their tree and resolves
+     * nothing; wrapping that is theirs to do.
+     */
+    return html`<feature-flags enable-v12-release
+      ><cds-aichat-internal
+        .config=${this.resolvedConfig}
+        .onAfterRender=${this.onAfterRender}
+        .onBeforeRender=${this.onBeforeRenderOverride}
+        .element=${this.element}
+        .renderUserDefinedInputNode=${inputNodeReactRenderer}>
+        ${this._writeableElementSlots.map(
+          (slot) => html`<slot name=${slot} slot=${slot}></slot>`
+        )}
+        ${this._userDefinedSlotNames.map(
+          (slot) => html`<slot name=${slot} slot=${slot}></slot>`
+        )}
+        ${
+          this.renderCustomMessageFooter
+            ? this._customFooterSlotNames.map(
+                (slot) => html`<slot name=${slot} slot=${slot}></slot>`
+              )
+            : this._customFooterSlotNames.map(
+                (slot) =>
+                  html`<div slot=${slot}><slot name=${slot}></slot></div>`
+              )
+        }
+        ${this._pluginSlotNames.map(
+          (slot) => html`<slot name=${slot} slot=${slot}></slot>`
+        )}
+      </cds-aichat-internal></feature-flags
+    >`;
   }
 }
 
