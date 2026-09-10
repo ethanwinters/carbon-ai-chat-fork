@@ -10,7 +10,9 @@
 import type { BaseOverflowMenuItem } from '../../typings/overflow-menu.js';
 
 /**
- * Activates an overflow menu item, navigating when it carries an `href`.
+ * Activates an overflow menu item: runs its `onClick`, then navigates when it
+ * carries an `href`. An item with both gets both, which is what the toolbar's
+ * icon-button path does with the same `Action`.
  *
  * Carbon's v12 menu item has no `href` support, so an item that used to render
  * an anchor now renders a plain row. Navigation has to happen here instead.
@@ -26,14 +28,29 @@ export function activateOverflowMenuItem(item: BaseOverflowMenuItem): void {
     return;
   }
 
+  item.onClick?.();
+
   if (item.href) {
     // Anchors get an implicit `noopener` for `target="_blank"`; `window.open`
     // does not, so a host option that opens a new tab would hand that tab a
-    // live `window.opener` back into the chat. The feature string is ignored
-    // when the target resolves to the current tab.
-    window.open(item.href, item.target || '_self', 'noopener,noreferrer');
-    return;
+    // live `window.opener` back into the chat. Not `noreferrer` -- the anchor
+    // sent a `Referer` and dropping it would break referrer-gated links. The
+    // feature string is ignored when the target resolves to the current tab.
+    window.open(item.href, item.target || '_self', 'noopener');
   }
+}
 
-  item.onClick?.();
+/**
+ * Stops Space from scrolling the page while a menu item has focus.
+ *
+ * Carbon's `cds-menu-item` synthesizes a click for Enter and Space without
+ * calling `preventDefault`, and `cds-menu` prevents it only for the arrow
+ * keys. The deprecated `cds-overflow-menu-body` used to swallow every key,
+ * so without this Space both activates the item and scrolls what is behind
+ * the open menu.
+ */
+export function suppressMenuItemSpaceScroll(event: KeyboardEvent): void {
+  if (event.key === ' ') {
+    event.preventDefault();
+  }
 }

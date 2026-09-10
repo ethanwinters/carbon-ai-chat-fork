@@ -31,7 +31,7 @@ describe('activateOverflowMenuItem', () => {
     expect(open).toHaveBeenCalledWith(
       'https://example.com',
       '_self',
-      'noopener,noreferrer'
+      'noopener'
     );
   });
 
@@ -44,14 +44,17 @@ describe('activateOverflowMenuItem', () => {
 
     // The anchor this replaced got `noopener` implicitly. `window.open` does
     // not, so the opened tab would otherwise hold a live handle on the chat.
+    // Not `noreferrer`: the anchor sent a `Referer` and so must this.
     expect(open).toHaveBeenCalledWith(
       'https://example.com',
       '_blank',
-      'noopener,noreferrer'
+      'noopener'
     );
   });
 
-  it('prefers href over onClick when an item carries both', () => {
+  it('runs both when an item carries href and onClick', () => {
+    // The toolbar renders the same Action as a visible icon button that fires
+    // both, so the overflow copy must not silently drop one.
     const onClick = jest.fn();
     activateOverflowMenuItem({
       text: 'Docs',
@@ -59,8 +62,8 @@ describe('activateOverflowMenuItem', () => {
       onClick,
     });
 
+    expect(onClick).toHaveBeenCalledTimes(1);
     expect(open).toHaveBeenCalledTimes(1);
-    expect(onClick).not.toHaveBeenCalled();
   });
 
   it('does nothing for a disabled item', () => {

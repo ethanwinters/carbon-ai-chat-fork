@@ -17,7 +17,10 @@ import '@carbon/web-components/es/components/menu/index.js';
 import '../../toolbar/src/toolbar.js';
 import type { Action } from '../../toolbar/src/toolbar.js';
 import type { BaseOverflowMenuItem } from '../../../typings/overflow-menu.js';
-import { activateOverflowMenuItem } from '../../../globals/utils/menu-item-activation.js';
+import {
+  activateOverflowMenuItem,
+  suppressMenuItemSpaceScroll,
+} from '../../../globals/utils/menu-item-activation.js';
 import prefix from '../../../globals/settings.js';
 import { PageObjectId } from '../../../testing/PageObjectId.js';
 import { tryFocus } from '../../../globals/utils/focus-utils.js';
@@ -302,6 +305,7 @@ class CdsAiChatChatHeader extends LitElement {
           danger-description=${item.dangerDescription || nothing}
           ?disabled=${item.disabled}
           data-testid=${item.testId || nothing}
+          @keydown=${suppressMenuItemSpaceScroll}
           @click=${() => activateOverflowMenuItem(item)}>
         </cds-menu-item>
       `
@@ -373,13 +377,7 @@ class CdsAiChatChatHeader extends LitElement {
     // chat's own mount paths -- Storybook and anything consuming this package
     // directly render with none. The markup below is unconditionally v12, so
     // the composition path has to be too.
-    // For LTR: menu opens right
-    // For RTL: menu opens left
     const triggerAlignment = this.isRTL ? 'left' : 'right';
-    // `menu-alignment` takes its own vocabulary -- bottom-/top- start/end -- and
-    // Carbon hands it straight to Floating UI. Feeding it the trigger's
-    // left/right places the menu beside the button instead of under it.
-    const menuAlignment = this.isRTL ? 'bottom-start' : 'bottom-end';
 
     return html`
       <div
@@ -389,7 +387,8 @@ class CdsAiChatChatHeader extends LitElement {
         <cds-overflow-menu
           enable-v12-overflowmenu
           align=${triggerAlignment}
-          menu-alignment=${menuAlignment}
+          menu-alignment="bottom-start"
+          autoalign
           tooltip-alignment=${CdsAiChatChatHeader.NAV_TOOLTIP_CONFIG.alignment}
           tooltip-position=${CdsAiChatChatHeader.NAV_TOOLTIP_CONFIG.position}
           enter-delay-ms=${CdsAiChatChatHeader.NAV_TOOLTIP_CONFIG.enterDelayMs}

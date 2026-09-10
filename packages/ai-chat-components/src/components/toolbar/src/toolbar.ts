@@ -23,7 +23,10 @@ import { CarbonIcon } from '@carbon/web-components/es/globals/internal/icon-load
 import { carbonElement } from '../../../globals/decorators/index.js';
 import '../../truncated-text/index.js';
 import { BaseOverflowMenuItem } from '../../../typings/overflow-menu.js';
-import { activateOverflowMenuItem } from '../../../globals/utils/menu-item-activation.js';
+import {
+  activateOverflowMenuItem,
+  suppressMenuItemSpaceScroll,
+} from '../../../globals/utils/menu-item-activation.js';
 import { PageObjectId } from '../../../testing/PageObjectId.js';
 
 const blockClass = `${prefix}-toolbar`;
@@ -308,7 +311,8 @@ class CDSAIChatToolbar extends LitElement {
                       enable-v12-overflowmenu
                       size=${this.getOverflowMenuSize()}
                       align=${this.isRTL ? 'bottom-start' : 'bottom-end'}
-                      menu-alignment=${this.isRTL ? 'bottom-start' : 'bottom-end'}
+                      menu-alignment="bottom-end"
+                      autoalign
                       data-offset
                       ?data-hidden=${hiddenActions.length === 0}
                       kind="ghost"
@@ -340,6 +344,7 @@ class CDSAIChatToolbar extends LitElement {
                               }
                               ?disabled=${item.disabled}
                               data-testid=${item.testId || nothing}
+                              @keydown=${suppressMenuItemSpaceScroll}
                               @click=${() => activateOverflowMenuItem(item)}>
                             </cds-menu-item>
                           `

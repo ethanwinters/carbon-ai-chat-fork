@@ -23,6 +23,7 @@ import OverflowMenuVertical16 from '@carbon/icons/es/overflow-menu--vertical/16.
 import { iconLoader } from '@carbon/web-components/es/globals/internal/icon-loader.js';
 import '@carbon/web-components/es/components/overflow-menu/index.js';
 import '@carbon/web-components/es/components/menu/index.js';
+import { suppressMenuItemSpaceScroll } from '../../../globals/utils/menu-item-activation.js';
 import '@carbon/web-components/es/components/icon-button/index.js';
 
 import styles from './chat-history.scss?lit';
@@ -138,17 +139,13 @@ class CDSAIChatHistoryPanelItem extends HostListenerMixin(
   /**
    * Handle menu item clicks
    */
-  private _handleMenuItemClick = (event: Event) => {
-    const target = event.currentTarget as HTMLElement;
-    const menuItemText =
-      target.getAttribute('data-action-text') || target.textContent?.trim();
-
+  private _handleMenuItemClick = (action: Action) => {
     // Dispatch a custom event with item details
     const itemActionEvent = new CustomEvent('history-item-menu-action', {
       bubbles: true,
       composed: true,
       detail: {
-        action: menuItemText,
+        action: action.text,
         itemId: this.id,
         itemName: this.name,
         element: this,
@@ -313,7 +310,7 @@ class CDSAIChatHistoryPanelItem extends HostListenerMixin(
                 <cds-overflow-menu
                   enable-v12-overflowmenu
                   align="top-right"
-                  menu-alignment="top-end"
+                  menu-alignment="bottom-end"
                   autoalign
                   size="sm">
                   ${iconLoader(OverflowMenuVertical16, {
@@ -333,10 +330,16 @@ class CDSAIChatHistoryPanelItem extends HostListenerMixin(
                         }
                         <cds-menu-item
                           label=${action.text}
-                          data-action-text=${action.text}
                           kind=${action.delete ? 'danger' : 'default'}
-                          @click=${handleMenuItemClick}>
-                          <span slot="render-icon">${action.icon}</span>
+                          @keydown=${suppressMenuItemSpaceScroll}
+                          @click=${() => handleMenuItemClick(action)}>
+                          ${
+                            action.icon
+                              ? html`<span slot="render-icon"
+                                  >${action.icon}</span
+                                >`
+                              : nothing
+                          }
                         </cds-menu-item>
                       `
                     )}

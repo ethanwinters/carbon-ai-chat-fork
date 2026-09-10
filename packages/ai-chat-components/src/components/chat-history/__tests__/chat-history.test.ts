@@ -131,7 +131,10 @@ describe('history panel item overflow menu', () => {
     // Carbon flips the menu itself when it is set to autoalign, which is what
     // replaced the hand-rolled positioning this component used to carry.
     expect(overflowMenu.hasAttribute('autoalign')).to.be.true;
-    expect(overflowMenu.getAttribute('menu-alignment')).to.equal('top-end');
+    expect(overflowMenu.hasAttribute('enable-v12-overflowmenu')).to.be.true;
+    // Opens downward by default; `autoalign` flips it up when the row sits too
+    // close to the bottom. The deleted workaround did the same by hand.
+    expect(overflowMenu.getAttribute('menu-alignment')).to.equal('bottom-end');
 
     const items = Array.from(menu!.querySelectorAll('cds-menu-item'));
     expect(items.map((el) => el.getAttribute('label'))).to.deep.equal([

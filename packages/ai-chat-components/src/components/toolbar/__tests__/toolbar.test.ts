@@ -97,5 +97,6 @@ describe('toolbar', function () {
     expect(overflowMenu.querySelector('cds-overflow-menu-body')).to.not.exist;
     expect(overflowMenu.hasAttribute('enable-v12-overflowmenu')).to.be.true;
     expect(overflowMenu.getAttribute('menu-alignment')).to.equal('bottom-end');
+    expect(overflowMenu.hasAttribute('autoalign')).to.be.true;
   });
 });
