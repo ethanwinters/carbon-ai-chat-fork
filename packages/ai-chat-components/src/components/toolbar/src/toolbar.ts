@@ -242,11 +242,12 @@ class CDSAIChatToolbar extends LitElement {
     const showInitialActions =
       rawVisibleActions.length === 0 && rawHiddenActions.length === 0;
 
-    // `enable-v12-overflowmenu` is set per element rather than left to the
-    // feature-flag scope. The scope does reach here, but it only exists on the
-    // chat's own mount paths -- Storybook and anything consuming this package
-    // directly render with none. The markup below is unconditionally v12, so
-    // the composition path has to be too.
+    // `enable-v12-overflowmenu` is set per element, not left to the flag scope:
+    // Storybook and direct consumers of this package render without one.
+    //
+    // `data-floating-menu-container` below reads as dead now that our own menu
+    // positions itself, but the decorator slot can hold a consumer's v11
+    // floating menu, which looks for that ancestor to portal into.
     return html`
       <div data-rounded="top" class=${blockClass}>
         <div data-fixed class="${blockClass}__start">

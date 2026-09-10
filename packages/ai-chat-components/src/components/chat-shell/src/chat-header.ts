@@ -372,18 +372,12 @@ class CdsAiChatChatHeader extends LitElement {
    * @returns Template result for overflow menu
    */
   private renderOverflowNavigation() {
-    // `enable-v12-overflowmenu` is set per element rather than left to the
-    // feature-flag scope. The scope does reach here, but it only exists on the
-    // chat's own mount paths -- Storybook and anything consuming this package
-    // directly render with none. The markup below is unconditionally v12, so
-    // the composition path has to be too.
+    // `enable-v12-overflowmenu` is set per element, not left to the flag scope:
+    // Storybook and direct consumers of this package render without one.
     const triggerAlignment = this.isRTL ? 'left' : 'right';
 
     return html`
-      <div
-        slot="navigation"
-        data-floating-menu-container
-        class="${prefix}-chat-header-overflow-wrapper">
+      <div slot="navigation" class="${prefix}-chat-header-overflow-wrapper">
         <cds-overflow-menu
           enable-v12-overflowmenu
           align=${triggerAlignment}

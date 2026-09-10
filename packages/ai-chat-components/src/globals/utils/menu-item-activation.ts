@@ -11,17 +11,12 @@ import type { BaseOverflowMenuItem } from '../../typings/overflow-menu.js';
 
 /**
  * Activates an overflow menu item: runs its `onClick`, then navigates when it
- * carries an `href`. An item with both gets both, which is what the toolbar's
+ * carries an `href`. An item with both gets both, matching what the toolbar's
  * icon-button path does with the same `Action`.
  *
- * Carbon's v12 menu item has no `href` support, so an item that used to render
- * an anchor now renders a plain row. Navigation has to happen here instead.
- *
- * This is a downgrade, not a translation: the option still goes where it
- * points, but the browser no longer treats it as a link. Middle-click and
- * modifier-click do nothing, the context menu offers no "copy link address",
- * and assistive technology announces a menu item rather than a link. Whether
- * Carbon restores link support is tracked in #2317.
+ * Carbon's v12 `cds-menu-item` has no `href`, so what was an anchor is now a
+ * scripted navigation: no middle-click, no "copy link address", and it
+ * announces as a menu item rather than a link. Tracked in #2317.
  */
 export function activateOverflowMenuItem(item: BaseOverflowMenuItem): void {
   if (item.disabled) {

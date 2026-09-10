@@ -294,11 +294,8 @@ class CDSAIChatHistoryPanelItem extends HostListenerMixin(
       [`cds--side-nav__link`]: true,
       [`cds--side-nav__link--current`]: selected,
     });
-    // `enable-v12-overflowmenu` is set per element rather than left to the
-    // feature-flag scope. The scope does reach here, but it only exists on the
-    // chat's own mount paths -- Storybook and anything consuming this package
-    // directly render with none. The markup below is unconditionally v12, so
-    // the composition path has to be too.
+    // `enable-v12-overflowmenu` is set per element, not left to the flag scope:
+    // Storybook and direct consumers of this package render without one.
     return html`
       ${
         !rename
