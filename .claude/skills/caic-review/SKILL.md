@@ -26,7 +26,7 @@ Two jobs share this rubric. Settle which one you're doing before reading any cod
   - **Important** — should fix: unclear naming, missing test for changed behavior, unhandled edge case, scope creep.
   - **Nit** — optional, and it still has to earn its place: a concrete one-edit fix a later reader benefits from. Everything else is noise — see [What isn't a finding](#what-isnt-a-finding).
 - Read enough to be sure before you call something a **Blocker**. A false Blocker costs the author as much as a missed one. If you have only read the happy path, file it as **Important** and say what you did not read.
-- When you can run commands, run the read-only gates for what changed before you write anything — `lint`, `lint:license`, `lint:styles`, `validate:*`, `format`. A failure you watched outranks one you inferred. Never start a build or a test run yourself: the rows in [definition-of-done.md](../../../references/definition-of-done.md) all build, and a build races the watcher a developer probably has running. Report an unrun build as a stated gap.
+- When you can run commands, run the read-only gates for what changed before you write anything — `lint`, `lint:license`, `lint:styles`, `validate:*`, `format`. A failure you watched outranks one you inferred. Never start a build or a test run yourself unless the user asks for one: the rows in [definition-of-done.md](../../../references/definition-of-done.md) all build, and a build races the watcher a developer probably has running. Testing a suggestion before you post it is the one case where the user may well ask, and [reviewing-a-pr.md](references/reviewing-a-pr.md) carries that ask. Report an unrun build as a stated gap.
 
 ## How to write a finding
 
@@ -40,7 +40,7 @@ One shape, one order — orientation, then severity, the defect, what it costs, 
 
 **The orientation line is what makes a finding readable a day later**, in a notification, with none of the code open — which is how the author reads it. [review-comments.md](../caic-copy-writer/references/review-comments.md) owns its wording and lists the four labels that work.
 
-Cite a range when the defect spans lines, and show the fix as a snippet when words alone won't carry it. Never post the objection without the fix. When you genuinely can't name one, name the gap instead — "this drops the second update; whether that's a bug depends on whether the queue is ordered, and I didn't trace it." An objection with a stated gap is workable. An invented fix the author implements is not.
+Cite a range when the defect spans lines, and show the fix as a snippet when words alone won't carry it. On a PR, a fix that replaces a line range ships as a `suggestion` block the author accepts in one click — [reviewing-a-pr.md](references/reviewing-a-pr.md). Never post the objection without the fix. When you genuinely can't name one, name the gap instead — "this drops the second update; whether that's a bug depends on whether the queue is ordered, and I didn't trace it." An objection with a stated gap is workable. An invented fix the author implements is not.
 
 The consequence names the input or path that reaches the defect — "on every close", "when the list is empty" — not the category. A defect you can't trigger is a guess: drop it, or say what you didn't check.
 
@@ -165,7 +165,7 @@ For context on conventions being enforced:
 - **Process conventions**: [conventions.md](../../../references/conventions.md) — commits, branches, license headers, hooks
 - **General overview**: [AGENTS.md](../../../AGENTS.md) — monorepo pointer index
 - **Package-specific rules**: see `AGENTS.md` in each package directory
-- **Reviewing a PR**: [reviewing-a-pr.md](references/reviewing-a-pr.md) — base branch, the review payload, and the `gh` call
+- **Reviewing a PR**: [reviewing-a-pr.md](references/reviewing-a-pr.md) — base branch, fixes shipped as acceptable suggestions, the review payload, and the `gh` call
 - **Large diffs**: [large-diffs.md](references/large-diffs.md) — ranking files by risk when the diff is too big to read evenly
 - **PR workflow**: [caic-pr](../caic-pr/SKILL.md) — drafting PR descriptions
 - **Plan-phase analog**: [plan-review.md](../caic-plan/references/plan-review.md) — the same discipline applied before code exists
