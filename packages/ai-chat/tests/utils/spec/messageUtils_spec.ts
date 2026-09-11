@@ -125,6 +125,37 @@ describe('messageUtils', () => {
     expect(buttonReq.history.label).toBe('Return a card');
   });
 
+  it('keeps the rest of a button item value input when the text falls back', () => {
+    const buttonReq = createMessageRequestForButtonItemOption(
+      {
+        label: 'Return a card',
+        value: {
+          input: {
+            structured_data: { fields: [] },
+            display_content: { type: 'doc' },
+          },
+        },
+      } as any,
+      'resp-6'
+    );
+    expect(buttonReq.input.text).toBe('Return a card');
+    expect(buttonReq.input.structured_data).toEqual({ fields: [] });
+    expect(buttonReq.input.display_content).toEqual({ type: 'doc' });
+  });
+
+  it('does not share state with the button item value input', () => {
+    const buttonItem = {
+      label: 'Return a card',
+      value: { input: { text: 'card', structured_data: { fields: [] } } },
+    } as any;
+    const buttonReq = createMessageRequestForButtonItemOption(
+      buttonItem,
+      'resp-7'
+    );
+    (buttonReq.input.structured_data as any).fields.push('x');
+    expect(buttonItem.value.input.structured_data.fields).toHaveLength(0);
+  });
+
   it('creates a silent button item request that still carries its label', () => {
     const buttonReq = createMessageRequestForButtonItemOption(
       {
