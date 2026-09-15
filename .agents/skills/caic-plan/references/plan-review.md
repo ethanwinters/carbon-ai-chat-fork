@@ -55,7 +55,7 @@ The right posture: read the plan fully → identify its load-bearing claims → 
 - Build a separate list of **design judgments** — choices the plan makes that don't depend on existing code (naming, API shape, deprecation policy, error-handling defaults). These need feedback but don't need verification. Mark the ones a **consumer can feel**: if such a judgment has no ADR behind it, that is a finding, not a note. The plan file is deleted when the work merges, and the reasoning goes with it — see [caic-adr](../../caic-adr/SKILL.md).
 - Build a third list of **behavior gaps** — places the plan states a shape but not a behavior. For every public value it introduces, ask what produces it; for every method, what it does on the no-op, failure, and repeat-call paths. An unanswered one is a design judgment the executor will make alone, in the PR, under time pressure. ("Behavior gap", not "spec gap": in this repo a spec is a test file.)
 
-  A gap closes by becoming a named case attached to the criterion it proves, not by a sentence of prose about it. Cases left with nothing to attach to are the criteria nobody wrote — promote them, per [caic-issue](../../caic-issue/SKILL.md#acceptance-criteria). Carry that through to [Phase 5](#phase-5--update-the-plan-files): a gap the review only described is a gap still open.
+  A gap closes by becoming a named case attached to the criterion it proves, not by a sentence of prose about it. Cases left with nothing to attach to are the criteria nobody wrote — promote them, per [caic-plan](../SKILL.md#acceptance-criteria). Carry that through to [Phase 5](#phase-5--update-the-plan-files): a gap the review only described is a gap still open.
 
 ## Phase 2 — Verify the load-bearing claims
 
@@ -121,7 +121,7 @@ The original critique document can stay as a record of what changed and why, but
 ## Anti-patterns
 
 - **Believing the plan.** Reviewing without verifying produces useless approval. Always check load-bearing claims.
-- **Passing a criterion that restates the implementation.** "Returns the merged config" is the code the plan already asked for, so it cannot fail independently of it; "a partial config inherits the default field by field" is a behavior, and can. Over-specified criteria are how a plan locks in the bug it was about to write — the same distinction [caic-issue](../../caic-issue/SKILL.md#acceptance-criteria) draws between a criterion and a plan step.
+- **Passing a criterion that restates the implementation.** "Returns the merged config" is the code the plan already asked for, so it cannot fail independently of it; "a partial config inherits the default field by field" is a behavior, and can. Over-specified criteria are how a plan locks in the bug it was about to write — the same distinction [caic-plan](../SKILL.md#acceptance-criteria) draws between a criterion and a plan step.
 - **Partial reads producing confident blockers.** If you'd recommend an architectural change based on a 100-line skim of a 900-line file, read the rest first. False blockers waste as much time as missed ones.
 - **Recommending changes to architecture you haven't verified exists.** If the plan says "we'll extend the existing X mechanism," verify X exists before commenting on the extension.
 - **Dumping everything into one section.** General feedback, verification, per-PR notes, and open questions each have their own section. Mixing them buries the action items.
