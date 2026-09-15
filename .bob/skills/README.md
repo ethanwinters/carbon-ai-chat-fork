@@ -10,7 +10,7 @@ Skills exist because always-on guidance and task guidance need different deliver
 
 | Skill                               | Use it when                                                                        | Also carries                          |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------- |
-| [caic-adr](caic-adr/SKILL.md)       | recording why a decision went the way it did, and what it costs consumers          | the ADR-review rubric it closes with  |
+| [caic-adr](caic-adr/SKILL.md)       | proposing a decision consumers will feel, for feedback, and keeping it as the record | the ADR-review rubric it closes with  |
 | [caic-plan](caic-plan/SKILL.md)     | planning against an issue you've picked up, or shaping a big effort into an epic   | the plan-review rubric it closes with, and the API contract locks |
 | [caic-issue](caic-issue/SKILL.md)   | filing an issue that states a problem and the outcomes that close it               | epic authoring, for umbrella work     |
 | [caic-pr](caic-pr/SKILL.md)         | drafting a PR description                                                          | —                                     |

@@ -60,7 +60,7 @@ One requirement, restated at each scale, never re-invented:
 
 | Level                       | Section             | Rule                                                                                                                                     |
 | --------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| ADR                         | Decision outcome    | The why: one decision, what lost, what it costs consumers.                                                                               |
+| ADR                         | Proposal            | The why: what changes, why now, and what it costs consumers.                                                                             |
 | Shaping plan                | Done when           | The observable outcomes of an effort. Written first; survives redesign.                                                                  |
 | Epic                        | Expected outcomes   | One per plan outcome, in the same words where they still fit.                                                                            |
 | Issue                       | Done when           | Outcomes only, no proofs. Each traces to one epic outcome, or to the issue's own Goal.                                                   |
