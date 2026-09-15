@@ -12,6 +12,7 @@ A plan is two documents with different jobs, and reviewing one against the other
 | ----- | -------- | ----------------------------- |
 | Shaping | `PLAN.md`, or an epic draft | Boundaries, traceability, and whether the work is carved right |
 | Implementation | `PLAN-{N}-*.md` | Whether every claim about the codebase holds |
+| Both | A single-step `PLAN.md` | The shaping questions, then Phases 1–3 on its implementation sections |
 
 Phases 1–3 below are written at implementation depth. **For a shaping plan, swap them for the shorter pass in [Reviewing a shaping plan](#reviewing-a-shaping-plan)** — then come back for the per-step files once the shape is settled. Phases 4 and 5 apply at either level: the open questions still get asked one at a time, and the resolutions still get baked into the files.
 
@@ -21,7 +22,7 @@ Demanding file-and-line verification of a shaping plan is the common mistake. At
 
 ## Reviewing a shaping plan
 
-Seven questions. None of them needs the codebase open for long.
+Eight questions. None of them needs the codebase open for long.
 
 1. **Does the plan have its sections, Done when first?** Check before anything else, because the questions below assume them. A plan with no Done when list cannot be reviewed for traceability at all — every step is an orphan, so question 2 returns a wall of findings that all share one cause. Name the missing section as the finding instead. The rubric already reaches this case transitively; the reviewer should not have to reason backwards from the orphans to get there.
 2. **Does every step trace up, and every outcome trace down?** Every Done when item has a step that delivers it; every step traces to one. An orphan on either side is a scope bug. See [the spine](../SKILL.md#the-spine).
@@ -30,10 +31,11 @@ Seven questions. None of them needs the codebase open for long.
 5. **Is the ordering forced, or invented?** For each dependency the plan asserts between steps, ask what actually breaks if they run in the other order. Invented sequencing is the most common reason a plan takes longer than it should.
 6. **Is a consumer-visible decision sitting in the Decisions list with no ADR?** That reasoning is deleted with the plan file. Flag it as a finding — see [caic-adr](../../caic-adr/SKILL.md).
 7. **Does every new code file have a precedent it fits?** A step that names none is a finding. So is one whose new file is above 2× its precedent, or shares more than a third of its lines with it. The fix is to extract the shared part, or to split. Both counts sit in a step's Files touched; check the precedent's with `wc -l`. No tool sees duplication across files, so read the shared part rather than measuring it.
+8. **Does the plan answer its issue?** For a plan against an issue: every Done-when id has at least one acceptance criterion, no Constraint is broken, every Open question is closed or carried as a Risk, and any outcome the plan changed went through the issue's amendment route. Then the suggested fix, if the issue had one: did the plan check its premise against the code and weigh at least one alternative before adopting it? An adopted suggestion with no `D<n>` naming what lost is a finding — see [Planning against an issue](../SKILL.md#planning-against-an-issue).
 
-Verify only the claims that decide a boundary. If the plan says a step is separable because two modules do not import each other, check that — it changes the breakdown. A precedent's line count is another, since it decides whether question 7 returns a finding. Leave everything else for the implementation-level pass.
+Verify only the claims that decide a boundary. If the plan says a step is separable because two modules do not import each other, check that — it changes the breakdown. A precedent's line count is another, since it decides whether question 7 returns a finding. So is the premise of a fix the plan adopted from its issue, since question 8 turns on it. Leave everything else for the implementation-level pass.
 
-Write the findings up, then continue at [Phase 4](#phase-4--resolve-decisions). A shaping review that stops at seven questions leaves the author with homework, which is the anti-pattern this file closes with.
+Write the findings up, then continue at [Phase 4](#phase-4--resolve-decisions). A shaping review that stops at eight questions leaves the author with homework, which is the anti-pattern this file closes with.
 
 ## The core principle
 
