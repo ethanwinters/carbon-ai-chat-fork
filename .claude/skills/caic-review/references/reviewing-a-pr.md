@@ -35,7 +35,7 @@ Line comments beat a wall of prose: they land next to the code they're about. Bu
 {
   "commit_id": "<headRefOid from gh pr view>",
   "event": "COMMENT",
-  "body": "Fix blockers before merge. <highest-severity concerns, anything dropped, then any assessment>",
+  "body": "Fix blockers before merge. <highest-severity concerns, anything dropped, then what you checked and cleared>",
   "comments": [
     {
       "path": "packages/ai-chat/src/foo.ts",

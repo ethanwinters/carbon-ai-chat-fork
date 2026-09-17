@@ -19,7 +19,7 @@ Two jobs share this rubric. Settle which one you're doing before reading any cod
 - Read the actual diff (`git diff`, `gh pr diff`, etc.) and referenced files — never a summary of what changed.
 - When reading it all at one depth would mean reading all of it shallowly, rank the files by risk first — [large-diffs.md](references/large-diffs.md).
 - **Score the diff against what it had to satisfy** — the issue's Done when, Constraints, and comments, the proofs, any API proposal, any ADR it cites. That check runs on every review, and [review-passes.md](references/review-passes.md#the-check-that-runs-every-time) carries each one and the severity a miss earns.
-- **Run the read-only gates for what changed before you write anything, and start no build yourself** — [repo-checks.md](references/repo-checks.md) carries the gate list, the one exception, and the conventions to flag by hand that no gate catches.
+- **Run the read-only gates for what changed before you write anything, and start no build without asking** — [repo-checks.md](references/repo-checks.md) carries the gate list, when to ask about a build, and the conventions to flag by hand that no gate catches.
 - Tag every finding with a severity so real problems aren't buried under taste:
   - **Blocker** — must fix before merge: bug, regression, security issue, broken build/tests, violated repo convention, accidental edit to generated output.
   - **Important** — should fix: unclear naming, missing test for changed behavior, unhandled edge case, scope creep.

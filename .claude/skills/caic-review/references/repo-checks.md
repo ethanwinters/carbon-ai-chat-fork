@@ -6,7 +6,7 @@ Load this on every review before you write findings: it names the read-only gate
 
 **Run the gates for what changed before you write anything, whenever you can run commands** — `lint`, `lint:dead`, `lint:license`, `lint:styles`, `validate:*`, `format`. A failure you watched outranks one you inferred.
 
-**Start no build and no test run yourself unless the user asks for one.** The rows in [definition-of-done.md](../../../../references/definition-of-done.md) all build, and a build races the watcher a developer probably has running. Testing a suggestion before you post it is the one case where the user may well ask, and [reviewing-a-pr.md](reviewing-a-pr.md) carries that ask. Report an unrun build as a stated gap.
+**Start no build and no test run without asking the user first.** The rows in [definition-of-done.md](../../../../references/definition-of-done.md) all build, and a build races the watcher a developer probably has running. Ask when a build would turn a finding you would otherwise have to hedge into one you watched fail. Testing a suggestion before you post it is the usual case — [reviewing-a-pr.md](reviewing-a-pr.md) carries that ask. Report an unrun build as a stated gap.
 
 ## Flag the conventions no gate catches
 
