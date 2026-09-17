@@ -22,7 +22,7 @@ Two jobs share this rubric. Settle which one you're doing before reading any cod
 - Open the issue the work closes — for a self-review, the issue or ask the task came from — and read its comments too. Walk its Done when and Constraints against the diff. An outcome the diff misses, or a constraint it breaks, is a **Blocker** until an agreed amendment on the issue says otherwise.
 - Walk the proofs next: the plan's acceptance criteria for a self-review, the PR's Testing / Reviewing steps for someone else's PR. A proof the diff doesn't satisfy is a **Blocker**.
 - If the issue carries an API proposal comment, compare the shipped shape against it. A difference with no follow-up in the thread is **Important**, and the fix may be a comment rather than a code change.
-- If the issue or its epic cites an ADR, read that ADR's Decision outcome and walk the diff against it too. A diff that contradicts an accepted ADR is a **Blocker** until a new ADR supersedes it — an implementation PR is not where a recorded decision gets reversed.
+- If the issue or its epic cites an ADR, read that ADR's Proposal and Decision and walk the diff against them too. A diff that contradicts an accepted ADR is a **Blocker** until a new ADR supersedes it — an implementation PR is not where a recorded decision gets reversed.
 - Tag every finding with a severity so real problems aren't buried under taste:
   - **Blocker** — must fix before merge: bug, regression, security issue, broken build/tests, violated repo convention, accidental edit to generated output.
   - **Important** — should fix: unclear naming, missing test for changed behavior, unhandled edge case, scope creep.
