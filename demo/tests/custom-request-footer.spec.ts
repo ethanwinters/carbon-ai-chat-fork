@@ -23,7 +23,6 @@ import {
   waitForChatReady,
 } from './utils';
 
-import type {} from '../types/window';
 
 // The host element the callback's content lands in. Scoped to `div` on purpose:
 // the web-component container also emits a passthrough `<slot slot="...">` for
