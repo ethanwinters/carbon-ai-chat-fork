@@ -155,7 +155,7 @@ const RESPONSE_MAP: Record<
 
     instance.updateIsMessageLoadingCounter('increase', 'Thinking...');
 
-    // Return a Promise that resolves when the work is done or cancelled
+    // Return a Promise that resolves when the work is done or canceled
     return new Promise<void>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         // Double-check signal wasn't aborted during delay
@@ -188,7 +188,7 @@ const RESPONSE_MAP: Record<
 
     instance.updateIsMessageLoadingCounter('increase', 'Thinking...');
 
-    // Return a Promise that resolves when the work is done or cancelled
+    // Return a Promise that resolves when the work is done or canceled
     return new Promise<void>((resolve, reject) => {
       const timeoutId = setTimeout(async () => {
         // Double-check signal wasn't aborted during delay

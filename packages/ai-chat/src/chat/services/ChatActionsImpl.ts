@@ -715,7 +715,7 @@ class ChatActionsImpl {
 
   /**
    * Removes a pending upload from the input state by its ID.
-   * If the upload is still in progress, its AbortController is signalled.
+   * If the upload is still in progress, its AbortController is signaled.
    */
   removePendingUpload(uploadId: string) {
     // Abort the upload if it is still in progress.
@@ -2090,7 +2090,7 @@ class ChatActionsImpl {
 
       if (preViewChangeEvent.cancelViewChange) {
         // If the view changing was canceled in the event then log a message and don't change the view.
-        debugLog('The view changing was cancelled by a view:pre:change event.');
+        debugLog('The view changing was canceled by a view:pre:change event.');
         return;
       }
 
@@ -2114,7 +2114,7 @@ class ChatActionsImpl {
         // If the view changing was canceled in the event then log a message and switch the viewState back to what it was
         // originally.
         store.dispatch(actions.setViewState(oldViewState));
-        debugLog('The view changing was cancelled by a view:change event.');
+        debugLog('The view changing was canceled by a view:change event.');
         return;
       }
 
@@ -2224,7 +2224,7 @@ class ChatActionsImpl {
 
       await this.serviceManager.messageService.cancelAllMessageRequests();
 
-      // Hide the stop streaming button since we've cancelled all streams
+      // Hide the stop streaming button since we've canceled all streams
       resetStopStreamingButton(store);
 
       // Drop any in-flight upsertMessage chains and recorded state so upserts queued

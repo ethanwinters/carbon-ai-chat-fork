@@ -397,27 +397,25 @@ function printTable(shown, totals, changed) {
 
 // The severity column is the verdict, and an all-blank one is a result rather
 // than a skipped check — but silence reads the same as never having looked. Say
-// the negative out loud, including why a high score can still go unlabelled.
+// the negative out loud, including why a high score can still go unlabeled.
 function bandSummary(shown, changed) {
   if (shown.length === 0) {
     return;
   }
-  const labelled = shown.filter((r) => r.severity !== null);
-  if (labelled.length === 0) {
+  const labeled = shown.filter((r) => r.severity !== null);
+  if (labeled.length === 0) {
     const scope = changed ? ' this change made worse' : '';
     console.log(
-      `\n${shown.length} shown, none labelled: no function${scope} crossed a band.`
+      `\n${shown.length} shown, none labeled: no function${scope} crossed a band.`
     );
     return;
   }
   const counts = new Map();
-  for (const { severity: s } of labelled) {
+  for (const { severity: s } of labeled) {
     counts.set(s, (counts.get(s) ?? 0) + 1);
   }
   const tally = [...counts].map(([label, n]) => `${n} ${label}`).join(', ');
-  console.log(
-    `\n${shown.length} shown, ${labelled.length} labelled: ${tally}.`
-  );
+  console.log(`\n${shown.length} shown, ${labeled.length} labeled: ${tally}.`);
 }
 
 function report(rows, totals, { max, report: floor, changed }, hadError) {

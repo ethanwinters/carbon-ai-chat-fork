@@ -841,7 +841,7 @@ describe('AutocompleteController', () => {
 
     it("does not read one trigger type's config for another", async () => {
       // The lookup is keyed on the active trigger type, so an autocomplete
-      // config cannot colour a starter trigger's answer.
+      // config cannot color a starter trigger's answer.
       const state = await emitFor(
         {
           starters: STARTERS,
