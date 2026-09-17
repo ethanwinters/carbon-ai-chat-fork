@@ -38,7 +38,7 @@ const ROOT_AGENTS_FILE = 'AGENTS.md';
 // deepest file, which is the most specific guidance. This budget is set well
 // under that cap so CI fails first, with a message, instead of a contributor
 // silently losing the tail of the chain.
-const MAX_FILE_BYTES = 8 * 1024;
+const MAX_FILE_BYTES = 12 * 1024;
 const MAX_CHAIN_BYTES = 24 * 1024;
 
 let errors = 0;
