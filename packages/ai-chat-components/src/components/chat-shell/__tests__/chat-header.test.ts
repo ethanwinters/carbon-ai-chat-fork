@@ -278,6 +278,70 @@ describe('cds-aichat-chat-header', function () {
       expect(overflowMenu).to.exist;
     });
 
+    it('composes the overflow menu the way the v12 structure expects', async () => {
+      const items = [
+        { text: 'Settings', onClick: () => {} },
+        { text: 'Delete', danger: true, divider: true, onClick: () => {} },
+      ];
+      const el = await fixture<CdsAiChatHeader>(html`
+        <cds-aichat-chat-header
+          navigation-type="overflow"
+          .navigationOverflowItems=${items}></cds-aichat-chat-header>
+      `);
+      const overflowMenu = el.shadowRoot!.querySelector(
+        'cds-overflow-menu'
+      ) as HTMLElement;
+
+      // Under the v12 flag the menu only opens off a direct `cds-menu` child.
+      // Anything else leaves it dead and only warns in development.
+      const menu = overflowMenu.querySelector(':scope > cds-menu');
+      expect(menu, 'cds-menu must be a direct child of cds-overflow-menu').to
+        .exist;
+      expect(overflowMenu.querySelector('cds-overflow-menu-body')).to.not.exist;
+
+      // `menu-alignment` is logical: Floating UI mirrors start/end against the
+      // computed direction, so this is a constant, not an isRTL ternary. The
+      // nav trigger sits at the inline-start end of the header.
+      expect(overflowMenu.getAttribute('menu-alignment')).to.equal(
+        'bottom-start'
+      );
+      expect(overflowMenu.hasAttribute('autoalign')).to.be.true;
+      expect(overflowMenu.hasAttribute('enable-v12-overflowmenu')).to.be.true;
+
+      const menuItems = Array.from(menu!.querySelectorAll('cds-menu-item'));
+      expect(menuItems.map((item) => item.getAttribute('label'))).to.deep.equal(
+        ['Settings', 'Delete']
+      );
+      expect(menuItems[1].getAttribute('kind')).to.equal('danger');
+      expect(menu!.querySelector('cds-menu-item-divider')).to.exist;
+    });
+
+    it('keeps the same logical menu alignment in RTL', async () => {
+      // `menu-alignment` is a logical API -- Floating UI mirrors start/end
+      // against the computed direction. A hand-rolled isRTL ternary here would
+      // double-flip and throw the menu off the panel edge, which is exactly
+      // what this asserts cannot come back.
+      const previousDir = document.documentElement.dir;
+      document.documentElement.dir = 'rtl';
+      try {
+        const el = await fixture<CdsAiChatHeader>(html`
+          <cds-aichat-chat-header
+            navigation-type="overflow"
+            .navigationOverflowItems=${[{ text: 'Settings', onClick: () => {} }]}></cds-aichat-chat-header>
+        `);
+        await el.updateComplete;
+
+        const overflowMenu = el.shadowRoot!.querySelector(
+          'cds-overflow-menu'
+        ) as HTMLElement;
+        expect(overflowMenu.getAttribute('menu-alignment')).to.equal(
+          'bottom-start'
+        );
+      } finally {
+        document.documentElement.dir = previousDir;
+      }
+    });
+
     it('should use custom navigation slot when provided', async () => {
       const el = await fixture<CdsAiChatHeader>(
         html`<cds-aichat-chat-header navigation-type="back">
