@@ -307,6 +307,25 @@ Runs `ChatContainer` and `ChatCustomElement` on React 17 using the legacy `React
 
 </details>
 
+### [Frameworks / React 18](./frameworks-react-18/README.md)
+
+Runs `ChatContainer` and `ChatCustomElement` on React 18, mounted from the app's own `createRoot`.
+
+**Start command:** `npm run start --workspace=@carbon/ai-chat-examples-react-18`
+
+<details>
+<summary>APIs and props demonstrated</summary>
+
+| Symbol | Package / kind | Role in this example |
+| --- | --- | --- |
+| `ChatContainer` | `@carbon/ai-chat` component | Mounts the floating chat UI. |
+| `ChatCustomElement` | `@carbon/ai-chat` component | Mounts the chat in a sized element. |
+| `PublicConfig` | `@carbon/ai-chat` type | Config shape. |
+| `customSendMessage` | `messaging` prop | Minimal echo mock backend. |
+| `createRoot` | `react-dom/client` | React 18 mount. |
+
+</details>
+
 ### [Frameworks / Vite](./frameworks-vite/README.md)
 
 Vite-powered React example that mounts `ChatContainer` with a minimal mock backend and adds a Vitest + happy-dom test suite.
