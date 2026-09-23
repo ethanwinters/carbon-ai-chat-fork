@@ -26,6 +26,7 @@ import { waitFor } from '@testing-library/react';
 
 import {
   createBaseConfig,
+  getChatShadowRoot,
   renderChatAndGetInstanceWithStore,
   setupAfterEach,
   setupBeforeEach,
@@ -168,7 +169,7 @@ describe('silent send', () => {
 
     function sendButton(): HTMLButtonElement | null {
       return deepQuery(
-        document.querySelector('cds-aichat-react')?.shadowRoot ?? null,
+        getChatShadowRoot(),
         'button[aria-label="Send message"]'
       ) as HTMLButtonElement | null;
     }

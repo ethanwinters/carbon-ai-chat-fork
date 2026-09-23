@@ -22,6 +22,7 @@ import { waitFor } from '@testing-library/react';
 
 import {
   createBaseConfig,
+  getChatShadowRoot,
   renderChatAndGetInstanceWithStore,
   setupBeforeEach,
   setupAfterEach,
@@ -71,11 +72,11 @@ function textResponse(text: string, id: string): HistoryItem {
 }
 
 /**
- * The chat mounts its React tree inside the `cds-aichat-react` shadow root, so
- * transcript queries have to go through it rather than through `document`.
+ * The chat mounts its React tree inside a shadow root, so transcript queries
+ * have to go through it rather than through `document`.
  */
 function chatShadowRoot(): ShadowRoot | null {
-  return document.querySelector('cds-aichat-react')?.shadowRoot ?? null;
+  return getChatShadowRoot();
 }
 
 /** Chips rendered in the transcript, in DOM order. */

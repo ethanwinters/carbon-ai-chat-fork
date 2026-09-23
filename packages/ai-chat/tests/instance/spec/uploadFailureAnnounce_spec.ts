@@ -9,6 +9,7 @@
 
 import {
   createBaseConfig,
+  getChatShadowRoot,
   renderChatAndGetInstanceWithStore,
   setupAfterEach,
   setupBeforeEach,
@@ -32,10 +33,9 @@ function createUploadConfig(
 }
 
 function chatShadowRoot(): ShadowRoot {
-  const chatElement = document.querySelector('cds-aichat-react');
-  const root = chatElement?.shadowRoot;
+  const root = getChatShadowRoot();
   if (!root) {
-    throw new Error('cds-aichat-react has not rendered a shadow root');
+    throw new Error('The chat has not rendered its shadow root');
   }
   return root;
 }
