@@ -9,23 +9,28 @@ import { test, expect, type Page } from '@playwright/test';
 
 /**
  * Loads `host-compatibility.html`, which imports the React and web-component
- * entries in the order its `order` parameter names. Every navigation is a new
- * page, so each case gets its own module graph and custom-element registry.
+ * entries in the order its `order` parameter names, or mounts one chat surface
+ * that its `surface` parameter names. Every navigation is a new page, so each
+ * case gets its own module graph and custom-element registry.
  *
  * Whatever loads first, a React chat keeps rendering in the host's React tree:
  * host context reaches its custom content, that content keeps its state, and
- * page CSS reaches it.
+ * page CSS reaches it. The React host adds no height to the page, and page CSS
+ * reaches the content the host puts in each slot.
  */
 
 interface ChatInstanceHandle {
   messaging: { addMessage: (message: unknown) => Promise<void> };
+  send: (request: unknown) => Promise<void>;
 }
 
 declare global {
   interface Window {
     hostCompatibility: {
       reactInstance?: ChatInstanceHandle;
+      wcInstance?: ChatInstanceHandle;
       setTheme?: (theme: string) => void;
+      scrollHeightBefore?: number;
       loaded: string[];
     };
   }
@@ -114,3 +119,137 @@ test('React chat renders in the host tree when the web-component entry loads fir
   await expectLiveReactChat(page);
   expect(errors).toEqual([]);
 });
+
+/** Opens one chat surface and waits for its instance. */
+async function openSurface(page: Page, surface: string) {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto(`/host-compatibility.html?surface=${surface}`);
+  const instanceKey = surface.startsWith('react')
+    ? 'reactInstance'
+    : 'wcInstance';
+  await page.waitForFunction(
+    (key) => Boolean(window.hostCompatibility?.[key]),
+    instanceKey,
+    { timeout: 20000 }
+  );
+  return { errors, instanceKey };
+}
+
+test('a float React chat adds no height to a full-height page', async ({
+  page,
+}) => {
+  const { errors } = await openSurface(page, 'react-container');
+  await page.waitForFunction(() =>
+    window.hostCompatibility.loaded.includes('react')
+  );
+  const { before, after } = await page.evaluate(() => ({
+    before: window.hostCompatibility.scrollHeightBefore,
+    after: document.documentElement.scrollHeight,
+  }));
+  expect(before).toBeGreaterThan(0);
+  expect(after).toBe(before);
+  expect(errors).toEqual([]);
+});
+
+type SlotKind =
+  | 'user-defined-response'
+  | 'message-footer'
+  | 'request-footer'
+  | 'writeable-element'
+  | 'input-node';
+
+const ALL_KINDS: SlotKind[] = [
+  'user-defined-response',
+  'message-footer',
+  'request-footer',
+  'writeable-element',
+  'input-node',
+];
+
+/**
+ * The surfaces and slot kinds where page CSS reaches slotted content today.
+ * `cds-aichat-container` keeps input nodes out of reach, and
+ * `cds-aichat-custom-element` keeps every kind inside its own shadow root, so
+ * those rows are not listed. The fixture still mounts `wc-custom`, so its rows
+ * can join once they pass.
+ */
+const PAGE_CSS_ROWS: [string, SlotKind[]][] = [
+  ['react-container', ALL_KINDS],
+  ['react-custom', ALL_KINDS],
+  [
+    'wc-container',
+    [
+      'user-defined-response',
+      'message-footer',
+      'request-footer',
+      'writeable-element',
+    ],
+  ],
+];
+
+/** Makes the chat render the given slot kind. */
+async function triggerSlot(page: Page, instanceKey: string, kind: SlotKind) {
+  if (kind === 'user-defined-response' || kind === 'message-footer') {
+    await page.evaluate(
+      (key) =>
+        window.hostCompatibility[key as 'reactInstance'].messaging.addMessage({
+          id: 'page-css',
+          output: {
+            generic: [
+              { response_type: 'user_defined', user_defined: {} },
+              {
+                response_type: 'text',
+                text: 'With a footer',
+                message_item_options: {
+                  custom_footer_slot: { slot_name: 'footer-1', is_on: true },
+                },
+              },
+            ],
+          },
+        }),
+      instanceKey
+    );
+  } else if (kind === 'request-footer' || kind === 'input-node') {
+    await page.evaluate(
+      (key) =>
+        window.hostCompatibility[key as 'reactInstance'].send({
+          id: 'rich',
+          input: {
+            message_type: 'text',
+            text: 'Ship it',
+            display_content: {
+              type: 'doc',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [{ type: 'taskCard', attrs: { label: 'Ship it' } }],
+                },
+              ],
+            },
+          },
+        }),
+      instanceKey
+    );
+  }
+  // The writeable element shows with the welcome response on open.
+}
+
+for (const [surface, kinds] of PAGE_CSS_ROWS) {
+  for (const kind of kinds) {
+    test(`page CSS reaches the ${kind} on ${surface}`, async ({ page }) => {
+      const { errors, instanceKey } = await openSurface(page, surface);
+      await triggerSlot(page, instanceKey, kind);
+
+      const node = page.locator(`.page-styled[data-kind="${kind}"]`).first();
+      await expect(node).toBeVisible({ timeout: 15000 });
+      expect(await node.evaluate((el) => getComputedStyle(el).color)).toBe(
+        'rgb(1, 2, 3)'
+      );
+      expect(await node.evaluate((el) => el.getRootNode() === document)).toBe(
+        true
+      );
+      expect(errors).toEqual([]);
+    });
+  }
+}
