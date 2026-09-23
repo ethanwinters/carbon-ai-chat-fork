@@ -36,23 +36,6 @@ import {
 } from '../../../src/types/component/ChatContainer';
 import { createBaseConfig, createBaseTestProps } from '../../test_helpers';
 
-// `cds-aichat-custom-element` spreads `root.adoptedStyleSheets` in its
-// `createRenderRoot`, and jsdom's ShadowRoot has no such property, so
-// connecting it throws before anything is wired. Same environment gap the
-// plugin-host parity spec patches.
-const adopted = new WeakMap<ShadowRoot, unknown[]>();
-if (!('adoptedStyleSheets' in ShadowRoot.prototype)) {
-  Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', {
-    configurable: true,
-    get(this: ShadowRoot) {
-      return adopted.get(this) ?? [];
-    },
-    set(this: ShadowRoot, sheets: unknown[]) {
-      adopted.set(this, sheets);
-    },
-  });
-}
-
 const FOOTER_SELECTOR = 'div[slot^="request-footer-"]';
 
 /**
