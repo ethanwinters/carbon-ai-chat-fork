@@ -11,7 +11,8 @@
  * Custom content rendered through a React wrapper stays part of the host's
  * React tree. Host context reaches it, its events bubble to host handlers,
  * host error boundaries catch its errors, and its state and DOM nodes survive
- * unrelated host re-renders.
+ * unrelated host re-renders. A host Suspense boundary can't stall startup, and
+ * restarting the conversation clears the content.
  *
  * A separate React root for the chat would silently break each of these, so
  * they are asserted here independently of how the host DOM is laid out.
@@ -30,10 +31,12 @@ import { ChatContainer } from '../../../src/react/ChatContainer';
 import { ChatCustomElement } from '../../../src/react/ChatCustomElement';
 import { ChatInstance } from '../../../src/types/instance/ChatInstance';
 import { RenderUserDefinedResponse } from '../../../src/types/component/ChatContainer';
+import { MessageResponseTypes } from '../../../src/types/messaging/Messages';
 import { resolvablePromise } from '../../../src/chat/utils/resolvablePromise';
 import {
   addUserDefinedResponse,
   createBaseConfig,
+  getChatShadowRoot,
   setupAfterEach,
   setupBeforeEach,
 } from '../../test_helpers';
@@ -229,6 +232,105 @@ describe('React wrappers keep custom content in the host React tree', () => {
         content.doResolve({ default: () => <p>Loaded response</p> })
       );
     }
+  });
+
+  it('finishes startup when a host sibling suspends while onBeforeRender is pending', async () => {
+    const gate = resolvablePromise();
+    const content = resolvablePromise<{ default: () => React.ReactElement }>();
+    const DeferredSibling = lazy(() => content);
+    const onBeforeRender = jest.fn(() => gate);
+    const onAfterRender = jest.fn();
+
+    function Page({ suspended }: { suspended: boolean }) {
+      return (
+        <Suspense fallback={<p data-probe="host-loading">Loading page</p>}>
+          <ChatContainer
+            {...config}
+            onBeforeRender={onBeforeRender}
+            onAfterRender={onAfterRender}
+          />
+          {suspended ? <DeferredSibling /> : <p>Sibling</p>}
+        </Suspense>
+      );
+    }
+
+    const view = render(<Page suspended={false} />);
+    await waitFor(() => expect(onBeforeRender).toHaveBeenCalledTimes(1), {
+      timeout: 5000,
+    });
+
+    // A plain update, not a transition, so the committed boundary shows its
+    // fallback and hides the chat while the sibling loads.
+    view.rerender(<Page suspended />);
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-probe="host-loading"]')
+      ).not.toBeNull()
+    );
+    await act(async () => gate.doResolve());
+    await act(async () =>
+      content.doResolve({
+        default: () => <p data-probe="loaded-sibling">Loaded sibling</p>,
+      })
+    );
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-probe="loaded-sibling"]')
+      ).not.toBeNull()
+    );
+
+    await waitFor(() => expect(onAfterRender).toHaveBeenCalledTimes(1), {
+      timeout: 5000,
+    });
+    const target = getChatShadowRoot().querySelector('.cds-aichat--react-app');
+    await waitFor(() =>
+      expect(target.querySelector('.cds-aichat--widget')).not.toBeNull()
+    );
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(onBeforeRender).toHaveBeenCalledTimes(1);
+    expect(onAfterRender).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears custom message footers when the conversation restarts', async () => {
+    let instance: ChatInstance | null = null;
+    render(
+      <ChatContainer
+        {...config}
+        onBeforeRender={(chat) => {
+          instance = chat;
+        }}
+        renderCustomMessageFooter={(slotName) => (
+          <span data-probe="message-footer">{slotName}</span>
+        )}
+      />
+    );
+    await waitFor(() => expect(instance).not.toBeNull(), { timeout: 5000 });
+    await act(() =>
+      instance.messaging.addMessage({
+        id: 'with-footer',
+        output: {
+          generic: [
+            {
+              response_type: MessageResponseTypes.TEXT,
+              text: 'reply',
+              message_item_options: {
+                custom_footer_slot: { slot_name: 'footer-1', is_on: true },
+              },
+            },
+          ],
+        },
+      } as never)
+    );
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-probe="message-footer"]')?.textContent
+      ).toBe('footer-1')
+    );
+
+    await act(() => instance.messaging.restartConversation());
+    await waitFor(() =>
+      expect(document.querySelector('[data-probe="message-footer"]')).toBeNull()
+    );
   });
 
   // One wrapper is enough: the boundary sits above both, and the content
