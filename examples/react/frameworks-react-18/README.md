@@ -1,17 +1,17 @@
-# Frameworks / React 17
+# Frameworks / React 18
 
-Runs `ChatContainer` and `ChatCustomElement` on React 17 using the legacy `ReactDOM.render` root, proving the library still works on the pre-concurrent API.
+Runs `ChatContainer` and `ChatCustomElement` on React 18, mounted from the app's own `createRoot`.
 
 ## What this example shows
 
-- Mounting with `ReactDOM.render` (not `createRoot`).
+- Mounting with `createRoot` from `react-dom/client`.
 - Both React components: the floating `ChatContainer` at `/`, and `ChatCustomElement` in a sized element at `/?wrapper=custom`.
 - A minimal mock `customSendMessage` that echoes user input.
 
 ## When to use this pattern
 
-- Your host app is stuck on React 17 and cannot upgrade yet.
-- You want a reference for mounting Carbon AI Chat under the legacy React 17 API.
+- Your host app runs React 18 and has not moved to React 19.
+- You want a reference for mounting Carbon AI Chat under the React 18 root API.
 
 ## APIs and props demonstrated
 
@@ -21,7 +21,7 @@ Runs `ChatContainer` and `ChatCustomElement` on React 17 using the legacy `React
 | `ChatCustomElement` | `@carbon/ai-chat` component | Mounts the chat in a sized element. |
 | `PublicConfig` | `@carbon/ai-chat` type | Config shape. |
 | `customSendMessage` | `messaging` prop | Minimal echo mock backend. |
-| `ReactDOM.render` | `react-dom` | Legacy React 17 mount. |
+| `createRoot` | `react-dom/client` | React 18 mount. |
 
 ## Run it
 
@@ -34,7 +34,7 @@ npm install
 npm run build --workspace=@carbon/ai-chat-components
 npm run build --workspace=@carbon/ai-chat
 
-npm run start --workspace=@carbon/ai-chat-examples-react-17
+npm run start --workspace=@carbon/ai-chat-examples-react-18
 ```
 
 (Replace `start` with `dev` or `test` if this example's package.json defines those instead.)
