@@ -10,11 +10,11 @@
 import { useCallback, useState } from 'react';
 import type { ServiceManager } from '../services/ServiceManager';
 import type { FileUpload } from '../../types/state/AppState';
-import type { InputFunctions } from '../components/input/Input';
+import type { HasRequestFocus } from '../../types/utilities/HasRequestFocus';
 
 interface UseHumanAgentCallbacksProps {
   serviceManager: ServiceManager;
-  inputRef: React.RefObject<InputFunctions | null>;
+  inputRef: React.RefObject<HasRequestFocus | null>;
   isConnectingOrConnected: boolean;
   allowMultipleFileUploads: boolean;
   requestInputFocus: () => void;
