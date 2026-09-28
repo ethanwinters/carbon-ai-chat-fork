@@ -7,6 +7,42 @@
  *  @license
  */
 
+// Run the suite under Carbon's v12 behavior.
+//
+// Carbon resolves a render-time flag by walking up to the nearest
+// `<feature-flags>` ancestor, so a component only sees the flag when it is
+// mounted inside one. Testing Library appends its container straight to
+// `document.body`, which would make it a sibling of the scope rather than a
+// descendant. Redirect those appends into the scope.
+//
+// The scope is built on the first append, not here: `feature-flags` pulls in
+// Lit, and autocomplete-controller-imports.test.ts proves a module graph that
+// reaches none. A file that never mounts anything never loads it.
+//
+// This runs once per test file, not per test: patching in `beforeEach` would
+// re-bind an already-patched `appendChild`, nesting each test's scope inside
+// the previous one. `CARBON_V12_SCOPE=0` drops the scope, as it does for
+// web-test-runner.
+if (process.env.CARBON_V12_SCOPE !== '0') {
+  let scope: HTMLElement | undefined;
+  const appendToBody = document.body.appendChild.bind(document.body);
+  const removeFromBody = document.body.removeChild.bind(document.body);
+  const getScope = () => {
+    if (!scope) {
+      jest.requireActual(
+        '@carbon/web-components/es/components/feature-flags/index.js'
+      );
+      scope = document.createElement('feature-flags');
+      scope.setAttribute('enable-v12-release', '');
+      appendToBody(scope);
+    }
+    return scope;
+  };
+  document.body.appendChild = (node: any) => getScope().appendChild(node);
+  document.body.removeChild = (node: any) =>
+    node.parentNode === scope ? scope.removeChild(node) : removeFromBody(node);
+}
+
 beforeEach(() => {
   // Mock DOMParser for icon transformation tests
   if (typeof DOMParser === 'undefined') {

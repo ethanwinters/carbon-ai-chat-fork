@@ -67,6 +67,40 @@ describe('toolbar', function () {
     expect(titleDiv).to.exist;
   });
 
+  it('composes its overflow menu the way the v12 structure expects', async () => {
+    // The menu only renders once actions actually overflow, and the overflow
+    // measurement only runs when `overflow` is set, so squeeze a toolbar that
+    // has it until the actions spill.
+    const wrapper = await fixture<HTMLDivElement>(
+      html`<div style="width: 120px;">
+        <cds-aichat-toolbar
+          overflow
+          .actions=${actionLists['Advanced list'] as Action[]}></cds-aichat-toolbar>
+      </div>`
+    );
+    const el = wrapper.querySelector('cds-aichat-toolbar') as Toolbar;
+    await el.updateComplete;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await el.updateComplete;
+
+    const overflowMenu = el.shadowRoot!.querySelector(
+      'cds-overflow-menu'
+    ) as HTMLElement;
+    expect(overflowMenu, 'actions should have overflowed into a menu').to.exist;
+
+    // Under the v12 flag the menu only opens off a direct `cds-menu` child.
+    // Anything else leaves it dead and only warns in development.
+    expect(
+      overflowMenu.querySelector(':scope > cds-menu'),
+      'cds-menu must be a direct child of cds-overflow-menu'
+    ).to.exist;
+    expect(overflowMenu.querySelector('cds-overflow-menu-body')).to.not.exist;
+    expect(overflowMenu.hasAttribute('enable-v12-overflowmenu')).to.be.true;
+    expect(overflowMenu.getAttribute('menu-alignment')).to.equal('bottom-end');
+    expect(overflowMenu.hasAttribute('autoalign')).to.be.true;
+  });
+
   describe('isSelected / toggle state (inline icon-button path)', function () {
     it('should not set aria-pressed when isSelected is absent (plain button)', async () => {
       const actions: Action[] = [
@@ -208,11 +242,10 @@ describe('toolbar', function () {
     it('should not set role="menuitemcheckbox" or aria-checked on overflow item when isSelected is absent', async () => {
       const el = await fixtureWithOverflow(undefined);
       await waitUntil(
-        () =>
-          el.shadowRoot!.querySelectorAll('cds-overflow-menu-item').length > 0
+        () => el.shadowRoot!.querySelectorAll('cds-menu-item').length > 0
       );
-      const items = el.shadowRoot!.querySelectorAll('cds-overflow-menu-item');
-      // Carbon sets role="menuitem" on all items via connectedCallback;
+      const items = el.shadowRoot!.querySelectorAll('cds-menu-item');
+      // Carbon sets role="menuitem" on items that carry no role of their own;
       // we must not override that with "menuitemcheckbox" when isSelected is absent.
       items.forEach((item) => {
         expect(item.getAttribute('role')).to.not.equal('menuitemcheckbox');
@@ -223,49 +256,43 @@ describe('toolbar', function () {
     it('should set role="menuitemcheckbox" and aria-checked="true" on overflow item when isSelected is true', async () => {
       const el = await fixtureWithOverflow(true);
       await waitUntil(
-        () =>
-          el.shadowRoot!.querySelectorAll('cds-overflow-menu-item').length > 0
+        () => el.shadowRoot!.querySelectorAll('cds-menu-item').length > 0
       );
       const items = Array.from(
-        el.shadowRoot!.querySelectorAll('cds-overflow-menu-item')
+        el.shadowRoot!.querySelectorAll('cds-menu-item')
       );
       const toggleItem = items.find(
-        (item) => item.textContent?.trim() === 'Toggle'
+        (item) => item.getAttribute('label') === 'Toggle'
       ) as (LitElement & HTMLElement) | undefined;
       expect(toggleItem, 'overflow item not rendered').to.exist;
       expect(toggleItem!.getAttribute('role')).to.equal('menuitemcheckbox');
       expect(toggleItem!.getAttribute('aria-checked')).to.equal('true');
       expect(toggleItem!.hasAttribute('data-selected')).to.be.true;
-      // Verify _patchShadowButtonAttrs mirrored the attributes onto the inner
-      // shadow <button> — the actual focus target with delegatesFocus.
+      // Carbon fills in role="menuitem" only when no role is set, so the
+      // checkbox role has to survive the item's first update.
       await toggleItem!.updateComplete;
-      const innerBtn = toggleItem!.shadowRoot!.querySelector('button')!;
-      expect(innerBtn.getAttribute('role')).to.equal('menuitemcheckbox');
-      expect(innerBtn.getAttribute('aria-checked')).to.equal('true');
+      expect(toggleItem!.getAttribute('role')).to.equal('menuitemcheckbox');
     });
 
     it('should set role="menuitemcheckbox" and aria-checked="false" on overflow item when isSelected is false', async () => {
       const el = await fixtureWithOverflow(false);
       await waitUntil(
-        () =>
-          el.shadowRoot!.querySelectorAll('cds-overflow-menu-item').length > 0
+        () => el.shadowRoot!.querySelectorAll('cds-menu-item').length > 0
       );
       const items = Array.from(
-        el.shadowRoot!.querySelectorAll('cds-overflow-menu-item')
+        el.shadowRoot!.querySelectorAll('cds-menu-item')
       );
       const toggleItem = items.find(
-        (item) => item.textContent?.trim() === 'Toggle'
+        (item) => item.getAttribute('label') === 'Toggle'
       ) as (LitElement & HTMLElement) | undefined;
       expect(toggleItem, 'overflow item not rendered').to.exist;
       expect(toggleItem!.getAttribute('role')).to.equal('menuitemcheckbox');
       expect(toggleItem!.getAttribute('aria-checked')).to.equal('false');
       expect(toggleItem!.hasAttribute('data-selected')).to.be.false;
-      // Verify _patchShadowButtonAttrs mirrored the attributes onto the inner
-      // shadow <button> — the actual focus target with delegatesFocus.
+      // Carbon fills in role="menuitem" only when no role is set, so the
+      // checkbox role has to survive the item's first update.
       await toggleItem!.updateComplete;
-      const innerBtn = toggleItem!.shadowRoot!.querySelector('button')!;
-      expect(innerBtn.getAttribute('role')).to.equal('menuitemcheckbox');
-      expect(innerBtn.getAttribute('aria-checked')).to.equal('false');
+      expect(toggleItem!.getAttribute('role')).to.equal('menuitemcheckbox');
     });
   });
 });

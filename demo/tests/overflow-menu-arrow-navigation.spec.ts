@@ -49,7 +49,7 @@ async function getFocusedMenuItemText(page: any): Promise<string | null> {
 
       // Check if this is an overflow menu item
       if (
-        activeElement.tagName.toLowerCase() === 'cds-overflow-menu-item' ||
+        activeElement.tagName.toLowerCase() === 'cds-menu-item' ||
         activeElement.getAttribute('role') === 'menuitem'
       ) {
         return activeElement;
@@ -64,7 +64,16 @@ async function getFocusedMenuItemText(page: any): Promise<string | null> {
     }
 
     const focusedItem = findFocusedElement(document);
-    return focusedItem ? focusedItem.textContent?.trim() || null : null;
+    if (!focusedItem) {
+      return null;
+    }
+    // `cds-menu-item` carries its text as a `label` attribute and renders it
+    // into its shadow root, so there is nothing in its light-DOM text content.
+    return (
+      focusedItem.getAttribute('label') ||
+      focusedItem.textContent?.trim() ||
+      null
+    );
   });
 }
 
@@ -77,10 +86,7 @@ async function openOverflowMenu(page: any) {
   await overflowMenuButton.click();
 
   // Wait for the first menu item to be visible
-  await page
-    .locator('cds-overflow-menu-item')
-    .first()
-    .waitFor({ state: 'visible' });
+  await page.locator('cds-menu-item').first().waitFor({ state: 'visible' });
 }
 
 /**
@@ -88,7 +94,7 @@ async function openOverflowMenu(page: any) {
  */
 async function focusFirstMenuItem(page: any) {
   // Focus the first menu item
-  const firstMenuItem = page.locator('cds-overflow-menu-item').first();
+  const firstMenuItem = page.locator('cds-menu-item').first();
   await firstMenuItem.focus();
 }
 
@@ -151,7 +157,7 @@ test('arrow key navigation in overflow menu', async ({ page }) => {
         }
 
         if (
-          activeElement.tagName.toLowerCase() === 'cds-overflow-menu-item' ||
+          activeElement.tagName.toLowerCase() === 'cds-menu-item' ||
           activeElement.getAttribute('role') === 'menuitem'
         ) {
           return activeElement;
@@ -165,7 +171,9 @@ test('arrow key navigation in overflow menu', async ({ page }) => {
       }
 
       const focusedItem = findFocusedElement(document);
-      return focusedItem?.textContent?.trim() === 'Documentation';
+      const text =
+        focusedItem?.getAttribute('label') || focusedItem?.textContent?.trim();
+      return text === 'Documentation';
     },
     { timeout: 2000 }
   );
