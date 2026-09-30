@@ -1,0 +1,1 @@
+{"id":"6a29b230-9fad-4391-9913-a8a0effbc697","fileUri":"file:///private/tmp/carbon-cve-fix/package-lock.json","repoName":"ethanwinters/carbon-ai-chat-fork","branchName":"fix/cve-2026-102422-shell-quote","toolName":"apply_diff","startLine":39095,"endLine":39097,"taskId":null,"createdAt":1790783411281}
