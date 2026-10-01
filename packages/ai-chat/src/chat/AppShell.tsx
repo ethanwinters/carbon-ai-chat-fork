@@ -38,8 +38,6 @@ import MessagesComponent, {
 import { HomeScreen } from './components/homeScreen/HomeScreen';
 import { Input } from './components/input/Input';
 import { AppShellWriteableElements } from './AppShellWriteableElements';
-import { EndHumanAgentChatModal } from './components/modals/EndHumanAgentChatModal';
-import { RequestScreenShareModal } from './components/modals/RequestScreenShareModal';
 import WriteableElement from './components/helpers/WriteableElement/WriteableElement';
 import { createUnmappingMemoizer } from './utils/memoizerUtils';
 import { WriteableElementName } from './utils/constants';
@@ -59,7 +57,10 @@ import { useAssistantUploadCallbacks } from './hooks/useAssistantUploadCallbacks
 import { usePanelCallbacks } from './hooks/usePanelCallbacks';
 import { useInputCallbacks } from './hooks/useInputCallbacks';
 import { useResizeObserver } from './hooks/useResizeObserver';
-import { ModalPortalRootProvider } from './providers/ModalPortalRootProvider';
+import {
+  HumanAgentConfirmationContext,
+  HumanAgentConfirmation,
+} from './contexts/HumanAgentConfirmationContext';
 import actions from './store/actions';
 import {
   selectHumanAgentDisplayState,
@@ -266,8 +267,8 @@ function AppShell({
     IS_PHONE && !publicConfig.disableCustomElementMobileEnhancements;
   const dir = isBrowser() ? document.dir || 'auto' : 'auto';
   const mainWindowRef = useRef<MainWindowFunctions | null>(null);
-  const [modalPortalHostElement, setModalPortalHostElement] =
-    useState<Element | null>(null);
+  const [humanAgentConfirmation, setHumanAgentConfirmation] =
+    useState<HumanAgentConfirmation | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationContainerRef = useRef<HTMLElement | null>(null);
   const disclaimerRef = useRef<CDSButton | null>(null);
@@ -465,7 +466,6 @@ function AppShell({
     onFilesSelectedForUpload,
   } = useHumanAgentCallbacks({
     serviceManager,
-    inputRef: composerRef,
     isConnectingOrConnected: agentDisplayState.isConnectingOrConnected,
     allowMultipleFileUploads: inputFields.allowMultipleFileUploads,
     requestInputFocus,
@@ -844,7 +844,8 @@ function AppShell({
       role="region"
       aria-label={regionLabel}>
       <AppShellErrorBoundary onError={handleBoundaryError}>
-        <ModalPortalRootProvider hostElement={modalPortalHostElement}>
+        <HumanAgentConfirmationContext.Provider
+          value={setHumanAgentConfirmation}>
           <Layer
             className={cx('cds-aichat--widget__layer', {
               'cds-aichat--widget__layer--hidden': !open,
@@ -856,6 +857,7 @@ function AppShell({
                 : 0
             }>
             <ChatShell
+              onPanelFocusFallback={requestInputFocus}
               data-testid={PageObjectId.CHAT_WIDGET}
               className={cx('cds-aichat--widget', {
                 'cds-aichat-float--open': !useCustomHostElement && open,
@@ -923,6 +925,11 @@ function AppShell({
               historyShownAnnouncement={languagePack.history_shown}
               historyHiddenAnnouncement={languagePack.history_hidden}>
               <AppShellPanels
+                endChatConfirmation={humanAgentConfirmation}
+                showEndChatConfirmation={showEndChatConfirmation}
+                confirmHumanAgentEndChat={confirmHumanAgentEndChat}
+                hideConfirmEndChat={hideConfirmEndChat}
+                showScreenShareRequest={humanAgentState.showScreenShareRequest}
                 serviceManager={serviceManager}
                 isHydratingComplete={isHydratingComplete}
                 shouldShowHydrationPanel={shouldShowHydrationPanel}
@@ -1094,21 +1101,10 @@ function AppShell({
                 />
               </div>
             </ChatShell>
-            {/* Modals rendered outside shell */}
-            {showEndChatConfirmation && (
-              <EndHumanAgentChatModal
-                onConfirm={confirmHumanAgentEndChat}
-                onCancel={hideConfirmEndChat}
-              />
-            )}
-            {humanAgentState.showScreenShareRequest && (
-              <RequestScreenShareModal />
-            )}
           </Layer>
-        </ModalPortalRootProvider>
+        </HumanAgentConfirmationContext.Provider>
       </AppShellErrorBoundary>
       {showLauncher && <LauncherContainer />}
-      <div className="cds-aichat--modal-host" ref={setModalPortalHostElement} />
     </div>
   );
 }
