@@ -13,12 +13,8 @@ import type { FileUpload } from '../../types/state/AppState';
 export class HumanAgentCallbacks {
   private showEndChatConfirmation = false;
   private listeners = new Set<() => void>();
-  private focusTimers = new Set<ReturnType<typeof setTimeout>>();
 
-  constructor(
-    private serviceManager: ServiceManager,
-    private focusInput: () => void
-  ) {}
+  constructor(private serviceManager: ServiceManager) {}
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -28,11 +24,6 @@ export class HumanAgentCallbacks {
   };
 
   getSnapshot = () => this.showEndChatConfirmation;
-
-  disconnect = () => {
-    this.focusTimers.forEach(clearTimeout);
-    this.focusTimers.clear();
-  };
 
   private setConfirmation(value: boolean) {
     if (this.showEndChatConfirmation !== value) {
@@ -47,11 +38,6 @@ export class HumanAgentCallbacks {
 
   hideConfirmEndChat = () => {
     this.setConfirmation(false);
-    const timer = setTimeout(() => {
-      this.focusTimers.delete(timer);
-      this.focusInput();
-    });
-    this.focusTimers.add(timer);
   };
 
   confirmHumanAgentEndChat = () => {

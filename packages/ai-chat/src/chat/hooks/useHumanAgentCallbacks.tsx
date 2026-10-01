@@ -7,16 +7,14 @@
  *  @license
  */
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js';
 import { HumanAgentCallbacks } from '../services/humanAgentCallbacks';
 import type { ServiceManager } from '../services/ServiceManager';
 import type { FileUpload } from '../../types/state/AppState';
-import type { InputFunctions } from '../components/input/Input';
 
 interface UseHumanAgentCallbacksProps {
   serviceManager: ServiceManager;
-  inputRef: React.RefObject<InputFunctions | null>;
   isConnectingOrConnected: boolean;
   allowMultipleFileUploads: boolean;
   requestInputFocus: () => void;
@@ -36,19 +34,14 @@ interface UseHumanAgentCallbacksReturn {
  */
 export function useHumanAgentCallbacks({
   serviceManager,
-  inputRef,
   isConnectingOrConnected,
   allowMultipleFileUploads,
   requestInputFocus,
 }: UseHumanAgentCallbacksProps): UseHumanAgentCallbacksReturn {
   const controller = useMemo(
-    () =>
-      new HumanAgentCallbacks(serviceManager, () =>
-        inputRef.current?.requestFocus()
-      ),
-    [serviceManager, inputRef]
+    () => new HumanAgentCallbacks(serviceManager),
+    [serviceManager]
   );
-  useEffect(() => controller.disconnect, [controller]);
   const showEndChatConfirmation = useSyncExternalStore(
     controller.subscribe,
     controller.getSnapshot,

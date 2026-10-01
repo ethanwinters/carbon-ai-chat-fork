@@ -10,8 +10,12 @@
 export function createPanelCallbacks(requestFocus: () => void) {
   return {
     onPanelOpenStart() {},
-    onPanelOpenEnd: requestFocus,
+    onPanelOpenEnd(event: CustomEvent) {
+      if (!event.detail?.isReactivation) {
+        requestFocus();
+      }
+    },
     onPanelCloseStart() {},
-    onPanelCloseEnd: requestFocus,
+    onPanelCloseEnd() {},
   };
 }

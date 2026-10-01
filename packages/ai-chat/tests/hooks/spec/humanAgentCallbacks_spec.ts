@@ -28,15 +28,12 @@ function setup() {
     state,
     service,
     focus,
-    controller: new HumanAgentCallbacks(manager, focus),
+    controller: new HumanAgentCallbacks(manager),
   };
 }
 
-beforeEach(() => jest.useFakeTimers());
-afterEach(() => jest.useRealTimers());
-
-it('owns confirmation state and cancels deferred focus when disconnected', () => {
-  const { controller, focus, service } = setup();
+it('owns confirmation state', () => {
+  const { controller, service } = setup();
   const listener = jest.fn();
   const unsubscribe = controller.subscribe(listener);
   expect(controller.getSnapshot()).toBe(false);
@@ -47,14 +44,6 @@ it('owns confirmation state and cancels deferred focus when disconnected', () =>
   controller.confirmHumanAgentEndChat();
   expect(controller.getSnapshot()).toBe(false);
   expect(service.endChat).toHaveBeenCalledWith(true);
-  expect(focus).not.toHaveBeenCalled();
-  controller.disconnect();
-  controller.disconnect();
-  jest.runAllTimers();
-  expect(focus).not.toHaveBeenCalled();
-  controller.hideConfirmEndChat();
-  jest.runAllTimers();
-  expect(focus).toHaveBeenCalledTimes(1);
   unsubscribe();
   controller.showConfirmEndChat();
   expect(listener).toHaveBeenCalledTimes(2);

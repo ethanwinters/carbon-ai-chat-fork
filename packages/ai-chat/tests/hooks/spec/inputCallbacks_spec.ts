@@ -132,7 +132,7 @@ it('cancels deferred scroll on disconnect and delegates navigation and disclaime
   });
 });
 
-it('delegates each assistant upload and focuses only on panel completion', () => {
+it('delegates each assistant upload and focuses only on a new panel opening', () => {
   const { manager } = setup();
   const uploads = createAssistantUploadCallbacks(
     manager as unknown as ServiceManager
@@ -150,9 +150,13 @@ it('delegates each assistant upload and focuses only on panel completion', () =>
   panel.onPanelOpenStart();
   panel.onPanelCloseStart();
   expect(focus).not.toHaveBeenCalled();
-  panel.onPanelOpenEnd();
+  panel.onPanelOpenEnd(
+    new CustomEvent('open', { detail: { isReactivation: true } })
+  );
   panel.onPanelCloseEnd();
-  expect(focus).toHaveBeenCalledTimes(2);
+  expect(focus).not.toHaveBeenCalled();
+  panel.onPanelOpenEnd(new CustomEvent('open'));
+  expect(focus).toHaveBeenCalledTimes(1);
 });
 
 it('projects config references and derives input availability', () => {
