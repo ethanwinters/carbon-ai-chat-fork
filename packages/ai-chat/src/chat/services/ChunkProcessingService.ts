@@ -11,10 +11,9 @@ import isEqual from 'lodash-es/isEqual.js';
 
 import actions from '../store/actions';
 import {
+  applyChunk,
   chunkHasDisplayableContent,
   FinalResponseChunk,
-  mergePartialResponseOptions,
-  resetStopStreamingButton,
   resolveChunkContext,
   shouldShowStopStreaming,
 } from '../utils/streamingUtils';
@@ -29,7 +28,10 @@ import {
   isTyping,
 } from '../utils/messageUtils';
 import { sleep } from '../utils/lang/promiseUtils';
-import { AddMessageOptions } from '../../types/config/MessagingConfig';
+import {
+  AddMessageOptions,
+  MessageState,
+} from '../../types/config/MessagingConfig';
 import {
   GenericItem,
   ItemStreamingMetadata,
@@ -170,7 +172,7 @@ class ChunkProcessingService {
           (isCompleteItem || isFinalResponse) &&
           stopStreamingState.isVisible
         ) {
-          resetStopStreamingButton(this.serviceManager.store);
+          this.serviceManager.messageService.hideStopStreamingButtonIfNoUpsertStreaming();
         }
       };
 
@@ -251,24 +253,22 @@ class ChunkProcessingService {
     item: DeepPartial<GenericItem> | undefined,
     isCompleteItem: boolean
   ) {
-    const { store } = this.serviceManager;
-    if (messageID && !store.getState().allMessagesByID[messageID]) {
-      store.dispatch(actions.streamingStart(messageID));
-    }
-
     if (isCompleteItem) {
       this.warnIfMissingCompleteItemStreamingId(messageID, item);
     }
 
-    if (messageID && item) {
-      store.dispatch(
-        actions.streamingAddChunk(messageID, item, isCompleteItem)
-      );
+    if (!messageID) {
+      return;
     }
 
-    mergePartialResponseOptions(store, messageID, chunk);
+    await this.serviceManager.messageUpsertCoordinator.upsert(
+      messageID,
+      MessageState.STREAMING,
+      (prev) => applyChunk(prev, chunk, messageID),
+      { origin: 'chunk', chunk: { item, isComplete: isCompleteItem } }
+    );
 
-    if (messageID && item) {
+    if (item) {
       await this.serviceManager.slotEventService.handleUserDefinedResponseItemsChunk(
         messageID,
         chunk,
@@ -422,7 +422,7 @@ class ChunkProcessingService {
     chunk: StreamChunk
   ) {
     if (isCompleteItem || isStreamFinalResponse(chunk)) {
-      resetStopStreamingButton(this.serviceManager.store);
+      this.serviceManager.messageService.hideStopStreamingButtonIfNoUpsertStreaming();
     }
   }
 

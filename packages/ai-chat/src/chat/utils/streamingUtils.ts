@@ -320,33 +320,12 @@ function messageHasDisplayableContent(
   return hasDisplayableContentForItem(item, item.response_type);
 }
 
-/**
- * Merges `message_options` from a `partial_response` chunk into the store.
- * Used by the `addMessageChunk` path to propagate message-level options while
- * a stream is in progress.
- */
-function mergePartialResponseOptions(
-  store: StoreLike,
-  messageID: string | undefined,
-  chunk: PartialOrCompleteItemChunk
-) {
-  if (chunk.partial_response?.message_options && messageID) {
-    store.dispatch(
-      actions.streamingMergeMessageOptions(
-        messageID,
-        chunk.partial_response.message_options
-      )
-    );
-  }
-}
-
 export {
   applyChunk,
   chunkHasDisplayableContent,
   hasDisplayableContentForItem,
   deriveStreamingItemText,
   FinalResponseChunk,
-  mergePartialResponseOptions,
   messageHasDisplayableContent,
   resetStopStreamingButton,
   resolveChunkContext,

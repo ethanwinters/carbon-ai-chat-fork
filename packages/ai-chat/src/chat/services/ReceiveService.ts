@@ -9,7 +9,7 @@
 
 import merge from 'lodash-es/merge.js';
 
-import actions from '../store/actions';
+import actions, { MessageWriteOptions } from '../store/actions';
 import { AppStateMessages } from '../../types/state/AppState';
 import { deepFreeze } from '../utils/lang/objectUtils';
 import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';
@@ -44,17 +44,17 @@ class ReceiveService {
    * that may be introduced by a pause).
    *
    * @param message A {@link MessageResponse} object.
-   * @param _isLatestWelcomeNode Indicates if this message is a new welcome message that has just been shown to the user
+   * @param isLatestWelcomeNode Indicates if this message is a new welcome message that has just been shown to the user
    * and isn't a historical welcome message.
    * @param requestMessage The optional {@link MessageRequest} that this response is a response to.
-   * @param _origin The public method the message comes from: `addMessage`, or `addMessageChunk` for the
+   * @param origin The public method the message comes from: `addMessage`, or `addMessageChunk` for the
    * `final_response` that completes a stream.
    */
   async receive(
     message: MessageResponse,
-    _isLatestWelcomeNode = false,
+    isLatestWelcomeNode = false,
     requestMessage?: MessageRequest,
-    _origin: 'addMessage' | 'chunk' = 'addMessage'
+    origin: 'addMessage' | 'chunk' = 'addMessage'
   ) {
     const { restartCount: initialRestartCount } = this.serviceManager;
 
@@ -81,15 +81,11 @@ class ReceiveService {
     }
 
     if (isResponse(message as any)) {
-      // Pre-mark COMPLETE so the coordinator skips event re-firing — we already fired
-      // pre:receive above and will fire receive below.
-      this.serviceManager.messageUpsertCoordinator.markComplete(message.id);
-      await this.writeReceivedMessage(message);
-      // Now freeze and fire receive after the store has been updated.
-      deepFreeze(message);
-      await this.serviceManager.fire({
-        type: BusEventType.RECEIVE,
-        data: message,
+      await this.writeReceivedMessage(message, {
+        origin,
+        isLatestWelcomeNode,
+        requestMessage,
+        restartCount: initialRestartCount,
       });
       return;
     }
@@ -121,11 +117,15 @@ class ReceiveService {
    * resolves once `receive` has fired, and rejects when a `receive` handler throws. The
    * message's items keep showing after that, while the next write for its id runs.
    */
-  private writeReceivedMessage(message: MessageResponse): Promise<void> {
+  private writeReceivedMessage(
+    message: MessageResponse,
+    options: MessageWriteOptions
+  ): Promise<void> {
     return this.serviceManager.messageUpsertCoordinator.upsert(
       message.id,
       MessageState.COMPLETE,
-      () => message
+      () => message,
+      options
     );
   }
 
