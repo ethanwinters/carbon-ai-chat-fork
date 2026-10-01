@@ -25,7 +25,6 @@ import {
   isResponse,
 } from '../utils/messageUtils';
 import { consoleError } from '../utils/miscUtils';
-import { resetStopStreamingButton } from '../utils/streamingUtils';
 import {
   BusEventPreReceive,
   BusEventType,
@@ -147,11 +146,11 @@ class ReceiveService {
     store.dispatch(actions.setActiveResponseId(fullMessage.id));
     store.dispatch(actions.addMessage(fullMessage));
 
-    if (config.public.messaging?.showStopButtonImmediately) {
-      resetStopStreamingButton(
-        store,
-        this.serviceManager.messageService.inboundStreaming.streamingMessageID
-      );
+    if (
+      config.public.messaging?.showStopButtonImmediately &&
+      !this.serviceManager.messageService.inboundStreaming.streamingMessageID
+    ) {
+      this.serviceManager.messageService.resetStopStreamingButtonWithoutUpserts();
     }
 
     let previousItemID: string = null;
