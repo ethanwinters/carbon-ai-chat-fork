@@ -188,24 +188,6 @@ class ChatInstanceService {
     );
   }
 
-  handleUpsertStreaming(message: MessageResponse) {
-    return this.serviceManager.chunkProcessingService.handleUpsertStreaming(
-      message
-    );
-  }
-
-  async handleConnectToHumanAgent(
-    localMessageItem: LocalMessageItem,
-    fullMessage: MessageResponse
-  ) {
-    return this.serviceManager.humanAgentService?.handleConnectToHumanAgent(
-      localMessageItem,
-      fullMessage,
-      this.serviceManager.store.getState().config,
-      this.serviceManager.restartCount
-    );
-  }
-
   announceStreamStarts(
     messageID: string,
     content: {

@@ -224,7 +224,8 @@ class MessageService {
       () => this.moveToNextQueueItem(),
       (pendingRequest, received) =>
         this.processSuccess(pendingRequest, received),
-      () => this.serviceManager.store.getState().config.public.messaging || {}
+      () => this.serviceManager.store.getState().config.public.messaging || {},
+      () => this.hideStopStreamingButtonIfNoUpsertStreaming()
     );
     this.queue = {
       waiting: [],
@@ -306,9 +307,9 @@ class MessageService {
     // For streaming messages, don't clear the queue yet - wait for FinalResponseChunk to arrive
     // For non-streaming messages (addMessage), clear immediately
     if (!current.isStreaming) {
-      // Hide stop streaming button if it was shown for showStopButtonImmediately
-      // Pass streamingMessageID to keep button visible if there's an active stream
-      this.resetStopStreamingButtonIfIdle();
+      // Hide stop streaming button if it was shown for showStopButtonImmediately, unless
+      // some other message is still streaming.
+      this.hideStopStreamingButtonIfIdle();
       this.moveToNextQueueItem();
     }
   }
@@ -631,8 +632,6 @@ class MessageService {
   public async cancelAllMessageRequests(
     reason: string = CancellationReason.CONVERSATION_RESTARTED
   ) {
-    this.serviceManager.messageUpsertCoordinator.endAllStreaming();
-    this.resetStopStreamingButtonIfIdle();
     while (this.queue.waiting.length) {
       await this.cancelMessageRequestByID(
         this.queue.waiting[0].message.id,
@@ -647,6 +646,15 @@ class MessageService {
         reason
       );
       this.clearCurrentQueueItem();
+    }
+
+    // Settle every upsert-driven stream. Mirror cancelCurrentMessageRequest's
+    // cleanup: if any upsert stream was running, the stop button must come down
+    // now that nothing in the send-queue remains either.
+    const settledUpsertStreams =
+      this.serviceManager.messageUpsertCoordinator.endAllStreaming();
+    if (settledUpsertStreams) {
+      this.hideStopStreamingButtonIfIdle();
     }
   }
 
@@ -673,30 +681,58 @@ class MessageService {
     this.inboundStreaming.finalizeStreamingMessage(messageID);
   }
 
-  resetStopStreamingButtonIfIdle() {
+  /**
+   * Returns true when any message is still streaming, whichever API is driving it —
+   * `addMessageChunk` (tracked by {@link inboundStreaming}) or `upsertMessage` (tracked
+   * by the upsert coordinator). This is the single source of truth for "is the chat still
+   * producing output", so the stop streaming button does not vanish when one of several
+   * concurrent streams finishes.
+   */
+  public isAnyMessageStreaming(): boolean {
+    if (this.inboundStreaming.streamingMessageID) {
+      return true;
+    }
+    return this.serviceManager.messageUpsertCoordinator.hasStreamingMessages();
+  }
+
+  /**
+   * Hides the stop streaming button unless something is still streaming.
+   */
+  public hideStopStreamingButtonIfIdle() {
     if (
-      !this.inboundStreaming.streamingMessageID &&
+      !this.isAnyMessageStreaming() &&
       (!this.queue.current || this.queue.current.isProcessed)
     ) {
-      this.resetStopStreamingButtonWithoutUpserts();
+      resetStopStreamingButton(this.serviceManager.store);
     }
   }
 
-  resetStopStreamingButtonWithoutUpserts() {
+  /**
+   * Hides the stop streaming button unless an `upsertMessage` stream is still running.
+   *
+   * The chunk flow has always hidden the button on its own `complete_item`, and that
+   * behavior is deliberately preserved — so these call sites must ignore
+   * {@link inboundStreaming} and ask only whether the *other* flow is live. Consulting the
+   * chunk state here would keep the button up past a `complete_item`, which is a different
+   * change than the one this method exists to make.
+   */
+  public hideStopStreamingButtonIfNoUpsertStreaming() {
     if (!this.serviceManager.messageUpsertCoordinator.hasStreamingMessages()) {
       resetStopStreamingButton(this.serviceManager.store);
     }
   }
 
   /**
-   * Cancels the current message request if one is in progress.
-   * Also handles streaming messages that may have been cleared from the queue.
+   * Cancels the current request and settles chunk and upsert streams. Upserts have no
+   * request association, so cancellation settles every registered upsert stream.
    */
   public async cancelCurrentMessageRequest(
     reason: string = CancellationReason.STOP_STREAMING
   ) {
+    // Settle before the chunk branch, which can return early.
     this.serviceManager.messageUpsertCoordinator.endAllStreaming();
-    this.resetStopStreamingButtonIfIdle();
+    this.hideStopStreamingButtonIfIdle();
+
     // If there's a streaming message, cancel it even if not in queue
     if (this.inboundStreaming.streamingMessageID) {
       await this.cancelMessageRequestByID(
@@ -809,7 +845,9 @@ class MessageService {
         pendingRequest.isProcessed = true;
         // Hide and re-enable the stop streaming button now that cancellation has
         // completed; processSuccess/processError will short-circuit on isProcessed.
-        this.resetStopStreamingButtonWithoutUpserts();
+        // This hid unconditionally before `upsertMessage` existed, so it still ignores
+        // other chunk streams; only a running upsert stream keeps the button up.
+        this.hideStopStreamingButtonIfNoUpsertStreaming();
         if (pendingRequest === this.queue.current) {
           this.moveToNextQueueItem();
         }
@@ -851,6 +889,16 @@ class MessageService {
       logError,
       reason
     );
+
+    // A canceled stream often ends without a `complete_item` or `final_response` — the
+    // host simply breaks out of its loop. Nothing else would settle the items' streaming
+    // flags, which left streaming-aware rendering (an in-progress markdown table, for
+    // one) engaged for the rest of the session.
+    if (streamingEntry) {
+      this.serviceManager.store.dispatch(
+        actions.endMessageStreaming(responseId)
+      );
+    }
 
     if (!pendingRequest && wasStreamingCurrent) {
       this.moveToNextQueueItem();

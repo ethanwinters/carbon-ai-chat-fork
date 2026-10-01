@@ -5,7 +5,11 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
-import { PageObjectId } from '@carbon/ai-chat/server';
+import {
+  type BusEventType,
+  MessageState,
+  PageObjectId,
+} from '@carbon/ai-chat/server';
 import type { Page } from '@playwright/test';
 
 import {
@@ -57,35 +61,63 @@ test.describe('demo send mode', () => {
 
 type MessagingMethod = 'addMessage' | 'addMessageChunk' | 'upsertMessage';
 
-const spyOnMessaging = async (page: Page) => {
+/**
+ * Wraps the instance's write methods so the test sees which one the mock
+ * backend called. With `holdFinal`, the call that ends a stream waits until
+ * the returned `releaseFinal` runs, which keeps the message streaming while
+ * the test looks at it.
+ */
+const spyOnMessaging = async (page: Page, { holdFinal = false } = {}) => {
   const calls: MessagingMethod[] = [];
+  let release: () => void = () => {};
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let finalReached: () => void = () => {};
+  const finalHeld = new Promise<void>((resolve) => {
+    finalReached = resolve;
+  });
 
   await page.exposeFunction('recordMessagingCall', (name: MessagingMethod) => {
     calls.push(name);
   });
-
-  await page.evaluate(() => {
-    const spyWindow = window as typeof window & {
-      recordMessagingCall: (name: string) => void;
-    };
-    const messaging = window.chatInstance!.messaging;
-    const { addMessage, addMessageChunk, upsertMessage } = messaging;
-
-    messaging.addMessage = (message) => {
-      spyWindow.recordMessagingCall('addMessage');
-      return addMessage(message);
-    };
-    messaging.addMessageChunk = (chunk) => {
-      spyWindow.recordMessagingCall('addMessageChunk');
-      return addMessageChunk(chunk);
-    };
-    messaging.upsertMessage = (messageID, state, updater) => {
-      spyWindow.recordMessagingCall('upsertMessage');
-      return upsertMessage(messageID, state, updater);
-    };
+  await page.exposeFunction('waitForFinalRelease', () => {
+    finalReached();
+    return released;
   });
 
-  return { calls };
+  await page.evaluate(
+    ({ hold, completeState }) => {
+      const spyWindow = window as typeof window & {
+        recordMessagingCall: (name: string) => void;
+        waitForFinalRelease: () => Promise<void>;
+      };
+      const messaging = window.chatInstance!.messaging;
+      const { addMessage, addMessageChunk, upsertMessage } = messaging;
+
+      messaging.addMessage = (message) => {
+        spyWindow.recordMessagingCall('addMessage');
+        return addMessage(message);
+      };
+      messaging.addMessageChunk = async (chunk) => {
+        spyWindow.recordMessagingCall('addMessageChunk');
+        if (hold && 'final_response' in chunk) {
+          await spyWindow.waitForFinalRelease();
+        }
+        return addMessageChunk(chunk);
+      };
+      messaging.upsertMessage = async (messageID, state, updater) => {
+        spyWindow.recordMessagingCall('upsertMessage');
+        if (hold && state === completeState) {
+          await spyWindow.waitForFinalRelease();
+        }
+        return upsertMessage(messageID, state, updater);
+      };
+    },
+    { hold: holdFinal, completeState: MessageState.COMPLETE }
+  );
+
+  return { calls, finalHeld, releaseFinal: release };
 };
 
 const openDemoChat = async (page: Page) => {
@@ -111,6 +143,7 @@ test.describe('demo send mode in the chat', () => {
     await sendChatMessage(page, 'text (stream)');
 
     if (useUpsertMessage) {
+      // chromium-upsert-message project: ?useUpsertMessage is set.
       expect(calls).toContain('upsertMessage');
       expect(calls).not.toContain('addMessageChunk');
     } else {
@@ -118,6 +151,51 @@ test.describe('demo send mode in the chat', () => {
       expect(calls).not.toContain('upsertMessage');
     }
     expect(calls).not.toContain('addMessage');
+  });
+
+  test('card (stream) renders mid-stream before the final response', async ({
+    page,
+    useUpsertMessage,
+  }, testInfo) => {
+    test.skip(
+      !useUpsertMessage,
+      'card (stream) only exists in the response map when ?useUpsertMessage is set.'
+    );
+    test.skip(
+      testInfo.project.name !== 'chromium-upsert-message',
+      'The chromium-upsert-message project owns this case.'
+    );
+    test.slow();
+    await openDemoChat(page);
+    const { calls, finalHeld, releaseFinal } = await spyOnMessaging(page, {
+      holdFinal: true,
+    });
+
+    const received = page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          window.chatInstance!.once({
+            type: 'receive' as BusEventType,
+            handler: () => resolve(),
+          });
+        })
+    );
+    await page.evaluate(() => {
+      void window.chatInstance!.send('card (stream)');
+    });
+
+    await finalHeld;
+    const cardBody = page.getByText('This card arrived as a complete item');
+    const cardFooter = page.getByText('View Carbon Docs');
+    // upsertMessage renders the card mid-stream, before final_response.
+    await expect(cardBody).toBeVisible();
+    await expect(cardFooter).toBeVisible();
+
+    releaseFinal();
+    await received;
+    await expect(cardBody).toBeVisible();
+    await expect(cardFooter).toBeVisible();
+    expect(calls).toContain('upsertMessage');
   });
 });
 

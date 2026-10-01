@@ -11,9 +11,9 @@ import isEqual from 'lodash-es/isEqual.js';
 
 import actions from '../store/actions';
 import {
+  applyChunk,
   chunkHasDisplayableContent,
   FinalResponseChunk,
-  mergePartialResponseOptions,
   resolveChunkContext,
   shouldShowStopStreaming,
 } from '../utils/streamingUtils';
@@ -28,12 +28,14 @@ import {
   isTyping,
 } from '../utils/messageUtils';
 import { sleep } from '../utils/lang/promiseUtils';
-import { AddMessageOptions } from '../../types/config/MessagingConfig';
+import {
+  AddMessageOptions,
+  MessageState,
+} from '../../types/config/MessagingConfig';
 import {
   GenericItem,
   ItemStreamingMetadata,
   MessageResponse,
-  MessageResponseTypes,
   PartialItemChunk,
   PartialOrCompleteItemChunk,
   PauseItem,
@@ -128,7 +130,19 @@ class ChunkProcessingService {
         extractedMessageID || undefined
       );
 
-      this.announceStreamingChunk(extractedMessageID, chunk);
+      if (extractedMessageID) {
+        this.serviceManager.streamAnnouncerService.announceStreamStarts(
+          extractedMessageID,
+          {
+            hasReasoning: Boolean(
+              chunk.partial_response?.message_options?.reasoning
+            ),
+            hasDisplayableContent: chunkHasDisplayableContent(chunk),
+            responseUserProfile:
+              chunk.partial_response?.message_options?.response_user_profile,
+          }
+        );
+      }
     }
 
     const chunkPromise = resolvablePromise();
@@ -137,44 +151,6 @@ class ChunkProcessingService {
       this.processChunkQueue();
     }
     return chunkPromise;
-  }
-
-  handleUpsertStreaming(message: MessageResponse) {
-    for (const item of message.output?.generic ?? []) {
-      const chunk: PartialItemChunk = {
-        partial_item: item,
-        partial_response: message,
-      };
-      this.announceStreamingChunk(message.id, chunk);
-      this.maybeShowStopStreaming(
-        chunk,
-        true,
-        this.serviceManager.store.getState().assistantInputState
-          .stopStreamingButtonState
-      );
-    }
-    if (!message.output?.generic?.length) {
-      this.announceStreamingChunk(message.id, {
-        partial_response: message,
-        partial_item: { response_type: MessageResponseTypes.TEXT, text: '' },
-      });
-    }
-  }
-
-  private announceStreamingChunk(messageID: string, chunk: PartialItemChunk) {
-    if (messageID) {
-      this.serviceManager.streamAnnouncerService.announceStreamStarts(
-        messageID,
-        {
-          hasReasoning: Boolean(
-            chunk.partial_response?.message_options?.reasoning
-          ),
-          hasDisplayableContent: chunkHasDisplayableContent(chunk),
-          responseUserProfile:
-            chunk.partial_response?.message_options?.response_user_profile,
-        }
-      );
-    }
   }
 
   async processChunkQueue() {
@@ -196,7 +172,7 @@ class ChunkProcessingService {
           (isCompleteItem || isFinalResponse) &&
           stopStreamingState.isVisible
         ) {
-          this.serviceManager.messageService.resetStopStreamingButtonWithoutUpserts();
+          this.serviceManager.messageService.hideStopStreamingButtonIfNoUpsertStreaming();
         }
       };
 
@@ -277,24 +253,28 @@ class ChunkProcessingService {
     item: DeepPartial<GenericItem> | undefined,
     isCompleteItem: boolean
   ) {
-    const { store } = this.serviceManager;
-    if (messageID && !store.getState().allMessagesByID[messageID]) {
-      store.dispatch(actions.streamingStart(messageID));
-    }
-
     if (isCompleteItem) {
       this.warnIfMissingCompleteItemStreamingId(messageID, item);
     }
 
-    if (messageID && item) {
-      store.dispatch(
-        actions.streamingAddChunk(messageID, item, isCompleteItem)
-      );
+    if (!messageID) {
+      return;
     }
 
-    mergePartialResponseOptions(store, messageID, chunk);
+    const initialRestartCount = this.serviceManager.restartCount;
+    const initialGeneration = this.restartGeneration;
+    await this.serviceManager.messageUpsertCoordinator.upsert(
+      messageID,
+      MessageState.STREAMING,
+      (prev) => applyChunk(prev, chunk, messageID),
+      { origin: 'chunk', chunk: { item, isComplete: isCompleteItem } }
+    );
 
-    if (messageID && item) {
+    if (
+      item &&
+      initialRestartCount === this.serviceManager.restartCount &&
+      initialGeneration === this.restartGeneration
+    ) {
       await this.serviceManager.slotEventService.handleUserDefinedResponseItemsChunk(
         messageID,
         chunk,
@@ -448,7 +428,7 @@ class ChunkProcessingService {
     chunk: StreamChunk
   ) {
     if (isCompleteItem || isStreamFinalResponse(chunk)) {
-      this.serviceManager.messageService.resetStopStreamingButtonWithoutUpserts();
+      this.serviceManager.messageService.hideStopStreamingButtonIfNoUpsertStreaming();
     }
   }
 
