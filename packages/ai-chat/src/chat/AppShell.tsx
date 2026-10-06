@@ -802,7 +802,7 @@ function AppShell({
   }, [mainWindowFunctions, serviceManager]);
 
   // Set scrollbar width CSS variable. Written via the shared dynamic
-  // stylesheet so a strict CSP can drop style-src-attr 'unsafe-inline'.
+  // stylesheet.
   useEffect(() => {
     const container = widgetContainerRef.current;
     if (!container) {
