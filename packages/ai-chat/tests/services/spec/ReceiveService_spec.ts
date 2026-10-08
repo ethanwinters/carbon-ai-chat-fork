@@ -44,6 +44,7 @@ function createHarness(config: PublicConfig = {}) {
     streamAnnouncerService: { clearAll: jest.fn() },
     messageService: {
       inboundStreaming: { streamingMessageID: null },
+      messageLoadingManager: { end: jest.fn() },
       finalizeStreamingMessage: jest.fn(),
       cancelAllMessageRequests: jest.fn().mockResolvedValue(undefined),
     },

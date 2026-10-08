@@ -362,5 +362,21 @@ describe('ChatInstance.messaging.restartConversation', () => {
 
       expect(instance.getState().isMessageLoadingCounter).toBe(0);
     });
+
+    it('stays off after a restart when the request before it got none', async () => {
+      const config = createBaseConfig();
+      config.messaging = {
+        skipWelcome: true,
+        messageLoadingIndicatorTimeoutSecs: 0.05,
+        customSendMessage: async () => {},
+      };
+      const instance = await renderChatAndGetInstance(config);
+
+      await instance.send('unanswered');
+      await instance.messaging.restartConversation();
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      expect(instance.getState().isMessageLoadingCounter).toBe(0);
+    });
   });
 });
