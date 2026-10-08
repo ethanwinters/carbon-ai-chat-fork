@@ -634,6 +634,9 @@ class MessageService {
   public async cancelAllMessageRequests(
     reason: string = CancellationReason.CONVERSATION_RESTARTED
   ) {
+    // Abort listeners can remove controllers from tracking before cancellation finishes.
+    const messageAbortControllers = Array.from(this.messageAbortControllers);
+
     while (this.queue.waiting.length) {
       await this.cancelMessageRequestByID(
         this.queue.waiting[0].message.id,
@@ -648,6 +651,11 @@ class MessageService {
         reason
       );
       this.clearCurrentQueueItem();
+    }
+
+    for (const [messageID, controller] of messageAbortControllers) {
+      controller.abort(reason);
+      this.inboundStreaming.clearStreamingResponse(messageID);
     }
   }
 

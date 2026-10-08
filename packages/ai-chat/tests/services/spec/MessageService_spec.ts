@@ -239,6 +239,89 @@ describe('MessageService', () => {
     expect((messageService as any).queue.waiting).toHaveLength(0);
   });
 
+  it.each([false, true])(
+    'cancels requests after their send callbacks return (streaming: %s)',
+    async (isStreaming) => {
+      const customSendMessage = jest.fn().mockResolvedValue(undefined);
+      const serviceManager = createServiceManagerStub(customSendMessage);
+      const messageService = new MessageService(serviceManager, {
+        messaging: { messageTimeoutSecs: 0 },
+      });
+
+      await messageService.send(
+        createMessage('returned-request'),
+        MessageSendSource.MESSAGE_INPUT,
+        'local-returned'
+      );
+      const signal: AbortSignal = customSendMessage.mock.calls[0][1].signal;
+      const onAbort = jest.fn();
+      signal.addEventListener('abort', onAbort);
+      expect((messageService as any).queue.current).toBeNull();
+
+      if (isStreaming) {
+        messageService.markCurrentMessageAsStreaming('response-id', 'item-id');
+      }
+
+      await messageService.cancelAllMessageRequests();
+
+      expect(signal.aborted).toBe(true);
+      expect(signal.reason).toBe(CancellationReason.CONVERSATION_RESTARTED);
+      expect(onAbort).toHaveBeenCalledTimes(1);
+      expect((messageService as any).messageAbortControllers.size).toBe(0);
+      expect(messageService.inboundStreaming.streamingMessageID).toBeNull();
+    }
+  );
+
+  it('cancels retained requests even when an abort listener clears their tracking', async () => {
+    const customSendMessage = jest.fn().mockResolvedValue(undefined);
+    const serviceManager = createServiceManagerStub(customSendMessage);
+    const messageService = new MessageService(serviceManager, {
+      messaging: { messageTimeoutSecs: 0 },
+    });
+
+    for (const id of ['first-request', 'second-request']) {
+      await messageService.send(
+        createMessage(id),
+        MessageSendSource.MESSAGE_INPUT,
+        `local-${id}`
+      );
+    }
+    const firstSignal: AbortSignal = customSendMessage.mock.calls[0][1].signal;
+    const secondSignal: AbortSignal = customSendMessage.mock.calls[1][1].signal;
+    firstSignal.addEventListener('abort', () => {
+      messageService.finalizeStreamingMessage('second-request');
+    });
+
+    await messageService.cancelAllMessageRequests('custom cancellation');
+
+    expect(firstSignal.reason).toBe('custom cancellation');
+    expect(secondSignal.reason).toBe('custom cancellation');
+    expect((messageService as any).messageAbortControllers.size).toBe(0);
+  });
+
+  it('clears retained controllers that were already aborted', async () => {
+    const customSendMessage = jest.fn().mockResolvedValue(undefined);
+    const serviceManager = createServiceManagerStub(customSendMessage);
+    const messageService = new MessageService(serviceManager, {
+      messaging: { messageTimeoutSecs: 0 },
+    });
+
+    await messageService.send(
+      createMessage('aborted-request'),
+      MessageSendSource.MESSAGE_INPUT,
+      'local-aborted'
+    );
+    const controller: AbortController = (
+      messageService as any
+    ).messageAbortControllers.get('aborted-request');
+    controller.abort(CancellationReason.STOP_STREAMING);
+
+    await messageService.cancelAllMessageRequests();
+
+    expect(controller.signal.reason).toBe(CancellationReason.STOP_STREAMING);
+    expect((messageService as any).messageAbortControllers.size).toBe(0);
+  });
+
   it('rejects a send when it exceeds the configured timeout', async () => {
     const customSendMessage = jest.fn(() => new Promise<void>(() => undefined));
     const serviceManager = createServiceManagerStub(customSendMessage);
