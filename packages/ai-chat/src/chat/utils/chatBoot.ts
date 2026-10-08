@@ -410,7 +410,6 @@ export async function initServiceManagerAndInstance(options: {
         options: AddMessageOptions = {}
       ) => {
         debugLog('Called instance.messaging.addMessageChunk', chunk, options);
-        serviceManager.messageService.messageLoadingManager.end();
         try {
           await serviceManager.actions.receiveChunk(chunk, null, options);
         } catch (error) {
