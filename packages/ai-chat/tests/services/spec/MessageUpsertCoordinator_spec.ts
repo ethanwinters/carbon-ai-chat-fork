@@ -59,6 +59,7 @@ function makeStubManager(initialMessages: Record<string, unknown> = {}) {
     },
     messageService: {
       finalizeStreamingMessage,
+      getCurrentMessageController: jest.fn(),
       resetStopStreamingButtonIfIdle: jest.fn(),
     },
   } as unknown as ServiceManager;

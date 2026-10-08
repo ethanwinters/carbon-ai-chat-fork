@@ -18,7 +18,10 @@ import {
   MessageResponse,
   MessageResponseTypes,
 } from '../../../../src/types/messaging/Messages';
-import { MessageState } from '../../../../src/types/config/MessagingConfig';
+import {
+  CancellationReason,
+  MessageState,
+} from '../../../../src/types/config/MessagingConfig';
 import { waitFor } from '@testing-library/react';
 import { HumanAgentsOnlineStatus } from '../../../../src/chat/services/haa/HumanAgentService';
 import { BusEventType } from '../../../../src/types/events/eventBusTypes';
@@ -118,9 +121,28 @@ describe('ChatInstance.messaging.upsertMessage', () => {
       }
     );
 
-    it('settles all current snapshots when stopped after customSendMessage resolves', async () => {
+    it.each([
+      CancellationReason.STOP_STREAMING,
+      CancellationReason.CONVERSATION_RESTARTED,
+    ])('aborts an early-resolved producer on %s', async (reason) => {
+      let signal: AbortSignal;
+      let releaseProducer: () => void;
+      const nextSnapshot = new Promise<void>((resolve) => {
+        releaseProducer = resolve;
+      });
+      let producer: Promise<void>;
       const config = createBaseConfig();
-      config.messaging.customSendMessage = async (_request, _options, chat) => {
+      config.messaging.customSendMessage = async (_request, options, chat) => {
+        signal = options.signal;
+        producer = nextSnapshot.then(async () => {
+          if (!signal.aborted) {
+            await chat.messaging.upsertMessage(
+              'early',
+              MessageState.STREAMING,
+              () => textResponse('early', 'late snapshot')
+            );
+          }
+        });
         await chat.messaging.upsertMessage(
           'early',
           MessageState.STREAMING,
@@ -130,7 +152,25 @@ describe('ChatInstance.messaging.upsertMessage', () => {
       const { instance, store, serviceManager } =
         await renderChatAndGetInstanceWithStore(config);
       await instance.send('start');
-      await serviceManager.messageService.cancelCurrentMessageRequest();
+      if (reason === CancellationReason.CONVERSATION_RESTARTED) {
+        await serviceManager.actions.restartConversation({
+          skipHydration: true,
+        });
+      } else {
+        await serviceManager.messageService.cancelCurrentMessageRequest();
+      }
+      expect(signal.aborted).toBe(true);
+      expect(signal.reason).toBe(reason);
+      releaseProducer();
+      await producer;
+      if (reason === CancellationReason.CONVERSATION_RESTARTED) {
+        expect(store.getState().allMessagesByID.early).toBeUndefined();
+      } else {
+        expect(
+          (store.getState().allMessagesByID.early as MessageResponse).output
+            .generic[0]
+        ).toMatchObject({ text: 'snapshot' });
+      }
       expect(
         serviceManager.messageUpsertCoordinator.hasStreamingMessages()
       ).toBe(false);
@@ -140,8 +180,71 @@ describe('ChatInstance.messaging.upsertMessage', () => {
       const item = Object.values(store.getState().allMessageItemsByID).find(
         (item) => item.fullMessageID === 'early'
       );
+      if (reason === CancellationReason.CONVERSATION_RESTARTED) {
+        expect(item).toBeUndefined();
+      } else {
+        expect(item.ui_state.streamingState.isDone).toBe(true);
+        expect(item.ui_state.isIntermediateStreaming).toBe(false);
+      }
+    });
+
+    it('discards an upsert enqueued by an abort listener during restart', async () => {
+      const config = createBaseConfig();
+      let terminalWrite: Promise<void>;
+      config.messaging.customSendMessage = async (_request, options, chat) => {
+        options.signal.addEventListener('abort', () => {
+          terminalWrite = chat.messaging.upsertMessage(
+            'early',
+            MessageState.COMPLETE,
+            () => textResponse('early', 'abort flush')
+          );
+        });
+        await chat.messaging.upsertMessage(
+          'early',
+          MessageState.STREAMING,
+          () => cancellableResponse('early')
+        );
+      };
+      const { instance, store, serviceManager } =
+        await renderChatAndGetInstanceWithStore(config);
+      await instance.send('start');
+      await serviceManager.actions.restartConversation({ skipHydration: true });
+      expect(terminalWrite).toBeDefined();
+      await terminalWrite;
+      expect(store.getState().allMessagesByID.early).toBeUndefined();
+      expect(
+        serviceManager.messageUpsertCoordinator.hasStreamingMessages()
+      ).toBe(false);
+    });
+
+    it('stops unsolicited streaming snapshots without a request controller', async () => {
+      const { instance, store, serviceManager } =
+        await renderChatAndGetInstanceWithStore(createBaseConfig());
+      await instance.messaging.upsertMessage(
+        'unsolicited',
+        MessageState.STREAMING,
+        () => cancellableResponse('unsolicited')
+      );
+      await serviceManager.messageService.cancelCurrentMessageRequest();
+      expect(
+        serviceManager.messageUpsertCoordinator.hasStreamingMessages()
+      ).toBe(false);
+      expect(
+        store.getState().assistantInputState.stopStreamingButtonState.isVisible
+      ).toBe(false);
+      const item = Object.values(store.getState().allMessageItemsByID).find(
+        (item) => item.fullMessageID === 'unsolicited'
+      );
       expect(item.ui_state.streamingState.isDone).toBe(true);
-      expect(item.ui_state.isIntermediateStreaming).toBe(false);
+      await instance.messaging.upsertMessage(
+        'unsolicited',
+        MessageState.COMPLETE,
+        () => textResponse('unsolicited', 'corrected')
+      );
+      expect(
+        (store.getState().allMessagesByID.unsolicited as MessageResponse).output
+          .generic[0]
+      ).toMatchObject({ text: 'corrected' });
     });
 
     it.each([MessageState.COMPLETE, MessageState.ERROR])(

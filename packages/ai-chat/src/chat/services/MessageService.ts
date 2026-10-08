@@ -631,7 +631,7 @@ class MessageService {
   public async cancelAllMessageRequests(
     reason: string = CancellationReason.CONVERSATION_RESTARTED
   ) {
-    this.serviceManager.messageUpsertCoordinator.endAllStreaming();
+    this.serviceManager.messageUpsertCoordinator.endAllStreaming(reason);
     this.resetStopStreamingButtonIfIdle();
     while (this.queue.waiting.length) {
       await this.cancelMessageRequestByID(
@@ -673,6 +673,10 @@ class MessageService {
     this.inboundStreaming.finalizeStreamingMessage(messageID);
   }
 
+  getCurrentMessageController() {
+    return this.queue.current?.sendMessageController;
+  }
+
   resetStopStreamingButtonIfIdle() {
     if (
       !this.inboundStreaming.streamingMessageID &&
@@ -695,7 +699,7 @@ class MessageService {
   public async cancelCurrentMessageRequest(
     reason: string = CancellationReason.STOP_STREAMING
   ) {
-    this.serviceManager.messageUpsertCoordinator.endAllStreaming();
+    this.serviceManager.messageUpsertCoordinator.endAllStreaming(reason);
     this.resetStopStreamingButtonIfIdle();
     // If there's a streaming message, cancel it even if not in queue
     if (this.inboundStreaming.streamingMessageID) {

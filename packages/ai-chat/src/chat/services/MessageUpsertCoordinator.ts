@@ -8,6 +8,7 @@
  */
 
 import {
+  CancellationReason,
   MessageState,
   UpsertMessageUpdater,
 } from '../../types/config/MessagingConfig';
@@ -56,6 +57,8 @@ class MessageUpsertCoordinator {
 
   private readonly streamingIDs = new Set<string>();
 
+  private readonly streamingControllers = new Map<string, AbortController>();
+
   private generation = 0;
 
   constructor(serviceManager: ServiceManager) {
@@ -69,6 +72,7 @@ class MessageUpsertCoordinator {
   markComplete(messageID: string | undefined) {
     if (messageID) {
       this.stateByID.set(messageID, MessageState.COMPLETE);
+      this.streamingControllers.delete(messageID);
       if (this.streamingIDs.delete(messageID)) {
         this.serviceManager.messageService.resetStopStreamingButtonIfIdle();
       }
@@ -100,6 +104,7 @@ class MessageUpsertCoordinator {
    */
   clear(messageID: string) {
     const wasStreaming = this.streamingIDs.delete(messageID);
+    this.streamingControllers.delete(messageID);
     this.stateByID.delete(messageID);
     this.chainByID.delete(messageID);
     if (wasStreaming) {
@@ -113,8 +118,13 @@ class MessageUpsertCoordinator {
    * fresh session.
    */
   clearAll() {
+    const controllers = new Set(this.streamingControllers.values());
+    for (const controller of controllers) {
+      controller.abort(CancellationReason.CONVERSATION_RESTARTED);
+    }
     this.generation++;
     this.streamingIDs.clear();
+    this.streamingControllers.clear();
     this.chainByID.clear();
     this.stateByID.clear();
   }
@@ -123,7 +133,8 @@ class MessageUpsertCoordinator {
     return this.streamingIDs.size > 0;
   }
 
-  endAllStreaming() {
+  endAllStreaming(reason: string) {
+    const controllers = new Set(this.streamingControllers.values());
     for (const messageID of this.streamingIDs) {
       const message =
         this.serviceManager.store.getState().allMessagesByID[messageID];
@@ -135,6 +146,10 @@ class MessageUpsertCoordinator {
       this.stateByID.set(messageID, MessageState.ERROR);
     }
     this.streamingIDs.clear();
+    this.streamingControllers.clear();
+    for (const controller of controllers) {
+      controller.abort(reason);
+    }
   }
 
   /**
@@ -222,10 +237,18 @@ class MessageUpsertCoordinator {
     );
     if (isStreaming) {
       this.stateByID.set(messageID, nextState);
+      if (!this.streamingIDs.has(messageID)) {
+        const controller =
+          this.serviceManager.messageService.getCurrentMessageController();
+        if (controller) {
+          this.streamingControllers.set(messageID, controller);
+        }
+      }
       this.streamingIDs.add(messageID);
       this.serviceManager.chunkProcessingService.handleUpsertStreaming(result);
     } else {
       this.streamingIDs.delete(messageID);
+      this.streamingControllers.delete(messageID);
     }
     try {
       await this.fanOutChangedSlots(
