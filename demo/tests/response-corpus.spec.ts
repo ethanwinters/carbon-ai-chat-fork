@@ -9,11 +9,18 @@ import { readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-import { PageObjectId } from '@carbon/ai-chat/server';
+import { BusEventType } from '@carbon/ai-chat/server';
+import type { BusEventReceive } from '@carbon/ai-chat';
 import type { Page } from '@playwright/test';
 
 import { test, expect } from './fixtures';
-import { destroyChatSession, openChatWindow, sendChatMessage } from './utils';
+import { RESPONSE_EXPECTATIONS } from './response-corpus-cases';
+import {
+  clearConversation,
+  destroyChatSession,
+  openChatWindow,
+  waitForChatReady,
+} from './utils';
 
 // Import types for window.chatInstance without emitting runtime code
 import type {} from '../types/window';
@@ -84,24 +91,6 @@ const dumpMessages = (page: Page) =>
     return lines.join('\n');
   });
 
-/**
- * Waits until the chat's messages stop changing, so streamed, paused, and delayed
- * responses have settled.
- */
-const waitForQuietMessages = async (page: Page) => {
-  let last = await dumpMessages(page);
-  let quietSince = Date.now();
-  const deadline = Date.now() + 30_000;
-  while (Date.now() - quietSince < 2000 && Date.now() < deadline) {
-    await page.waitForTimeout(150);
-    const now = await dumpMessages(page);
-    if (now !== last) {
-      last = now;
-      quietSince = Date.now();
-    }
-  }
-};
-
 /** How many message items show the chat's own "failed to draw" error. */
 const countFailedItems = (page: Page) =>
   page.evaluate(() => {
@@ -125,9 +114,11 @@ test.describe('every demo response draws', () => {
 
   const keys = responseKeys();
 
-  test('reads the response keys', () => {
+  test('has expectations for every response', () => {
     expect(keys.length).toBeGreaterThan(30);
-    expect(keys).toContain('grid');
+    expect(Object.keys(RESPONSE_EXPECTATIONS).sort()).toEqual(
+      keys.filter((key) => !ERRORS_ON_PURPOSE.has(key)).sort()
+    );
   });
 
   for (const key of keys.filter((name) => !ERRORS_ON_PURPOSE.has(name))) {
@@ -152,10 +143,68 @@ test.describe('every demo response draws', () => {
       await page.route(/.*ibm-common\.js$/, (route) => route.abort());
       await page.goto('/?settings=%7B%22layout%22%3A%22float%22%7D');
       await openChatWindow(page);
-      await expect(page.getByTestId(PageObjectId.MAIN_PANEL)).toBeVisible();
+      await waitForChatReady(page);
+      await clearConversation(page);
 
-      await sendChatMessage(page, key);
-      await waitForQuietMessages(page);
+      const expected = RESPONSE_EXPECTATIONS[key];
+      const completedResponses: string[] = [];
+      await page.exposeFunction('recordCorpusResponse', (id: string) => {
+        completedResponses.push(id);
+      });
+      await page.evaluate((receiveEventType) => {
+        const corpusWindow = window as typeof window & {
+          recordCorpusResponse: (id: string) => Promise<void>;
+        };
+        window.chatInstance!.on({
+          type: receiveEventType,
+          handler: (event: BusEventReceive) =>
+            corpusWindow.recordCorpusResponse(event.data.id),
+        });
+      }, BusEventType.RECEIVE);
+
+      await page.evaluate((message) => window.chatInstance!.send(message), key);
+      await expect
+        .poll(() => completedResponses.length, {
+          message: `Completed responses for "${key}"`,
+          timeout: 30_000,
+        })
+        .toBe(expected.responses ?? 1);
+      expect(new Set(completedResponses).size).toBe(expected.responses ?? 1);
+
+      const responses = page.locator(
+        '.cds-aichat--message--response, .cds-aichat--system-message-standalone'
+      );
+      await expect(responses).toHaveCount(expected.items);
+      // Slotted custom responses live in the container's light DOM, outside the message wrappers.
+      const chat = page.locator('cds-aichat-container').first();
+      for (const text of expected.text) {
+        await expect(chat).toContainText(text);
+      }
+      for (const [selector, count] of expected.selectors ?? []) {
+        await expect(chat.locator(selector)).toHaveCount(count);
+      }
+      await expect
+        .poll(() =>
+          responses
+            .locator('cds-aichat-markdown')
+            .evaluateAll((elements) =>
+              elements.some(
+                (element) =>
+                  (element as HTMLElement & { streaming: boolean }).streaming
+              )
+            )
+        )
+        .toBe(false);
+      await expect(
+        page.getByRole('button', { name: 'Stop response', exact: true })
+      ).toBeHidden();
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () => window.chatInstance!.getState().isMessageLoadingCounter
+          )
+        )
+        .toBe(0);
 
       if (DUMP_DIR) {
         const mode = useUpsertMessage ? 'upsert' : 'add-message';
