@@ -267,6 +267,7 @@ describe('messageUtils', () => {
       expect(request.history).toEqual({
         label: 'sent text',
         related_message_id: 'response-id',
+        is_choice_request: true,
         silent: true,
       });
       expect(request.history).not.toHaveProperty('selection_display');

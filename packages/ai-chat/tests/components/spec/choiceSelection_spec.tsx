@@ -133,6 +133,7 @@ describe('choice selection controls', () => {
         history: {
           label: 'sent text',
           related_message_id: 'response-id',
+          is_choice_request: true,
           silent: true,
         },
       }),

@@ -12,8 +12,9 @@ import ChatButton, {
   CHAT_BUTTON_SIZE,
 } from '@carbon/ai-chat-components/es/react/chat-button.js';
 import cx from 'classnames';
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useSelector } from '../../../hooks/useSelector';
+import { consoleError } from '../../../utils/miscUtils';
 
 import { AppState } from '../../../../types/state/AppState';
 import { HasClassName } from '../../../../types/utilities/HasClassName';
@@ -110,11 +111,11 @@ function BaseButtonItemComponent({
   );
   const text = label || url;
   const linkTarget = url ? target : undefined;
-  const setButtonRef = (element: HTMLElement | null) => {
+  const setButtonRef = useCallback((element: HTMLElement | null) => {
     buttonRef.current = element as HTMLElement & {
       updateComplete?: Promise<unknown>;
     };
-  };
+  }, []);
 
   useEffect(() => {
     const host = buttonRef.current;
@@ -137,7 +138,12 @@ function BaseButtonItemComponent({
       }
     };
 
-    void updateAriaPressed();
+    updateAriaPressed().catch((error) => {
+      consoleError(
+        'The post-back button could not update its pressed state.',
+        error
+      );
+    });
   }, [selected]);
 
   if (imageURL) {

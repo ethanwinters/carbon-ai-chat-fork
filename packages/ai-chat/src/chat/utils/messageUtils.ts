@@ -364,6 +364,7 @@ function createMessageRequestForChoice(
     input,
   };
   messageRequest.history = {
+    is_choice_request: true,
     label: transcriptText,
     related_message_id: relatedResponseID,
   };
@@ -399,6 +400,7 @@ function createMessageRequestForButtonItemOption(
   };
 
   messageRequest.history = {
+    is_choice_request: true,
     label: transcriptText,
     related_message_id: relatedResponseID,
   };

@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, waitFor } from '@testing-library/react';
 import { ButtonItemPostBackComponent } from '../../../src/chat/components/responseTypes/button/ButtonItemPostBackComponent';
 import { ServiceManagerContext } from '../../../src/chat/contexts/ServiceManagerContext';
 import { StoreProvider } from '../../../src/chat/providers/StoreProvider';
@@ -101,6 +101,41 @@ describe('post-back selected state', () => {
     }
   );
 
+  it.each([undefined, 'standard-button'])(
+    'reports a failed pressed-state update for %s buttons',
+    async (is) => {
+      const { container, localMessageItem, renderComponent, rerender } =
+        renderPostBack({ is });
+      const { host } = await getFocusableButton(container, is);
+      const error = new Error('Button update failed');
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      Object.defineProperty(host, 'updateComplete', {
+        configurable: true,
+        get: () => Promise.reject(error),
+      });
+
+      try {
+        localMessageItem.ui_state.optionSelected = {
+          input: { text: 'sent text' },
+          history: { label: 'Visible label' },
+        };
+        rerender(renderComponent());
+
+        await waitFor(() => {
+          expect(consoleSpy).toHaveBeenCalledWith(
+            expect.stringContaining(
+              'The post-back button could not update its pressed state.'
+            ),
+            error
+          );
+        });
+      } finally {
+        delete host.updateComplete;
+        consoleSpy.mockRestore();
+      }
+    }
+  );
+
   it('keeps disabled and selected states separate', async () => {
     const { container, localMessageItem, rerender } = renderPostBack();
     rerender(
@@ -140,6 +175,7 @@ describe('post-back selected state', () => {
     expect(request.history).toEqual({
       label: 'sent text',
       related_message_id: 'response-id',
+      is_choice_request: true,
       silent: true,
     });
     expect(requestFocus).toHaveBeenCalled();

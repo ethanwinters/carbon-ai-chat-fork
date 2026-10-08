@@ -14,7 +14,10 @@ import { IntlProvider } from '../../../src/chat/providers/IntlProvider';
 import { StoreProvider } from '../../../src/chat/providers/StoreProvider';
 import { createIntl } from '../../../src/chat/utils/i18n';
 import { makeConfigStore } from '../../test_helpers';
-import { MessageResponseTypes } from '../../../src/types/messaging/Messages';
+import {
+  MessageRequestHistory,
+  MessageResponseTypes,
+} from '../../../src/types/messaging/Messages';
 
 jest.mock(
   '../../../src/chat/components/helpers/MarkdownWithDefaults/MarkdownWithDefaults',
@@ -31,7 +34,7 @@ jest.mock('../../../src/chat/components-legacy/MessageRichUserContent', () => ({
 
 const intl = createIntl({ locale: 'en', messages: {} });
 
-function renderRequest(history: Record<string, unknown>) {
+function renderRequest(history: MessageRequestHistory) {
   const originalMessage = {
     id: 'request-id',
     input: {
@@ -76,6 +79,7 @@ describe('choice request transcript rendering', () => {
     renderRequest({
       label: 'Resolved choice label',
       related_message_id: 'response-id',
+      is_choice_request: true,
     });
 
     expect(screen.getByTestId('plain-request')).toHaveTextContent(
@@ -83,6 +87,20 @@ describe('choice request transcript rendering', () => {
     );
     expect(screen.queryByTestId('rich-request')).not.toBeInTheDocument();
   });
+
+  it.each([undefined, false])(
+    'keeps rich content when related history has is_choice_request=%s',
+    (is_choice_request) => {
+      renderRequest({
+        label: 'Host label',
+        related_message_id: 'response-id',
+        is_choice_request,
+      });
+
+      expect(screen.getByTestId('rich-request')).toBeInTheDocument();
+      expect(screen.queryByTestId('plain-request')).not.toBeInTheDocument();
+    }
+  );
 
   it('keeps rich content for a general request with only a history label', () => {
     renderRequest({ label: 'Host label' });

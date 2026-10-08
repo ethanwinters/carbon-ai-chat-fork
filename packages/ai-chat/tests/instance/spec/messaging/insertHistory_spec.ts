@@ -522,74 +522,85 @@ describe('ChatInstance.messaging.insertHistory', () => {
   });
 
   describe('choice selection restoration', () => {
-    it('selects only the option group containing the ordered best match', async () => {
-      const { instance, store } =
-        await renderChatAndGetInstanceWithStore(createBaseConfig());
-      const historyItems: HistoryItem[] = [
-        {
-          message: {
-            id: 'choice-response',
-            output: {
-              generic: [
-                {
-                  response_type: MessageResponseTypes.OPTION,
-                  preference: OptionItemPreference.BUTTON,
-                  options: [
-                    { label: '', value: { input: { text: '' } } },
-                    {
-                      label: 'Same label',
-                      value: { input: { text: 'first' } },
-                    },
-                  ],
-                },
-                {
-                  response_type: MessageResponseTypes.OPTION,
-                  preference: OptionItemPreference.DROPDOWN,
-                  options: [
-                    {
-                      label: 'Different control text',
-                      selection_display: SelectionDisplay.INPUT_TEXT,
-                      value: { input: { text: 'second' } },
-                    },
-                  ],
-                },
-              ],
+    it.each([true, undefined])(
+      'restores the matching option group with is_choice_request=%s',
+      async (is_choice_request) => {
+        const { instance, store } =
+          await renderChatAndGetInstanceWithStore(createBaseConfig());
+        const historyItems: HistoryItem[] = [
+          {
+            message: {
+              id: 'choice-response',
+              output: {
+                generic: [
+                  {
+                    response_type: MessageResponseTypes.OPTION,
+                    preference: OptionItemPreference.BUTTON,
+                    options: [
+                      { label: '', value: { input: { text: '' } } },
+                      {
+                        label: 'Same label',
+                        value: { input: { text: 'first' } },
+                      },
+                    ],
+                  },
+                  {
+                    response_type: MessageResponseTypes.OPTION,
+                    preference: OptionItemPreference.DROPDOWN,
+                    options: [
+                      {
+                        label: 'Different control text',
+                        selection_display: SelectionDisplay.INPUT_TEXT,
+                        value: { input: { text: 'second' } },
+                      },
+                    ],
+                  },
+                ],
+              },
             },
+            time: '2024-01-01T00:00:00.000Z',
           },
-          time: '2024-01-01T00:00:00.000Z',
-        },
-        {
-          message: {
-            id: 'choice-request',
-            input: { text: 'second' },
-            history: {
-              label: 'second',
-              related_message_id: 'choice-response',
-              silent: true,
+          {
+            message: {
+              id: 'choice-request',
+              input: { text: 'second' },
+              history: {
+                label: 'second',
+                related_message_id: 'choice-response',
+                is_choice_request,
+                silent: true,
+              },
             },
+            time: '2024-01-01T00:00:01.000Z',
           },
-          time: '2024-01-01T00:00:01.000Z',
-        },
-      ];
+        ];
 
-      await instance.messaging.insertHistory(historyItems);
+        await instance.messaging.insertHistory(
+          JSON.parse(JSON.stringify(historyItems))
+        );
 
-      const groups = Object.values(store.getState().allMessageItemsByID).filter(
-        (item) =>
-          item.fullMessageID === 'choice-response' &&
-          item.item.response_type === MessageResponseTypes.OPTION
-      );
-      expect(groups).toHaveLength(2);
-      expect(groups[0].ui_state.optionSelected).toBeUndefined();
-      expect(groups[1].ui_state.optionSelected?.id).toBe('choice-request');
-      expect(
-        Object.values(store.getState().allMessageItemsByID).filter(
-          (item) => item.ui_state.optionSelected
-        )
-      ).toHaveLength(1);
-    });
+        const groups = Object.values(
+          store.getState().allMessageItemsByID
+        ).filter(
+          (item) =>
+            item.fullMessageID === 'choice-response' &&
+            item.item.response_type === MessageResponseTypes.OPTION
+        );
+        expect(groups).toHaveLength(2);
+        expect(groups[0].ui_state.optionSelected).toBeUndefined();
+        expect(groups[1].ui_state.optionSelected?.id).toBe('choice-request');
+        expect(
+          groups[1].ui_state.optionSelected?.history.is_choice_request
+        ).toBe(is_choice_request);
+        expect(
+          Object.values(store.getState().allMessageItemsByID).filter(
+            (item) => item.ui_state.optionSelected
+          )
+        ).toHaveLength(1);
+      }
+    );
 
-    it('traverses top-level, body, and footer post-backs before selecting one', async () => {
+    it('restores a legacy unmarked post-back from top-level, body, and footer choices', async () => {
       const { instance, store } =
         await renderChatAndGetInstanceWithStore(createBaseConfig());
       const postBack = (label: string, text: string) => ({

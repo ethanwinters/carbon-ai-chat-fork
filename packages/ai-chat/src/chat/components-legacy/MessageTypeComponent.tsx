@@ -245,10 +245,7 @@ function MessageTypeComponent(props: MessageTypeComponentProps) {
     // the assistant.
     const userText = getRequestBubbleText(localMessageItem, originalMessage);
     const displayContent = originalMessage.input.display_content;
-    const isChoiceRequest = Boolean(
-      originalMessage.history?.related_message_id &&
-      originalMessage.history?.label
-    );
+    const isChoiceRequest = originalMessage.history?.is_choice_request === true;
     const isFile =
       originalMessage.input.message_type ===
       (InternalMessageRequestType.FILE as unknown as MessageInputType);
