@@ -13,7 +13,10 @@ import {
   setupBeforeEach,
   setupAfterEach,
 } from '../../../test_helpers';
-import { MessageRequest } from '../../../../src/types/messaging/Messages';
+import {
+  MessageRequest,
+  MessageResponseTypes,
+} from '../../../../src/types/messaging/Messages';
 import {
   CancellationReason,
   CustomSendMessageOptions,
@@ -324,6 +327,40 @@ describe('ChatInstance.messaging.restartConversation', () => {
 
       // Should handle all restarts gracefully - at least final message should process
       expect(messagesProcessed).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe('Loading indicator', () => {
+    it('is off after a reply when the request before the restart got none', async () => {
+      const config = createBaseConfig();
+      config.messaging = {
+        skipWelcome: true,
+        messageLoadingIndicatorTimeoutSecs: 0.05,
+        customSendMessage: async (
+          request: MessageRequest,
+          _options: CustomSendMessageOptions,
+          instance: ChatInstance
+        ) => {
+          if (request.input.text !== 'answered') {
+            return;
+          }
+          await instance.messaging.addMessage({
+            output: {
+              generic: [
+                { response_type: MessageResponseTypes.TEXT, text: 'reply' },
+              ],
+            },
+          });
+        },
+      };
+      const instance = await renderChatAndGetInstance(config);
+
+      await instance.send('unanswered');
+      await instance.messaging.restartConversation();
+      await instance.send('answered');
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      expect(instance.getState().isMessageLoadingCounter).toBe(0);
     });
   });
 });
