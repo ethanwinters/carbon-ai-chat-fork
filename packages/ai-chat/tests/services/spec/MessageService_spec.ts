@@ -15,7 +15,10 @@ import {
   MessageRequest,
   MessageInputType,
 } from '../../../src/types/messaging/Messages';
-import { MessageSendSource } from '../../../src/types/events/eventBusTypes';
+import {
+  BusEventType,
+  MessageSendSource,
+} from '../../../src/types/events/eventBusTypes';
 import { resolvablePromise } from '../../../src/chat/utils/resolvablePromise';
 import { OnErrorType } from '../../../src/types/config/ErrorConfig';
 import { CancellationReason } from '../../../src/types/config/MessagingConfig';
@@ -75,6 +78,7 @@ const createServiceManagerStub = (
   };
 
   const serviceManager = {
+    restartCount: 0,
     store,
     actions,
     eventBus,
@@ -85,6 +89,144 @@ const createServiceManagerStub = (
 };
 
 describe('MessageService', () => {
+  it('retains request ownership after its callback returns and across restarts', async () => {
+    const customSendMessage = jest.fn().mockResolvedValue(undefined);
+    const serviceManager = createServiceManagerStub(customSendMessage);
+    const messageService = new MessageService(serviceManager, {
+      messaging: { messageTimeoutSecs: 0 },
+    });
+
+    await messageService.send(
+      createMessage('first-request'),
+      MessageSendSource.MESSAGE_INPUT,
+      'local-first'
+    );
+    expect(
+      messageService.isRequestFromPreviousConversation('first-request')
+    ).toBe(false);
+    await messageService.cancelAllMessageRequests();
+    serviceManager.restartCount++;
+
+    await messageService.send(
+      createMessage('second-request'),
+      MessageSendSource.MESSAGE_INPUT,
+      'local-second'
+    );
+    expect(
+      messageService.isRequestFromPreviousConversation('first-request')
+    ).toBe(true);
+    expect(
+      messageService.isRequestFromPreviousConversation('second-request')
+    ).toBe(false);
+    expect(
+      messageService.isRequestFromPreviousConversation('unknown-request')
+    ).toBe(false);
+    expect(messageService.isRequestFromPreviousConversation(undefined)).toBe(
+      false
+    );
+
+    await messageService.cancelAllMessageRequests();
+    serviceManager.restartCount++;
+    expect(
+      messageService.isRequestFromPreviousConversation('first-request')
+    ).toBe(true);
+    expect(
+      messageService.isRequestFromPreviousConversation('second-request')
+    ).toBe(true);
+  });
+
+  it('registers the final request ID before calling the host', async () => {
+    const customSendMessage = jest.fn((request) => {
+      serviceManager.restartCount++;
+      expect(messageService.isRequestFromPreviousConversation(request.id)).toBe(
+        true
+      );
+    });
+    const serviceManager = createServiceManagerStub(customSendMessage);
+    const messageService = new MessageService(serviceManager, {
+      messaging: { messageTimeoutSecs: 0 },
+    });
+    (serviceManager.eventBus.fire as jest.Mock).mockImplementation(
+      async (event) => {
+        if (event.type === BusEventType.PRE_SEND) {
+          event.data.id = 'host-request';
+        }
+      }
+    );
+
+    await messageService.send(
+      createMessage('initial-request'),
+      MessageSendSource.MESSAGE_INPUT,
+      'local-request'
+    );
+    expect(customSendMessage).toHaveBeenCalledTimes(1);
+    expect(
+      messageService.isRequestFromPreviousConversation('host-request')
+    ).toBe(true);
+    expect(
+      messageService.isRequestFromPreviousConversation('initial-request')
+    ).toBe(false);
+  });
+
+  it('uses the queued generation when the conversation changes before the host callback', async () => {
+    const sendEvent = resolvablePromise<void>();
+    const reachedSendEvent = resolvablePromise<void>();
+    const customSendMessage = jest.fn().mockResolvedValue(undefined);
+    const serviceManager = createServiceManagerStub(customSendMessage);
+    const messageService = new MessageService(serviceManager, {
+      messaging: { messageTimeoutSecs: 0 },
+    });
+    (serviceManager.eventBus.fire as jest.Mock).mockImplementation((event) => {
+      if (event.type === BusEventType.SEND) {
+        reachedSendEvent.doResolve();
+        return sendEvent;
+      }
+      return Promise.resolve();
+    });
+
+    const sent = messageService.send(
+      createMessage('waiting-request'),
+      MessageSendSource.MESSAGE_INPUT,
+      'local-waiting'
+    );
+    await reachedSendEvent;
+    serviceManager.restartCount++;
+    sendEvent.doResolve();
+    await sent;
+
+    expect(customSendMessage).toHaveBeenCalledTimes(1);
+    expect(
+      messageService.isRequestFromPreviousConversation('waiting-request')
+    ).toBe(true);
+  });
+
+  it('retains request ownership after stop and stream cleanup', async () => {
+    const customSendMessage = jest.fn().mockResolvedValue(undefined);
+    const serviceManager = createServiceManagerStub(customSendMessage);
+    const messageService = new MessageService(serviceManager, {
+      messaging: { messageTimeoutSecs: 0 },
+    });
+    await messageService.send(
+      createMessage('stopped-request'),
+      MessageSendSource.MESSAGE_INPUT,
+      'local-stopped'
+    );
+    await messageService.cancelMessageRequestByID(
+      'stopped-request',
+      false,
+      CancellationReason.STOP_STREAMING
+    );
+    messageService.finalizeStreamingMessage('stopped-request');
+
+    expect(
+      messageService.isRequestFromPreviousConversation('stopped-request')
+    ).toBe(false);
+    serviceManager.restartCount++;
+    expect(
+      messageService.isRequestFromPreviousConversation('stopped-request')
+    ).toBe(true);
+  });
+
   it('sends a message and advances the queue', async () => {
     const customSendMessage = jest.fn().mockResolvedValue(undefined);
     const serviceManager = createServiceManagerStub(customSendMessage);
@@ -163,6 +305,7 @@ describe('MessageService', () => {
     const sendMessagePromise = resolvablePromise<void>();
     const abortController = new AbortController();
     const pendingRequest: PendingMessageRequest = {
+      restartGeneration: 0,
       localMessageID: 'local-1',
       message: createMessage('m-2'),
       sendMessagePromise,
@@ -200,6 +343,7 @@ describe('MessageService', () => {
 
     // Keep the queue busy so the next send stays in the waiting list.
     (messageService as any).queue.current = {
+      restartGeneration: 0,
       localMessageID: 'local-current',
       message: createMessage('m-current'),
       sendMessagePromise: resolvablePromise<void>(),
@@ -373,6 +517,7 @@ describe('MessageService', () => {
     const sendMessagePromise = resolvablePromise<void>();
     const abortController = new AbortController();
     const pendingRequest: PendingMessageRequest = {
+      restartGeneration: 0,
       localMessageID: 'local-streaming',
       message: createMessage('m-streaming'),
       sendMessagePromise,
@@ -465,6 +610,7 @@ describe('MessageService', () => {
       const sendMessagePromise = resolvablePromise<void>();
       const abortController = new AbortController();
       const pendingRequest: PendingMessageRequest = {
+        restartGeneration: 0,
         localMessageID: 'local-1',
         message: createMessage('m-1'),
         sendMessagePromise,
@@ -521,6 +667,7 @@ describe('MessageService', () => {
 
       const sendMessagePromise = resolvablePromise<void>();
       const pendingRequest: PendingMessageRequest = {
+        restartGeneration: 0,
         localMessageID: 'local-1',
         message: createMessage('m-1'),
         sendMessagePromise,
