@@ -20,7 +20,10 @@ import {
   MessageResponse,
   MessageResponseTypes,
 } from '../../../../src/types/messaging/Messages';
-import { CancellationReason } from '../../../../src/types/config/MessagingConfig';
+import {
+  CancellationReason,
+  MessageState,
+} from '../../../../src/types/config/MessagingConfig';
 import {
   BusEventPreReceive,
   BusEventType,
@@ -43,7 +46,7 @@ function response(id: string, requestID?: string): MessageResponse {
   };
 }
 
-type Delivery = 'add' | 'partial' | 'complete' | 'final';
+type Delivery = 'add' | 'partial' | 'complete' | 'final' | 'upsert';
 
 function deliver(
   instance: ChatInstance,
@@ -55,6 +58,12 @@ function deliver(
       return instance.messaging.addMessage(message);
     case 'final':
       return instance.messaging.addMessageChunk({ final_response: message });
+    case 'upsert':
+      return instance.messaging.upsertMessage(
+        message.id,
+        MessageState.COMPLETE,
+        () => message
+      );
     default: {
       const streaming_metadata = {
         response_id: message.id,
@@ -98,7 +107,7 @@ describe('Request attribution across restart', () => {
   describe.each(['restartConversation', 'clearConversation'] as const)(
     '%s',
     (reset) => {
-      it.each<Delivery>(['add', 'partial', 'complete', 'final'])(
+      it.each<Delivery>(['add', 'partial', 'complete', 'final', 'upsert'])(
         'ignores a late first %s delivery without changing the new stream',
         async (kind) => {
           const { instance, store, serviceManager, requests } =
@@ -167,7 +176,7 @@ describe('Request attribution across restart', () => {
     await third;
   });
 
-  describe.each<Delivery>(['add', 'final'])('%s', (kind) => {
+  describe.each<Delivery>(['add', 'final', 'upsert'])('%s', (kind) => {
     it.each(['current', 'unknown', 'omitted'] as const)(
       'accepts and preserves %s request attribution',
       async (attribution) => {
@@ -187,6 +196,143 @@ describe('Request attribution across restart', () => {
         ).toMatchObject({ id: 'accepted-response', request_id: requestID });
       }
     );
+  });
+
+  it.each(['updater', 'pre:receive'] as const)(
+    'drops an upsert that crosses restart during %s',
+    async (boundary) => {
+      const { instance, store, serviceManager, requests } = await setupChat();
+      await instance.send('first');
+      const entered = resolvablePromise();
+      const release = resolvablePromise();
+      const receive = jest.fn();
+      instance.on({ type: BusEventType.RECEIVE, handler: receive });
+      if (boundary === 'pre:receive') {
+        instance.on({
+          type: BusEventType.PRE_RECEIVE,
+          handler: async (event) => {
+            if ((event as BusEventPreReceive).data.id === 'late-response') {
+              entered.doResolve();
+              await release;
+            }
+          },
+        });
+      }
+      const pending = instance.messaging.upsertMessage(
+        'late-response',
+        MessageState.COMPLETE,
+        async () => {
+          if (boundary === 'updater') {
+            entered.doResolve();
+            await release;
+          }
+          return response('late-response', requests[0].id);
+        }
+      );
+      await entered;
+      await instance.messaging.restartConversation();
+      await instance.send('second');
+      const state = store.getState();
+      const endLoading = jest.spyOn(
+        serviceManager.messageService.messageLoadingManager,
+        'end'
+      );
+      receive.mockClear();
+
+      release.doResolve();
+      await pending;
+
+      expect(store.getState()).toBe(state);
+      expect(endLoading).not.toHaveBeenCalled();
+      expect(receive).not.toHaveBeenCalled();
+    }
+  );
+
+  it('waits for an acceptable updater result before ending loading', async () => {
+    const { instance, serviceManager, requests } = await setupChat();
+    await instance.send('first');
+    const entered = resolvablePromise();
+    const release = resolvablePromise();
+    const endLoading = jest.spyOn(
+      serviceManager.messageService.messageLoadingManager,
+      'end'
+    );
+    const pending = instance.messaging.upsertMessage(
+      'reply',
+      MessageState.COMPLETE,
+      async () => {
+        entered.doResolve();
+        await release;
+        return response('reply', requests[0].id);
+      }
+    );
+    await entered;
+    expect(endLoading).not.toHaveBeenCalled();
+    release.doResolve();
+    await pending;
+    expect(endLoading).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([false, true])(
+    'preserves updater rejection without clearing a later conversation (restart: %s)',
+    async (restart) => {
+      const { instance, serviceManager } = await setupChat();
+      const entered = resolvablePromise();
+      const release = resolvablePromise();
+      const failure = new Error('Updater failed');
+      const pending = instance.messaging.upsertMessage(
+        'reply',
+        MessageState.COMPLETE,
+        async () => {
+          entered.doResolve();
+          await release;
+          throw failure;
+        }
+      );
+      const rejected = expect(pending).rejects.toBe(failure);
+      await entered;
+      if (restart) {
+        await instance.messaging.restartConversation();
+        await instance.send('second');
+      }
+      const endLoading = jest.spyOn(
+        serviceManager.messageService.messageLoadingManager,
+        'end'
+      );
+      release.doResolve();
+      await rejected;
+      expect(endLoading).toHaveBeenCalledTimes(restart ? 0 : 1);
+    }
+  );
+
+  it('does not invoke an updater that was queued before restart', async () => {
+    const { instance, store, requests } = await setupChat();
+    await instance.send('first');
+    const entered = resolvablePromise();
+    const release = resolvablePromise();
+    const first = instance.messaging.upsertMessage(
+      'reply',
+      MessageState.STREAMING,
+      async () => {
+        entered.doResolve();
+        await release;
+        return response('reply', requests[0].id);
+      }
+    );
+    const updater = jest.fn(() => response('reply', requests[0].id));
+    const queued = instance.messaging.upsertMessage(
+      'reply',
+      MessageState.COMPLETE,
+      updater
+    );
+    await entered;
+    await instance.messaging.restartConversation();
+    await instance.send('second');
+    const state = store.getState();
+    release.doResolve();
+    await Promise.all([first, queued]);
+    expect(updater).not.toHaveBeenCalled();
+    expect(store.getState()).toBe(state);
   });
 
   it('does not finalize the new stream when an old final chunk crosses restart during pre:receive', async () => {
