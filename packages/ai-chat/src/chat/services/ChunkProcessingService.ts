@@ -115,6 +115,16 @@ class ChunkProcessingService {
     options: AddMessageOptions = {}
   ) {
     const restartGeneration = this.restartGeneration;
+    const requestID = isStreamFinalResponse(chunk)
+      ? chunk.final_response.request_id
+      : chunk.streaming_metadata?.request_id;
+    if (
+      this.serviceManager.messageService.isRequestFromPreviousConversation(
+        requestID
+      )
+    ) {
+      return;
+    }
     const { messageID: extractedMessageID } = resolveChunkContext(
       chunk,
       messageID
@@ -196,7 +206,9 @@ class ChunkProcessingService {
         await this.handleFinalResponseChunk(chunk, messageID, options);
       }
 
-      this.resetStopStreamingIfNeeded(isCompleteItem, chunk);
+      if (restartGeneration === this.restartGeneration) {
+        this.resetStopStreamingIfNeeded(isCompleteItem, chunk);
+      }
 
       this.advanceChunkQueue(chunkPromise);
     } catch (error) {
@@ -278,6 +290,7 @@ class ChunkProcessingService {
     messageID: string | undefined,
     options: AddMessageOptions
   ) {
+    const restartGeneration = this.restartGeneration;
     this.warnIfMissingFinalResponseStreamingIds(
       messageID,
       chunk.final_response
@@ -293,7 +306,7 @@ class ChunkProcessingService {
       'chunk'
     );
 
-    if (messageID) {
+    if (messageID && restartGeneration === this.restartGeneration) {
       this.serviceManager.messageService.finalizeStreamingMessage(messageID);
     }
   }

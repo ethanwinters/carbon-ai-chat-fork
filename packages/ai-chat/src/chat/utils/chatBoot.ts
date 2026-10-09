@@ -397,6 +397,13 @@ export async function initServiceManagerAndInstance(options: {
         options: AddMessageOptions = {}
       ) => {
         debugLog('Called instance.messaging.addMessage', message, options);
+        if (
+          serviceManager.messageService.isRequestFromPreviousConversation(
+            message.request_id
+          )
+        ) {
+          return Promise.resolve();
+        }
         serviceManager.messageService.messageLoadingManager.end();
         return serviceManager.actions.receive(
           message,
