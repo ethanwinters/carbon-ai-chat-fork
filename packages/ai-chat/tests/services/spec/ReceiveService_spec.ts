@@ -48,6 +48,8 @@ function createHarness(config: PublicConfig = {}) {
     messageService: {
       inboundStreaming: { streamingMessageID: null },
       finalizeStreamingMessage: jest.fn(),
+      clearStreamingCancellation: jest.fn(),
+      clearAllStreamingCancellation: jest.fn(),
       hideStopStreamingButtonIfIdle: jest.fn(),
       hideStopStreamingButtonIfNoUpsertStreaming: jest.fn(),
       cancelAllMessageRequests: jest.fn().mockResolvedValue(undefined),

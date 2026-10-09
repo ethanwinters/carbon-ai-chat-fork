@@ -8,6 +8,7 @@
  */
 
 import { DeepPartial } from '../../types/utilities/DeepPartial';
+import type { MessageWriteOptions } from './messageWriteTypes';
 
 import {
   AnnounceMessage,
@@ -33,7 +34,6 @@ import {
 } from '../../types/messaging/LocalMessageItem';
 import {
   ConversationalSearchItemCitation,
-  GenericItem,
   IFrameItem,
   Message,
   MessageRequest,
@@ -42,58 +42,6 @@ import {
   MessageUIStateInternal,
   SearchResult,
 } from '../../types/messaging/Messages';
-
-/**
- * What the chat's own callers of the upsert path pass along with a write. The public
- * `upsertMessage` never passes it.
- */
-interface MessageWriteOptions {
-  /** The public method the write comes from. Unset means `upsertMessage`. */
-  origin?: 'addMessage' | 'chunk';
-
-  /**
-   * For a streaming write with `origin: 'chunk'`, the item the chunk carries: the host's
-   * `partial_item` or `complete_item` itself.
-   */
-  chunk?: { item: DeepPartial<GenericItem>; isComplete: boolean };
-
-  /**
-   * For a write from `addMessage` or `final_response`: whether the message is a new
-   * welcome message, which marks its items as welcome responses.
-   */
-  isLatestWelcomeNode?: boolean;
-
-  /**
-   * For a write from `addMessage` or `final_response`: the request the message answers.
-   * The message's `request_id` is set to its id, or cleared when there is none.
-   */
-  requestMessage?: MessageRequest;
-
-  /**
-   * For a write from `addMessage` or `final_response`: the restart count when the caller
-   * began. The write is dropped when a restart happened since.
-   */
-  restartCount?: number;
-
-  /** Set by the coordinator on a write from `addMessage` or `final_response`. */
-  received?: ReceivedLocalItems;
-}
-
-/**
- * A write from `addMessage` or `final_response`, which shows its message the way
- * `addMessage` always has. The first write stores the message and carries no item. Each
- * later write shows one item.
- */
-interface ReceivedLocalItems {
-  /** The item a later write shows. */
-  localItem?: LocalMessageItem;
-
-  /** The items nested in `localItem`. Always set when `localItem` is set. */
-  nestedLocalItems: LocalMessageItem[];
-
-  /** The id of the item the message showed before `localItem`, which it goes after. */
-  addAfterID?: string;
-}
 
 const CHANGE_STATE = 'CHANGE_STATE';
 const HYDRATE_CHAT = 'HYDRATE_CHAT';
@@ -155,6 +103,8 @@ const SET_RESPONSE_PANEL_IS_OPEN = 'SET_RESPONSE_PANEL_IS_OPEN';
 const SET_RESPONSE_PANEL_CONTENT = 'SET_PANEL_RESPONSE_CONTENT';
 const SET_STOP_STREAMING_BUTTON_VISIBLE = 'SET_STOP_STREAMING_BUTTON_VISIBLE';
 const SET_STOP_STREAMING_BUTTON_DISABLED = 'SET_STOP_STREAMING_BUTTON_DISABLED';
+const SET_STOP_STREAMING_BUTTON_METADATA_DISABLED =
+  'SET_STOP_STREAMING_BUTTON_METADATA_DISABLED';
 const SET_STREAM_ID = 'SET_STREAM_ID';
 const UPDATE_THEME_STATE = 'UPDATE_THEME_STATE';
 const SET_IS_RESTARTING = 'SET_IS_RESTARTING';
@@ -670,6 +620,13 @@ const actions = {
     return { type: SET_STOP_STREAMING_BUTTON_DISABLED, isDisabled };
   },
 
+  setStopStreamingButtonMetadataDisabled(isMetadataDisabled: boolean) {
+    return {
+      type: SET_STOP_STREAMING_BUTTON_METADATA_DISABLED,
+      isMetadataDisabled,
+    };
+  },
+
   setStreamID(currentStreamID: string) {
     return { type: SET_STREAM_ID, currentStreamID };
   },
@@ -741,8 +698,6 @@ const actions = {
 
 export default actions;
 
-export type { MessageWriteOptions, ReceivedLocalItems };
-
 export {
   CHANGE_STATE,
   ADD_IS_LOADING_COUNTER,
@@ -799,6 +754,7 @@ export {
   MERGE_HISTORY,
   SET_STOP_STREAMING_BUTTON_VISIBLE,
   SET_STOP_STREAMING_BUTTON_DISABLED,
+  SET_STOP_STREAMING_BUTTON_METADATA_DISABLED,
   SET_STREAM_ID,
   UPDATE_THEME_STATE,
   SET_MESSAGE_UI_STATE_INTERNAL_PROPERTY,

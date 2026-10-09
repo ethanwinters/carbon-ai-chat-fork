@@ -61,7 +61,7 @@ import {
 } from '../../types/messaging/Messages';
 import ObjectMap from '../../types/utilities/ObjectMap';
 import { DeepPartial } from '../../types/utilities/DeepPartial';
-import type { MessageWriteOptions } from './actions';
+import type { MessageWriteOptions } from './messageWriteTypes';
 import {
   createLocalMessageItemsForNestedMessageItems,
   findDrawIssues,
@@ -224,6 +224,7 @@ const DEFAULT_INPUT_STATE: InputState = {
     currentStreamID: null,
     isVisible: false,
     isDisabled: false,
+    isMetadataDisabled: false,
   },
   pendingUploads: [],
 };

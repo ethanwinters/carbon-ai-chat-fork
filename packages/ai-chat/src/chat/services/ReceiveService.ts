@@ -9,7 +9,8 @@
 
 import merge from 'lodash-es/merge.js';
 
-import actions, { MessageWriteOptions } from '../store/actions';
+import actions from '../store/actions';
+import type { MessageWriteOptions } from '../store/messageWriteTypes';
 import { AppStateMessages } from '../../types/state/AppState';
 import { deepFreeze } from '../utils/lang/objectUtils';
 import { uuid } from '@carbon/ai-chat-components/es/globals/utils/uuid.js';

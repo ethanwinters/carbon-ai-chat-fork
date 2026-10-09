@@ -66,7 +66,13 @@ function makeStubManager(initialMessages: Record<string, unknown> = {}) {
     },
     fire,
     actions: chatActions,
-    messageService: { finalizeStreamingMessage, hideStopStreamingButtonIfIdle },
+    messageService: {
+      finalizeStreamingMessage,
+      hideStopStreamingButtonIfIdle,
+      updateStreamingCancellation: jest.fn(),
+      clearStreamingCancellation: jest.fn(),
+      clearAllStreamingCancellation: jest.fn(),
+    },
   } as unknown as ServiceManager;
 
   return {

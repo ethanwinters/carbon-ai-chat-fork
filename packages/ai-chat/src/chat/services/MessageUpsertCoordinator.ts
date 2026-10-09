@@ -28,10 +28,11 @@ import {
 import { LocalMessageItem } from '../../types/messaging/LocalMessageItem';
 import { OnErrorType } from '../../types/config/ErrorConfig';
 import isEqual from 'lodash-es/isEqual.js';
-import actions, {
+import actions from '../store/actions';
+import type {
   MessageWriteOptions,
   ReceivedLocalItems,
-} from '../store/actions';
+} from '../store/messageWriteTypes';
 import {
   createLocalMessageItemsForNestedMessageItems,
   outputItemToLocalItem,
@@ -47,10 +48,7 @@ import {
 } from '../utils/messageUtils';
 import { deepFreeze } from '../utils/lang/objectUtils';
 import { consoleError } from '../utils/miscUtils';
-import {
-  hasDisplayableContentForItem,
-  shouldShowStopStreaming,
-} from '../utils/streamingUtils';
+import { hasDisplayableContentForItem } from '../utils/streamingUtils';
 import { ServiceManager } from './ServiceManager';
 
 /**
@@ -157,6 +155,7 @@ class MessageUpsertCoordinator {
    */
   markComplete(messageID: string | undefined) {
     if (messageID) {
+      this.serviceManager.messageService.clearStreamingCancellation(messageID);
       this.stateByID.set(messageID, MessageState.COMPLETE);
       // `addMessage` and history already ran, or are running, this message's pauses, so
       // a later upsert of it must not run them again. Always overwrite, even when upsert
@@ -211,6 +210,7 @@ class MessageUpsertCoordinator {
   endAllStreaming(): boolean {
     const settledAny = this.streamingIDs.size > 0;
     for (const messageID of this.streamingIDs) {
+      this.serviceManager.messageService.clearStreamingCancellation(messageID);
       const refsBefore = this.snapshotLocalItemRefs(messageID);
       this.serviceManager.store.dispatch(
         actions.endMessageStreaming(messageID)
@@ -227,6 +227,7 @@ class MessageUpsertCoordinator {
    * `removeMessages`.
    */
   clear(messageID: string) {
+    this.serviceManager.messageService.clearStreamingCancellation(messageID);
     const wasStreaming = this.streamingIDs.has(messageID);
     this.stateByID.delete(messageID);
     this.chainByID.delete(messageID);
@@ -244,6 +245,7 @@ class MessageUpsertCoordinator {
    * into a fresh session.
    */
   clearAll() {
+    this.serviceManager.messageService.clearAllStreamingCancellation();
     this.generation++;
     this.chainByID.clear();
     this.stateByID.clear();
@@ -833,19 +835,21 @@ class MessageUpsertCoordinator {
     result: MessageResponse,
     wasStreaming: boolean
   ) {
-    const { store } = this.serviceManager;
+    const { messageService } = this.serviceManager;
 
     if (nextState === MessageState.STREAMING) {
-      const isCancellable = (result.output?.generic ?? []).some(
+      const flags = (result.output?.generic ?? []).map(
         (item) => item?.streaming_metadata?.cancellable
       );
-      const { isVisible } =
-        store.getState().assistantInputState.stopStreamingButtonState;
-      if (shouldShowStopStreaming({ cancellable: isCancellable }, isVisible)) {
-        store.dispatch(actions.setStopStreamingButtonVisible(true));
+      if (flags.includes(false)) {
+        messageService.updateStreamingCancellation(result.id, false);
+      } else if (flags.includes(true)) {
+        messageService.updateStreamingCancellation(result.id, true);
       }
       return;
     }
+
+    messageService.clearStreamingCancellation(result.id);
 
     // COMPLETE and ERROR are both terminal for this message — but the affordance only
     // goes away once nothing else is streaming. `runOne` already dropped this message

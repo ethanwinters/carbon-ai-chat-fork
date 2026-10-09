@@ -39,7 +39,10 @@ import {
   ResolvablePromise,
   resolvablePromise,
 } from '../utils/resolvablePromise';
-import { resetStopStreamingButton } from '../utils/streamingUtils';
+import {
+  resetStopStreamingButton,
+  syncStopStreamingButton,
+} from '../utils/streamingUtils';
 import { ServiceManager } from './ServiceManager';
 import { InboundStreamingCoordinator } from './InboundStreamingCoordinator';
 import { OutboundMessageCoordinator } from './OutboundMessageCoordinator';
@@ -154,6 +157,8 @@ export interface PendingMessageRequest extends SendMessageRequest {
 }
 
 class MessageService {
+  private nonCancellableResponseIDs = new Set<string>();
+
   /**
    * The service manager to use to access services.
    */
@@ -632,6 +637,7 @@ class MessageService {
   public async cancelAllMessageRequests(
     reason: string = CancellationReason.CONVERSATION_RESTARTED
   ) {
+    this.clearAllStreamingCancellation();
     while (this.queue.waiting.length) {
       await this.cancelMessageRequestByID(
         this.queue.waiting[0].message.id,
@@ -705,6 +711,34 @@ class MessageService {
     ) {
       resetStopStreamingButton(this.serviceManager.store);
     }
+  }
+
+  public updateStreamingCancellation(messageID: string, cancellable?: boolean) {
+    if (cancellable === false) {
+      this.nonCancellableResponseIDs.add(messageID);
+    } else if (cancellable === true) {
+      this.nonCancellableResponseIDs.delete(messageID);
+    }
+    syncStopStreamingButton(
+      this.serviceManager.store,
+      cancellable,
+      this.nonCancellableResponseIDs.size > 0
+    );
+  }
+
+  public clearStreamingCancellation(messageID: string) {
+    if (this.nonCancellableResponseIDs.delete(messageID)) {
+      syncStopStreamingButton(
+        this.serviceManager.store,
+        undefined,
+        this.nonCancellableResponseIDs.size > 0
+      );
+    }
+  }
+
+  public clearAllStreamingCancellation() {
+    this.nonCancellableResponseIDs.clear();
+    syncStopStreamingButton(this.serviceManager.store);
   }
 
   /**
@@ -868,6 +902,7 @@ class MessageService {
   ) {
     // messageID may be an item_id or response_id; resolve to whichever streaming id we tracked.
     const responseId = this.inboundStreaming.resolveResponseId(messageID);
+    this.clearStreamingCancellation(responseId);
     const streamingEntry = this.inboundStreaming.getStreamingMeta(responseId);
     const wasStreamingCurrent =
       this.inboundStreaming.streamingMessageID === responseId;

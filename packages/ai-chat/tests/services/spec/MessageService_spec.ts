@@ -91,6 +91,7 @@ const createServiceManagerStub = (
     messageUpsertCoordinator,
     messageService: {
       hideStopStreamingButtonIfNoUpsertStreaming: jest.fn(),
+      updateStreamingCancellation: jest.fn(),
     },
   } as unknown as ServiceManager;
 

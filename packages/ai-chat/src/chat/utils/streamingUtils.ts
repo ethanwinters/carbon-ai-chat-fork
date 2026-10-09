@@ -148,8 +148,7 @@ function resolveChunkContext(
  * Returns true if the stop streaming button should be shown for this chunk.
  *
  * If the button is already visible (e.g., from showStopButtonImmediately), this will
- * return false to avoid redundant state updates. The button will remain visible unless
- * the streaming metadata explicitly marks it as non-cancellable.
+ * return false to avoid redundant state updates.
  */
 function shouldShowStopStreaming(
   streamingData: { cancellable?: boolean } | undefined,
@@ -164,6 +163,28 @@ function shouldShowStopStreaming(
   return Boolean(streamingData?.cancellable);
 }
 
+function syncStopStreamingButton(
+  store: StoreLike,
+  cancellable?: boolean,
+  metadataDisabled = cancellable === false
+) {
+  const { isVisible, isMetadataDisabled } =
+    store.getState().assistantInputState.stopStreamingButtonState;
+  if (!isVisible && cancellable !== true) {
+    return;
+  }
+
+  // Metadata must not release the separate disable latch set by a stop-button click.
+  if (Boolean(isMetadataDisabled) !== metadataDisabled) {
+    store.dispatch(
+      actions.setStopStreamingButtonMetadataDisabled(metadataDisabled)
+    );
+  }
+  if (shouldShowStopStreaming({ cancellable }, isVisible)) {
+    store.dispatch(actions.setStopStreamingButtonVisible(true));
+  }
+}
+
 /**
  * Hides and re-enables the stop streaming button if currently visible.
  *
@@ -176,6 +197,9 @@ function shouldShowStopStreaming(
 function resetStopStreamingButton(store: StoreLike) {
   const stopStreamingState =
     store.getState().assistantInputState.stopStreamingButtonState;
+  if (stopStreamingState.isMetadataDisabled) {
+    store.dispatch(actions.setStopStreamingButtonMetadataDisabled(false));
+  }
   if (stopStreamingState.isVisible) {
     store.dispatch(actions.setStopStreamingButtonDisabled(false));
     store.dispatch(actions.setStopStreamingButtonVisible(false));
@@ -331,5 +355,6 @@ export {
   resolveChunkContext,
   shouldShowStopStreaming,
   StreamingResponseMeta,
+  syncStopStreamingButton,
   StreamingTracker,
 };
