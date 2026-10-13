@@ -16,7 +16,7 @@ No behavioral run is recorded here. Static checks and source inspection do not c
 6. **Capture the run.** Save the conversation, questions, tool calls, output files, and final diff. Score the result against the hidden expectations.
 7. **Repeat with the other snapshot.** Use the same harness version, model, settings, clock, tools, limits, and prompt. Repeat an ambiguous case before drawing a conclusion.
 
-The guidance layer contains all `AGENTS.md` and `CLAUDE.md` files, root and package `references/` directories, and all three skill trees. Exclude `references/agent-guidance-evals/`: its recipes and scoring criteria must stay outside the subject workspace. Include `.github/copilot-instructions.md` and `.codex/config.toml` when the harness uses them. Record the exact path manifest; do not replace source files, package manifests, tests, or runtime code with candidate versions.
+The guidance layer contains all `AGENTS.md` files, any `CLAUDE.md` files a snapshot still has (the baseline does), root and package `references/` directories, and all three skill trees. Exclude `references/agent-guidance-evals/`: its recipes and scoring criteria must stay outside the subject workspace. Include `.github/copilot-instructions.md` and `.codex/config.toml` when the harness uses them. Record the exact path manifest; do not replace source files, package manifests, tests, or runtime code with candidate versions.
 
 Keep the source revision, guidance manifest, and case recipe as separate inputs. Fixture commit IDs can differ because their guidance differs. Compare source file hashes and Git graph shape, not those IDs alone.
 
