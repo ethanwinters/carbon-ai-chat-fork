@@ -694,6 +694,7 @@ describe('MessageService', () => {
         currentGeneration: 0,
         requestStarted: jest.fn(),
         requestFinished: jest.fn(),
+        requestStopped: jest.fn(),
         responseFinished: jest.fn(),
       };
       serviceManager.conversationLifecycleService = lifecycle as any;
@@ -749,6 +750,7 @@ describe('MessageService', () => {
         currentGeneration: 0,
         requestStarted: jest.fn(),
         requestFinished: jest.fn(),
+        requestStopped: jest.fn(),
         responseFinished: jest.fn(),
       };
       serviceManager.conversationLifecycleService = lifecycle as any;
