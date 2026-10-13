@@ -34,6 +34,7 @@ import {
   BusEventType,
 } from '../../../../src/types/events/eventBusTypes';
 import { STREAMING_ADD_CHUNK } from '../../../../src/chat/store/actions';
+import { resolvablePromise } from '../../../../src/chat/utils/resolvablePromise';
 
 describe('ChatInstance.messaging.addMessageChunk', () => {
   beforeEach(setupBeforeEach);
@@ -114,6 +115,103 @@ describe('ChatInstance.messaging.addMessageChunk', () => {
       messageID: requestID,
       otherData: processingFailure,
     });
+  });
+
+  it('preserves a later stream when a finalized response transport throws', async () => {
+    const firstFinalized = resolvablePromise<void>();
+    const failFirst = resolvablePromise<void>();
+    const secondStreaming = resolvablePromise<void>();
+    const finishSecond = resolvablePromise<void>();
+    const customSendMessage = jest.fn(
+      async (request: MessageRequest, _options, chat: ChatInstance) => {
+        if (request.input.text === 'third') {
+          return;
+        }
+        const responseID = `${request.input.text}-response`;
+        const finalResponse: MessageResponse = {
+          id: responseID,
+          request_id: request.id,
+          output: {
+            generic: [
+              {
+                response_type: MessageResponseTypes.TEXT,
+                text: 'Final answer',
+                streaming_metadata: { id: 'text' },
+              },
+            ],
+          },
+        };
+        await chat.messaging.addMessageChunk({
+          streaming_metadata: { response_id: responseID },
+          partial_item: {
+            response_type: MessageResponseTypes.TEXT,
+            text: 'Partial answer',
+            streaming_metadata: { id: 'text', cancellable: true },
+          },
+        });
+        if (request.input.text === 'first') {
+          await chat.messaging.addMessageChunk({
+            final_response: finalResponse,
+          });
+          firstFinalized.doResolve();
+          await failFirst;
+          throw new Error('first transport failed');
+        }
+        secondStreaming.doResolve();
+        await finishSecond;
+        await chat.messaging.addMessageChunk({ final_response: finalResponse });
+      }
+    );
+    const { instance, store, serviceManager } =
+      await renderChatAndGetInstanceWithStore({
+        ...createBaseConfig(),
+        onError: jest.fn(),
+        messaging: {
+          skipWelcome: true,
+          messageTimeoutSecs: 0,
+          customSendMessage,
+        },
+      });
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const first = instance.send('first');
+    const firstFailure = expect(first).rejects.toThrow(
+      'first transport failed'
+    );
+    let second: Promise<void>;
+
+    try {
+      await firstFinalized;
+      second = instance.send('second');
+      await secondStreaming;
+      const third = instance.send('third');
+      failFirst.doResolve();
+      await firstFailure;
+
+      expect(
+        serviceManager.messageService.inboundStreaming.streamingMessageID
+      ).toBe('second-response');
+      const secondItem = Object.values(
+        store.getState().allMessageItemsByID
+      ).find((item) => item.fullMessageID === 'second-response');
+      expect(secondItem.ui_state.streamingState.isDone).toBe(false);
+      expect(
+        customSendMessage.mock.calls.map(([request]) => request.input.text)
+      ).toEqual(['first', 'second']);
+
+      finishSecond.doResolve();
+      await Promise.all([second, third]);
+      expect(
+        customSendMessage.mock.calls.map(([request]) => request.input.text)
+      ).toEqual(['first', 'second', 'third']);
+    } finally {
+      failFirst.doResolve();
+      finishSecond.doResolve();
+      await firstFailure;
+      await second;
+      consoleError.mockRestore();
+    }
   });
 
   it('does not turn a chunk event handler failure into a conversation error', async () => {

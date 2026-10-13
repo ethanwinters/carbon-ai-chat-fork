@@ -769,8 +769,12 @@ class MessageService {
     }
     const responseID =
       this.inboundStreaming.streamingMessageID || pendingRequest.message.id;
-    this.inboundStreaming.clearStreamingResponse(responseID);
     pendingRequest.isStreaming = false;
+    const streamingMeta = this.inboundStreaming.getStreamingMeta(responseID);
+    if (streamingMeta?.requestId !== pendingRequest.message.id) {
+      return;
+    }
+    this.inboundStreaming.clearStreamingResponse(responseID);
     this.serviceManager.conversationLifecycleService?.responseFinished(
       responseID,
       pendingRequest.generation
