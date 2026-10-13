@@ -112,6 +112,38 @@ describe('public message state', () => {
     });
   });
 
+  it('preserves snapshot text while an upsert item is streaming without chunks', () => {
+    const projection = new PublicMessagesProjection();
+    const message: Message = {
+      id: 'response',
+      output: { generic: [] },
+    };
+    const item = localItem(
+      'response',
+      'text',
+      {
+        response_type: MessageResponseTypes.TEXT,
+        text: 'A partial response is visible.',
+      },
+      []
+    );
+
+    const [result] = projection.project(
+      ['response'],
+      { response: message },
+      { [item.ui_state.id]: item },
+      [item.ui_state.id]
+    );
+
+    expect(result).toMatchObject({
+      output: {
+        generic: [
+          { response_type: 'text', text: 'A partial response is visible.' },
+        ],
+      },
+    });
+  });
+
   it('keeps stable references for unchanged content and fixed old snapshots', () => {
     const projection = new PublicMessagesProjection();
     const message: Message = {

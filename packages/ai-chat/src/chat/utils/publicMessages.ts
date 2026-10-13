@@ -21,6 +21,7 @@ import {
 import type ObjectMap from '../../types/utilities/ObjectMap';
 import { deepFreeze } from './lang/objectUtils';
 import { isResponse } from './messageUtils';
+import { deriveStreamingItemText } from './streamingUtils';
 
 interface CachedMessage {
   sources: readonly unknown[];
@@ -126,9 +127,10 @@ function assembleStreamingItem(localItem: LocalMessageItem): GenericItem {
     ...streamingState.chunks
   ) as GenericItem;
   if (assembled.response_type === MessageResponseTypes.TEXT) {
-    (assembled as TextItem).text = streamingState.chunks
-      .map((chunk) => (chunk as Partial<TextItem>).text ?? '')
-      .join('');
+    (assembled as TextItem).text = deriveStreamingItemText(
+      (assembled as TextItem).text,
+      (localItem as LocalMessageItem<TextItem>).ui_state.streamingState
+    );
   }
   return assembled;
 }
