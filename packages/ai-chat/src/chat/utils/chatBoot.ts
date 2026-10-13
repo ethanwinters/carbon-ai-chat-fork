@@ -62,10 +62,9 @@ import { AutoScrollOptions } from '../../types/utilities/HasDoAutoScroll';
 let bootContainerRulesInstalled = false;
 
 /**
- * Install boot-container size rules on the shared dynamic stylesheet so a
- * strict CSP can drop style-src-attr 'unsafe-inline'. The container fills
- * the host element when one is provided and otherwise stays collapsed
- * (0×0) until the chat floats out.
+ * Install boot-container size rules on the shared dynamic stylesheet. The
+ * container fills the host element when one is provided and otherwise stays
+ * collapsed (0×0) until the chat floats out.
  */
 function ensureBootContainerStyleRules(): void {
   if (bootContainerRulesInstalled) {
