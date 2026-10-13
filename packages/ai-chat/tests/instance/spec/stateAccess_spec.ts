@@ -9,6 +9,7 @@
 
 import { act } from '@testing-library/react';
 import actions from '../../../src/chat/store/actions';
+import { PublicChatState } from '../../../src/types/instance/PublicChatState';
 import {
   BusEventStateChange,
   BusEventType,
@@ -23,6 +24,33 @@ import {
 describe('ChatInstance.state', () => {
   beforeEach(setupBeforeEach);
   afterEach(setupAfterEach);
+
+  it.each(['unread', 'fresh'])(
+    'keeps a %s snapshot isolated from customSendMessage mutations',
+    async (snapshotKind) => {
+      let snapshot: PublicChatState;
+      let requestID: string;
+      const customSendMessage = jest.fn((request, _options, instance) => {
+        requestID = request.id;
+        const unread = instance.state.get();
+        request.input.text = 'Changed by the host';
+        snapshot = snapshotKind === 'unread' ? unread : instance.state.get();
+      });
+      const { instance } = await renderChatAndGetInstanceWithStore({
+        ...createBaseConfig(),
+        messaging: { customSendMessage, skipWelcome: true },
+      });
+
+      await act(async () => {
+        await instance.send('Original request');
+      });
+
+      expect(customSendMessage).toHaveBeenCalledTimes(1);
+      expect(
+        snapshot.messages.find((message) => message.id === requestID)
+      ).toMatchObject({ input: { text: 'Original request' } });
+    }
+  );
 
   it('provides stable bound reads and agrees with getState', async () => {
     const { instance } =

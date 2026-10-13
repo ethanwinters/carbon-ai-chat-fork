@@ -257,11 +257,12 @@ class OutboundMessageCoordinator {
       const message = cloneDeep(current.message);
       current.message = message;
       this.serviceManager.store.dispatch(actions.updateMessage(message));
+      const customSendMessageRequest = cloneDeep(message);
       // AbortController was already created when message was added to queue
       debugLog('Called customSendMessage', message);
       const busEventSend: BusEventSend = {
         type: BusEventType.SEND,
-        data: message,
+        data: customSendMessageRequest,
         source: current.source,
       };
       startLoading?.();
@@ -284,7 +285,7 @@ class OutboundMessageCoordinator {
       this.registerRequestGeneration(message.id, current.restartGeneration);
       await Promise.resolve(
         customSendMessage(
-          message,
+          customSendMessageRequest,
           {
             signal: current.sendMessageController.signal,
             silent: current.requestOptions.silent,
