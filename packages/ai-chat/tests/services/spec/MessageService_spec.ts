@@ -573,6 +573,51 @@ describe('MessageService', () => {
   });
 
   describe('streaming terminal cleanup', () => {
+    it("keeps another stream's stop button visible after an ERROR upsert", () => {
+      const serviceManager = createServiceManagerStub(jest.fn(), {
+        isVisible: true,
+        isDisabled: false,
+      });
+      const messageService = new MessageService(serviceManager, {
+        messaging: { messageTimeoutSecs: 0 },
+      });
+      messageService.markCurrentMessageAsStreaming('response-a');
+      messageService.markCurrentMessageAsStreaming('response-b');
+
+      messageService.markStreamingResponseError('response-a');
+
+      expect(messageService.inboundStreaming.streamingMessageID).toBe(
+        'response-b'
+      );
+      expect(serviceManager.store.dispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'SET_STOP_STREAMING_BUTTON_VISIBLE',
+          isVisible: false,
+        })
+      );
+    });
+
+    it('hides the stop button after the only stream receives an ERROR upsert', () => {
+      const serviceManager = createServiceManagerStub(jest.fn(), {
+        isVisible: true,
+        isDisabled: false,
+      });
+      const messageService = new MessageService(serviceManager, {
+        messaging: { messageTimeoutSecs: 0 },
+      });
+      messageService.markCurrentMessageAsStreaming('response-a');
+
+      messageService.markStreamingResponseError('response-a');
+
+      expect(messageService.inboundStreaming.streamingMessageID).toBeNull();
+      expect(serviceManager.store.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'SET_STOP_STREAMING_BUTTON_VISIBLE',
+          isVisible: false,
+        })
+      );
+    });
+
     it('advances after an ERROR upsert when the transport later succeeds', async () => {
       const first = createDeferred();
       const customSendMessage = jest.fn((message: MessageRequest<any>) =>

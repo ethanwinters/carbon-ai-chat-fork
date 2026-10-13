@@ -753,7 +753,10 @@ class MessageService {
         this.moveToNextQueueItem();
       }
     }
-    resetStopStreamingButton(this.serviceManager.store);
+    resetStopStreamingButton(
+      this.serviceManager.store,
+      this.inboundStreaming.streamingMessageID
+    );
   }
 
   private finishFailedStreamingResponse(pendingRequest: PendingMessageRequest) {
