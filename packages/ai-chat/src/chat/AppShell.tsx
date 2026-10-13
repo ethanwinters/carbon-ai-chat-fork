@@ -68,6 +68,7 @@ import {
   selectInputFieldVisible,
   selectInputUploadAndStreamingFields,
   selectLanguagePack,
+  selectStopStreamingButtonVisible,
 } from './store/selectors';
 import { shallowEqual } from './store/appStore';
 import {
@@ -354,6 +355,9 @@ function AppShell({
   // Effective input flags derived from config + runtime override.
   const isInputReadonly = useSelector(selectInputIsReadonly);
   const isInputFieldVisible = useSelector(selectInputFieldVisible);
+  const isStopStreamingButtonVisible = useSelector(
+    selectStopStreamingButtonVisible
+  );
   const agentDisplayState = useSelector(
     selectHumanAgentDisplayState,
     shallowEqual
@@ -809,7 +813,7 @@ function AppShell({
   }, [mainWindowFunctions, serviceManager]);
 
   // Set scrollbar width CSS variable. Written via the shared dynamic
-  // stylesheet so a strict CSP can drop style-src-attr 'unsafe-inline'.
+  // stylesheet.
   useEffect(() => {
     const container = widgetContainerRef.current;
     if (!container) {
@@ -1071,9 +1075,7 @@ function AppShell({
                     placeholder={
                       languagePack[agentDisplayState.inputPlaceholderKey]
                     }
-                    isStopStreamingButtonVisible={
-                      inputFields.stopStreamingButtonState.isVisible
-                    }
+                    isStopStreamingButtonVisible={isStopStreamingButtonVisible}
                     isStopStreamingButtonDisabled={
                       inputFields.stopStreamingButtonState.isDisabled
                     }

@@ -70,6 +70,7 @@ class ChunkProcessingService {
     messageID?: string;
     options: AddMessageOptions;
     chunkPromise: ResolvablePromise<void>;
+    restartGeneration: number;
   }[] = [];
 
   /**
@@ -131,12 +132,28 @@ class ChunkProcessingService {
     options: AddMessageOptions = {}
   ) {
     const ownedChunk = cloneDeep(chunk);
-    if (isStreamPartialItem(ownedChunk)) {
-      const extractedMessageID =
-        messageID ||
-        ('streaming_metadata' in ownedChunk &&
-          ownedChunk.streaming_metadata?.response_id);
+    const restartGeneration = this.restartGeneration;
+    const requestID = isStreamFinalResponse(ownedChunk)
+      ? ownedChunk.final_response.request_id
+      : ownedChunk.streaming_metadata?.request_id;
+    if (
+      this.serviceManager.messageService.isRequestFromPreviousConversation(
+        requestID
+      )
+    ) {
+      return;
+    }
+    const { messageID: extractedMessageID } = resolveChunkContext(
+      ownedChunk,
+      messageID
+    );
+    if (this.shouldSkipChunkDueToGeneration(extractedMessageID)) {
+      return;
+    }
 
+    this.serviceManager.messageService.messageLoadingManager.end();
+
+    if (isStreamPartialItem(ownedChunk)) {
       this.serviceManager.messageService.markCurrentMessageAsStreaming(
         extractedMessageID,
         ownedChunk.partial_item?.streaming_metadata?.id
@@ -168,6 +185,7 @@ class ChunkProcessingService {
       messageID,
       options,
       chunkPromise,
+      restartGeneration,
     });
     if (this.chunkQueue.length === 1) {
       this.processChunkQueue();
@@ -176,7 +194,8 @@ class ChunkProcessingService {
   }
 
   async processChunkQueue() {
-    const { chunk, options, chunkPromise } = this.chunkQueue[0];
+    const { chunk, options, chunkPromise, restartGeneration } =
+      this.chunkQueue[0];
     const { store } = this.serviceManager;
     let messageID: string | undefined;
     let terminalConversationFailure = false;
@@ -193,19 +212,10 @@ class ChunkProcessingService {
     try {
       const context = resolveChunkContext(chunk, this.chunkQueue[0].messageID);
       ({ messageID } = context);
-      const { item, isCompleteItem, isPartialItem, isFinalResponse } = context;
+      const { item, isCompleteItem, isPartialItem } = context;
       const stopStreamingState =
         store.getState().assistantInputState.stopStreamingButtonState;
-      const hideStopStreaming = () => {
-        if (
-          (isCompleteItem || isFinalResponse) &&
-          stopStreamingState.isVisible
-        ) {
-          resetStopStreamingButton(this.serviceManager.store);
-        }
-      };
-
-      if (this.shouldSkipChunkDueToGeneration(messageID, hideStopStreaming)) {
+      if (restartGeneration !== this.restartGeneration) {
         this.advanceChunkQueue(chunkPromise);
         return;
       }
@@ -244,7 +254,7 @@ class ChunkProcessingService {
         );
       } else if (isStreamFinalResponse(chunk)) {
         await this.handleFinalResponseChunk(chunk, messageID, options);
-        if (messageID) {
+        if (messageID && restartGeneration === this.restartGeneration) {
           runCoreOperation(() =>
             this.serviceManager.messageService.finalizeStreamingMessage(
               messageID
@@ -253,9 +263,11 @@ class ChunkProcessingService {
         }
       }
 
-      runCoreOperation(() =>
-        this.resetStopStreamingIfNeeded(isCompleteItem, chunk)
-      );
+      if (restartGeneration === this.restartGeneration) {
+        runCoreOperation(() =>
+          this.resetStopStreamingIfNeeded(isCompleteItem, chunk)
+        );
+      }
 
       this.advanceChunkQueue(chunkPromise);
     } catch (error) {
@@ -288,10 +300,7 @@ class ChunkProcessingService {
     }
   }
 
-  private shouldSkipChunkDueToGeneration(
-    messageID: string | undefined,
-    hideStopStreaming: () => void
-  ) {
+  private shouldSkipChunkDueToGeneration(messageID: string | undefined) {
     const inboundStreaming =
       this.serviceManager.messageService.inboundStreaming;
     if (
@@ -300,8 +309,7 @@ class ChunkProcessingService {
       !inboundStreaming.validateChunkGeneration(
         messageID,
         this.messageGenerations,
-        this.restartGeneration,
-        hideStopStreaming
+        this.restartGeneration
       )
     ) {
       return true;

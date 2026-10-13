@@ -61,6 +61,10 @@ class OutboundMessageCoordinator {
     private getMessagingConfig: () => PublicConfigMessaging,
     private finishStreamingResponse: (
       pendingRequest: PendingMessageRequest
+    ) => void,
+    private registerRequestGeneration: (
+      requestID: string,
+      restartGeneration: number
     ) => void
   ) {}
 
@@ -277,6 +281,7 @@ class OutboundMessageCoordinator {
         }
       }
 
+      this.registerRequestGeneration(message.id, current.restartGeneration);
       await Promise.resolve(
         customSendMessage(
           message,

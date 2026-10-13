@@ -18,6 +18,7 @@ import { resolvablePromise } from '../../../src/chat/utils/resolvablePromise';
 import { PublicConfig } from '../../../src/types/config/PublicConfig';
 import {
   BusEvent,
+  BusEventPreReceive,
   BusEventReceive,
   BusEventType,
 } from '../../../src/types/events/eventBusTypes';
@@ -45,7 +46,9 @@ function createHarness(config: PublicConfig = {}) {
     humanAgentService: { handleConnectToHumanAgent },
     streamAnnouncerService: { clearAll: jest.fn() },
     messageService: {
+      isRequestFromPreviousConversation: jest.fn().mockReturnValue(false),
       inboundStreaming: { streamingMessageID: null },
+      messageLoadingManager: { end: jest.fn() },
       finalizeStreamingMessage: jest.fn(),
       cancelAllMessageRequests: jest.fn().mockResolvedValue(undefined),
     },
@@ -275,6 +278,40 @@ describe('ReceiveService', () => {
 
     expect(store.getState().allMessagesByID).toEqual({});
     expect(eventTypes()).toEqual([BusEventType.PRE_RECEIVE]);
+  });
+
+  it('drops a message when pre:receive assigns a request from a previous conversation', async () => {
+    const { service, manager, store, fire, eventTypes } = createHarness();
+    jest
+      .spyOn(manager.messageService, 'isRequestFromPreviousConversation')
+      .mockImplementation((requestID) => requestID === 'old-request');
+    fire.mockImplementation(async (event): Promise<void> => {
+      if (event.type === BusEventType.PRE_RECEIVE) {
+        (event as BusEventPreReceive).data.request_id = 'old-request';
+      }
+    });
+
+    await service.receive(response());
+
+    expect(store.getState().allMessagesByID).toEqual({});
+    expect(eventTypes()).toEqual([BusEventType.PRE_RECEIVE]);
+  });
+
+  it('does not call the old footer when restart happens while a slot is pending', async () => {
+    const { service, manager, slotEventService, localItems } = createHarness();
+    const pendingSlot = resolvablePromise();
+    slotEventService.handleUserDefinedResponseItems.mockReturnValueOnce(
+      pendingSlot
+    );
+    await service.receive(response());
+    await manager.hydrationService.restartConversation({
+      skipHydration: true,
+      fireEvents: false,
+    });
+    pendingSlot.doResolve();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(slotEventService.handleCustomFooterSlot).not.toHaveBeenCalled();
+    expect(localItems()).toEqual([]);
   });
 
   it.each([
