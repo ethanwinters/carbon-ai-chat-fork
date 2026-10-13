@@ -31,6 +31,7 @@ import { consoleError, debugLog } from '../utils/miscUtils';
 import { BusEventSend, BusEventType } from '../../types/events/eventBusTypes';
 import { ChatInstance } from '../../types/instance/ChatInstance';
 import { addDefaultsToMessage } from '../utils/messageUtils';
+import { isChunkProcessingError } from './ChunkProcessingService';
 
 type CustomSendMessageFn = (
   message: MessageRequest<any>,
@@ -57,6 +58,13 @@ class OutboundMessageCoordinator {
       received?: MessageResponse
     ) => Promise<void>,
     private getMessagingConfig: () => PublicConfigMessaging,
+    private finishStreamingResponse: (
+      pendingRequest: PendingMessageRequest
+    ) => void,
+    private registerRequestGeneration: (
+      requestID: string,
+      restartGeneration: number
+    ) => void,
     private hideStopStreamingButtonIfNoUpsertStreaming: () => void
   ) {}
 
@@ -79,7 +87,8 @@ class OutboundMessageCoordinator {
    */
   async processError(
     pendingRequest: PendingMessageRequest,
-    resultText: string
+    resultText: string,
+    reportConversationError = true
   ) {
     const { timeFirstRequest, timeLastRequest, isProcessed, requestOptions } =
       pendingRequest;
@@ -97,16 +106,27 @@ class OutboundMessageCoordinator {
       this.addErrorMessage();
     }
 
-    this.serviceManager.actions.errorOccurred({
+    const conversationError = {
       errorType: OnErrorType.MESSAGE_COMMUNICATION,
       message: 'An error occurred sending a message',
+      messageID: pendingRequest.message.id,
       otherData: resultText,
-    });
+    };
+    if (reportConversationError) {
+      if (this.serviceManager.actions.conversationErrorOccurred) {
+        this.serviceManager.actions.conversationErrorOccurred(
+          conversationError,
+          pendingRequest.generation
+        );
+      } else {
+        const { messageID: _messageID, ...legacyError } = conversationError;
+        this.serviceManager.actions.errorOccurred(legacyError);
+      }
+    }
 
     // A `customSendMessage` that throws mid-stream never sends a closing chunk, so settle
     // the items it had streamed — only if that stream belongs to this request, since a
-    // host can still be streaming a response to an earlier one. The chunk registry
-    // itself is left as it always was.
+    // host can still be streaming a response to an earlier one.
     const { inboundStreaming } = this.serviceManager.messageService;
     const { streamingMessageID } = inboundStreaming;
     const streamingMeta =
@@ -120,6 +140,11 @@ class OutboundMessageCoordinator {
         actions.endMessageStreaming(streamingMessageID)
       );
     }
+
+    this.serviceManager.messageUpsertCoordinator.endStreamingForRequest(
+      pendingRequest.message.id,
+      pendingRequest.generation
+    );
 
     // Hide stop streaming button if visible. This hid unconditionally before
     // `upsertMessage` existed, so it still ignores chunk streams; only a running upsert
@@ -154,8 +179,13 @@ class OutboundMessageCoordinator {
     }
 
     // Reject the promise that lets the original caller who sent the message know that the message failed to be sent.
+    this.finishStreamingResponse(pendingRequest);
     sendMessagePromise.doReject(new Error(resultText));
     pendingRequest.isProcessed = true;
+    this.serviceManager.conversationLifecycleService?.requestFinished(
+      pendingRequest.message.id,
+      pendingRequest.generation
+    );
 
     if (pendingRequest === this.getCurrent()) {
       // Move on to next item in queue.
@@ -223,6 +253,10 @@ class OutboundMessageCoordinator {
 
     sendMessagePromise.doResolve();
     pendingRequest.isProcessed = true;
+    this.serviceManager.conversationLifecycleService?.requestFinished(
+      pendingRequest.message.id,
+      pendingRequest.generation
+    );
 
     if (pendingRequest === this.getCurrent()) {
       this.moveToNextQueueItem();
@@ -249,11 +283,12 @@ class OutboundMessageCoordinator {
       const message = cloneDeep(current.message);
       current.message = message;
       this.serviceManager.store.dispatch(actions.updateMessage(message));
+      const customSendMessageRequest = cloneDeep(message);
       // AbortController was already created when message was added to queue
       debugLog('Called customSendMessage', message);
       const busEventSend: BusEventSend = {
         type: BusEventType.SEND,
-        data: message,
+        data: customSendMessageRequest,
         source: current.source,
       };
       startLoading?.();
@@ -276,9 +311,10 @@ class OutboundMessageCoordinator {
         );
       }
 
+      this.registerRequestGeneration(message.id, current.restartGeneration);
       await Promise.resolve(
         customSendMessage(
-          message,
+          customSendMessageRequest,
           {
             signal: current.sendMessageController.signal,
             silent: current.requestOptions.silent,
@@ -292,9 +328,13 @@ class OutboundMessageCoordinator {
       consoleError('An error occurred while sending a message', error);
       const resultText =
         (error &&
-          (typeof error === 'string' ? error : JSON.stringify(error))) ||
+          (typeof error === 'string'
+            ? error
+            : error instanceof Error
+              ? error.message
+              : JSON.stringify(error))) ||
         'There was an unidentified error.';
-      this.processError(current, resultText);
+      this.processError(current, resultText, !isChunkProcessingError(error));
     } finally {
       // Loading manager is ended via processSuccess/reject handlers.
     }

@@ -16,8 +16,12 @@ import {
   setupBeforeEach,
   setupAfterEach,
 } from '../../../test_helpers';
-import actions from '../../../../src/chat/store/actions';
-import { BusEventType } from '../../../../src/types/events/eventBusTypes';
+import actions, { UPSERT_MESSAGE } from '../../../../src/chat/store/actions';
+import type { MessageWriteOptions } from '../../../../src/chat/store/messageWriteTypes';
+import {
+  BusEventChunkUserDefinedResponse,
+  BusEventType,
+} from '../../../../src/types/events/eventBusTypes';
 import {
   MessageResponseTypes,
   TextItem,
@@ -34,6 +38,7 @@ import {
 } from '../../../../src/types/config/MessagingConfig';
 import { ChatInstance } from '../../../../src/types/instance/ChatInstance';
 import { OnErrorType } from '../../../../src/types/config/ErrorConfig';
+import { resolvablePromise } from '../../../../src/chat/utils/resolvablePromise';
 import {
   MALFORMED,
   fixtureMessage,
@@ -131,6 +136,323 @@ describe('ChatInstance.messaging.addMessageChunk', () => {
     ).resolves.not.toThrow();
   });
 
+  it('ends a failed stream and reports one terminal error for its request', async () => {
+    const processingFailure = new Error('stream reducer failed');
+    const onError = jest.fn();
+    let requestID: string;
+    const config = {
+      ...createBaseConfig(),
+      onError,
+      messaging: {
+        customSendMessage: async (
+          request: MessageRequest,
+          _options: CustomSendMessageOptions,
+          instance: ChatInstance
+        ) => {
+          requestID = request.id;
+          await instance.messaging.addMessageChunk({
+            streaming_metadata: { response_id: 'failed-response' },
+            partial_item: {
+              streaming_metadata: { id: 'failed-item' },
+              response_type: MessageResponseTypes.TEXT,
+              text: 'partial',
+            },
+          });
+        },
+      },
+    };
+    const { instance, store } = await renderChatAndGetInstanceWithStore(config);
+    const originalDispatch = store.dispatch;
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    jest.spyOn(store, 'dispatch').mockImplementation((action) => {
+      if (
+        action.type === UPSERT_MESSAGE &&
+        (action.options as MessageWriteOptions | undefined)?.origin === 'chunk'
+      ) {
+        throw processingFailure;
+      }
+      return originalDispatch(action);
+    });
+
+    await expect(instance.send('trigger a failed stream')).rejects.toThrow(
+      'stream reducer failed'
+    );
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(instance.state.get().status).toBe('error');
+    expect(instance.state.get().error).toMatchObject({
+      errorType: OnErrorType.MESSAGE_COMMUNICATION,
+      messageID: requestID,
+      otherData: processingFailure,
+    });
+  });
+
+  it('does not advance a pending send when a failed stream receives a late final response', async () => {
+    const secondStarted = resolvablePromise<void>();
+    const finishSecond = resolvablePromise<void>();
+    const secondSettled = jest.fn();
+    let failedRequestID: string;
+    const customSendMessage = jest.fn(
+      async (request: MessageRequest, _options, chat: ChatInstance) => {
+        if (request.input.text === 'first') {
+          failedRequestID = request.id;
+          await chat.messaging.addMessageChunk({
+            streaming_metadata: { response_id: 'failed-stream' },
+            partial_item: {
+              streaming_metadata: { id: 'failed-item' },
+              response_type: MessageResponseTypes.TEXT,
+              text: 'Partial answer',
+            },
+          });
+          throw new Error('first send failed');
+        }
+        if (request.input.text === 'second') {
+          secondStarted.doResolve();
+          await finishSecond;
+        }
+      }
+    );
+    const { instance } = await renderChatAndGetInstanceWithStore({
+      ...createBaseConfig(),
+      onError: jest.fn(),
+      messaging: {
+        skipWelcome: true,
+        messageTimeoutSecs: 0,
+        customSendMessage,
+      },
+    });
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    let second: Promise<void>;
+    let third: Promise<void>;
+
+    try {
+      await expect(instance.send('first')).rejects.toThrow('first send failed');
+      second = instance.send('second').then(secondSettled);
+      await secondStarted;
+      third = instance.send('third');
+
+      await instance.messaging.addMessageChunk({
+        final_response: {
+          id: 'failed-stream',
+          request_id: failedRequestID,
+          output: {
+            generic: [
+              {
+                response_type: MessageResponseTypes.TEXT,
+                text: 'Late answer',
+              },
+            ],
+          },
+        },
+      });
+
+      expect(
+        customSendMessage.mock.calls.map(([request]) => request.input.text)
+      ).toEqual(['first', 'second']);
+      expect(secondSettled).not.toHaveBeenCalled();
+
+      finishSecond.doResolve();
+      await Promise.all([second, third]);
+      expect(
+        customSendMessage.mock.calls.map(([request]) => request.input.text)
+      ).toEqual(['first', 'second', 'third']);
+      expect(secondSettled).toHaveBeenCalledTimes(1);
+    } finally {
+      finishSecond.doResolve();
+      await Promise.all([second, third]);
+      consoleError.mockRestore();
+    }
+  });
+
+  it('preserves a later stream when a finalized response transport throws', async () => {
+    const firstFinalized = resolvablePromise<void>();
+    const failFirst = resolvablePromise<void>();
+    const secondStreaming = resolvablePromise<void>();
+    const finishSecond = resolvablePromise<void>();
+    const customSendMessage = jest.fn(
+      async (request: MessageRequest, _options, chat: ChatInstance) => {
+        if (request.input.text === 'third') {
+          return;
+        }
+        const responseID = `${request.input.text}-response`;
+        const finalResponse: MessageResponse = {
+          id: responseID,
+          request_id: request.id,
+          output: {
+            generic: [
+              {
+                response_type: MessageResponseTypes.TEXT,
+                text: 'Final answer',
+                streaming_metadata: { id: 'text' },
+              },
+            ],
+          },
+        };
+        await chat.messaging.addMessageChunk({
+          streaming_metadata: { response_id: responseID },
+          partial_item: {
+            response_type: MessageResponseTypes.TEXT,
+            text: 'Partial answer',
+            streaming_metadata: { id: 'text', cancellable: true },
+          },
+        });
+        if (request.input.text === 'first') {
+          await chat.messaging.addMessageChunk({
+            final_response: finalResponse,
+          });
+          firstFinalized.doResolve();
+          await failFirst;
+          throw new Error('first transport failed');
+        }
+        secondStreaming.doResolve();
+        await finishSecond;
+        await chat.messaging.addMessageChunk({ final_response: finalResponse });
+      }
+    );
+    const { instance, store, serviceManager } =
+      await renderChatAndGetInstanceWithStore({
+        ...createBaseConfig(),
+        onError: jest.fn(),
+        messaging: {
+          skipWelcome: true,
+          messageTimeoutSecs: 0,
+          customSendMessage,
+        },
+      });
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const first = instance.send('first');
+    const firstFailure = expect(first).rejects.toThrow(
+      'first transport failed'
+    );
+    let second: Promise<void>;
+
+    try {
+      await firstFinalized;
+      second = instance.send('second');
+      await secondStreaming;
+      const third = instance.send('third');
+      failFirst.doResolve();
+      await firstFailure;
+
+      expect(
+        serviceManager.messageService.inboundStreaming.streamingMessageID
+      ).toBe('second-response');
+      const secondItem = Object.values(
+        store.getState().allMessageItemsByID
+      ).find((item) => item.fullMessageID === 'second-response');
+      expect(secondItem.ui_state.streamingState.isDone).toBe(false);
+      expect(
+        customSendMessage.mock.calls.map(([request]) => request.input.text)
+      ).toEqual(['first', 'second']);
+
+      finishSecond.doResolve();
+      await Promise.all([second, third]);
+      expect(
+        customSendMessage.mock.calls.map(([request]) => request.input.text)
+      ).toEqual(['first', 'second', 'third']);
+    } finally {
+      failFirst.doResolve();
+      finishSecond.doResolve();
+      await firstFailure;
+      await second;
+      consoleError.mockRestore();
+    }
+  });
+
+  it('does not turn a chunk event handler failure into a conversation error', async () => {
+    const onError = jest.fn();
+    const { instance } = await renderChatAndGetInstanceWithStore({
+      ...createBaseConfig(),
+      onError,
+    });
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    instance.on({
+      type: BusEventType.CHUNK_USER_DEFINED_RESPONSE,
+      handler: async () => {
+        throw new Error('host chunk handler failed');
+      },
+    });
+
+    await expect(
+      instance.messaging.addMessageChunk({
+        streaming_metadata: { response_id: 'callback-response' },
+        partial_item: {
+          streaming_metadata: { id: 'callback-item' },
+          response_type: MessageResponseTypes.USER_DEFINED,
+          user_defined: { value: 'test' },
+        },
+      })
+    ).rejects.toThrow('host chunk handler failed');
+
+    expect(onError).not.toHaveBeenCalled();
+    expect(instance.state.get().status).toBe('ready');
+    expect(instance.state.get().error).toBeNull();
+  });
+
+  it('should own chunk data passed by the caller', async () => {
+    const config = createBaseConfig();
+    const { instance, store } = await renderChatAndGetInstanceWithStore(config);
+    const partialItem = {
+      streaming_metadata: { id: 'owned-item' },
+      response_type: MessageResponseTypes.TEXT,
+      text: 'original',
+    } satisfies Partial<TextItem>;
+    const chunk: PartialItemChunk = {
+      streaming_metadata: { response_id: 'owned-response' },
+      partial_item: partialItem,
+    };
+
+    await instance.messaging.addMessageChunk(chunk);
+    partialItem.text = 'mutated';
+
+    const stored =
+      store.getState().allMessageItemsByID['owned-response-owned-item'];
+    expect(stored.ui_state.streamingState.chunks[0]).toMatchObject({
+      text: 'original',
+    });
+  });
+
+  it('owns and freezes chunk event data separately from the store', async () => {
+    const { instance, store } =
+      await renderChatAndGetInstanceWithStore(createBaseConfig());
+    let receivedEvent: BusEventChunkUserDefinedResponse;
+    instance.on({
+      type: BusEventType.CHUNK_USER_DEFINED_RESPONSE,
+      handler: async (event) => {
+        receivedEvent = event as BusEventChunkUserDefinedResponse;
+      },
+    });
+
+    await instance.messaging.addMessageChunk({
+      streaming_metadata: { response_id: 'owned-event-response' },
+      partial_item: {
+        streaming_metadata: { id: 'owned-event-item' },
+        response_type: MessageResponseTypes.USER_DEFINED,
+        user_defined: { value: 'original' },
+      },
+    });
+
+    const stored =
+      store.getState().allMessageItemsByID[
+        'owned-event-response-owned-event-item'
+      ];
+    expect(receivedEvent.data.messageItem).not.toBe(stored.item);
+    expect(receivedEvent.data.chunk).not.toBe(
+      stored.ui_state.streamingState.chunks[0]
+    );
+    expect(Object.isFrozen(receivedEvent.data)).toBe(true);
+    expect(Object.isFrozen(receivedEvent.data.messageItem)).toBe(true);
+    expect(() => {
+      (receivedEvent.data.messageItem.user_defined as { value: string }).value =
+        'mutated';
+    }).toThrow();
+    expect(stored.item.user_defined).toEqual({ value: 'original' });
+  });
+
   it('should return a Promise', async () => {
     const config = createBaseConfig();
     const instance = await renderChatAndGetInstance(config);
@@ -207,7 +529,7 @@ describe('ChatInstance.messaging.addMessageChunk', () => {
     expect(messageItem.ui_state.streamingState.isDone).toBe(false);
 
     const concatenatedText = messageItem.ui_state.streamingState.chunks
-      .map((chunk: any) => chunk.text)
+      .map((chunk) => ('text' in chunk ? chunk.text : ''))
       .join('');
 
     expect(concatenatedText).toBe('Hello world from Jest!');
@@ -261,7 +583,7 @@ describe('ChatInstance.messaging.addMessageChunk', () => {
     expect(messageItem.ui_state.streamingState.isDone).toBe(false);
 
     const partialText = messageItem.ui_state.streamingState.chunks
-      .map((chunk: any) => chunk.text)
+      .map((chunk) => ('text' in chunk ? chunk.text : ''))
       .join('');
     expect(partialText).toBe('Streaming text response!');
 
@@ -2080,15 +2402,13 @@ describe('malformed items through addMessageChunk', () => {
   afterEach(setupAfterEach);
 
   /**
-   * Items a renderer throws on. The rest throw while `final_response` is stored, which
-   * leaves the streamed item as it was.
+   * Items a renderer throws on. Label-only options render successfully; other malformed
+   * items fail while `final_response` is stored, leaving the streamed item as it was.
    */
   const SHOWS_ERROR = new Set([
     'grid, column width not a string',
     'option, no options',
     'option, null entry',
-    'option, dropdown entry with no value.input',
-    'option, more than four entries, one with no value',
     'conversational_search, citations not a list',
     'conversational_search, null citation',
     'system, after a null item in the message',

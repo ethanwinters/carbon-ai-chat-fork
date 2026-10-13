@@ -9,10 +9,12 @@ import { readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-import { PageObjectId } from '@carbon/ai-chat/server';
+import { BusEventType, PageObjectId } from '@carbon/ai-chat/server';
+import type { BusEventReceive, BusEventSend } from '@carbon/ai-chat';
 import type { Page } from '@playwright/test';
 
 import { test, expect } from './fixtures';
+import { RESPONSE_EXPECTATIONS } from './response-corpus-cases';
 import { destroyChatSession, openChatWindow, sendChatMessage } from './utils';
 
 // Import types for window.chatInstance without emitting runtime code
@@ -248,8 +250,60 @@ test.describe('every demo response draws', () => {
       await openChatWindow(page);
       await expect(page.getByTestId(PageObjectId.MAIN_PANEL)).toBeVisible();
 
+      const expected = RESPONSE_EXPECTATIONS[key];
+      const completedResponses: string[] = [];
+      const responseRequestIDs: string[] = [];
+      const requestIDs: string[] = [];
+      await page.exposeFunction(
+        'recordCorpusResponse',
+        (id: string, requestID: string) => {
+          completedResponses.push(id);
+          responseRequestIDs.push(requestID);
+        }
+      );
+      await page.exposeFunction('recordCorpusRequest', (id: string) => {
+        requestIDs.push(id);
+      });
+      await page.evaluate(
+        (eventTypes) => {
+          const corpusWindow = window as typeof window & {
+            recordCorpusResponse: (
+              id: string,
+              requestID: string
+            ) => Promise<void>;
+            recordCorpusRequest: (id: string) => Promise<void>;
+          };
+          window.chatInstance!.on({
+            type: eventTypes.SEND,
+            handler: (event: BusEventSend) =>
+              corpusWindow.recordCorpusRequest(event.data.id),
+          });
+          window.chatInstance!.on({
+            type: eventTypes.RECEIVE,
+            handler: (event: BusEventReceive) =>
+              corpusWindow.recordCorpusResponse(
+                event.data.id,
+                event.data.request_id
+              ),
+          });
+        },
+        { SEND: BusEventType.SEND, RECEIVE: BusEventType.RECEIVE }
+      );
+
       await sendChatMessage(page, key);
       await waitForQuietMessages(page);
+      await expect
+        .poll(() => completedResponses.length, {
+          message: `Completed responses for "${key}"`,
+          timeout: 30_000,
+        })
+        .toBe(expected.responses ?? 1);
+      expect(new Set(completedResponses).size).toBe(expected.responses ?? 1);
+      expect(requestIDs).toHaveLength(1);
+      expect(requestIDs[0]).toBeTruthy();
+      expect(responseRequestIDs).toEqual(
+        Array(expected.responses ?? 1).fill(requestIDs[0])
+      );
 
       if (DUMP_DIR) {
         const mode = useUpsertMessage ? 'upsert' : 'add-message';

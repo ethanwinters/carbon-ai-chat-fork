@@ -54,6 +54,7 @@ export {
   PublicDefaultCustomPanelState,
   PublicChatHumanAgentState,
   PublicChatState,
+  ConversationStatus,
   PublicWorkspaceCustomPanelState,
 } from './types/instance/PublicChatState';
 export {
@@ -273,6 +274,7 @@ export {
   MessageResponseTypes,
   OptionItem,
   OptionItemPreference,
+  SelectionDisplay,
   PartialItemChunk,
   PartialItemChunkWithId,
   PauseItem,

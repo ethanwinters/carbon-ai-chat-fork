@@ -69,6 +69,7 @@ type MessagingMethod = 'addMessage' | 'addMessageChunk' | 'upsertMessage';
  */
 const spyOnMessaging = async (page: Page, { holdFinal = false } = {}) => {
   const calls: MessagingMethod[] = [];
+  const requestIDs: string[] = [];
   let release: () => void = () => {};
   const released = new Promise<void>((resolve) => {
     release = resolve;
@@ -81,6 +82,9 @@ const spyOnMessaging = async (page: Page, { holdFinal = false } = {}) => {
   await page.exposeFunction('recordMessagingCall', (name: MessagingMethod) => {
     calls.push(name);
   });
+  await page.exposeFunction('recordResponseRequest', (id: string) => {
+    requestIDs.push(id);
+  });
   await page.exposeFunction('waitForFinalRelease', () => {
     finalReached();
     return released;
@@ -90,6 +94,7 @@ const spyOnMessaging = async (page: Page, { holdFinal = false } = {}) => {
     ({ hold, completeState }) => {
       const spyWindow = window as typeof window & {
         recordMessagingCall: (name: string) => void;
+        recordResponseRequest: (id: string) => Promise<void>;
         waitForFinalRelease: () => Promise<void>;
       };
       const messaging = window.chatInstance!.messaging;
@@ -101,6 +106,11 @@ const spyOnMessaging = async (page: Page, { holdFinal = false } = {}) => {
       };
       messaging.addMessageChunk = async (chunk) => {
         spyWindow.recordMessagingCall('addMessageChunk');
+        await spyWindow.recordResponseRequest(
+          'final_response' in chunk
+            ? chunk.final_response.request_id
+            : chunk.streaming_metadata?.request_id
+        );
         if (hold && 'final_response' in chunk) {
           await spyWindow.waitForFinalRelease();
         }
@@ -111,13 +121,17 @@ const spyOnMessaging = async (page: Page, { holdFinal = false } = {}) => {
         if (hold && state === completeState) {
           await spyWindow.waitForFinalRelease();
         }
-        return upsertMessage(messageID, state, updater);
+        return upsertMessage(messageID, state, async (previous) => {
+          const response = await updater(previous);
+          await spyWindow.recordResponseRequest(response.request_id);
+          return response;
+        });
       };
     },
     { hold: holdFinal, completeState: MessageState.COMPLETE }
   );
 
-  return { calls, finalHeld, releaseFinal: release };
+  return { calls, requestIDs, finalHeld, releaseFinal: release };
 };
 
 const openDemoChat = async (page: Page) => {
@@ -138,7 +152,7 @@ test.describe('demo send mode in the chat', () => {
   }) => {
     test.slow();
     await openDemoChat(page);
-    const { calls } = await spyOnMessaging(page);
+    const { calls, requestIDs } = await spyOnMessaging(page);
 
     await sendChatMessage(page, 'text (stream)');
 
@@ -151,6 +165,9 @@ test.describe('demo send mode in the chat', () => {
       expect(calls).not.toContain('upsertMessage');
     }
     expect(calls).not.toContain('addMessage');
+    expect(requestIDs.length).toBeGreaterThan(1);
+    expect(requestIDs[0]).toBeTruthy();
+    expect(new Set(requestIDs).size).toBe(1);
   });
 
   test('card (stream) renders mid-stream before the final response', async ({

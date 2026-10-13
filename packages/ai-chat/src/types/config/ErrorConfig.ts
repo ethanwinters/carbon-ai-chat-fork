@@ -58,6 +58,11 @@ export interface OnErrorData {
   message: string;
 
   /**
+   * The ID of the message request that failed, when the error belongs to a send operation.
+   */
+  messageID?: string;
+
+  /**
    * An extra blob of data associated with the error. This may be a stack trace for thrown errors. For a
    * {@link OnErrorType.RENDER} report about an upserted item the chat can't draw, it names the item and the fields
    * it's missing.

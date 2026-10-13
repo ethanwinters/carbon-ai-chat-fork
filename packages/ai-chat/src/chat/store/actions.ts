@@ -7,6 +7,8 @@
  *  @license
  */
 
+import cloneDeep from 'lodash-es/cloneDeep.js';
+
 import { DeepPartial } from '../../types/utilities/DeepPartial';
 import type { MessageWriteOptions } from './messageWriteTypes';
 
@@ -23,6 +25,8 @@ import {
   ViewState,
 } from '../../types/state/AppState';
 import type { StructuredData } from '../../types/messaging/Messages';
+import type { OnErrorData } from '../../types/config/ErrorConfig';
+import type { ConversationStatus } from '../../types/instance/PublicChatState';
 import {
   CustomPanelConfigOptions,
   WorkspaceCustomPanelConfigOptions,
@@ -114,6 +118,7 @@ const CLEAR_STRUCTURED_DATA = 'CLEAR_STRUCTURED_DATA';
 const ADD_PENDING_UPLOAD = 'ADD_PENDING_UPLOAD';
 const UPDATE_PENDING_UPLOAD = 'UPDATE_PENDING_UPLOAD';
 const REMOVE_PENDING_UPLOAD = 'REMOVE_PENDING_UPLOAD';
+const SET_CONVERSATION_LIFECYCLE = 'SET_CONVERSATION_LIFECYCLE';
 
 interface UnknownAction {
   type: string;
@@ -303,8 +308,15 @@ const actions = {
 
   resetIsHydratingCounter() {
     return {
-      type: RESET_IS_LOADING_COUNTER,
+      type: RESET_IS_HYDRATING_COUNTER,
     };
+  },
+
+  setConversationLifecycle(
+    status: ConversationStatus,
+    error: Readonly<OnErrorData> | null
+  ) {
+    return { type: SET_CONVERSATION_LIFECYCLE, status, error };
   },
 
   setActiveResponseId(activeResponseId: string | null) {
@@ -517,7 +529,7 @@ const actions = {
       workspaceID: data.workspaceID,
       localMessageItem: data.localMessageItem,
       fullMessage: data.fullMessage,
-      additionalData: data.additionalData,
+      additionalData: cloneDeep(data.additionalData),
     };
   },
 
@@ -765,4 +777,5 @@ export {
   SET_ACTIVE_RESPONSE_ID,
   UPDATE_STRUCTURED_DATA,
   CLEAR_STRUCTURED_DATA,
+  SET_CONVERSATION_LIFECYCLE,
 };

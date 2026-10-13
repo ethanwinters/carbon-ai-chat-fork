@@ -47,7 +47,7 @@ import { AppShellPanels } from './AppShellPanels';
 import { HasServiceManager } from './hocs/withServiceManager';
 import { useMobileViewportLayout } from './hooks/useMobileViewportLayout';
 import { useOnMount } from './hooks/useOnMount';
-import { useSelector } from './hooks/useSelector';
+import { useSelector, useStateAccessSelector } from './hooks/useSelector';
 import { useWindowOpenState } from './hooks/useWindowOpenState';
 import { useFocusManager } from './hooks/useFocusManager';
 import { useStyleInjection } from './hooks/useStyleInjection';
@@ -68,6 +68,7 @@ import {
   selectInputFieldVisible,
   selectInputUploadAndStreamingFields,
   selectLanguagePack,
+  selectStopStreamingButtonVisible,
 } from './store/selectors';
 import { shallowEqual } from './store/appStore';
 import {
@@ -101,6 +102,7 @@ import {
   ChatWidthBreakpoint,
   PendingUpload,
 } from '../types/state/AppState';
+import type { PublicChatState } from '../types/instance/PublicChatState';
 import {
   AutoScrollOptions,
   HasDoAutoScroll,
@@ -147,6 +149,8 @@ const selectPersistedToBrowserStorage = (state: AppState) =>
 const selectIsHydrated = (state: AppState) => state.isHydrated;
 const selectAssistantMessageState = (state: AppState) =>
   state.assistantMessageState;
+const selectIsHydratingCounter = (state: PublicChatState) =>
+  state.isHydratingCounter;
 const selectHumanAgentStateSlice = (state: AppState) => state.humanAgentState;
 const selectWorkspacePanelState = (state: AppState) =>
   state.workspacePanelState;
@@ -224,6 +228,10 @@ function AppShell({
   );
   const isHydrated = useSelector(selectIsHydrated);
   const assistantMessageState = useSelector(selectAssistantMessageState);
+  const isHydratingCounter = useStateAccessSelector(
+    serviceManager.instance.state,
+    selectIsHydratingCounter
+  );
   const humanAgentState = useSelector(selectHumanAgentStateSlice);
   const workspacePanelState = useSelector(selectWorkspacePanelState);
   const historyPanelState = useSelector(selectHistoryPanelState);
@@ -347,6 +355,9 @@ function AppShell({
   // Effective input flags derived from config + runtime override.
   const isInputReadonly = useSelector(selectInputIsReadonly);
   const isInputFieldVisible = useSelector(selectInputFieldVisible);
+  const isStopStreamingButtonVisible = useSelector(
+    selectStopStreamingButtonVisible
+  );
   const agentDisplayState = useSelector(
     selectHumanAgentDisplayState,
     shallowEqual
@@ -361,7 +372,7 @@ function AppShell({
   } = useDerivedState({
     publicConfig,
     persistedToBrowserStorage,
-    isHydratingCounter: assistantMessageState.isHydratingCounter,
+    isHydratingCounter,
     catastrophicErrorType,
     viewStateMainWindow: viewState.mainWindow,
   });
@@ -802,7 +813,7 @@ function AppShell({
   }, [mainWindowFunctions, serviceManager]);
 
   // Set scrollbar width CSS variable. Written via the shared dynamic
-  // stylesheet so a strict CSP can drop style-src-attr 'unsafe-inline'.
+  // stylesheet.
   useEffect(() => {
     const container = widgetContainerRef.current;
     if (!container) {
@@ -1064,9 +1075,7 @@ function AppShell({
                     placeholder={
                       languagePack[agentDisplayState.inputPlaceholderKey]
                     }
-                    isStopStreamingButtonVisible={
-                      inputFields.stopStreamingButtonState.isVisible
-                    }
+                    isStopStreamingButtonVisible={isStopStreamingButtonVisible}
                     isStopStreamingButtonDisabled={
                       inputFields.stopStreamingButtonState.isDisabled ||
                       inputFields.stopStreamingButtonState.isMetadataDisabled

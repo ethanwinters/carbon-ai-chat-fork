@@ -8,6 +8,7 @@
  */
 
 import { act, waitFor } from '@testing-library/react';
+import isEqual from 'lodash-es/isEqual.js';
 import {
   createBaseConfig,
   renderChatAndGetInstance,
@@ -992,10 +993,9 @@ describe('ChatInstance.messaging.addMessage', () => {
       expect(receive).not.toHaveBeenCalled();
     });
 
-    it('leaves request_id unset on a response added during customSendMessage, and clears a host-set one', async () => {
-      // Surprising: addMessage always passes no originating request, so processing
-      // overwrites request_id with undefined. The link to the request is never recorded.
+    it('leaves an omitted request_id unset and preserves an explicit host request_id', async () => {
       let requestID: string;
+      const hostUnset = response('pin-request-id', [text('Answer')]);
       const config = {
         ...createBaseConfig(),
         messaging: {
@@ -1006,9 +1006,7 @@ describe('ChatInstance.messaging.addMessage', () => {
             chatInstance: ChatInstance
           ) => {
             requestID = request.id;
-            await chatInstance.messaging.addMessage(
-              response('pin-request-id', [text('Answer')])
-            );
+            await chatInstance.messaging.addMessage(hostUnset);
           },
         },
       };
@@ -1024,6 +1022,8 @@ describe('ChatInstance.messaging.addMessage', () => {
       ] as MessageResponse;
       expect(answered).toBeDefined();
       expect(answered.request_id).toBeUndefined();
+      expect(answered).not.toBe(hostUnset);
+      expect(hostUnset).toEqual(response('pin-request-id', [text('Answer')]));
 
       const hostSet = {
         ...response('pin-host-request-id', [text('Proactive')]),
@@ -1037,9 +1037,14 @@ describe('ChatInstance.messaging.addMessage', () => {
             'pin-host-request-id'
           ] as MessageResponse
         ).request_id
-      ).toBeUndefined();
-      // The host's own object is the one that was changed.
-      expect(hostSet.request_id).toBeUndefined();
+      ).toBe('host-set');
+      expect(store.getState().allMessagesByID['pin-host-request-id']).not.toBe(
+        hostSet
+      );
+      expect(hostSet).toEqual({
+        ...response('pin-host-request-id', [text('Proactive')]),
+        request_id: 'host-set',
+      });
     });
 
     it('turns a message with no output into an inline error', async () => {
@@ -1075,7 +1080,7 @@ describe('ChatInstance.messaging.addMessage', () => {
       expect(receive.mock.calls.map((call) => call[0].data.id)).toContain(id);
     });
 
-    it("assigns an id to a message without one, writing it onto the host's object", async () => {
+    it("assigns an id to its copies without changing the host's object", async () => {
       const { instance, store } =
         await renderChatAndGetInstanceWithStore(createBaseConfig());
       const preReceive = jest.fn();
@@ -1084,10 +1089,19 @@ describe('ChatInstance.messaging.addMessage', () => {
 
       await instance.messaging.addMessage(message);
 
-      expect(typeof message.id).toBe('string');
-      expect(message.id.length).toBeGreaterThan(0);
-      expect(preReceive.mock.calls[0][0].data.id).toBe(message.id);
-      expect(store.getState().allMessagesByID[message.id]).toBe(message);
+      const eventMessage = preReceive.mock.calls[0][0].data;
+      expect(typeof eventMessage.id).toBe('string');
+      expect(eventMessage.id.length).toBeGreaterThan(0);
+      const stored = store.getState().allMessagesByID[
+        eventMessage.id
+      ] as MessageResponse;
+      expect(stored.id).toBe(eventMessage.id);
+      expect(eventMessage).not.toBe(message);
+      expect(stored).not.toBe(message);
+      expect(stored).not.toBe(eventMessage);
+      expect(stored.output).not.toBe(message.output);
+      expect(stored.output).toEqual(message.output);
+      expect(message).toEqual({ output: { generic: [text('No id')] } });
     });
 
     it('fires pre:receive and receive again for a second addMessage with the same id', async () => {
@@ -1145,15 +1159,28 @@ describe('ChatInstance.messaging.addMessage', () => {
       expect(visible).toEqual([true, false]);
     });
 
-    it("freezes the stored message, which is the host's own object", async () => {
+    it("freezes separate stored and receive copies without freezing the host's object", async () => {
       const { instance, store } =
         await renderChatAndGetInstanceWithStore(createBaseConfig());
       const message = response('pin-frozen', [text('Frozen')]);
+      const receive = jest.fn();
+      instance.on({ type: BusEventType.RECEIVE, handler: receive });
 
       await instance.messaging.addMessage(message);
 
       const stored = store.getState().allMessagesByID['pin-frozen'];
-      expect(stored).toBe(message);
+      const received = receive.mock.calls[0][0].data;
+      expect(stored).not.toBe(message);
+      expect(stored).toMatchObject(message);
+      expect((stored as MessageResponse).output).not.toBe(message.output);
+      expect(received).not.toBe(message);
+      expect(received).not.toBe(stored);
+      expect(received.output).not.toBe((stored as MessageResponse).output);
+      expect(received).toEqual(stored);
+      expect(Object.isFrozen(received)).toBe(true);
+      expect(Object.isFrozen(message)).toBe(false);
+      expect(Object.isFrozen(message.output.generic[0])).toBe(false);
+      expect(message).toEqual(response('pin-frozen', [text('Frozen')]));
       expect(Object.isFrozen(stored)).toBe(true);
       expect(
         Object.isFrozen((stored as MessageResponse).output.generic[0])
@@ -1265,7 +1292,11 @@ describe('ChatInstance.messaging.addMessage', () => {
             'First 2',
           ])
         );
-        expect(store.getState().allMessagesByID[id]).toBe(second);
+        const stored = store.getState().allMessagesByID[id] as MessageResponse;
+        expect(stored).not.toBe(second);
+        expect(stored.output).not.toBe(second.output);
+        expect(stored).toMatchObject(second);
+        expect(stored.output).toEqual(second.output);
         expect(store.getState().assistantMessageState.messageIDs).toEqual([id]);
       });
 
@@ -1284,7 +1315,11 @@ describe('ChatInstance.messaging.addMessage', () => {
         await waitFor(() =>
           expect(visibleTexts(store, id)).toEqual(['Second 1', 'First 2'])
         );
-        expect(store.getState().allMessagesByID[id]).toBe(second);
+        const stored = store.getState().allMessagesByID[id] as MessageResponse;
+        expect(stored).not.toBe(second);
+        expect(stored.output).not.toBe(second.output);
+        expect(stored).toMatchObject(second);
+        expect(stored.output).toEqual(second.output);
       });
 
       it('runs an upsertMessage while an addMessage for the same id is paused', async () => {
@@ -1314,12 +1349,21 @@ describe('ChatInstance.messaging.addMessage', () => {
         message: MessageResponse
       ) => {
         const handlerGate = gate();
+        const entered = gate();
         instance.on({
           type: BusEventType.RECEIVE,
-          handler: (event: any) =>
-            event.data === message ? handlerGate.promise : undefined,
+          handler: (event: any) => {
+            if (
+              event.data.id === message.id &&
+              isEqual(event.data.output, message.output)
+            ) {
+              entered.release();
+              return handlerGate.promise;
+            }
+            return undefined;
+          },
         });
-        return handlerGate;
+        return { ...handlerGate, entered: entered.promise };
       };
 
       it('stores a second addMessage and fires its receive while the first one waits on its receive handler', async () => {
@@ -1332,6 +1376,7 @@ describe('ChatInstance.messaging.addMessage', () => {
         const fire = jest.spyOn(serviceManager.eventBus, 'fire');
 
         const firstAdd = instance.messaging.addMessage(first);
+        await firstHandler.entered;
         const secondAdd = instance.messaging.addMessage(second);
         // The bus refuses or queues a second receive while the first one's handler runs,
         // so only the attempt to fire it is pinned.
@@ -1341,11 +1386,25 @@ describe('ChatInstance.messaging.addMessage', () => {
           expect(
             fire.mock.calls.some(
               ([event]: any) =>
-                event.type === BusEventType.RECEIVE && event.data === second
+                event.type === BusEventType.RECEIVE &&
+                event.data.id === second.id &&
+                isEqual(event.data.output, second.output)
             )
           ).toBe(true)
         );
-        expect(store.getState().allMessagesByID[id]).toBe(second);
+        const stored = store.getState().allMessagesByID[id] as MessageResponse;
+        expect(stored).not.toBe(second);
+        expect(stored.output).not.toBe(second.output);
+        expect(stored).toMatchObject(second);
+        expect(stored.output).toEqual(second.output);
+        const secondReceive = fire.mock.calls.find(
+          ([event]: any) =>
+            event.type === BusEventType.RECEIVE &&
+            isEqual(event.data.output, second.output)
+        )?.[0] as any;
+        expect(secondReceive.data).not.toBe(second);
+        expect(secondReceive.data).not.toBe(stored);
+        expect(secondReceive.data).toEqual(stored);
 
         firstHandler.release();
         await firstAdd;
@@ -1359,6 +1418,7 @@ describe('ChatInstance.messaging.addMessage', () => {
         const addedHandler = holdReceiveOf(instance, added);
 
         const add = instance.messaging.addMessage(added);
+        await addedHandler.entered;
         await waitFor(() => expect(visibleTexts(store, id)).toEqual(['Added']));
         const upsert = instance.messaging.upsertMessage(
           id,
@@ -1674,7 +1734,11 @@ describe('ChatInstance.messaging.addMessage', () => {
 
       // Outlast the first message's pause.
       await new Promise((resolve) => setTimeout(resolve, 400));
-      expect(store.getState().allMessagesByID[id]).toBe(replacement);
+      const stored = store.getState().allMessagesByID[id] as MessageResponse;
+      expect(stored).not.toBe(replacement);
+      expect(stored.output).not.toBe(replacement.output);
+      expect(stored).toMatchObject(replacement);
+      expect(stored.output).toEqual(replacement.output);
       expect(itemsOf(store, id).map((item: any) => item.item.text)).toEqual([
         'Replacement',
       ]);
@@ -1711,16 +1775,25 @@ describe('malformed items through addMessage', () => {
         message.output.generic[0],
       ]);
     });
-    expect(store.getState().allMessagesByID[message.id]).toBe(message);
+    const stored = store.getState().allMessagesByID[
+      message.id
+    ] as MessageResponse;
+    expect(stored).not.toBe(message);
+    expect(stored.output).not.toBe(message.output);
+    expect(stored).toMatchObject(message);
+    expect(stored.output).toEqual(message.output);
   });
 
-  /** Items a renderer throws on. The rest throw while the message is stored, which drops it. */
+  const SHOWS_OPTION = new Set([
+    'option, dropdown entry with no value.input',
+    'option, more than four entries, one with no value',
+  ]);
+
+  /** Items a renderer throws on. Other malformed items fail while the message is stored. */
   const SHOWS_ERROR = new Set([
     'grid, column width not a string',
     'option, no options',
     'option, null entry',
-    'option, dropdown entry with no value.input',
-    'option, more than four entries, one with no value',
     'conversational_search, citations not a list',
     'conversational_search, null citation',
     'system, after a null item in the message',
@@ -1742,11 +1815,41 @@ describe('malformed items through addMessage', () => {
           }
         : {
             rejects: false,
-            shownItems: 0,
+            shownItems: SHOWS_OPTION.has(fixture.name) ? 1 : 0,
             reports: [],
             failedItems: 0,
             catastrophic: false,
           }
     );
+  });
+
+  describe('Loading indicator', () => {
+    it('shows for an unanswered request and is off after the next reply', async () => {
+      const config = createBaseConfig();
+      config.messaging = {
+        messageLoadingIndicatorTimeoutSecs: 0.05,
+        customSendMessage: async (request, _options, instance) => {
+          if (request.input.text !== 'answered') {
+            return;
+          }
+          await instance.messaging.addMessage({
+            output: {
+              generic: [
+                { response_type: MessageResponseTypes.TEXT, text: 'reply' },
+              ],
+            },
+          });
+        },
+      };
+      const instance = await renderChatAndGetInstance(config);
+
+      await instance.send('unanswered');
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      expect(instance.getState().isMessageLoadingCounter).toBe(1);
+
+      await instance.send('answered');
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      expect(instance.getState().isMessageLoadingCounter).toBe(0);
+    });
   });
 });
