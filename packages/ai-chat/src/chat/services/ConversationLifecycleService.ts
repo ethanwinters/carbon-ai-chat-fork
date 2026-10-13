@@ -19,7 +19,8 @@ class ConversationLifecycleService {
   private generation = 0;
   private hydrating = false;
   private activeRequests = new Set<string>();
-  private activeResponses = new Set<string>();
+  private activeResponses = new Map<string, string | undefined>();
+  private stoppedRequests = new Set<string>();
   private error: Readonly<OnErrorData> | null = null;
 
   constructor(private serviceManager: ServiceManager) {}
@@ -37,6 +38,7 @@ class ConversationLifecycleService {
     this.hydrating = !skipHydration;
     this.activeRequests.clear();
     this.activeResponses.clear();
+    this.stoppedRequests.clear();
     this.error = null;
     this.publish();
     return this.generation;
@@ -71,9 +73,30 @@ class ConversationLifecycleService {
     }
   }
 
-  responseStreaming(messageID: string, generation = this.generation) {
-    if (messageID && this.isCurrent(generation)) {
-      this.activeResponses.add(messageID);
+  requestStopped(messageID: string, generation = this.generation) {
+    if (!this.isCurrent(generation)) {
+      return;
+    }
+    this.stoppedRequests.add(messageID);
+    for (const [responseID, requestID] of this.activeResponses) {
+      if (requestID === messageID) {
+        this.activeResponses.delete(responseID);
+      }
+    }
+    this.publish();
+  }
+
+  responseStreaming(
+    messageID: string,
+    generation = this.generation,
+    requestID?: string
+  ) {
+    if (
+      messageID &&
+      this.isCurrent(generation) &&
+      !this.stoppedRequests.has(requestID)
+    ) {
+      this.activeResponses.set(messageID, requestID);
       this.publish();
     }
   }

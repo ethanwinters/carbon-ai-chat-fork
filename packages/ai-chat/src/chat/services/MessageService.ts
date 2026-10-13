@@ -216,6 +216,11 @@ class MessageService {
    */
   public messageLoadingManager: MessageLoadingManager;
 
+  get currentRequestID() {
+    const current = this.queue.current;
+    return current && !current.isProcessed ? current.message.id : undefined;
+  }
+
   public registerRequestGeneration(
     requestID: string,
     restartGeneration: number
@@ -752,6 +757,10 @@ class MessageService {
   }
 
   private finishFailedStreamingResponse(pendingRequest: PendingMessageRequest) {
+    this.serviceManager.conversationLifecycleService?.requestStopped(
+      pendingRequest.message.id,
+      pendingRequest.generation
+    );
     if (!pendingRequest.isStreaming) {
       return;
     }
@@ -863,6 +872,12 @@ class MessageService {
 
     // Only process the pending request if it exists (it may have already been cleared from queue)
     if (pendingRequest) {
+      if (reason !== CancellationReason.TIMEOUT) {
+        this.serviceManager.conversationLifecycleService?.requestStopped(
+          pendingRequest.message.id,
+          pendingRequest.generation
+        );
+      }
       if (reason === CancellationReason.TIMEOUT) {
         if (logError) {
           const conversationError = {

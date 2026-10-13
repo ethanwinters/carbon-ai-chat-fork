@@ -143,11 +143,12 @@ class MessageUpsertCoordinator {
     }
 
     const stamp = this.takeStamp();
+    const requestID = this.serviceManager.messageService.currentRequestID;
     const prev = this.chainByID.get(messageID) ?? Promise.resolve();
     // A predecessor failure for this id must not poison this caller's promise.
     const next = prev
       .catch(noop)
-      .then(() => this.runOne(messageID, nextState, updater, stamp));
+      .then(() => this.runOne(messageID, nextState, updater, stamp, requestID));
     this.chainByID.set(messageID, next);
 
     // Drain the chain entry once `next` settles. The trailing `.then(noop, noop)`
@@ -168,7 +169,8 @@ class MessageUpsertCoordinator {
     messageID: string,
     nextState: MessageState,
     updater: UpsertMessageUpdater,
-    stamp: UpsertStamp
+    stamp: UpsertStamp,
+    requestID?: string
   ): Promise<void> {
     if (this.isStale(stamp)) {
       return;
@@ -196,7 +198,9 @@ class MessageUpsertCoordinator {
     this.serviceManager.store.dispatch(actions.upsertMessage(committedResult));
     if (nextState === MessageState.STREAMING) {
       this.serviceManager.conversationLifecycleService?.responseStreaming(
-        messageID
+        messageID,
+        undefined,
+        result.request_id ?? requestID
       );
     } else if (nextState === MessageState.ERROR) {
       if (this.serviceManager.messageService.markStreamingResponseError) {
