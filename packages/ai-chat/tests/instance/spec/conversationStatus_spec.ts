@@ -363,6 +363,55 @@ describe('conversation status', () => {
     expect(instance.state.get().status).toBe('ready');
   });
 
+  it('keeps an updated settled request stream alive when another send is canceled', async () => {
+    const started = resolvablePromise();
+    const release = resolvablePromise();
+    let secondRequestID: string;
+    const config = createBaseConfig();
+    config.messaging = {
+      skipWelcome: true,
+      customSendMessage: async (request, _options, instance) => {
+        if (request.input.text === 'first') {
+          await instance.messaging.upsertMessage(
+            'response-a',
+            MessageState.STREAMING,
+            () => ({ id: 'response-a', output: { generic: [] } })
+          );
+        } else {
+          secondRequestID = request.id;
+          started.doResolve();
+          await release;
+        }
+      },
+    };
+    const { instance, serviceManager } =
+      await renderChatAndGetInstanceWithStore(config);
+    await instance.send('first');
+    const pendingSend = instance.send('second');
+    await started;
+    await instance.messaging.upsertMessage(
+      'response-a',
+      MessageState.STREAMING,
+      () => ({ id: 'response-a', output: { generic: [] } })
+    );
+
+    await serviceManager.messageService.cancelMessageRequestByID(
+      secondRequestID,
+      false
+    );
+    release.doResolve();
+    await pendingSend;
+    const statusAfterCancel = instance.state.get().status;
+    await instance.messaging.upsertMessage(
+      'response-a',
+      MessageState.COMPLETE,
+      () => ({ id: 'response-a', output: { generic: [] } })
+    );
+
+    expect(statusAfterCancel).toBe('streaming');
+    expect(instance.state.get().status).toBe('ready');
+  });
+
   it('updates content without reviving an upsert stream after cancel', async () => {
     const streaming = resolvablePromise();
     const release = resolvablePromise();

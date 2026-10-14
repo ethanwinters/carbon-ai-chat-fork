@@ -107,7 +107,9 @@ class ConversationLifecycleService {
       this.isCurrent(generation) &&
       !this.stoppedRequests.has(requestID)
     ) {
-      this.activeResponses.set(messageID, requestID);
+      if (!this.activeResponses.has(messageID)) {
+        this.activeResponses.set(messageID, requestID);
+      }
       this.publish();
     }
   }

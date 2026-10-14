@@ -393,6 +393,76 @@ describe('ChatInstance.messaging.addMessageChunk', () => {
     expect(instance.state.get().error).toBeNull();
   });
 
+  it('preserves a reused response after a pre-restart final chunk handler rejects', async () => {
+    const handlerStarted = resolvablePromise<void>();
+    const releaseHandler = resolvablePromise<void>();
+    const onError = jest.fn();
+    const { instance, store } = await renderChatAndGetInstanceWithStore({
+      ...createBaseConfig(),
+      onError,
+      messaging: { skipWelcome: true, customSendMessage: () => {} },
+    });
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    instance.on({
+      type: BusEventType.PRE_RECEIVE,
+      handler: jest.fn().mockImplementationOnce(() => {
+        handlerStarted.doResolve();
+        return releaseHandler;
+      }),
+    });
+
+    const oldChunk = instance.messaging.addMessageChunk({
+      final_response: {
+        id: 'reused-response',
+        output: { generic: [] },
+      },
+    });
+    const oldChunkFailure =
+      expect(oldChunk).rejects.toThrow('old handler failed');
+    await handlerStarted;
+    await instance.messaging.restartConversation();
+
+    const newResponse: MessageResponse = {
+      id: 'reused-response',
+      output: {
+        generic: [
+          { response_type: MessageResponseTypes.TEXT, text: 'New response' },
+        ],
+      },
+    };
+    await instance.messaging.upsertMessage(
+      newResponse.id,
+      MessageState.STREAMING,
+      () => newResponse
+    );
+    expect(instance.state.get().status).toBe('streaming');
+
+    const queuedChunk = instance.messaging.addMessageChunk({
+      final_response: {
+        id: 'queued-response',
+        output: { generic: [] },
+      },
+    });
+    releaseHandler.doReject(new Error('old handler failed'));
+    await oldChunkFailure;
+    await queuedChunk;
+
+    expect(instance.state.get().status).toBe('streaming');
+    expect(instance.state.get().error).toBeNull();
+    expect(onError).not.toHaveBeenCalled();
+    expect(store.getState().allMessagesByID[newResponse.id]).toMatchObject(
+      newResponse
+    );
+    expect(store.getState().allMessagesByID['queued-response']).toBeDefined();
+
+    await instance.messaging.upsertMessage(
+      newResponse.id,
+      MessageState.COMPLETE,
+      () => newResponse
+    );
+    expect(instance.state.get().status).toBe('ready');
+  });
+
   it('should own chunk data passed by the caller', async () => {
     const config = createBaseConfig();
     const { instance, store } = await renderChatAndGetInstanceWithStore(config);

@@ -288,6 +288,10 @@ class ChunkProcessingService {
       this.advanceChunkQueue(chunkPromise);
     } catch (error) {
       consoleError('Error processing stream chunk', error);
+      if (restartGeneration !== this.restartGeneration) {
+        this.advanceChunkQueue(chunkPromise, new ChunkProcessingError(error));
+        return;
+      }
       const responseID = messageID
         ? this.serviceManager.messageService.inboundStreaming.resolveResponseId(
             messageID
