@@ -69,6 +69,7 @@ class ChunkProcessingService {
   private chunkQueue: {
     chunk: StreamChunk;
     messageID?: string;
+    requestID?: string;
     options: AddMessageOptions;
     chunkPromise: ResolvablePromise<void>;
     restartGeneration: number;
@@ -184,6 +185,12 @@ class ChunkProcessingService {
     this.chunkQueue.push({
       chunk: ownedChunk,
       messageID,
+      requestID:
+        requestID ??
+        this.serviceManager.messageService.inboundStreaming.getStreamingMeta(
+          extractedMessageID
+        )?.requestId ??
+        this.serviceManager.messageService.currentRequestID,
       options,
       chunkPromise,
       restartGeneration,
@@ -195,7 +202,7 @@ class ChunkProcessingService {
   }
 
   async processChunkQueue() {
-    const { chunk, options, chunkPromise, restartGeneration } =
+    const { chunk, options, chunkPromise, restartGeneration, requestID } =
       this.chunkQueue[0];
     const { store, restartCount: initialRestartCount } = this.serviceManager;
     let messageID: string | undefined;
@@ -222,7 +229,9 @@ class ChunkProcessingService {
       if (messageID && (isPartialItem || isCompleteItem)) {
         runCoreOperation(() =>
           this.serviceManager.conversationLifecycleService.responseStreaming(
-            messageID
+            messageID,
+            undefined,
+            requestID
           )
         );
       }

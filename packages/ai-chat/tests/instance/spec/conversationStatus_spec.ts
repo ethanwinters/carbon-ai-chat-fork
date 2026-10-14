@@ -13,6 +13,7 @@ import { MessageResponseTypes } from '../../../src/types/messaging/Messages';
 
 import { OnErrorType } from '../../../src/types/config/ErrorConfig';
 import { MessageState } from '../../../src/types/config/MessagingConfig';
+import { BusEventType } from '../../../src/types/events/eventBusTypes';
 import {
   createBaseConfig,
   renderChatAndGetInstanceWithStore,
@@ -148,32 +149,37 @@ describe('conversation status', () => {
     expect(instance.getState().error).toBeNull();
   });
 
-  it('treats an ERROR upsert as terminal without reporting a global error', async () => {
+  it('keeps other responses streaming when an ERROR upsert finishes one response', async () => {
     const onError = jest.fn();
-    const { instance, serviceManager } =
-      await renderChatAndGetInstanceWithStore({
-        ...createBaseConfig(),
-        onError,
-      });
-
-    act(() => {
-      serviceManager.conversationLifecycleService.responseStreaming(
-        'standalone-response'
-      );
+    const { instance } = await renderChatAndGetInstanceWithStore({
+      ...createBaseConfig(),
+      onError,
     });
-    await instance.messaging.upsertMessage(
-      'standalone-response',
-      MessageState.ERROR,
-      () => ({
-        id: 'standalone-response',
-        output: { generic: [] },
-      })
-    );
 
+    for (const responseID of ['response-a', 'response-b']) {
+      await instance.messaging.upsertMessage(
+        responseID,
+        MessageState.STREAMING,
+        () => ({ id: responseID, output: { generic: [] } })
+      );
+    }
+    await instance.messaging.upsertMessage(
+      'response-a',
+      MessageState.ERROR,
+      () => ({ id: 'response-a', output: { generic: [] } })
+    );
+    expect(instance.getState().status).toBe('streaming');
+
+    await instance.messaging.upsertMessage(
+      'response-b',
+      MessageState.ERROR,
+      () => ({ id: 'response-b', output: { generic: [] } })
+    );
     expect(instance.getState().status).toBe('ready');
     expect(instance.getState().error).toBeNull();
     expect(onError).not.toHaveBeenCalled();
   });
+
   it('releases an awaited upsert stream when its send throws', async () => {
     const config = createBaseConfig();
     config.messaging = {
@@ -309,6 +315,116 @@ describe('conversation status', () => {
     await serviceManager.messageService.cancelCurrentMessageRequest();
     release.doResolve();
     await pendingSend;
+
+    expect(instance.state.get().status).toBe('ready');
+  });
+
+  it.each(['cancel', 'failure'] as const)(
+    'does not revive queued chunk responses after request %s',
+    async (outcome) => {
+      const handlerStarted = resolvablePromise();
+      const releaseHandler = resolvablePromise();
+      const chunksQueued = resolvablePromise();
+      const releaseSend = resolvablePromise();
+      let queuedChunks: Promise<void>[];
+      const config = createBaseConfig();
+      config.messaging = {
+        skipWelcome: true,
+        customSendMessage: async (request, _options, chat) => {
+          if (request.input.text === 'next') {
+            return;
+          }
+          queuedChunks = [true, false].map((explicitOwner) =>
+            chat.messaging.addMessageChunk({
+              streaming_metadata: {
+                response_id: explicitOwner
+                  ? 'explicit-response'
+                  : 'implicit-response',
+                ...(explicitOwner ? { request_id: request.id } : {}),
+              },
+              partial_item: {
+                response_type: MessageResponseTypes.TEXT,
+                text: 'queued content',
+                streaming_metadata: { id: 'text' },
+              },
+            })
+          );
+          chunksQueued.doResolve();
+          await releaseSend;
+          if (outcome === 'failure') {
+            throw new Error('send failed');
+          }
+        },
+      };
+      const { instance, serviceManager } =
+        await renderChatAndGetInstanceWithStore(config);
+      jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      instance.on({
+        type: BusEventType.PRE_RECEIVE,
+        handler: jest.fn().mockImplementationOnce(() => {
+          handlerStarted.doResolve();
+          return releaseHandler;
+        }),
+      });
+      const heldChunk = instance.messaging.addMessageChunk({
+        final_response: { id: 'held-response', output: { generic: [] } },
+      });
+      await handlerStarted;
+      const send = instance.send('first');
+      const sendSettled =
+        outcome === 'failure'
+          ? expect(send).rejects.toThrow('send failed')
+          : send;
+      await chunksQueued;
+      if (outcome === 'cancel') {
+        await serviceManager.messageService.cancelCurrentMessageRequest();
+      }
+      releaseSend.doResolve();
+      await sendSettled;
+      await instance.send('next');
+      expect(instance.state.get().status).toBe('ready');
+
+      releaseHandler.doResolve();
+      await heldChunk;
+      await Promise.all(queuedChunks);
+
+      expect(instance.state.get().status).toBe('ready');
+      expect(instance.state.get().error).toBeNull();
+      expect(
+        instance.state.get().messages.map((message) => message.id)
+      ).toEqual(
+        expect.arrayContaining(['explicit-response', 'implicit-response'])
+      );
+    }
+  );
+
+  it('releases chunk responses when their send fails', async () => {
+    const config = createBaseConfig();
+    config.messaging = {
+      skipWelcome: true,
+      customSendMessage: async (request, _options, chat) => {
+        if (request.input.text === 'next') {
+          return;
+        }
+        for (const responseID of ['response-a', 'response-b']) {
+          await chat.messaging.addMessageChunk({
+            streaming_metadata: { response_id: responseID },
+            partial_item: {
+              response_type: MessageResponseTypes.TEXT,
+              text: 'partial',
+              streaming_metadata: { id: 'text' },
+            },
+          });
+        }
+        throw new Error('send failed');
+      },
+    };
+    const { instance } = await renderChatAndGetInstanceWithStore(config);
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    await expect(instance.send('first')).rejects.toThrow('send failed');
+    expect(instance.state.get().status).toBe('error');
+    await instance.send('next');
 
     expect(instance.state.get().status).toBe('ready');
   });
