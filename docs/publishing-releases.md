@@ -148,8 +148,8 @@ A stable release occurs on the last Monday of the sprint and finishes later in t
   - [ ] Merge in the generated PR (the title of the PR should start with `chore(release):` followed by the version).
   - [ ] Check the generated [release](https://github.com/carbon-design-system/carbon-ai-chat/releases) to ensure the release notes are correct.
   - [ ] The creation and push of the tag should have triggered:
-    - [ ] The [deploy staging environment workflow](https://github.com/carbon-design-system/carbon-ai-chat/actions/workflows/deploy-staging-storybook.yml) and the [deploy latest environment workflow](https://github.com/carbon-design-system/carbon-ai-chat/actions/workflows/deploy-latest-storybook.yml) Once both workflows have completed, check the staging and latest environments on GitHub Pages and ensure the version in the storybook top left header has been updated.
-    - [ ] The [publish cdn workflow](https://github.com/carbon-design-system/carbon-ai-chat/actions/workflows/publish-cdn.yml). Once this workflow has completed, check that the CDN for the latest tag and version has been published.
+    - [ ] The [publish chat components cdn workflow](https://github.com/carbon-design-system/carbon-ai-chat/actions/workflows/publish-components-cdn.yml). Its last job updates `versions.js`, which feeds the version dropdowns. Once this workflow has passed, check that the Storybook version dropdown lists the new version.
+    - [ ] The [publish chat cdn workflow](https://github.com/carbon-design-system/carbon-ai-chat/actions/workflows/publish-chat-cdn.yml). Once this workflow has completed, check that the docs and demo app sites for the latest tag and version have been published.
   - [ ] Edit the generated release, and change the release from `pre-release` to `latest`. ![Screenshot of release label with latest option selected](https://github.com/user-attachments/assets/f3afc692-d691-4c04-b891-73d0406be7b0)
 
 - [ ] Post a message to the `#carbon-ai-chat` Slack channel to announce the new version of `@carbon/ai-chat`. This message usually includes a list of features / fixes completed in the release - these can be pulled from the release changelog.
