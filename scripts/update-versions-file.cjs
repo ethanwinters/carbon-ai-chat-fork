@@ -113,10 +113,10 @@ const publishedComponents = readVersions(
   'AI_CHAT_COMPONENTS_VERSIONS',
   true
 );
-const seedComponents = readVersions(
-  fs.readFileSync(path.join(__dirname, '../versions.js'), 'utf8'),
-  'AI_CHAT_COMPONENTS_VERSIONS'
-);
+// The seed backfills versions a failed run never published.
+const seed = fs.readFileSync(path.join(__dirname, '../versions.js'), 'utf8');
+const seedChat = readVersions(seed, 'AI_CHAT_VERSIONS');
+const seedComponents = readVersions(seed, 'AI_CHAT_COMPONENTS_VERSIONS');
 if (
   seedComponents.some((version) => !publishedComponents?.includes(version)) &&
   SEED_VERIFIED !== 'true'
@@ -132,7 +132,7 @@ readVersions(content, 'AI_CHAT_COMPONENTS_VERSIONS', true);
 content = writeVersions(
   content,
   'AI_CHAT_VERSIONS',
-  orderVersions([...publishedChat, `v${CHAT_VERSION}`])
+  orderVersions([...publishedChat, ...seedChat, `v${CHAT_VERSION}`])
 );
 content = writeVersions(
   content,
