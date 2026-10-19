@@ -41,7 +41,8 @@ function readVersions(content, name, optional = false) {
   }
 
   const literal = matches[0][1];
-  if (!/^\[\s*(?:'v\d+\.\d+\.\d+'\s*,?\s*)*\]$/.test(literal)) {
+  // The published catalog predates the repo's single-quote formatting.
+  if (!/^\[\s*(?:(['"])v\d+\.\d+\.\d+\1\s*,?\s*)*\]$/.test(literal)) {
     throw new Error(`Invalid ${name} array`);
   }
   const versions = JSON.parse(

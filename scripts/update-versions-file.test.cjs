@@ -122,6 +122,22 @@ test('requires verified seed pages before adding the components list', (t) => {
   }
 });
 
+test('reads a published catalog written with double quotes', (t) => {
+  const { cwd, env } = fixture(t);
+  fs.writeFileSync(
+    path.join(cwd, 'published-versions.js'),
+    'export const AI_CHAT_VERSIONS = [\n  "v1.20.0",\n  "v0.5.2",\n];\n'
+  );
+
+  run('node', [updater], cwd, env);
+  const versions = fs.readFileSync(path.join(cwd, 'versions.js'), 'utf8');
+  assert.match(
+    versions,
+    /AI_CHAT_VERSIONS = \[\n {2}'v1\.21\.0',\n {2}'v1\.20\.0',\n\];/
+  );
+  assert.match(versions, /AI_CHAT_COMPONENTS_VERSIONS = \[\n {2}'v1\.11\.0'/);
+});
+
 test('requires verified seed pages when backfilling an existing components list', (t) => {
   const { cwd, env } = fixture(t);
   fs.writeFileSync(
