@@ -210,11 +210,12 @@ jobs:
           DEST_DIR: 'components/storybook/react/version/v${{ steps.release-versions.outputs.components }}'
 
   # Update the stable version catalog after both Storybooks publish. A job in
-  # this run, not a dispatch, so a failed update fails the publish.
+  # this run, not a dispatch, so a failed update fails the publish. Called
+  # from `main` so a manual release-branch run still uses the current updater.
   update-versions-file:
     needs: publish-cdn
     if: ${{ !contains(needs.publish-cdn.outputs.chat, '-rc.') }}
-    uses: ./.github/workflows/update-versions-file.yml
+    uses: carbon-design-system/carbon-ai-chat/.github/workflows/update-versions-file.yml@main
     with:
       branch: ${{ github.event.client_payload.branch || github.ref_name }}
       sha: ${{ needs.publish-cdn.outputs.sha }}
