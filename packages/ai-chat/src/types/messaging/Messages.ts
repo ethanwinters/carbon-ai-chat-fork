@@ -647,8 +647,17 @@ export interface ItemStreamingMetadata {
   id: string;
 
   /**
-   * When included on a partial_item, indicates if the stream can be cancelled.
-   * If so, a "stop streaming" button will display in the UI.
+   * Controls the stop streaming button during a streamed response. `true` shows and
+   * enables it. `false` disables an already visible button without hiding it, including
+   * a button shown by {@link PublicConfigMessaging.showStopButtonImmediately}.
+   * A later `true` enables it again unless the user has already clicked stop.
+   *
+   * For {@link ChatInstanceMessaging.upsertMessage}, any explicit `false` in the
+   * snapshot takes precedence over `true`. For {@link ChatInstanceMessaging.addMessageChunk},
+   * the latest explicit value on a partial item applies. Omitting the flag leaves the
+   * response's setting unchanged in either flow. If several responses stream at once,
+   * any response marked `false` keeps the shared button disabled until it permits
+   * cancellation or ends. Ending the last stream clears the button state.
    */
   cancellable?: boolean;
 
@@ -2182,6 +2191,42 @@ interface MessageRequestHistory {
   label?: string;
 
   /**
+   * The sender to display for this request. Omit this profile to use the default “You” label.
+   * When you load a shared conversation, omit the viewer's profile from a presentation copy.
+   * Keep the original sender data in your application's history store.
+   * Names are trimmed before display. Missing or blank names use the default label.
+   *
+   * @example Prepare shared requests for the current viewer
+   * ```ts
+   * import type { MessageRequest } from '@carbon/ai-chat';
+   *
+   * const canonicalRequests: MessageRequest[] = [
+   *   {
+   *     input: { text: 'Check this transaction.' },
+   *     history: {
+   *       timestamp: 1759571880000,
+   *       user_profile: { id: 'jane.doe', nickname: 'Jane Doe' },
+   *     },
+   *   },
+   * ];
+   *
+   * const viewerID = 'jane.doe';
+   * const displayedRequests = canonicalRequests.map((request) => {
+   *   const history = { ...request.history };
+   *   if (history.user_profile?.id === viewerID) {
+   *     delete history.user_profile;
+   *   }
+   *   return { ...request, history };
+   * });
+   *
+   * // Insert displayedRequests as history; retain canonicalRequests in your store.
+   * console.log(displayedRequests[0]?.history?.user_profile); // undefined: displays "You"
+   * console.log(canonicalRequests[0]?.history?.user_profile?.nickname); // Jane Doe
+   * ```
+   */
+  user_profile?: RequestUserProfile;
+
+  /**
    * If the message was a welcome node request.
    */
   is_welcome_request?: boolean;
@@ -2386,6 +2431,29 @@ interface ResponseUserProfile {
 }
 
 /**
+ * Identifies the sender displayed for a user request.
+ *
+ * @category Messaging
+ */
+interface RequestUserProfile {
+  /**
+   * The sender's identifier in your application. The chat does not use it to identify the current viewer.
+   */
+  id: string;
+
+  /**
+   * The sender's visible name, trimmed before display. Blank names use the default “You” label.
+   */
+  nickname: string;
+
+  /**
+   * A URL for the sender's square avatar image. The image is hidden when the name is blank or avatars are disabled.
+   * If the image fails to load, the sender's name remains visible.
+   */
+  profile_picture_url?: string;
+}
+
+/**
  * A single search result.
  *
  * @category Messaging
@@ -2399,6 +2467,7 @@ interface SearchResult {
 
 export {
   ResponseUserProfile,
+  RequestUserProfile,
   AudioItem,
   BaseGenericItem,
   BaseMessageInput,

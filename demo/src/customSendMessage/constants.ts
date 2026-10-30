@@ -7,6 +7,8 @@
  *  @license
  */
 
+import { timing } from './timing';
+
 const TABLE = `
 | Element      | Symbol | Atomic Number | Group | Period | Atomic Mass (u) | Electron Config | Bonding | Melting Point (°C) | Boiling Point (°C) |
 |--------------|--------|---------------|-------|--------|-----------------|-----------------|---------|--------------------|--------------------|
@@ -248,7 +250,12 @@ const CHAIN_OF_THOUGHT_TEXT = `Carbon's versatile bonding properties have been a
 
 const CHAIN_OF_THOUGHT_TEXT_STREAM = `Carbon's versatile bonding properties have been analyzed through multiple chemical databases to present this comprehensive overview. As this analysis streams in, various computational chemistry tools are querying molecular structures and periodic trends.`;
 
-const WORD_DELAY = 40;
+const WORD_DELAY = timing.wordDelay;
+
+// Delay between successive upsert-only streaming items (e.g. each card in a
+// carousel, or the hold before a card's final response). Long enough to make
+// the mid-stream render obviously visible.
+const UPSERT_ITEM_DELAY = 1500;
 
 export {
   CHAIN_OF_THOUGHT_TEXT_STREAM,
@@ -263,4 +270,5 @@ export {
   BLOCKQUOTE,
   MARKDOWN,
   HTML,
+  UPSERT_ITEM_DELAY,
 };

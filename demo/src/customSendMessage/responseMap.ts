@@ -16,6 +16,8 @@ import {
 import { doAudioSoundCloud, doAudioMp3 } from './doAudio';
 import { doButton } from './doButton';
 import { doCard } from './doCard';
+import { doCardStreaming } from './doCardStreaming';
+import { doCarouselStreaming } from './doCarouselStreaming';
 import { doPreviewCard } from './doPreviewCard';
 import { doCarousel } from './doCarousel';
 import { doCode, doCodeStreaming } from './doCode';
@@ -52,7 +54,12 @@ import {
 } from './doText';
 import { doUserDefined, doUserDefinedStreaming } from './doUserDefined';
 import { doSystemMessage } from './doSystemMessage';
+import { timing } from './timing';
 import { doVideoYouTube, doVideoVimeo, doVideoKaltura } from './doVideo';
+import { usesUpsertMessage } from './sendResponse';
+
+const DELAYED_RESPONSE_MS = timing.delayedResponseMs;
+const CONSECUTIVE_SECOND_DELAY_MS = timing.consecutiveSecondDelayMs;
 
 const sortResponseMap = <T extends Record<string, unknown>>(map: T): T =>
   Object.fromEntries(
@@ -61,14 +68,14 @@ const sortResponseMap = <T extends Record<string, unknown>>(map: T): T =>
     )
   ) as T;
 
-const RESPONSE_MAP: Record<
-  string,
-  (
-    instance: ChatInstance,
-    requestOptions?: CustomSendMessageOptions,
-    requestID?: MessageRequest['id']
-  ) => Promise<void> | void
-> = sortResponseMap({
+type ResponseHandler = (
+  instance: ChatInstance,
+  requestOptions?: CustomSendMessageOptions,
+  requestID?: MessageRequest['id']
+) => Promise<void> | void;
+
+// Available in both send modes.
+const BASE_RESPONSE_MAP: Record<string, ResponseHandler> = sortResponseMap({
   'audio - soundcloud': (instance, _requestOptions, requestID) =>
     doAudioSoundCloud(instance, requestID),
   'audio - mp3': (instance, _requestOptions, requestID) =>
@@ -234,7 +241,7 @@ const RESPONSE_MAP: Record<
           requestID
         );
         resolve();
-      }, 3000);
+      }, DELAYED_RESPONSE_MS);
 
       // Cancel timeout if signal is aborted
       const abortHandler = () => {
@@ -286,7 +293,7 @@ const RESPONSE_MAP: Record<
         } catch (error) {
           reject(error);
         }
-      }, 3000);
+      }, DELAYED_RESPONSE_MS);
 
       // Cancel timeout if signal is aborted
       const abortHandler = () => {
@@ -304,8 +311,8 @@ const RESPONSE_MAP: Record<
       doTextWithFeedback(instance, requestID);
       setTimeout(() => {
         doTextWithFeedback(instance, requestID);
-      }, 1000);
-    }, 3000);
+      }, CONSECUTIVE_SECOND_DELAY_MS);
+    }, DELAYED_RESPONSE_MS);
   },
   html: (instance, _requestOptions, requestID) =>
     doHTML(instance, undefined, undefined, undefined, requestID),
@@ -331,5 +338,19 @@ const RESPONSE_MAP: Record<
   'video - kaltura': (instance, _requestOptions, requestID) =>
     doVideoKaltura(instance, requestID),
 });
+
+// Only meaningful when upsertMessage is active: these entries demonstrate
+// mid-stream rendering that addMessageChunk holds until final_response.
+const UPSERT_ONLY_RESPONSE_MAP: Record<string, ResponseHandler> =
+  sortResponseMap({
+    'card (stream)': (instance, requestOptions, requestID) =>
+      doCardStreaming(instance, requestOptions, requestID),
+    'carousel (stream)': (instance, requestOptions, requestID) =>
+      doCarouselStreaming(instance, requestOptions, requestID),
+  });
+
+const RESPONSE_MAP: Record<string, ResponseHandler> = usesUpsertMessage()
+  ? sortResponseMap({ ...BASE_RESPONSE_MAP, ...UPSERT_ONLY_RESPONSE_MAP })
+  : BASE_RESPONSE_MAP;
 
 export { RESPONSE_MAP };
